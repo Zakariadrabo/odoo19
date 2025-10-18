@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_efund_forme_juridique,efund_forme_juridique,model_efund_forme_juridique,base.group_user,1,1,1,1
+access_efund_secteur_activite,efund_secteur_activite,model_efund_secteur_activite,base.group_user,1,1,1,1
+access_efund_statut_operationnel,efund_statut_operationnel,model_efund_statut_operationnel,base.group_user,1,1,1,1
+access_efund_type_fonds,efund_type_fonds,model_efund_type_fonds,base.group_user,1,1,1,1
