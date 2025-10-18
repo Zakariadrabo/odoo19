@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Forme Juridique -->
+    <record id="action_efund_forme_juridique" model="ir.actions.act_window">
+        <field name="name">Forme Juridique</field>
+        <field name="res_model">efund.forme.juridique</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer une nouvelle forme juridique
+            </p>
+        </field>
+    </record>
+    <!-- Secteur Activité -->
+    <record id="action_efund_secteur_activite" model="ir.actions.act_window">
+        <field name="name">Secteur Activité</field>
+        <field name="res_model">efund.secteur.activite</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer un nouveau Secteur Activité
+            </p>
+        </field>
+    </record>
+    <!-- Statut Opérationnel -->
+    <record id="action_efund_statut_operationnel" model="ir.actions.act_window">
+        <field name="name">Statut Opérationnel</field>
+        <field name="res_model">efund.statut.operationnel</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer un nouveau Statut Opérationnel
+            </p>
+        </field>
+    </record>
+    <!-- Type Fond -->
+    <record id="action_efund_type_fonds" model="ir.actions.act_window">
+        <field name="name">Type Fond</field>
+        <field name="res_model">efund.type.fonds</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer un nouveau type de fond
+            </p>
+        </field>
+    </record>
+
+</odoo>

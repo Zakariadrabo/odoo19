@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ========================================= -->
+    <!-- MENUS PRINCIPAUX -->
+    <!-- ========================================= -->
+
+    <!-- Menu racine -->
+    <menuitem
+        id="menu_gestion_fonds_root"
+        name="Gestion de Fonds"
+        sequence="10"
+        web_icon="gestion_fonds,static/description/icon.png"
+    />
+
+    <!-- Sous-menu Tableau de bord -->
+    <menuitem
+        id="menu_gestion_fonds_dashboard"
+        name="Tableau de Bord"
+        parent="menu_gestion_fonds_root"
+        action="action_gestion_fonds_dashboard"
+        sequence="10"
+    />
+
+    <!-- Sous-menu Configuration -->
+    <menuitem
+        id="menu_gestion_fonds_configuration"
+        name="Configuration"
+        parent="menu_gestion_fonds_root"
+        sequence="20"
+    />
+
+    <!-- ========================================= -->
+    <!-- SOUS-MENUS CONFIGURATION -->
+    <!-- ========================================= -->
+
+    <!-- Sociétés de Gestion -->
+    <menuitem
+        id="menu_societes_gestion"
+        name="Sociétés de Gestion"
+        parent="menu_gestion_fonds_configuration"
+        action="action_societes_gestion"
+        sequence="10"
+    />
+
+    <!-- Fonds -->
+    <menuitem
+        id="menu_fonds"
+        name="Fonds"
+        parent="menu_gestion_fonds_configuration"
+        action="action_fonds"
+        sequence="20"
+    />
+
+    <!-- Propriétés Sociétés de Gestion
+    <menuitem
+        id="menu_societe_gestion_proprietes"
+        name="Propriétés Sociétés"
+        parent="menu_gestion_fonds_configuration"
+        action="action_societe_gestion_proprietes"
+        sequence="15"
+    />
+-->
+    <!-- Propriétés Fonds
+    <menuitem
+        id="menu_gestion_fonds_proprietes"
+        name="Propriétés Fonds"
+        parent="menu_gestion_fonds_configuration"
+        action="action_gestion_fonds_proprietes"
+        sequence="25"
+    />
+-->
+
+
+
+</odoo>

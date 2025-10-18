@@ -1,0 +1,47 @@
+<odoo>
+    <!-- ========================================= -->
+    <!-- ACTIONS PRINCIPALES -->
+    <!-- ========================================= -->
+
+    <!-- Action pour le tableau de bord principal -->
+    <record id="action_gestion_fonds_dashboard" model="ir.actions.act_window">
+        <field name="name">Tableau de Bord Gestion de Fonds</field>
+        <field name="res_model">res.company</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Bienvenue dans le module de Gestion de Fonds !
+            </p>
+            <p>
+                Commencez par créer votre société de gestion, puis ajoutez vos fonds.
+            </p>
+        </field>
+    </record>
+
+    <!-- Action pour les sociétés de gestion -->
+    <record id="action_societes_gestion" model="ir.actions.act_window">
+        <field name="name">Sociétés de Gestion</field>
+        <field name="res_model">res.company</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer une nouvelle société de gestion
+            </p>
+        </field>
+    </record>
+
+    <!-- Action pour les fonds -->
+    <record id="action_fonds" model="ir.actions.act_window">
+        <field name="name">Fonds</field>
+        <field name="res_model">res.company</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer un nouveau fonds
+            </p>
+            <p>
+                Avant de créer un fonds, assurez-vous d'avoir une société de gestion configurée.
+            </p>
+        </field>
+    </record>
+</odoo>

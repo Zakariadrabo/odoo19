@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue arbre pour les formes juridiques -->
+    <record id="view_efund_forme_juridique_list" model="ir.ui.view">
+        <field name="name">efund.forme.juridique.list</field>
+        <field name="model">efund.forme.juridique</field>
+        <field name="arch" type="xml">
+            <list string="Forme Juridique" editable="bottom">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="description"/>
+            </list>
+        </field>
+    </record>
+    <!-- Vue arbre pour les types de fonds -->
+    <record id="view_efund_type_fonds_list" model="ir.ui.view">
+        <field name="name">efund.type.fonds.list</field>
+        <field name="model">efund.type.fonds</field>
+        <field name="arch" type="xml">
+            <list string="Type Fonds" editable="bottom">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="description"/>
+            </list>
+        </field>
+    </record>
+    <!-- Vue arbre pour les Statuts Opérationnels -->
+    <record id="view_efund_statut_operationnel_list" model="ir.ui.view">
+        <field name="name">efund.statut.operationnel.list</field>
+        <field name="model">efund.statut.operationnel</field>
+        <field name="arch" type="xml">
+            <list string="Statut Opérationnel" editable="bottom">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="description"/>
+            </list>
+        </field>
+    </record>
+    <!-- Vue arbre pour les secteurs d'activité -->
+    <record id="view_efund_secteur_activite_list" model="ir.ui.view">
+        <field name="name">efund.secteur.activite.list</field>
+        <field name="model">efund.secteur.activite</field>
+        <field name="arch" type="xml">
+            <list string="Secteur d'Activités" editable="bottom">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="description"/>
+            </list>
+        </field>
+    </record>
+
+</odoo>
