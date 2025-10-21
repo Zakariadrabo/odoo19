@@ -1,0 +1,107 @@
+<odoo>
+    <!-- =====================================================
+         3️⃣  VUE TREE
+    ====================================================== -->
+    <record id="view_fund_fund_tree" model="ir.ui.view">
+        <field name="name">fund.fund.tree</field>
+        <field name="model">efund.fund</field>
+        <field name="arch" type="xml">
+            <list string="Funds" decoration-danger="state == 'liquidated'" decoration-warning="state == 'suspended'">
+                <field name="company_id"/>
+                <field name="management_company_id"/>
+                <field name="fund_type"/>
+                <field name="risk_level"/>
+                <field name="nav_frequency"/>
+                <field name="launch_date"/>
+                <field name="ter"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- =====================================================
+         4️⃣  VUE FORM
+    ====================================================== -->
+    <record id="view_fund_fund_form" model="ir.ui.view">
+        <field name="name">fund.fund.form</field>
+        <field name="model">fund.fund</field>
+        <field name="arch" type="xml">
+            <form string="Fund" create="true" edit="true">
+                <header>
+                    <button name="action_activate" type="object" string="Activate" states="draft" class="btn-primary"/>
+                    <button name="action_suspend" type="object" string="Suspend" states="active" class="btn-warning"/>
+                    <button name="action_liquidate" type="object" string="Liquidate" states="active,suspended" class="btn-danger"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,suspended,liquidated"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <group string="Identification">
+                            <field name="company_id"/>
+                            <field name="management_company_id"/>
+                            <field name="fund_type"/>
+                            <field name="risk_level"/>
+                            <field name="nav_frequency"/>
+                        </group>
+
+                        <group string="Informations financières">
+                            <field name="launch_date"/>
+                            <field name="ter"/>
+                            <field name="benchmark_index"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Investment Objective">
+                            <field name="investment_objective" nolabel="1" widget="html"/>
+                        </page>
+
+                        <page string="Accounting / Currency">
+                            <field name="currency_id" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <chatter>
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </chatter>
+            </form>
+        </field>
+    </record>
+    <!-- =====================================================
+         5️⃣  VUE KANBAN
+    ====================================================== -->
+    <record id="view_fund_fund_kanban" model="ir.ui.view">
+        <field name="name">fund.fund.kanban</field>
+        <field name="model">fund.fund</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <field name="company_id"/>
+                <field name="fund_type"/>
+                <field name="risk_level"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_card">
+                            <div class="o_kanban_details">
+                                <strong><field name="company_id"/></strong>
+                                <div><span class="text-muted">Type:</span> <field name="fund_type"/></div>
+                                <div><span class="text-muted">Risk:</span> <field name="risk_level"/></div>
+                                <div><span class="text-muted">NAV Freq:</span> <field name="nav_frequency"/></div>
+                                <div><span class="text-muted">TER:</span> <field name="ter"/></div>
+                            </div>
+                            <div class="oe_kanban_footer">
+                                <span class="badge" t-attf-class="bg-{{ record.state.raw_value }}">
+                                    <field name="state"/>
+                                </span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+
+</odoo>

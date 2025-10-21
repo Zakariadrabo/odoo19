@@ -17,14 +17,18 @@
 """,
     'author': 'eSecureX',
     'website': 'https://www.esecurex.com',
-    'depends': ['base'],
+    'depends': ['base','account','contacts'],
     'data': [
         'security/ir.model.access.csv',
         'views/efund_action_menu_principal.xml',
         'views/efund_menu_principal.xml',
         'views/efund_action_menu_parametre.xml',
+        #'views/efund_action_fund.xml',
+
         'views/efund_menu_parametre.xml',
-        'views/efund_views_parametre.xml',
+        'views/efund_investor_views.xml',
+        #'views/efund_views_parametre.xml',
+        #'views/efund_views_fund.xml',
 
     ],
 

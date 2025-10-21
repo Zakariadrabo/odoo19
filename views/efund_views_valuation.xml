@@ -1,0 +1,158 @@
+<odoo>
+    <!-- =========================
+           Kanban view - fund.valuation
+           ========================= -->
+    <record id="view_fund_valuation_kanban" model="ir.ui.view">
+        <field name="name">efund.fund.valuation.kanban</field>
+        <field name="model">efund.fund.valuation</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <field name="fund_id"/>
+                <field name="valuation_date"/>
+                <field name="net_assets"/>
+                <field name="nav_per_share"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card o_kanban_record">
+                            <div class="o_kanban_primary">
+                                <strong>
+                                    <field name="fund_id"/>
+                                </strong>
+                                <div class="text-muted">
+                                    <field name="valuation_date"/>
+                                </div>
+                            </div>
+                            <div class="o_kanban_content">
+                                <div>
+                                    <span class="text-muted">Net Assets:</span>
+                                    <field name="net_assets" widget="monetary"/>
+                                </div>
+                                <div>
+                                    <span class="text-muted">NAV/Share:</span>
+                                    <field name="nav_per_share" widget="monetary"/>
+                                </div>
+                                <div>
+                                    <span class="text-muted">Shares:</span>
+                                    <field name="total_shares"/>
+                                </div>
+                            </div>
+                            <div class="o_kanban_footer">
+                                <div class="o_kanban_tags">
+                                    <field name="state" widget="statusbar"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- =========================
+         Tree view - fund.valuation
+         ========================= -->
+    <record id="view_fund_valuation_tree" model="ir.ui.view">
+        <field name="name">fund.valuation.tree</field>
+        <field name="model">efund.fund.valuation</field>
+        <field name="arch" type="xml">
+            <tree string="Valuations" decoration-danger="state == 'cancelled'">
+                <field name="name"/>
+                <field name="fund_id"/>
+                <field name="valuation_date"/>
+                <field name="total_assets" widget="monetary"/>
+                <field name="total_liabilities" widget="monetary"/>
+                <field name="net_assets" widget="monetary"/>
+                <field name="nav_per_share" widget="monetary"/>
+                <field name="total_shares"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- =========================
+         Form view - fund.valuation
+         ========================= -->
+    <record id="view_fund_valuation_form" model="ir.ui.view">
+        <field name="name">fund.valuation.form</field>
+        <field name="model">efund.fund.valuation</field>
+        <field name="arch" type="xml">
+            <form string="Valuation" create="true" edit="true">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,validated,cancelled"/>
+                    <button name="action_compute" type="object" string="Compute" states="draft" class="btn-primary"/>
+                    <button name="action_validate" type="object" string="Validate" states="in_progress"
+                            class="btn-success"/>
+                    <button name="action_cancel" type="object" string="Cancel" states="draft,in_progress"
+                            class="btn-danger"/>
+                    <field name="computed_by" invisible="1"/>
+                    <field name="validated_by" invisible="1"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="fund_id" required="1"/>
+                            <field name="valuation_date" required="1"/>
+                            <field name="valuation_type"/>
+                        </group>
+                        <group>
+                            <field name="currency_id" readonly="1"/>
+                            <field name="total_shares"/>
+                            <field name="total_assets" widget="monetary" readonly="1"/>
+                            <field name="total_liabilities" widget="monetary" readonly="1"/>
+                            <field name="net_assets" widget="monetary" readonly="1"/>
+                            <field name="nav_per_share" widget="monetary" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Positions">
+                            <field name="valuation_line_ids">
+                                <tree editable="bottom">
+                                    <field name="instrument_id"/>
+                                    <field name="quantity"/>
+                                    <field name="unit_price" widget="monetary"/>
+                                    <field name="market_value" widget="monetary"/>
+                                </tree>
+                            </field>
+                            <button name="action_refresh_lines" type="object" string="Refresh Lines"
+                                    class="btn-secondary"/>
+                        </page>
+
+                        <page string="Fees / Charges">
+                            <field name="fee_line_ids">
+                                <tree editable="bottom">
+                                    <field name="fee_type"/>
+                                    <field name="description"/>
+                                    <field name="amount" widget="monetary"/>
+                                </tree>
+                            </field>
+                        </page>
+
+                        <page string="Logs / Audit">
+                            <field name="log_ids" nolabel="1">
+                                <tree>
+                                    <field name="timestamp"/>
+                                    <field name="user_id"/>
+                                    <field name="action"/>
+                                    <field name="message"/>
+                                </tree>
+                            </field>
+                        </page>
+
+                        <page string="Notes">
+                            <field name="notes" widget="text" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <chatter>
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </chatter>
+            </form>
+        </field>
+    </record>
+
+</odoo>

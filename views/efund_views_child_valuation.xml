@@ -1,0 +1,153 @@
+<odoo>
+    <!-- =========================
+       Actions for child models (optional quick access)
+       ========================= -->
+  <record id="action_fund_valuation_line" model="ir.actions.act_window">
+    <field name="name">Valuation Lines</field>
+    <field name="res_model">efund.fund.valuation.line</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <record id="action_fund_valuation_fee" model="ir.actions.act_window">
+    <field name="name">Valuation Fees</field>
+    <field name="res_model">efund.fund.valuation.fee</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <record id="action_fund_valuation_log" model="ir.actions.act_window">
+    <field name="name">Valuation Logs</field>
+    <field name="res_model">efund.fund.valuation.log</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <!-- Optional menu items for child models under valuation menu -->
+  <menuitem id="menu_fund_valuation_children" name="Valuation Data" parent="menu_fund_valuation_root" sequence="5"/>
+  <menuitem id="menu_fund_valuation_lines" name="Positions" parent="menu_fund_valuation_children" action="action_fund_valuation_line" sequence="10"/>
+  <menuitem id="menu_fund_valuation_fees" name="Fees" parent="menu_fund_valuation_children" action="action_fund_valuation_fee" sequence="20"/>
+  <menuitem id="menu_fund_valuation_logs" name="Logs" parent="menu_fund_valuation_children" action="action_fund_valuation_log" sequence="30"/>
+
+  <!-- =========================
+       Views for efund.fund.valuation.line
+       ========================= -->
+  <record id="view_fund_valuation_line_list" model="ir.ui.view">
+    <field name="name">efund.fund.valuation.line.list</field>
+    <field name="model">efund.fund.valuation.line</field>
+    <field name="arch" type="xml">
+      <list string="Valuation Lines">
+        <field name="valuation_id"/>
+        <field name="instrument_id"/>
+        <field name="quantity"/>
+        <field name="unit_price" widget="monetary"/>
+        <field name="market_value" widget="monetary"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_fund_valuation_line_form" model="ir.ui.view">
+    <field name="name">efund.fund.valuation.line.form</field>
+    <field name="model">efund.fund.valuation.line</field>
+    <field name="arch" type="xml">
+      <form string="Valuation Line">
+        <sheet>
+          <group>
+            <field name="valuation_id"/>
+            <field name="instrument_id"/>
+            <field name="quantity"/>
+            <field name="unit_price" widget="monetary"/>
+            <field name="market_value" widget="monetary" readonly="1"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- =========================
+       Views for efund.fund.valuation.fee
+       ========================= -->
+  <record id="view_fund_valuation_fee_list" model="ir.ui.view">
+    <field name="name">efund.fund.valuation.fee.list</field>
+    <field name="model">efund.fund.valuation.fee</field>
+    <field name="arch" type="xml">
+      <list string="Valuation Fees">
+        <field name="valuation_id"/>
+        <field name="fee_type"/>
+        <field name="description"/>
+        <field name="amount" widget="monetary"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_fund_valuation_fee_form" model="ir.ui.view">
+    <field name="name">efund.fund.valuation.fee.form</field>
+    <field name="model">efund.fund.valuation.fee</field>
+    <field name="arch" type="xml">
+      <form string="Valuation Fee">
+        <sheet>
+          <group>
+            <field name="valuation_id"/>
+            <field name="fee_type"/>
+            <field name="description"/>
+            <field name="amount" widget="monetary"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- =========================
+       Views for efund.fund.valuation.log
+       ========================= -->
+  <record id="view_fund_valuation_log_list" model="ir.ui.view">
+    <field name="name">efund.fund.valuation.log.list</field>
+    <field name="model">efund.fund.valuation.log</field>
+    <field name="arch" type="xml">
+      <list string="Valuation Logs">
+        <field name="valuation_id"/>
+        <field name="timestamp"/>
+        <field name="user_id"/>
+        <field name="action"/>
+        <field name="message"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_fund_valuation_log_form" model="ir.ui.view">
+    <field name="name">efund.fund.valuation.log.form</field>
+    <field name="model">efund.fund.valuation.log</field>
+    <field name="arch" type="xml">
+      <form string="Valuation Log">
+        <sheet>
+          <group>
+            <field name="valuation_id"/>
+            <field name="timestamp"/>
+            <field name="user_id"/>
+            <field name="action"/>
+          </group>
+          <group>
+            <field name="message" nolabel="1"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- =========================
+       Search view for efund.fund.valuation (optional)
+       ========================= -->
+  <record id="view_fund_valuation_search" model="ir.ui.view">
+    <field name="name">efund.fund.valuation.search</field>
+    <field name="model">efund.fund.valuation</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="fund_id"/>
+        <field name="valuation_date"/>
+        <filter string="Validated" name="validated" domain="[('state','=','validated')]"/>
+        <filter string="Draft" name="draft" domain="[('state','=','draft')]"/>
+        <group string="Group By">
+          <filter string="Fund" domain="[]" context="{'group_by':'fund_id'}"/>
+          <filter string="State" domain="[]" context="{'group_by':'state'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+</odoo>

@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <menuitem
-        id="menu_efund_forme_juridique"
-        name="Forme Juridique"
-        parent="menu_gestion_fonds_configuration"
-        action="action_efund_forme_juridique"
-        sequence="2"
-    />
+
     <menuitem
         id="menu_efund_secteur_activite"
         name="Secteur activité"
@@ -28,7 +22,4 @@
         action="action_efund_type_fonds"
         sequence="5"
     />
-
-
-
 </odoo>

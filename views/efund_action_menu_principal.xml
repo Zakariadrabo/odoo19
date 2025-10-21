@@ -44,4 +44,168 @@
             </p>
         </field>
     </record>
+
+    <record id="action_efund_fund" model="ir.actions.act_window">
+        <field name="name">Funds</field>
+        <field name="res_model">res.company</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first fund!
+            </p>
+        </field>
+    </record>
+
+    <record id="action_efund_fund" model="ir.actions.act_window">
+        <field name="name">Funds</field>
+        <field name="res_model">efund.fund</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first fund to start managing portfolios.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_fund_class_list" model="ir.actions.act_window">
+        <field name="name">Classes de parts</field>
+        <field name="res_model">efund.fund.class</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first fund to start managing portfolios.
+            </p>
+        </field>
+    </record>
+
+    <!-- =========================
+         1. SOCIÉTÉ DE GESTION
+    ========================== -->
+    <record id="action_management_company_list" model="ir.actions.act_window">
+        <field name="name">Sociétés de gestion</field>
+        <field name="res_model">efund.management.company</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first fund management company
+            </p>
+        </field>
+    </record>
+
+    <!-- =========================
+         2. FONDS
+    ========================== -->
+    <record id="action_fund_list" model="ir.actions.act_window">
+        <field name="name">Fonds</field>
+        <field name="res_model">efund.fund</field>
+        <field name="view_mode">list,form,kanban</field>
+    </record>
+
+    <record id="action_fund_class_list" model="ir.actions.act_window">
+        <field name="name">Classes de parts</field>
+        <field name="res_model">efund.fund.class</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- =========================
+         3. CLIENTS / PORTEURS
+    ========================== -->
+    <record id="action_fund_investor_list" model="ir.actions.act_window">
+        <field name="name">Porteurs de parts</field>
+        <field name="res_model">efund.investor</field>
+        <field name="view_mode">list,form,kanban</field>
+    </record>
+
+
+    <!-- =========================
+         4. OPÉRATIONS
+    ========================== -->
+    <record id="action_fund_subscription_list" model="ir.actions.act_window">
+        <field name="name">Souscriptions</field>
+        <field name="res_model">efund.fund.subscription</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_fund_redemption_list" model="ir.actions.act_window">
+        <field name="name">Rachats</field>
+        <field name="res_model">efund.fund.redemption</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_fund_arbitrage_list" model="ir.actions.act_window">
+        <field name="name">Arbitrages</field>
+        <field name="res_model">efund.fund.arbitrage</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_fund_distribution_list" model="ir.actions.act_window">
+        <field name="name">Distributions</field>
+        <field name="res_model">efund.fund.distribution</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- =========================
+         5. PORTFEUILLE
+    ========================== -->
+    <record id="action_fund_instrument_list" model="ir.actions.act_window">
+        <field name="name">Instruments</field>
+        <field name="res_model">efund.fund.instrument</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_fund_position_list" model="ir.actions.act_window">
+        <field name="name">Positions</field>
+        <field name="res_model">efund.fund.position</field>
+        <field name="view_mode">list,form,graph</field>
+    </record>
+
+    <record id="action_fund_valuation_list" model="ir.actions.act_window">
+        <field name="name">Valorisations</field>
+        <field name="res_model">efund.fund.valuation</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créez une valorisation pour un fonds et calculez le NAV par part.
+            </p>
+        </field>
+    </record>
+    <!-- =========================
+         6. VALEUR LIQUIDATIVE
+    ========================== -->
+    <record id="action_fund_nav_list" model="ir.actions.act_window">
+        <field name="name">Valeurs Liquidatives</field>
+        <field name="res_model">efund.fund.nav</field>
+        <field name="view_mode">list,form,graph</field>
+    </record>
+
+    <!-- =========================
+         7. COMPTABILITÉ
+    ==========================
+    <record id="action_fund_fee_list" model="ir.actions.act_window">
+        <field name="name">Frais</field>
+        <field name="res_model">efund.fund.fee</field>
+        <field name="view_mode">list,form</field>
+    </record>
+-->
+
+    <!-- =========================
+         8. REPORTING
+    ========================== -->
+    <record id="action_regulatory_report_list" model="ir.actions.act_window">
+        <field name="name">Reporting Réglementaire</field>
+        <field name="res_model">fund.report.regulatory</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_fund_dashboard" model="ir.actions.client">
+        <field name="name">Tableau de bord</field>
+        <field name="tag">fund_dashboard</field>
+    </record>
+
+
+    <!-- =========================
+         9. CONFIGURATION
+    ========================== -->
+
+
 </odoo>

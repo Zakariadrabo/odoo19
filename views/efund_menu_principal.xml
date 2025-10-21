@@ -6,69 +6,197 @@
 
     <!-- Menu racine -->
     <menuitem
-        id="menu_gestion_fonds_root"
-        name="Gestion de Fonds"
-        sequence="10"
-        web_icon="gestion_fonds,static/description/icon.png"
+            id="menu_fund_management_root"
+            name="Gestion de Fonds"
+            sequence="10"
+            web_icon="gestion_fonds,static/description/icon.png"
     />
+
+
 
     <!-- Sous-menu Tableau de bord -->
     <menuitem
-        id="menu_gestion_fonds_dashboard"
-        name="Tableau de Bord"
-        parent="menu_gestion_fonds_root"
-        action="action_gestion_fonds_dashboard"
-        sequence="10"
+            id="menu_gestion_fonds_dashboard"
+            name="Tableau de Bord"
+            parent="menu_fund_management_root"
+            action="action_gestion_fonds_dashboard"
+            sequence="2"
     />
 
-    <!-- Sous-menu Configuration -->
-    <menuitem
-        id="menu_gestion_fonds_configuration"
-        name="Configuration"
-        parent="menu_gestion_fonds_root"
-        sequence="20"
-    />
+    <!-- =========================
+         1. SOCIÉTÉ DE GESTION
+    ========================== -->
+    <menuitem id="menu_management_company_root"
+              name="Société de Gestion"
+              parent="menu_fund_management_root"
+              sequence="10"/>
 
-    <!-- ========================================= -->
-    <!-- SOUS-MENUS CONFIGURATION -->
-    <!-- ========================================= -->
+    <menuitem id="menu_management_company_config"
+              name="Configuration"
+              parent="menu_management_company_root"
+              sequence="11"/>
 
-    <!-- Sociétés de Gestion -->
-    <menuitem
-        id="menu_societes_gestion"
-        name="Sociétés de Gestion"
-        parent="menu_gestion_fonds_configuration"
-        action="action_societes_gestion"
-        sequence="10"
-    />
+    <menuitem id="menu_management_company"
+              name="Sociétés de gestion"
+              parent="menu_management_company_root"
+              action="action_management_company_list"
+              sequence="12"/>
 
-    <!-- Fonds -->
-    <menuitem
-        id="menu_fonds"
-        name="Fonds"
-        parent="menu_gestion_fonds_configuration"
-        action="action_fonds"
-        sequence="20"
-    />
 
-    <!-- Propriétés Sociétés de Gestion
+
+    <!-- =========================
+         2. FONDS
+    ========================== -->
+    <menuitem id="menu_fund_root"
+              name="Fonds"
+              parent="menu_fund_management_root"
+              sequence="20"/>
+
+    <menuitem id="menu_fund_fund_list"
+              name="Fonds enregistrés"
+              parent="menu_fund_root"
+              action="action_fund_list"
+              sequence="21"/>
+    <menuitem id="menu_fund_classes"
+              name="Classes de parts"
+              parent="menu_fund_root"
+              action="action_fund_class_list"
+              sequence="22"/>
+
+    <!-- =========================
+         3. CLIENTS / PORTEURS
+    ========================== -->
+    <menuitem id="menu_clients_root"
+              name="Clients / Porteurs"
+              parent="menu_fund_management_root"
+              sequence="30"/>
+
+    <menuitem id="menu_investors"
+              name="Porteurs de parts"
+              parent="menu_clients_root"
+              action="action_fund_investor_list"
+              sequence="31"/>
+
+
+
+    <!-- =========================
+         4. OPÉRATIONS
+    ========================== -->
+    <menuitem id="menu_operations_root"
+              name="Opérations"
+              parent="menu_fund_management_root"
+              sequence="40"/>
+    <menuitem id="menu_subscriptions"
+              name="Souscriptions"
+              parent="menu_operations_root"
+              action="action_fund_subscription_list"
+              sequence="41"/>
+    <menuitem id="menu_redemptions"
+              name="Rachats"
+              parent="menu_operations_root"
+              action="action_fund_redemption_list"
+              sequence="42"/>
+    <menuitem id="menu_arbitrages"
+              name="Arbitrages"
+              parent="menu_operations_root"
+              action="action_fund_arbitrage_list"
+              sequence="43"/>
+     <menuitem id="menu_distributions"
+              name="Distributions"
+              parent="menu_operations_root"
+              action="action_fund_distribution_list"
+              sequence="44"/>
+
+
+    <!-- =========================
+         5. PORTFEUILLE
+    ========================== -->
+    <menuitem id="menu_portfolio_root"
+              name="Portefeuille"
+              parent="menu_fund_management_root"
+              sequence="50"/>
+
+    <menuitem id="menu_instruments"
+              name="Instruments Financiers"
+              parent="menu_portfolio_root"
+              action="action_fund_instrument_list"
+              sequence="51"/>
+    <menuitem id="menu_positions"
+              name="Positions"
+              parent="menu_portfolio_root"
+              action="action_fund_position_list"
+              sequence="52"/>
+    <menuitem id="menu_valuations"
+              name="Valorisations"
+              parent="menu_portfolio_root"
+              action="action_fund_valuation_list"
+              sequence="53"/>
+
+
+    <!-- =========================
+         6. VALEUR LIQUIDATIVE
+    ========================== -->
+    <menuitem id="menu_nav_root"
+              name="Valeur Liquidative"
+              parent="menu_fund_management_root"
+              sequence="60"/>
+    <menuitem id="menu_nav_calculation"
+              name="Calculs de VL"
+              parent="menu_nav_root"
+              action="action_fund_nav_list"
+              sequence="61"/>
+
+
+    <!-- =========================
+         7. COMPTABILITÉ
+    ========================== -->
+    <menuitem id="menu_accounting_root"
+              name="Comptabilité"
+              parent="menu_fund_management_root"
+              sequence="70"/>
+
+    <menuitem id="menu_accounting_entries"
+              name="Écritures Comptables"
+              parent="menu_accounting_root"
+              sequence="71"/>
+              <!--  action="account.action_move_journal_line" -->
+
+
+    <menuitem id="menu_fees"
+              name="Frais et Commissions"
+              parent="menu_accounting_root"
+              action="action_fund_fee_list"
+              sequence="72"/>
+
+
+    <!-- =========================
+         8. REPORTING
+    ========================== -->
+    <menuitem id="menu_reporting_root"
+              name="Reporting"
+              parent="menu_fund_management_root"
+              sequence="80"/>
+    <menuitem id="menu_regulatory_reports"
+              name="Reporting Réglementaire"
+              parent="menu_reporting_root"
+              action="action_regulatory_report_list"
+              sequence="81"/>
+    <menuitem id="menu_dashboard"
+              name="Tableaux de bord"
+              parent="menu_reporting_root"
+              action="action_fund_dashboard"
+              sequence="82"/>
+
+
+    <!-- =========================
+         9. CONFIGURATION
+    ========================== -->
     <menuitem
-        id="menu_societe_gestion_proprietes"
-        name="Propriétés Sociétés"
-        parent="menu_gestion_fonds_configuration"
-        action="action_societe_gestion_proprietes"
-        sequence="15"
+            id="menu_gestion_fonds_configuration"
+            name="Configuration"
+            parent="menu_fund_management_root"
+            sequence="80"
     />
--->
-    <!-- Propriétés Fonds
-    <menuitem
-        id="menu_gestion_fonds_proprietes"
-        name="Propriétés Fonds"
-        parent="menu_gestion_fonds_configuration"
-        action="action_gestion_fonds_proprietes"
-        sequence="25"
-    />
--->
 
 
 
