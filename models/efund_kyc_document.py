@@ -8,6 +8,7 @@ class FundKycDocument(models.Model):
     _order = "id desc"
 
     investor_id = fields.Many2one('efund.investor', string="Investor", required=True, ondelete='cascade')
+    name=fields.Char('KYC Document Name')
     document_type = fields.Selection([
         ('id_card','ID Card'),
         ('passport','Passport'),

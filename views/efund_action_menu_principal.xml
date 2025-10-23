@@ -18,66 +18,6 @@
         </field>
     </record>
 
-    <!-- Action pour les sociétés de gestion -->
-    <record id="action_societes_gestion" model="ir.actions.act_window">
-        <field name="name">Sociétés de Gestion</field>
-        <field name="res_model">res.company</field>
-        <field name="view_mode">list,form,kanban</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Créer une nouvelle société de gestion
-            </p>
-        </field>
-    </record>
-
-    <!-- Action pour les fonds -->
-    <record id="action_fonds" model="ir.actions.act_window">
-        <field name="name">Fonds</field>
-        <field name="res_model">res.company</field>
-        <field name="view_mode">list,form,kanban</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Créer un nouveau fonds
-            </p>
-            <p>
-                Avant de créer un fonds, assurez-vous d'avoir une société de gestion configurée.
-            </p>
-        </field>
-    </record>
-
-    <record id="action_efund_fund" model="ir.actions.act_window">
-        <field name="name">Funds</field>
-        <field name="res_model">res.company</field>
-        <field name="view_mode">list,form,kanban</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Create your first fund!
-            </p>
-        </field>
-    </record>
-
-    <record id="action_efund_fund" model="ir.actions.act_window">
-        <field name="name">Funds</field>
-        <field name="res_model">efund.fund</field>
-        <field name="view_mode">kanban,list,form</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Create your first fund to start managing portfolios.
-            </p>
-        </field>
-    </record>
-
-    <record id="action_fund_class_list" model="ir.actions.act_window">
-        <field name="name">Classes de parts</field>
-        <field name="res_model">efund.fund.class</field>
-        <field name="view_mode">list,form</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Create your first fund to start managing portfolios.
-            </p>
-        </field>
-    </record>
-
     <!-- =========================
          1. SOCIÉTÉ DE GESTION
     ========================== -->
@@ -99,6 +39,14 @@
         <field name="name">Fonds</field>
         <field name="res_model">efund.fund</field>
         <field name="view_mode">list,form,kanban</field>
+         <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer un nouveau fonds
+            </p>
+            <p>
+                Avant de créer un fonds, assurez-vous d'avoir une société de gestion configurée.
+            </p>
+        </field>
     </record>
 
     <record id="action_fund_class_list" model="ir.actions.act_window">
@@ -180,20 +128,20 @@
 
     <!-- =========================
          7. COMPTABILITÉ
-    ==========================
+    ========================== -->
     <record id="action_fund_fee_list" model="ir.actions.act_window">
         <field name="name">Frais</field>
-        <field name="res_model">efund.fund.fee</field>
+        <field name="res_model">efund.fund.valuation.fee</field>
         <field name="view_mode">list,form</field>
     </record>
--->
+
 
     <!-- =========================
          8. REPORTING
     ========================== -->
     <record id="action_regulatory_report_list" model="ir.actions.act_window">
         <field name="name">Reporting Réglementaire</field>
-        <field name="res_model">fund.report.regulatory</field>
+        <field name="res_model">efund.fund.report.regulatory</field>
         <field name="view_mode">list,form</field>
     </record>
 
@@ -206,6 +154,22 @@
     <!-- =========================
          9. CONFIGURATION
     ========================== -->
+
+    <!-- Action AML Alerte   -->
+    <record id="action_efund_aml_alert" model="ir.actions.act_window">
+        <field name="name">AML Alerts</field>
+        <field name="res_model">efund.aml.alert</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('investor_id', '=', active_id)]</field>
+        <field name="context">{'default_investor_id': active_id}</field>
+    </record>
+
+     <!-- ACTION & MENU -->
+    <record id="action_aml_alert" model="ir.actions.act_window">
+        <field name="name">AML Alerts</field>
+        <field name="res_model">efund.aml.alert</field>
+        <field name="view_mode">list,form</field>
+    </record>
 
 
 </odoo>

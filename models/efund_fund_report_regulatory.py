@@ -45,7 +45,7 @@ class FundReportRegulatory(models.Model):
         ('validated', 'Validated'),
         ('submitted', 'Submitted'),
         ('archived', 'Archived'),
-    ], string="Status", default='draft', tracking=True)
+    ], string="Status", default='draft')
 
     notes = fields.Text(string="Notes / Comments")
     reviewer_id = fields.Many2one('res.users', string="Reviewer")

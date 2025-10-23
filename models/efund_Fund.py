@@ -1,23 +1,24 @@
-from odoo import models, fields, api
-from odoo.exceptions import UserError,ValidationError
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError, ValidationError
 from odoo.models import Constraint
+
 
 # models/fund.py
 class Fund(models.Model):
     _name = 'efund.fund'
     _description = 'Fund'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
+    name = fields.Char(string="Fund Name", required=True)
     company_id = fields.Many2one(
         'res.company',
         string='Company',
-        required=True,
         ondelete='cascade'
     )
 
     management_company_id = fields.Many2one(
         'efund.management.company',
         string='Management Company',
-        required=True,
         domain="[('company_id', '!=', company_id)]"  # Évite bouclage
     )
 
@@ -54,36 +55,55 @@ class Fund(models.Model):
     benchmark_index = fields.Char(string='Benchmark Index')
 
     # Relations
-    #share_class_ids = fields.One2many('fund.share.class', 'fund_id', string='Share Classes')
+    # share_class_ids = fields.One2many('fund.share.class', 'fund_id', string='Share Classes')
     currency_id = fields.Many2one(related='company_id.currency_id')
 
-    @api.model
-    def create(self, vals):
+    @api.model_create_multi
+    def create(self, vals_list):
         """Create a res.company automatically when creating a Fund."""
-        # Vérification de l'existence d'une société avec le même nom
-        existing_company = self.env['res.company'].sudo().search([('name', '=', vals.get('name'))], limit=1)
-        if existing_company:
-            raise ValidationError(_("A company with the same name already exists."))
+        funds = self.env[self._name]
+        management_company = self.env['efund.management.company'].search([], limit=1)
+        if not management_company:
+            raise UserError(_("No Management Company found. Please create one first."))
 
-        # Préparation des valeurs de la société associée
-        company_vals = {
-            'name': vals.get('name'),
-            'currency_id': vals.get('currency_id'),
-        }
+        for vals in vals_list:
+            fund_name = vals.get('name')
+            if not fund_name:
+                raise ValidationError(_("Fund name is required."))
 
-        # Création de la société en superuser
-        company = self.env['res.company'].sudo().create(company_vals)
+            # Récupère ou détermine la devise
+            currency_id = vals.get('currency_id') or self.env.company.currency_id.id
+            if not currency_id:
+                raise ValidationError(_("No default currency found for your company."))
 
-        # Lier le fonds à la société nouvellement créée
-        vals['company_id'] = company.id
+            # Vérifie s'il existe déjà une société avec ce nom
+            existing_company = self.env['res.company'].sudo().search([('name', '=', fund_name)], limit=1)
+            if existing_company:
+                raise ValidationError(_("A company with the same name already exists."))
 
-        # Création du fonds
-        fund = super(Fund, self).create(vals)
+            # Crée automatiquement la société associée
+            company = self.env['res.company'].sudo().create({
+                'name': fund_name,
+                'currency_id': currency_id,
+            })
 
-        # Ajout éventuel de configurations post-création
-        fund._post_create_setup(company)
+            # Injecte les champs dépendants
+            vals['company_id'] = company.id
+            vals['management_company_id'] = management_company.id
+            vals['currency_id'] = currency_id
 
-        return fund
+        # Appel du super
+        funds = super(Fund, self).create(vals_list)
+
+        # Post-traitement si nécessaire
+        for fund in funds:
+            fund._post_create_setup(fund.company_id)
+
+        return funds
+
+    def _post_create_setup(self, company):
+        """Optional post-creation configuration."""
+        return True
 
     def _post_create_setup(self, company):
         """Initialisation post-création : journaux, comptes, etc."""
@@ -97,36 +117,26 @@ class Fund(models.Model):
         }
         self.env['account.journal'].sudo().create(journal_vals)
 
-        # ------------------------------------------------------------
-        # ACTION METHODS
-        # ------------------------------------------------------------
-        def action_activate(self):
-            for record in self:
-                if not record.launch_date:
-                    raise ValidationError(_("Please define a launch date before activating the fund."))
-                record.state = 'active'
-                record.message_post(body=_("Fund has been activated."))
+    # ------------------------------------------------------------
+    # ACTION METHODS
+    # ------------------------------------------------------------
+    def action_activate(self):
+        for record in self:
+            if not record.launch_date:
+                raise ValidationError(_("Please define a launch date before activating the fund."))
+            record.state = 'active'
+            record.message_post(body=_("Fund has been activated."))
 
-        def action_suspend(self):
-            for record in self:
-                if record.state != 'active':
-                    raise ValidationError(_("Only active funds can be suspended."))
-                record.state = 'suspended'
-                record.message_post(body=_("Fund has been suspended."))
+    def action_suspend(self):
+        for record in self:
+            if record.state != 'active':
+                raise ValidationError(_("Only active funds can be suspended."))
+            record.state = 'suspended'
+            record.message_post(body=_("Fund has been suspended."))
 
-        def action_liquidate(self):
-            for record in self:
-                if record.state not in ('active', 'suspended'):
-                    raise ValidationError(_("Only active or suspended funds can be liquidated."))
-                record.state = 'liquidated'
-                record.message_post(body=_("Fund has been liquidated."))
-
-        # ------------------------------------------------------------
-        # DISPLAY NAME
-        # ------------------------------------------------------------
-        def name_get(self):
-            result = []
-            for record in self:
-                name = f"{record.company_id.name or 'Unnamed Fund'}"
-                result.append((record.id, name))
-            return result
+    def action_liquidate(self):
+        for record in self:
+            if record.state not in ('active', 'suspended'):
+                raise ValidationError(_("Only active or suspended funds can be liquidated."))
+            record.state = 'liquidated'
+            record.message_post(body=_("Fund has been liquidated."))

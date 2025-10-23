@@ -45,15 +45,16 @@
     <record id="view_efund_management_company_tree" model="ir.ui.view">
         <field name="name">efund.management.company.tree</field>
         <field name="model">efund.management.company</field>
+
         <field name="arch" type="xml">
-            <tree string="Fund Management Companies" decoration-info="funds_count &gt; 0">
+            <list string="Fund Management Companies" decoration-info="funds_count &gt; 0">
                 <field name="name"/>
                 <field name="regulatory_license"/>
                 <field name="funds_count"/>
                 <field name="aum" widget="monetary"/>
                 <field name="currency_id"/>
                 <field name="compliance_officer_id"/>
-            </tree>
+            </list>
         </field>
     </record>
 

@@ -1,10 +1,12 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from odoo.exceptions import UserError,ValidationError
+import logging
+
+_logger = logging.getLogger(__name__)
 
 class FundManagementCompany(models.Model):
     _name = 'efund.management.company'
     _description = 'Fund Management Company'
-
 
     company_id = fields.Many2one(
         'res.company',
@@ -40,15 +42,21 @@ class FundManagementCompany(models.Model):
     # Relations
     managed_funds = fields.One2many('efund.fund', 'management_company_id', string='Managed Funds')
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Ensure only one management company globally."""
+        if self.search_count([]) > 0:
+            raise UserError(_("Only one Management Company can exist in the system."))
 
-    @api.constrains('company_id')
-    def _check_company_is_management(self):
-        """Vérifie que la company n'est pas déjà un fond"""
-        for mgmt_company in self:
-            if mgmt_company.company_id.fund_id:
-                raise ValidationError(
-                    ("This company is already used as a fund and cannot be a management company.")
-                )
+        for vals in vals_list:
+            company = self.env['res.company'].browse(vals.get('company_id'))
+            if not company:
+                raise ValidationError(_("A valid company must be linked."))
+
+            company.is_management_company = True
+
+        return super().create(vals_list)
+
 
     # Computed fields
     @api.depends('managed_funds')

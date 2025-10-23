@@ -23,22 +23,21 @@
          4️⃣  VUE FORM
     ====================================================== -->
     <record id="view_fund_fund_form" model="ir.ui.view">
-        <field name="name">fund.fund.form</field>
-        <field name="model">fund.fund</field>
+        <field name="name">efund.fund.form</field>
+        <field name="model">efund.fund</field>
         <field name="arch" type="xml">
             <form string="Fund" create="true" edit="true">
                 <header>
-                    <button name="action_activate" type="object" string="Activate" states="draft" class="btn-primary"/>
-                    <button name="action_suspend" type="object" string="Suspend" states="active" class="btn-warning"/>
-                    <button name="action_liquidate" type="object" string="Liquidate" states="active,suspended" class="btn-danger"/>
+                    <button name="action_activate" type="object" string="Activate"  invisible="state != 'draft'"  class="btn-primary"/>
+                    <button name="action_suspend" type="object" string="Suspend"  invisible="state != 'active'"  class="btn-warning"/>
+                    <button name="action_liquidate" type="object" string="Liquidate"  invisible="state != 'active' or state != 'suspended'" class="btn-danger"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,active,suspended,liquidated"/>
                 </header>
 
                 <sheet>
                     <group>
                         <group string="Identification">
-                            <field name="company_id"/>
-                            <field name="management_company_id"/>
+                            <field name="name"/>
                             <field name="fund_type"/>
                             <field name="risk_level"/>
                             <field name="nav_frequency"/>
@@ -72,9 +71,9 @@
     <!-- =====================================================
          5️⃣  VUE KANBAN
     ====================================================== -->
-    <record id="view_fund_fund_kanban" model="ir.ui.view">
-        <field name="name">fund.fund.kanban</field>
-        <field name="model">fund.fund</field>
+    <record id="view_efund_fund_kanban" model="ir.ui.view">
+        <field name="name">efund.fund.kanban</field>
+        <field name="model">efund.fund</field>
         <field name="arch" type="xml">
             <kanban default_group_by="state" class="o_kanban_small_column">
                 <field name="company_id"/>

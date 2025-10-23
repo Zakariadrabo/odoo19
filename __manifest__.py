@@ -28,7 +28,7 @@
         'views/efund_menu_parametre.xml',
         'views/efund_investor_views.xml',
         #'views/efund_views_parametre.xml',
-        #'views/efund_views_fund.xml',
+        'views/efund_views_fund.xml',
 
     ],
 

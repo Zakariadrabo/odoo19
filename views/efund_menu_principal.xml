@@ -11,9 +11,6 @@
             sequence="10"
             web_icon="gestion_fonds,static/description/icon.png"
     />
-
-
-
     <!-- Sous-menu Tableau de bord -->
     <menuitem
             id="menu_gestion_fonds_dashboard"

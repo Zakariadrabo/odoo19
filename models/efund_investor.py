@@ -36,6 +36,21 @@ class FundInvestor(models.Model):
     aml_alert_ids = fields.One2many('efund.aml.alert','investor_id', string="AML Alerts")
     active = fields.Boolean(default=True)
 
+    def action_create_aml_alert(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('New AML Alert'),
+            'res_model': 'efund.aml.alert',
+            'view_mode': 'form',
+            'context': {
+                'default_investor_id': self.id,
+                'default_fund_id': self.company_id.id,
+            },
+            'target': 'current',
+        }
+
+
 
     @api.model
     def create(self, vals):
