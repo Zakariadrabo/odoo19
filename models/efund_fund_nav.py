@@ -39,3 +39,43 @@ class FundNAV(models.Model):
                 nav.compute_nav()
             except Exception as e:
                 pass
+
+    def calculate_nav(self):
+        """Calcule la NAV pour une classe de parts"""
+        self.ensure_one()
+
+        # 1. Valorisation des actifs
+        positions = self.env['fund.position'].search([
+            ('fund_id', '=', self.fund_id.id)
+        ])
+        total_assets = sum(pos.market_value for pos in positions)
+
+        # 2. Calcul des passifs
+        fees_payable = self._calculate_accrued_fees()
+        other_liabilities = self._calculate_other_liabilities()
+        total_liabilities = fees_payable + other_liabilities
+
+        # 3. Nombre de parts
+        total_shares = self._calculate_outstanding_shares()
+
+        # 4. Calcul final
+        net_assets = total_assets - total_liabilities
+        nav_per_share = net_assets / total_shares if total_shares > 0 else 0
+
+        return {
+            'total_net_assets': net_assets,
+            'nav_per_share': nav_per_share,
+            'total_shares': total_shares
+        }
+
+    """
+        nav_checklist = [
+    '✓ Tous les prix de marché reçus et validés',
+    '✓ Positions mises à jour avec les dernières transactions',
+    '✓ Frais de gestion courus calculés',
+    '✓ Taux de change du jour appliqués',
+    '✓ Nombre de parts mis à jour (souscriptions/rachats)',
+    '✓ Calculs vérifiés par une seconde personne',
+    '✓ NAV publiée avant la deadline réglementaire'
+]
+    """

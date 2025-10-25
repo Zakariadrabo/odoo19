@@ -26,6 +26,8 @@ class FundKycDocument(models.Model):
     status = fields.Selection([('uploaded','Uploaded'),('verified','Verified'),('expired','Expired')], default='uploaded')
     notes = fields.Text()
     company_id = fields.Many2one('res.company', related='investor_id.company_id', store=True, readonly=True)
+    file_data = fields.Binary(string="File")
+    file_name = fields.Char(string="File Name")
 
     @api.constrains('expiry_date')
     def _check_dates(self):
@@ -43,3 +45,4 @@ class FundKycDocument(models.Model):
     def action_mark_expired(self):
         for rec in self:
             rec.status = 'expired'
+

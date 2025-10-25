@@ -51,6 +51,24 @@
                     </group>
 
                     <notebook>
+                        <page string="Informations Réglementaires">
+                           <!--
+                            <group>
+                                <group string="Agréments">
+                                    <field name="regulateur"/>
+                                    <field name="agrement_date"/>
+                                    <field name="dossier_reglementaire_id"/>
+                                </group>
+                            </group>
+                            -->
+                        </page>
+                        <page string="Gestion Opérationnelle">
+
+                        </page>
+                        <page string="Valeur du fonds">
+
+                        </page>
+
                         <page string="Investment Objective">
                             <field name="investment_objective" nolabel="1" widget="html"/>
                         </page>
@@ -58,6 +76,26 @@
                         <page string="Accounting / Currency">
                             <field name="currency_id" readonly="1"/>
                         </page>
+                        <page string="Shares Class">
+                            <field name="share_class_ids" create="true" edit="true">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="fee_structure"/>
+                                    <field name="management_fee_rate"/>
+                                    <field name="redemption_fee_rate"/>
+                                    <field name="performance_fee_rate"/>
+                                    <field name="is_accumulating"/>
+                                    <field name="minimum_subscription"/>
+                                    <field name="minimum_additional_subscription"/>
+                                    <field name="minimum_redemption"/>
+                                    <field name="total_shares" readonly="1"/>
+                                    <field name="total_net_assets" readonly="1"/>
+                                    <field name="current_nav" readonly="1"/>
+
+                                </list>
+                            </field>
+                        </page>
+
                     </notebook>
                 </sheet>
 

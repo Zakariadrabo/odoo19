@@ -55,6 +55,10 @@ class FundManagementCompany(models.Model):
 
             company.is_management_company = True
 
+            # Met à jour le partner associé
+            partner = company.partner_id
+            partner.write({'is_management_company': True})
+
         return super().create(vals_list)
 
 

@@ -55,7 +55,7 @@ class Fund(models.Model):
     benchmark_index = fields.Char(string='Benchmark Index')
 
     # Relations
-    # share_class_ids = fields.One2many('fund.share.class', 'fund_id', string='Share Classes')
+    share_class_ids = fields.One2many('efund.fund.class', 'fund_id', string='Share Classes')
     currency_id = fields.Many2one(related='company_id.currency_id')
 
     @api.model_create_multi
@@ -86,6 +86,10 @@ class Fund(models.Model):
                 'name': fund_name,
                 'currency_id': currency_id,
             })
+
+            # Met à jour le partner associé
+            partner = company.partner_id
+            partner.write({'is_fund': True})
 
             # Injecte les champs dépendants
             vals['company_id'] = company.id

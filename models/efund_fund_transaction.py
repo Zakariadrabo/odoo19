@@ -1,5 +1,5 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError,ValidationError
 
 
 class FundTransaction(models.Model):
@@ -17,6 +17,7 @@ class FundTransaction(models.Model):
     currency_id = fields.Many2one('res.currency')
     related_move_id = fields.Many2one('account.move', string="Accounting Move")
 
+    """
     def action_validate(self):
         for rec in self:
             if rec.status != 'draft':
@@ -35,3 +36,78 @@ class FundTransaction(models.Model):
     def action_post(self):
         for rec in self:
             rec.status = 'done'
+    """
+
+    @api.model
+    def create(self, vals):
+        transaction = super().create(vals)
+        if transaction.state == 'confirmed':
+            transaction._create_accounting_entry()
+        return transaction
+
+    def action_confirm(self):
+        for transaction in self:
+            if transaction.state != 'draft':
+                continue
+            transaction.write({'state': 'confirmed'})
+            transaction._create_accounting_entry()
+
+    def _create_accounting_entry(self):
+        """Create accounting entry for the transaction"""
+        self.ensure_one()
+
+        # Get the appropriate journal based on transaction type
+        journal = self.env['account.journal'].search([
+            ('company_id', '=', self.fund_id.id),
+            ('type', '=', 'bank'),
+        ], limit=1)
+
+        if not journal:
+            raise UserError(_('No bank journal found for fund %s') % self.fund_id.name)
+
+        # Prepare account move lines
+        move_lines = []
+
+        if self.transaction_type == 'subscription':
+            # Debit bank, credit capital
+            debit_account = journal.default_account_id
+            credit_account = self.fund_id.account_capital_id  # Pre-configured account
+
+            move_lines.append((0, 0, {
+                'account_id': debit_account.id,
+                'debit': self.amount,
+                'credit': 0,
+                'name': f'Subscription from {self.investor_id.name}',
+            }))
+
+            move_lines.append((0, 0, {
+                'account_id': credit_account.id,
+                'debit': 0,
+                'credit': self.amount,
+                'name': f'Capital increase from {self.investor_id.name}',
+            }))
+
+        # Create the account move
+        move = self.env['account.move'].create({
+            'move_type': 'entry',
+            'date': self.transaction_date,
+            'journal_id': journal.id,
+            'company_id': self.fund_id.id,
+            'line_ids': move_lines,
+            'ref': self.name,
+        })
+
+        move.action_post()
+        self.accounting_entry_id = move.id
+
+    @api.constrains('units', 'unit_price', 'amount')
+    def _check_amounts(self):
+        for transaction in self:
+            if transaction.transaction_type in ['subscription', 'redemption']:
+                if transaction.units <= 0:
+                    raise ValidationError(_('Units must be positive for subscriptions and redemptions.'))
+                if transaction.unit_price <= 0:
+                    raise ValidationError(_('Unit price must be positive.'))
+                expected_amount = transaction.units * transaction.unit_price
+                if abs(transaction.amount - expected_amount) > 0.01:
+                    raise ValidationError(_('Amount does not match units * unit price.'))

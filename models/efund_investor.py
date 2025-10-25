@@ -6,23 +6,25 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+
 class FundInvestor(models.Model):
     _name = "efund.investor"
     _description = "Investor / Porteur - KYC record"
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "id desc"
 
-    partner_id = fields.Many2one('res.partner', string="Partner", required=True, ondelete='cascade')
+    partner_id = fields.Many2one('res.partner', string="Partner", required=True, ondelete='cascade',
+                                 domain="[('is_investor', '=', True)]", context="{'default_is_investor': True}" )
     company_id = fields.Many2one('res.company', string="Context Company (Fund)", required=True, index=True)
     name = fields.Char(related="partner_id.name", store=True, readonly=True)
     status = fields.Selection([
-        ('draft','Draft'),
-        ('kyc_pending','KYC Pending'),
-        ('kyc_approved','KYC Approved'),
-        ('kyc_rejected','KYC Rejected'),
-        ('archived','Archived')
+        ('draft', 'Draft'),
+        ('kyc_pending', 'KYC Pending'),
+        ('kyc_approved', 'KYC Approved'),
+        ('kyc_rejected', 'KYC Rejected'),
+        ('archived', 'Archived')
     ], default='draft')
-    kyc_level = fields.Selection([('low','Low'),('medium','Medium'),('high','High')], default='low')
+    kyc_level = fields.Selection([('low', 'Low'), ('medium', 'Medium'), ('high', 'High')], default='low')
     kyc_score = fields.Integer(default=0)
     kyc_last_update = fields.Datetime()
     kyc_operator_id = fields.Many2one('res.users', string="KYC Operator")
@@ -31,10 +33,14 @@ class FundInvestor(models.Model):
     risk_category = fields.Char()
     whitelisted = fields.Boolean(default=False)
     notes = fields.Text()
-    document_ids = fields.One2many('efund.kyc.document','investor_id', string="KYC Documents")
-    kyc_check_ids = fields.One2many('efund.kyc.check','investor_id', string="KYC Checks")
-    aml_alert_ids = fields.One2many('efund.aml.alert','investor_id', string="AML Alerts")
+    document_ids = fields.One2many('efund.kyc.document', 'investor_id', string="KYC Documents")
+    kyc_check_ids = fields.One2many('efund.kyc.check', 'investor_id', string="KYC Checks")
+    aml_alert_ids = fields.One2many('efund.aml.alert', 'investor_id', string="AML Alerts")
     active = fields.Boolean(default=True)
+
+    # Relations vers comptes
+    account_part_ids = fields.One2many('efund.account.part', 'investor_id', string='Comptes Parts / Actions')
+    account_cash_ids = fields.One2many('efund.account.cash', 'investor_id', string='Comptes Espèces')
 
     def action_create_aml_alert(self):
         self.ensure_one()
@@ -49,8 +55,6 @@ class FundInvestor(models.Model):
             },
             'target': 'current',
         }
-
-
 
     @api.model
     def create(self, vals):
@@ -150,3 +154,6 @@ class FundInvestor(models.Model):
                 'status': 'new',
                 'notes': reason or _('KYC rejected by operator.')
             })
+
+
+
