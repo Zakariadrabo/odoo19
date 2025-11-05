@@ -25,8 +25,7 @@ class FundClass(models.Model):
         'efund.fund',
         string='Fund',
         required=True,
-        ondelete='cascade',
-        domain="[('state', '=', 'active')]"
+        ondelete='cascade'
     )
 
 

@@ -1,11 +1,12 @@
 {
 
-    'name': 'Gestion de Fonds - Suite',
+    'name': 'efundOpc',
     'version': '19.0.1',
     'category': 'Finance',
-    'summary': 'Gestion complète des fonds communs de placement',
+    'summary': 'Gestion de Fonds - Suite',
     'description': """
     Module de gestion des fonds d'investissement
+    Gestion complète des fonds communs de placement
     ===========================================
 
     Fonctionnalités principales:
@@ -20,6 +21,7 @@
     'depends': ['base','account','contacts'],
     'data': [
         'security/ir.model.access.csv',
+        'views/efund_view_management_company_profile_form.xml',
         'views/efund_action_menu_principal.xml',
         'views/efund_menu_principal.xml',
         'views/efund_action_menu_parametre.xml',
@@ -29,6 +31,11 @@
         'views/efund_investor_views.xml',
         'views/efund_views_parametre.xml',
         'views/efund_views_fund.xml',
+        'views/view_efund_initial_valuation_investor_line_form.xml',
+        'views/fund_initial_valuation_wizard_views.xml',
+        'views/fund_share_class_views.xml',
+        'views/efund_view_compliance_policy_tree.xml',
+        'views/efund_views_valuation.xml',
 
     ],
 

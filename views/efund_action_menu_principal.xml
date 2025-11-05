@@ -31,6 +31,21 @@
             </p>
         </field>
     </record>
+    <!-- Action Profil et licence  -->
+    <record id="action_management_company_profile" model="ir.actions.act_window">
+        <field name="name">Profil / Licences</field>
+        <field name="res_model">efund.management.company</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="efundOpc.view_management_company_profile_form"/>
+        <field name="target">current</field>
+    </record>
+
+    <!-- Action Politiques et Conformité  -->
+    <record id="action_efund_compliance_policy" model="ir.actions.act_window">
+        <field name="name">Politiques et Conformité</field>
+        <field name="res_model">efund.compliance.policy</field>
+        <field name="view_mode">list,form</field>
+    </record>
 
     <!-- =========================
          2. FONDS
@@ -39,7 +54,7 @@
         <field name="name">Fonds</field>
         <field name="res_model">efund.fund</field>
         <field name="view_mode">list,form,kanban</field>
-         <field name="help" type="html">
+        <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Créer un nouveau fonds
             </p>
@@ -53,6 +68,19 @@
         <field name="name">Classes de parts</field>
         <field name="res_model">efund.fund.class</field>
         <field name="view_mode">list,form</field>
+    </record>
+    <record id="action_nav_list" model="ir.actions.act_window">
+        <field name="name">Valorisations</field>
+        <field name="res_model">efund.fund.valuation</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer une nouvelle valorisation
+            </p>
+            <p>
+                Avant de créer une valorisation, assurez-vous d'avoir un fond configuré.
+            </p>
+        </field>
     </record>
 
     <!-- =========================
@@ -164,7 +192,7 @@
         <field name="context">{'default_investor_id': active_id}</field>
     </record>
 
-     <!-- ACTION & MENU -->
+    <!-- ACTION & MENU -->
     <record id="action_aml_alert" model="ir.actions.act_window">
         <field name="name">AML Alerts</field>
         <field name="res_model">efund.aml.alert</field>

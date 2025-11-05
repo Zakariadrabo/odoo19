@@ -28,18 +28,17 @@
               parent="menu_fund_management_root"
               sequence="10"/>
 
-    <menuitem id="menu_management_company_config"
-              name="Configuration"
+     <menuitem id="menu_management_company_profile"
+              name="Profil / Licences"
               parent="menu_management_company_root"
+              action="action_management_company_profile"
               sequence="11"/>
 
-    <menuitem id="menu_management_company"
-              name="Sociétés de gestion"
+    <menuitem id="menu_management_company_compliance"
+              name="Politiques et Conformité"
               parent="menu_management_company_root"
-              action="action_management_company_list"
+              action="action_efund_compliance_policy"
               sequence="12"/>
-
-
 
     <!-- =========================
          2. FONDS
@@ -59,6 +58,11 @@
               parent="menu_fund_root"
               action="action_fund_class_list"
               sequence="22"/>
+     <menuitem id="menu_nav_list"
+              name="Valorisations"
+              parent="menu_fund_root"
+              action="action_nav_list"
+              sequence="23"/>
 
     <!-- =========================
          3. CLIENTS / PORTEURS
@@ -170,7 +174,7 @@
          8. REPORTING
     ========================== -->
     <menuitem id="menu_reporting_root"
-              name="Reporting"
+              name="Reporting / Analytics"
               parent="menu_fund_management_root"
               sequence="80"/>
     <menuitem id="menu_regulatory_reports"
@@ -179,10 +183,18 @@
               action="action_regulatory_report_list"
               sequence="81"/>
     <menuitem id="menu_dashboard"
-              name="Tableaux de bord"
+              name="Tableaux de bord du fond"
               parent="menu_reporting_root"
               action="action_fund_dashboard"
               sequence="82"/>
+    <menuitem id="menu_dashboard"
+              name="Performance du portefeuille"
+              parent="menu_reporting_root"
+              sequence="83"/>
+    <menuitem id="menu_dashboard"
+              name="Indicateurs de risque"
+              parent="menu_reporting_root"
+              sequence="84"/>
 
 
     <!-- =========================
@@ -192,9 +204,16 @@
             id="menu_gestion_fonds_configuration"
             name="Configuration"
             parent="menu_fund_management_root"
-            sequence="80"
+            sequence="90"
     />
-
+    <menuitem id="menu_gestion_fonds"
+              name="Instruments financiers"
+              parent="menu_gestion_fonds_configuration"
+              sequence="91"/>
+    <menuitem id="menu_gestion_fonds"
+              name="Instruments financiers"
+              parent="menu_gestion_fonds_configuration"
+              sequence="91"/>
 
 
 </odoo>

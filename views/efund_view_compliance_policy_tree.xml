@@ -1,0 +1,49 @@
+<odoo>
+    <record id="view_efund_compliance_policy_tree" model="ir.ui.view">
+        <field name="name">efund.compliance.policy.tree</field>
+        <field name="model">efund.compliance.policy</field>
+        <field name="arch" type="xml">
+            <list decoration-warning="status == 'expired'" decoration-success="status == 'validated'">
+                <field name="name"/>
+                <field name="policy_type"/>
+                <field name="effective_date"/>
+                <field name="next_review_date"/>
+                <field name="status" widget="badge"/>
+                <field name="responsible_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_efund_compliance_policy_form" model="ir.ui.view">
+        <field name="name">efund.compliance.policy.form</field>
+        <field name="model">efund.compliance.policy</field>
+        <field name="arch" type="xml">
+            <form string="Compliance Policy" create="true" edit="true">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="policy_type"/>
+                            <field name="responsible_id"/>
+                        </group>
+                        <group>
+                            <field name="effective_date"/>
+                            <field name="next_review_date"/>
+                            <field name="status"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Contenu">
+                            <field name="description" placeholder="Résumé de la politique..."/>
+                        </page>
+                        <page string="Document attaché">
+                            <field name="document_id" widget="many2one_binary"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>
+
+

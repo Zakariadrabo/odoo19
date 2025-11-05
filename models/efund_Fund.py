@@ -58,6 +58,65 @@ class Fund(models.Model):
     share_class_ids = fields.One2many('efund.fund.class', 'fund_id', string='Share Classes')
     currency_id = fields.Many2one(related='company_id.currency_id')
 
+    # Comptabilité
+
+    cash_account_id = fields.Many2one(
+        'account.account',
+        string='Cash Account',
+        domain="[('account_type', '=', 'asset_cash')]",
+        help="Compte bancaire principal du fonds"
+    )
+
+    capital_account_id = fields.Many2one(
+        'account.account',
+        string='Capital Account',
+        domain="[('account_type', '=', 'equity')]",
+        help="Compte de capital social du fonds"
+    )
+
+    # Comptes supplémentaires
+    subscription_account_id = fields.Many2one(
+        'account.account',
+        string='Subscription Account'
+    )
+
+    redemption_account_id = fields.Many2one(
+        'account.account',
+        string='Redemption Account'
+    )
+
+    fee_income_account_id = fields.Many2one(
+        'account.account',
+        string='Fee Income Account'
+    )
+    # === JOURNAUX par Fonds ===
+    subscription_journal_id = fields.Many2one(
+        'account.journal',
+        string='Subscription Journal',
+        domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]"
+    )
+
+    redemption_journal_id = fields.Many2one(
+        'account.journal',
+        string='Redemption Journal',
+        domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]"
+    )
+
+    operations_journal_id = fields.Many2one(
+        'account.journal',
+        string='Miscellaneous Journal',
+        domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]"
+    )
+
+    # Méthode utilitaire pour récupérer un journal
+    def _get_default_journal(self, journal_type='bank'):
+        """Retourne le journal par défaut selon le type"""
+        return self.env['account.journal'].search([
+            ('company_id', '=', self.company_id.id),
+            ('type', '=', journal_type)
+        ], limit=1)
+
+
     @api.model_create_multi
     def create(self, vals_list):
         """Create a res.company automatically when creating a Fund."""
@@ -144,3 +203,23 @@ class Fund(models.Model):
                 raise ValidationError(_("Only active or suspended funds can be liquidated."))
             record.state = 'liquidated'
             record.message_post(body=_("Fund has been liquidated."))
+
+    def action_initial_valuation(self):
+        """
+        Méthode appelée quand on clique le bouton.
+        Self = enregistrement(s) sélectionné(s) dans la tree view
+        """
+        self.ensure_one()  # S'assure qu'un seul fond est sélectionné
+
+        # OUVRE le wizard de valorisation initiale
+        return {
+            'type': 'ir.actions.act_window',  # Ouvre une fenêtre
+            'name': f'Valorisation Initiale - {self.name}',
+            'res_model': 'efund.initial.valuation.wizard',  # Modèle transient
+            'view_mode': 'form',
+            'target': 'new',  # Fenêtre modale
+            'context': {
+                'default_fund_id': self.id,  # Pré-remplit le fond
+                'default_share_class_id': self.share_class_ids[:1].id,
+            }
+        }

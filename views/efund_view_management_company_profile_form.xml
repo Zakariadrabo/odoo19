@@ -1,0 +1,41 @@
+<odoo>
+    <record id="view_management_company_profile_form" model="ir.ui.view">
+        <field name="name">efund.management.company.profile.form</field>
+        <field name="model">efund.management.company</field>
+        <field name="arch" type="xml">
+            <form string="Profil / Licences" create="false" edit="true">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="company_id" invisible="1"/>
+                            <field name="regulatory_license"/>
+                            <field name="aum"/>
+                        </group>
+                        <group>
+                            <field name="currency_id" readonly="1"/>
+                            <field name="compliance_officer_id"/>
+                            <field name="funds_count" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Politiques et conformité">
+                            <field name="risk_management_policy"
+                                   placeholder="Décrivez ici votre politique de gestion des risques..."/>
+                        </page>
+                        <page string="Fonds gérés">
+                            <field name="managed_funds">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="fund_type"/>
+                                    <field name="state"/>
+                                    <field name="nav_frequency"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

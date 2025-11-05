@@ -6,16 +6,19 @@ class FundNAV(models.Model):
     _name = "efund.fund.nav"
     _description = "Computed NAV for a fund"
 
-    fund_id = fields.Many2one('res.company', domain="[('company_type','=','fonds')]", required=True)
+    fund_id = fields.Many2one('efund.fund', required=True)
     date = fields.Date(required=True, index=True)
-    fund_currency_id = fields.Many2one('res.currency',string="Devise du fonds",required=True)
-    nav_total = fields.Monetary(string="Actif net total",currency_field='fund_currency_id')
+    #fund_currency_id = fields.Many2one('res.currency',string="Devise du fonds",required=True)
+    nav_total = fields.Float(string="Actif net total")
     nav_per_share = fields.Float()
-    class_id = fields.Many2one('efund.fund.class')
+    share_class_id = fields.Many2one('efund.fund.class')
     status = fields.Selection([('draft','Draft'),('computed','Computed'),('posted','Posted')], default='draft')
     computed_by = fields.Many2one('res.users')
     computed_at = fields.Datetime()
     accounting_move_id = fields.Many2one('account.move')
+    is_initial_valuation = fields.Boolean(default=True)
+    total_shares = fields.Float(string="Total shares")
+
 
     def compute_nav(self):
         # Simplified placeholder: aggregate market_value from positions

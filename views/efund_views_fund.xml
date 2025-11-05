@@ -15,6 +15,11 @@
                 <field name="launch_date"/>
                 <field name="ter"/>
                 <field name="state"/>
+                <button name="action_initial_valuation"
+                        type="object"
+                        class="btn-outline-primary"
+                        string="Valorisation Initiale"
+                        invisible="state != 'draft'"/>
             </list>
         </field>
     </record>
@@ -28,9 +33,12 @@
         <field name="arch" type="xml">
             <form string="Fund" create="true" edit="true">
                 <header>
-                    <button name="action_activate" type="object" string="Activate"  invisible="state != 'draft'"  class="btn-primary"/>
-                    <button name="action_suspend" type="object" string="Suspend"  invisible="state != 'active'"  class="btn-warning"/>
-                    <button name="action_liquidate" type="object" string="Liquidate"  invisible="state != 'active' or state != 'suspended'" class="btn-danger"/>
+                    <button name="action_activate" type="object" string="Activate" invisible="state != 'draft'"
+                            class="btn-primary"/>
+                    <button name="action_suspend" type="object" string="Suspend" invisible="state != 'active'"
+                            class="btn-warning"/>
+                    <button name="action_liquidate" type="object" string="Liquidate"
+                            invisible="state != 'active' or state != 'suspended'" class="btn-danger"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,active,suspended,liquidated"/>
                 </header>
 
@@ -52,15 +60,15 @@
 
                     <notebook>
                         <page string="Informations Réglementaires">
-                           <!--
-                            <group>
-                                <group string="Agréments">
-                                    <field name="regulateur"/>
-                                    <field name="agrement_date"/>
-                                    <field name="dossier_reglementaire_id"/>
-                                </group>
-                            </group>
-                            -->
+                            <!--
+                             <group>
+                                 <group string="Agréments">
+                                     <field name="regulateur"/>
+                                     <field name="agrement_date"/>
+                                     <field name="dossier_reglementaire_id"/>
+                                 </group>
+                             </group>
+                             -->
                         </page>
                         <page string="Gestion Opérationnelle">
 
@@ -74,7 +82,19 @@
                         </page>
 
                         <page string="Accounting / Currency">
-                            <field name="currency_id" readonly="1"/>
+                            <group string="Fund Accounts Configuration">
+                                <field name="cash_account_id"/>
+                                <field name="capital_account_id"/>
+                                <field name="subscription_account_id"/>
+                                <field name="redemption_account_id"/>
+                                <field name="fee_income_account_id"/>
+                                <field name="currency_id" readonly="1" string="Monnaie"/>
+                            </group>
+                            <group string="Fund Journals Configuration">
+                                <field name="subscription_journal_id"/>
+                                <field name="redemption_journal_id"/>
+                                <field name="operations_journal_id"/>
+                            </group>
                         </page>
                         <page string="Shares Class">
                             <field name="share_class_ids" create="true" edit="true">
@@ -122,11 +142,25 @@
                     <t t-name="kanban-box">
                         <div class="oe_kanban_global_click o_kanban_card">
                             <div class="o_kanban_details">
-                                <strong><field name="company_id"/></strong>
-                                <div><span class="text-muted">Type:</span> <field name="fund_type"/></div>
-                                <div><span class="text-muted">Risk:</span> <field name="risk_level"/></div>
-                                <div><span class="text-muted">NAV Freq:</span> <field name="nav_frequency"/></div>
-                                <div><span class="text-muted">TER:</span> <field name="ter"/></div>
+                                <strong>
+                                    <field name="company_id"/>
+                                </strong>
+                                <div>
+                                    <span class="text-muted">Type:</span>
+                                    <field name="fund_type"/>
+                                </div>
+                                <div>
+                                    <span class="text-muted">Risk:</span>
+                                    <field name="risk_level"/>
+                                </div>
+                                <div>
+                                    <span class="text-muted">NAV Freq:</span>
+                                    <field name="nav_frequency"/>
+                                </div>
+                                <div>
+                                    <span class="text-muted">TER:</span>
+                                    <field name="ter"/>
+                                </div>
                             </div>
                             <div class="oe_kanban_footer">
                                 <span class="badge" t-attf-class="bg-{{ record.state.raw_value }}">
