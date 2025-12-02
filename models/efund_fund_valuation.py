@@ -48,15 +48,23 @@ class FundValuation(models.Model):
 
     notes = fields.Text(string="Comments / Observations")
 
+    def _prepare_vals_sequence(self, vals):
+        """Prépare les valeurs avec séquence automatique"""
+        if vals.get("name", "/") == "/":
+            vals["name"] = self.env["ir.sequence"].sudo().next_by_code("efund.fund.valuation") or "/"
+        return vals
+
     @api.model
     def create(self, vals):
-        # name sequence
-        if vals.get("name", "/") == "/":
-            seq = self.env["ir.sequence"].sudo().next_by_code("efund.fund.valuation") or "/"
-            vals["name"] = seq
-        rec = super().create(vals)
-        rec._log_action("create", _("Valuation created."))
-        return rec
+        if isinstance(vals, list):
+            vals = [self._prepare_vals_sequence(v) for v in vals]
+        else:
+            vals = self._prepare_vals_sequence(vals)
+
+        records = super().create(vals)
+        for rec in records:
+            rec._log_action("create", _("Valuation created."))
+        return records
 
     def write(self, vals):
         res = super().write(vals)
@@ -198,7 +206,7 @@ class FundValuation(models.Model):
     # ------------------------------
     def _log_action(self, action, message):
         for rec in self:
-            self.env["efund.valuation.log"].create({
+            self.env["efund.fund.valuation.log"].create({
                 "valuation_id": rec.id,
                 "action": action,
                 "message": message,

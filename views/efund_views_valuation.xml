@@ -79,10 +79,10 @@
             <form string="Valuation" create="true" edit="true">
                 <header>
                     <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,validated,cancelled"/>
-                    <button name="action_compute" type="object" string="Compute" states="draft" class="btn-primary"/>
-                    <button name="action_validate" type="object" string="Validate" states="in_progress"
+                    <button name="action_compute" type="object" string="Compute" invisible="state != 'draft'" class="btn-primary"/>
+                    <button name="action_validate" type="object" string="Validate" invisible="state != 'in_progress'"
                             class="btn-success"/>
-                    <button name="action_cancel" type="object" string="Cancel" states="draft,in_progress"
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state not in ('draft','in_progress')"
                             class="btn-danger"/>
                     <field name="computed_by" invisible="1"/>
                     <field name="validated_by" invisible="1"/>
