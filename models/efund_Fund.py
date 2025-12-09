@@ -1,6 +1,9 @@
+import logging
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.models import Constraint
+_logger = logging.getLogger(__name__)
 
 
 # models/fund.py
@@ -106,6 +109,47 @@ class Fund(models.Model):
         'account.journal',
         string='Miscellaneous Journal',
         domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]"
+    )
+
+    # Données sur les positions du fond
+
+    position_ids = fields.One2many(
+        'efund.fund.position',
+        'fund_id',
+        string="Positions"
+    )
+
+    # Champs calculés pour le résumé
+    total_market_value = fields.Monetary(
+        string="Valeur totale du portfolio",
+        currency_field='currency_id',
+        compute='_compute_portfolio_summary',
+        store=True
+    )
+
+    position_count = fields.Integer(
+        string="Nombre de positions",
+        compute='_compute_portfolio_summary',
+        store=True
+    )
+
+    total_unrealized_pl = fields.Monetary(
+        string="Total Plus/Moins-values",
+        currency_field='currency_id',
+        compute='_compute_portfolio_summary',
+        store=True
+    )
+
+    last_valuation_date = fields.Date(
+        string="Dernière valorisation",
+        compute='_compute_portfolio_summary',
+        store=True
+    )
+
+    portfolio_concentration = fields.Float(
+        string="Concentration du top 5",
+        compute='_compute_portfolio_concentration',
+        digits=(16, 2)
     )
 
     # Méthode utilitaire pour récupérer un journal
@@ -221,5 +265,135 @@ class Fund(models.Model):
             'context': {
                 'default_fund_id': self.id,  # Pré-remplit le fond
                 'default_share_class_id': self.share_class_ids[:1].id,
+            }
+        }
+
+    #Méthode positions
+    @api.depends('position_ids', 'position_ids.market_value',
+                 'position_ids.unrealized_pl', 'position_ids.valuation_date')
+    def _compute_portfolio_summary(self):
+        """Calcule les totaux du portfolio"""
+        for fund in self:
+            active_positions = fund.position_ids.filtered(
+                lambda p: p.status == 'active'
+            )
+
+            fund.total_market_value = sum(active_positions.mapped('market_value'))
+            fund.position_count = len(active_positions)
+            fund.total_unrealized_pl = sum(active_positions.mapped('unrealized_pl'))
+
+            if active_positions:
+                fund.last_valuation_date = max(active_positions.mapped('valuation_date'))
+            else:
+                fund.last_valuation_date = False
+
+    def _compute_portfolio_concentration(self):
+        """Calcule la concentration du portfolio (top 5 positions)"""
+        for fund in self:
+            active_positions = fund.position_ids.filtered(
+                lambda p: p.status == 'active'
+            ).sorted('market_value', reverse=True)
+
+            if fund.total_market_value > 0:
+                top_5_value = sum(pos.market_value for pos in active_positions[:5])
+                fund.portfolio_concentration = (top_5_value / fund.total_market_value) * 100
+            else:
+                fund.portfolio_concentration = 0.0
+
+    # ========== MÉTHODES D'ACTION ==========
+    def action_open_position_wizard(self):
+        """Ouvrir le wizard pour ajouter une position"""
+        self.ensure_one()
+        return {
+            'name': _('Ajouter une position'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'efund.position.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_fund_id': self.id,
+                'default_operation_type': 'add',
+            }
+        }
+
+    def action_import_positions(self):
+        """Ouvrir le wizard pour importer des positions"""
+        self.ensure_one()
+        return {
+            'name': _('Importer des positions'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'efund.position.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_fund_id': self.id,
+                'default_operation_type': 'import',
+            }
+        }
+
+    def action_portfolio_report(self):
+        """Générer un rapport de portfolio"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_url',
+            'url': f'/web#action=efund_fund.action_portfolio_report&active_id={self.id}',
+            'target': 'self',
+        }
+
+    def action_view_positions(self):
+        """Voir toutes les positions du fonds"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Positions de %s') % self.name,
+            'res_model': 'efund.fund.position',
+            'view_mode': 'list,form',
+            'domain': [('fund_id', '=', self.id)],
+            'context': {'default_fund_id': self.id},
+        }
+
+    def action_update_position(self):
+        """Ouvrir le wizard pour mettre à jour la position"""
+        self.ensure_one()
+
+        if self.status == 'closed':
+            raise UserError(_("Impossible de modifier une position clôturée."))
+
+        _logger.info(f"action_update_position: {self.id}")
+
+        return {
+            'name': _('Mettre à jour la position') % self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'efund.fund.position',
+            'view_mode': 'list,form',
+            'context': {
+                'default_position_id': self.id,
+                'default_fund_id': self.fund_id.id,
+                'default_instrument_id': self.instrument_id.id,
+                'default_current_quantity': self.quantity,
+                'default_current_avg_cost': self.avg_cost,
+                'default_current_date': self.valuation_date,
+            }
+        }
+
+    def action_close_position(self):
+        """Clôturer la position"""
+        self.ensure_one()
+
+        if self.status == 'closed':
+            raise UserError(_("Cette position est déjà clôturée."))
+
+        return {
+            'name': _('Clôturer la position'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'efund.position.close.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_position_id': self.id,
+                'default_fund_id': self.fund_id.id,
+                'default_instrument_id': self.instrument_id.id,
+                'default_current_quantity': self.quantity,
+                'default_market_value': self.market_value,
             }
         }

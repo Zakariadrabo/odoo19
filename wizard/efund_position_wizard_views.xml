@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Wizard pour ajouter/modifier des positions -->
+    <record id="view_efund_position_wizard_form" model="ir.ui.view">
+        <field name="name">efund.position.wizard.form</field>
+        <field name="model">efund.position.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Gestion des positions">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="title" readonly="1"/>
+                        </h1>
+                    </div>
+                    <field name="operation_type"/>
+
+                    <!-- Section pour ajout simple -->
+                    <group invisible="operation_type != 'add'">
+                        <group string="Sélection">
+                            <field name="fund_id" required="operation_type == 'add'"/>
+                            <field name="instrument_id" required="operation_type == 'add'"/>
+                            <field name="valuation_date" required="operation_type == 'add'"/>
+                        </group>
+
+                        <group string="Données de position">
+                            <field name="quantity" required="operation_type == 'add'"/>
+                            <field name="avg_cost" required="operation_type == 'add'"/>
+                            <field name="currency_id" required="operation_type == 'add'"/>
+                        </group>
+
+                        <footer>
+                            <button name="action_add_position" type="object" string="Ajouter la position"
+                                    class="btn-primary" invisible="operation_type != 'add'"/>
+                            <button special="cancel" string="Annuler" class="btn-secondary" invisible="operation_type != 'add'"/>
+                        </footer>
+                    </group>
+
+                    <!-- Section pour import -->
+                    <group invisible="operation_type != 'import'">
+                        <group>
+                            <field name="fund_id" required="operation_type == 'import'"/>
+                            <field name="import_file" filename="filename" required="operation_type == 'import'"/>
+
+                            <div class="alert alert-info" role="alert">
+                                <strong>Format du fichier CSV:</strong>
+                                <ul>
+                                    <li>Colonnes: instrument_code, quantity, avg_cost, valuation_date</li>
+                                    <li>Séparateur: virgule (,)</li>
+                                    <li>Encodage: UTF-8</li>
+                                    <li>Exemple: AAPL,100,150.25,2024-01-15</li>
+                                </ul>
+                                <p>
+                                    <strong>Note:</strong>
+                                    Les positions existantes seront mises à jour si elles existent déjà pour la même
+                                    date.
+                                </p>
+                            </div>
+                        </group>
+
+                        <footer>
+                            <button name="action_import_positions" type="object" string="Importer" class="btn-primary" invisible="operation_type != 'import'"/>
+                            <button special="cancel" string="Annuler" class="btn-secondary" invisible="operation_type != 'import'"/>
+                        </footer>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

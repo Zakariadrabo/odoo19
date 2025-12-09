@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Action pour ouvrir le wizard d'amortissement -->
+    <record id="action_generate_bond_amortization" model="ir.actions.act_window">
+        <field name="name">Générer tableau d'amortissement</field>
+        <field name="res_model">efund.bond.amortization.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_instrument_id': active_id}</field>
+    </record>
+
+    <!-- Vue du wizard -->
+    <record id="view_efund_bond_amortization_wizard_form" model="ir.ui.view">
+        <field name="name">efund.bond.amortization.wizard.form</field>
+        <field name="model">efund.bond.amortization.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Générer le tableau d'amortissement">
+                <sheet>
+                    <group>
+                        <group string="Paramètres de l'obligation">
+                            <field name="instrument_id" readonly="1"/>
+                            <field name="currency_id" readonly="1"/>
+                            <field name="nominal_amount" required="1"/>
+                            <field name="coupon_rate" required="1"/>
+                            <field name="maturity_years" required="1"/>
+                            <field name="frequency" required="1"/>
+                            <field name="start_date" required="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_generate_schedule"
+                            string="Générer"
+                            type="object"
+                            class="btn-primary"/>
+                    <button string="Annuler"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

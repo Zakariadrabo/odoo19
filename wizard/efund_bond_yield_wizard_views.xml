@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_fund_bond_yield_wizard_form" model="ir.ui.view">
+        <field name="name">fund.bond.yield.wizard.form</field>
+        <field name="model">fund.bond.yield.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Bond Yield Calculation">
+                <sheet>
+                    <group>
+                        <group string="Bond Information">
+                            <field name="bond_id" readonly="1"/>
+                            <field name="calculation_date" required="1"/>
+                            <field name="market_price" required="1"/>
+                            <field name="currency_id" readonly="1"/>
+                        </group>
+                        <group string="Maturity Information">
+                            <field name="days_to_maturity" readonly="1"/>
+                            <field name="years_to_maturity" readonly="1"/>
+                            <field name="dirty_price" readonly="1"/>
+                            <field name="accrued_interest" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <div class="alert alert-info">
+                        <strong>Market Price:</strong> Entrez le prix de marché en pourcentage de la valeur nominale (ex: 102.5 pour 102.5%)
+                    </div>
+
+                    <group string="Yield Results" attrs="{'invisible': [('ytm', '=', 0)]}">
+                        <group>
+                            <label string="Yield to Maturity (YTM)"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="ytm"/>%
+                                </span>
+                            </div>
+
+                            <label string="Current Yield"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="current_yield"/>%
+                                </span>
+                            </div>
+                        </group>
+
+                        <group>
+                            <label string="Modified Duration"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="modified_duration"/>
+                                </span>
+                                <span class="o_stat_text">années</span>
+                            </div>
+
+                            <label string="Macaulay Duration"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="macaulay_duration"/>
+                                </span>
+                                <span class="o_stat_text">années</span>
+                            </div>
+                        </group>
+
+                        <group>
+                            <label string="Convexity"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="convexity"/>
+                                </span>
+                            </div>
+                        </group>
+                    </group>
+
+                    <!-- Informations sensibilité -->
+                    <group string="Sensitivity Analysis" attrs="{'invisible': [('modified_duration', '=', 0)]}">
+                        <div class="alert alert-warning">
+                            <strong>Price Sensitivity:</strong><br/>
+                            • +1% yield change: <span t-esc="'-' + str(object.modified_duration) + '%'"/> price change<br/>
+                            • -1% yield change: <span t-esc="'+' + str(object.modified_duration) + '%'"/> price change<br/>
+                            • Convexity adjustment: ±<span t-esc="str(round(object.convexity * 0.5, 4))"/>%
+                        </div>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_calculate" string="Calculate YTM" type="object" class="btn-primary"/>
+                    <button name="action_export_results" string="Export Results" type="object" class="btn-secondary"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
