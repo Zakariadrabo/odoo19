@@ -6,7 +6,6 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
-
 class FundInvestor(models.Model):
     _name = "efund.investor"
     _description = "Investor / Porteur - KYC record"
@@ -37,6 +36,50 @@ class FundInvestor(models.Model):
     kyc_check_ids = fields.One2many('efund.kyc.check', 'investor_id', string="KYC Checks")
     aml_alert_ids = fields.One2many('efund.aml.alert', 'investor_id', string="AML Alerts")
     active = fields.Boolean(default=True)
+
+    #Rachide
+    #Section A
+    civilite = fields.Selection ([('Mr', 'Monsieur'), ('Mrs', 'Madamme')], required=True)
+    full_name = fields.Char(string="Nom Complet", required=True)
+    birthdate = fields.Date(string="Date de naissance")
+    birthplace = fields.Char(string="Lieu Naissance")
+    nationality = fields.Char(string="Nationalité")
+    sex = fields.Selection([('male', 'Homme'), ('female', 'Femme')], string="Sexe", required=True)
+    tranche = fields.Selection([("<55", "Jusqu'à 55ans"), ("56T74", "Entre 56 et 74 ans"), (">75", "Plus de 75ans")], string= "Quelle est votre tranche d'Age ? ", required=True)
+    marital_status = fields.Selection([('married', 'Marié(e)'), ('single', 'Célibataire'), ('divorced', 'Divorcé'), ('widowed', 'Veuf/Veuve')], string="Statut Matrimonial")
+    profession = fields.Char(string="Profession", required=True)
+    country = fields.Char(string="Pays", required=True)
+    city = fields.Char(string="Ville", required=True)
+    address = fields.Char(string="Adresse Postal")
+
+    #Section B
+    experience = fields.Selection ([('(5-10', 'Entre 5 et 10 ans'), ('10-15', 'Entre 10 et 15 ans'), ('>15', 'Plus de 15 ans')], string = "Quelle est votre expérience en matière d'investissement sur les marchés financiers", required=True)
+    profil =fields.Selection ([('Prudent', 'Prudent'), ('Equilibrate', 'Equilibré'), ('Dynamique', 'Dynamique')], string= "Profil d'Investissement", required=True)
+
+    #Section C
+    fisc = fields.Selection([('Yes', 'Oui'), ('No', 'Non')], string="Etes-vous resident fiscal d'un pays hors Afrique Centrale?", required=True)
+    pays_fisc =fields.Char(string="Pays de Déclaration fiscale")
+    facta = fields.Selection([('Yes', 'Oui'), ('No', 'Non')], string="Etes-vous citoyen ou resident américain?", required=True)
+    fisc_usa = fields.Selection([('Yes', 'Oui'), ('No', 'Non')],string="Etes-vous soumis à des obligations fiscales aux Etats-Unis?")
+
+    #Onglet 2
+    #Section D
+    estimation = fields.Selection([('M5', 'Moins de 5 Millions FCFA'), ('E5', 'Entre 5 et 50Millions FCFA'), ('P5', 'Plus de 50 Millions FCFA')],string="Estimation de votre patrimoine",required=True)
+    revenu = fields.Selection([('M5', 'Moins de 5Millions FCFA'), ('E5', 'Entre 5 et 10 Millions FCFA'), ('P5', 'Plus de 10 Millions FCFA')],string="Quel est votre Revenu annuel net?",required=True)
+    montant_mois= fields.Integer(string="Montant estimé des transactions mensuelles prévues",required=True)
+    periodicite = fields.Selection ([('Monthly', 'Mensuel'), ('Quarterly', 'Trimestriel'),('Semi-Annual', 'Semestriel'), ('Annual', 'Annuel')], string="Périodicité de Versement",required=True)
+
+    #Section E
+    origine = fields.Selection ([('salary', 'Salaire'), ('Investment', 'Investissement'), ('legacy', 'Héritage'), ('savings', 'Epargne'), ('Other', 'Autre')], string="Origine des Fonds?",required=True)
+    activite = fields.Selection ([('employee', 'Salarié'),('liberal profession','Proféssion Libérale'), ('businessman', 'Entrepreneur'), ('Other', 'Autre')],string= "Nature de l'activite générant la provenance des fonds?",required=True)
+    objectif =  fields.Selection ([('Investment', 'Investissement'), ('savings', 'Epargne'), ('Transactions', 'Transactions Commerciales'),('Other', 'Autre')], string="Objectif du compte",required=True)
+
+
+    #Section F
+    pep = fields.Selection([('Yes', 'Oui'), ('No', 'Non')], string='Etes-vous politiquement exposé?', required=True)
+    violation = fields.Selection([('Yes', 'Oui'), ('No', 'Non')],string="Avez-vous dejà été auditionné, poursuivi ou sanctionné pour violation des lois anti-blanchiments?",required=True)
+
+
 
     # Relations vers comptes
     account_part_ids = fields.One2many('efund.account.part', 'investor_id', string='Comptes Parts / Actions')

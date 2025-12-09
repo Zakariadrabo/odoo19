@@ -9,11 +9,7 @@ class ResCompany(models.Model):
         help="Indicates if this partner is the investor of the fund.",
         default=False,
     )
-    is_fund = fields.Boolean(
-        string="Is Fund",
-        help="Indicates if this partner is the investor of the fund.",
-        default=False,
-    )
+    is_fund = fields.Boolean(string="Is Fund",help="Indicates if this partner is the investor of the fund.",default=False,)
     is_management_company = fields.Boolean(
         string="Is Management Company",
         help="Indicates if this partner is the management company of the fund.",

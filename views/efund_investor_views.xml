@@ -16,22 +16,34 @@
     </record>
 
 
+    <!--  VUE FORMULAIRE          -->
+
     <record id="view_efund_investor_form" model="ir.ui.view">
         <field name="name">efund.investor.form</field>
         <field name="model">efund.investor</field>
         <field name="arch" type="xml">
             <form string="Investor" create="true" edit="true">
+
+
                 <header>
+
+
+                    <!-- Bouton statistique AML Alerts -->
                     <button name="%(action_efund_aml_alert)d"
                             type="action"
                             class="oe_stat_button"
                             icon="fa-shield-alt">
                         <field string="AML Alerts" name="aml_alert_ids" widget="statinfo"/>
                     </button>
+
+                    <!-- Barre de statut -->
                     <field name="status" widget="statusbar"
                            statusbar_visible="draft,kyc_pending,kyc_approved,kyc_rejected,archived"/>
                 </header>
+
+                <!-- SHEET -->
                 <sheet>
+                    <!-- Informations principales -->
                     <group>
                         <group>
                             <field name="partner_id"
@@ -52,7 +64,10 @@
                             <field name="active"/>
                         </group>
                     </group>
+
+                    <!-- NOTEBOOK -->
                     <notebook>
+
                         <page string="Comptes">
                             <group>
                                 <group string="Compte Titre">
@@ -78,9 +93,68 @@
                             </group>
                         </page>
 
+
+                        <page string="KYC – Informations Personnelles">
+                            <group col="2">
+                                <group>
+                                    <separator string="Identité" colspan="2"/>
+                                    <field name="civilite"/>
+                                    <field name="full_name"/>
+                                    <field name="birthdate"/>
+                                    <field name="birthplace"/>
+                                    <field name="nationality"/>
+                                    <field name="sex"/>
+                                    <field name="tranche"/>
+                                    <field name="marital_status"/>
+                                    <field name="profession"/>
+                                </group>
+                                <group>
+                                    <separator string="Adresse" colspan="2"/>
+                                    <field name="country"/>
+                                    <field name="city"/>
+                                    <field name="address"/>
+
+                                    <separator string="Profil et Expérience" colspan="2"/>
+                                    <field name="experience"/>
+                                    <field name="profil"/>
+
+                                    <separator string="Résidence et Fiscalité" colspan="2"/>
+                                    <field name="fisc"/>
+                                    <field name="pays_fisc"/>
+                                    <field name="facta"/>
+                                    <field name="fisc_usa"/>
+                                </group>
+                            </group>
+                        </page>
+
+
+                        <page string="KYC – Conformité et Informations Financières">
+                            <group col="2">
+                                <group>
+                                    <separator string="Informations Financières" colspan="2"/>
+                                    <field name="estimation"/>
+                                    <field name="revenu"/>
+                                    <field name="montant_mois"/>
+                                    <field name="periodicite"/>
+
+                                    <separator string="Origine des Fonds" colspan="2"/>
+                                    <field name="origine"/>
+                                    <field name="activite"/>
+                                    <field name="objectif"/>
+                                </group>
+                                <group>
+                                    <separator string="Conformité AML / FACTA" colspan="2"/>
+                                    <field name="pep"/>
+                                    <field name="violation"/>
+                                </group>
+                            </group>
+                        </page>
+
                         <page string="Notes">
                             <field name="notes" placeholder="Add remarks or observations..."/>
                         </page>
+
+
                         <page string="KYC Documents">
                             <field name="document_ids" create="true" edit="true">
                                 <list editable="bottom">
@@ -95,6 +169,7 @@
                             </field>
                         </page>
 
+
                         <page string="KYC Checks">
                             <field name="kyc_check_ids" create="true" edit="true">
                                 <list editable="bottom">
@@ -105,7 +180,10 @@
                                 </list>
                             </field>
                         </page>
+
+
                         <page string="AML Alerts / Monitoring">
+                            <!-- Boutons d'action -->
                             <group>
                                 <group>
                                     <button name="%(action_efund_aml_alert)d"
@@ -121,9 +199,12 @@
                                 </group>
                             </group>
 
+                            <!-- Liste des alertes AML -->
                             <field name="aml_alert_ids" nolabel="1">
-                                <list editable="bottom" decoration-danger="severity=='critical'"
-                                      decoration-warning="severity=='suspicious'" decoration-muted="status=='closed'">
+                                <list editable="bottom"
+                                      decoration-danger="severity=='critical'"
+                                      decoration-warning="severity=='suspicious'"
+                                      decoration-muted="status=='closed'">
                                     <field name="name"/>
                                     <field name="severity" widget="badge"/>
                                     <field name="status" widget="badge"/>
@@ -133,16 +214,17 @@
                                 </list>
                             </field>
 
+
                             <group>
                                 <separator string="Latest Alert Notes"/>
                                 <field name="notes" placeholder="Notes or decisions taken during AML investigation..."/>
                             </group>
                         </page>
+
                     </notebook>
                 </sheet>
             </form>
         </field>
     </record>
-
 
 </odoo>
