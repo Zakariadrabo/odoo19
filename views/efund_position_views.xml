@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue tree des positions -->
+    <record id="view_efund_fund_position_list" model="ir.ui.view">
+        <field name="name">efund.fund.position.list</field>
+        <field name="model">efund.fund.position</field>
+        <field name="arch" type="xml">
+            <list string="Positions">
+                <field name="instrument_id"/>
+                <field name="decoration_state" invisible="1"/>
+                <field name="valuation_date"/>
+                <field name="quantity"/>
+                <field name="avg_cost"/>
+                <field name="last_price"/>
+                <field name="market_value"/>
+                <field name="unrealized_pl"/>
+                <field name="unrealized_pl_percent"/>
+
+                <field name="status" widget="badge" decoration-info="status=='active'"
+                       decoration-warning="status=='suspended'" decoration-danger="status=='closed'"/>
+
+                <button name="action_update_position" type="object" string="Modifier" class="oe_highlight"
+                        invisible="status == 'closed'"/>
+
+                <button name="action_close_position" type="object" string="Clôturer" invisible="status == 'closed'"/>
+
+                <button name="action_view_instrument" type="object" string="Instrument" class="oe_link"
+                        icon="fa-external-link"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue formulaire des positions -->
+    <record id="view_efund_fund_position_form" model="ir.ui.view">
+        <field name="name">efund.fund.position.form</field>
+        <field name="model">efund.fund.position</field>
+        <field name="arch" type="xml">
+            <form string="Position">
+                <header>
+                    <button name="action_update_position" type="object" string="Modifier" class="oe_highlight"
+                            invisible="status == 'closed'"/>
+                    <button name="action_close_position" type="object" string="Clôturer"
+                            invisible="status == 'closed'"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_instrument" type="object" string="Voir l'instrument"
+                                class="oe_highlight" icon="fa-line-chart"/>
+                    </div>
+
+                    <group>
+                        <group string="Informations de base">
+                            <field name="fund_id"/>
+                            <field name="instrument_id"/>
+                            <field name="valuation_date"/>
+                            <field name="status"/>
+                        </group>
+                        <group string="Informations de cours">
+                            <field name="last_price" readonly="1"/>
+                            <field name="last_price_date" readonly="1"/>
+                            <field name="instrument_currency_id" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <separator string="Données de position"/>
+
+                    <group>
+                        <group string="Position">
+                            <field name="quantity"/>
+                            <field name="avg_cost"/>
+                            <field name="currency_id" readonly="1"/>
+                        </group>
+                        <group string="Valorisation">
+                            <field name="market_value" readonly="1"/>
+                            <field name="unrealized_pl" readonly="1"/>
+                            <field name="unrealized_pl_percent" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Notes">
+                        <field name="notes"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

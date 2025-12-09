@@ -123,18 +123,26 @@
     <!-- =========================
          5. PORTFEUILLE
     ========================== -->
-    <record id="action_fund_instrument_list" model="ir.actions.act_window">
-        <field name="name">Instruments</field>
+    <!-- Instrument -->
+    <record id="action_efund_fund_instrument" model="ir.actions.act_window">
+        <field name="name">Instrument</field>
         <field name="res_model">efund.fund.instrument</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer et gérer votre premier instrument financier.
+            </p>
+        </field>
     </record>
 
+    <!-- Positions -->
     <record id="action_fund_position_list" model="ir.actions.act_window">
         <field name="name">Positions</field>
         <field name="res_model">efund.fund.position</field>
         <field name="view_mode">list,form,graph</field>
     </record>
 
+    <!-- Valorisation -->
     <record id="action_fund_valuation_list" model="ir.actions.act_window">
         <field name="name">Valorisations</field>
         <field name="res_model">efund.fund.valuation</field>
@@ -142,6 +150,30 @@
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Créez une valorisation pour un fonds et calculez le NAV par part.
+            </p>
+        </field>
+    </record>
+
+    <!-- Cours -->
+    <record id="action_efund_fund_instrument_price" model="ir.actions.act_window">
+        <field name="name">Cours des instruments</field>
+        <field name="res_model">efund.fund.instrument.price</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créez la liste des cours.
+            </p>
+        </field>
+    </record>
+
+    <!-- Emetteur -->
+    <record id="action_efund_instrument_issuer" model="ir.actions.act_window">
+        <field name="name">Emetteur</field>
+        <field name="res_model">efund.instrument.issuer</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer et gérer votre premier Emetteur.
             </p>
         </field>
     </record>
@@ -183,6 +215,18 @@
          9. CONFIGURATION
     ========================== -->
 
+    <!-- Action Import   -->
+    <record id="action_efund_fund_instrument_price_import" model="ir.actions.act_window">
+        <field name="name">Import des cours</field>
+        <field name="res_model">efund.fund.instrument.price.import</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configurez l'import des cours depuis Excel ou API
+            </p>
+        </field>
+    </record>
+
     <!-- Action AML Alerte   -->
     <record id="action_efund_aml_alert" model="ir.actions.act_window">
         <field name="name">AML Alerts</field>
@@ -197,6 +241,15 @@
         <field name="name">AML Alerts</field>
         <field name="res_model">efund.aml.alert</field>
         <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Action isolée -->
+    <!-- Action générer le tableau d'amortissement -->
+    <record id="action_generate_bond_amortization" model="ir.actions.act_window">
+        <field name="name">Générer Tableau d'Amortissement</field>
+        <field name="res_model">efund.bond.amortization.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
     </record>
 
 

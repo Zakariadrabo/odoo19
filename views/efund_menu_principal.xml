@@ -28,7 +28,7 @@
               parent="menu_fund_management_root"
               sequence="10"/>
 
-     <menuitem id="menu_management_company_profile"
+    <menuitem id="menu_management_company_profile"
               name="Profil / Licences"
               parent="menu_management_company_root"
               action="action_management_company_profile"
@@ -58,7 +58,7 @@
               parent="menu_fund_root"
               action="action_fund_class_list"
               sequence="22"/>
-     <menuitem id="menu_nav_list"
+    <menuitem id="menu_nav_list"
               name="Valorisations"
               parent="menu_fund_root"
               action="action_nav_list"
@@ -77,7 +77,6 @@
               parent="menu_clients_root"
               action="action_fund_investor_list"
               sequence="31"/>
-
 
 
     <!-- =========================
@@ -102,7 +101,7 @@
               parent="menu_operations_root"
               action="action_fund_arbitrage_list"
               sequence="43"/>
-     <menuitem id="menu_distributions"
+    <menuitem id="menu_distributions"
               name="Distributions"
               parent="menu_operations_root"
               action="action_fund_distribution_list"
@@ -120,7 +119,7 @@
     <menuitem id="menu_instruments"
               name="Instruments Financiers"
               parent="menu_portfolio_root"
-              action="action_fund_instrument_list"
+              action="action_efund_fund_instrument"
               sequence="51"/>
     <menuitem id="menu_positions"
               name="Positions"
@@ -132,6 +131,17 @@
               parent="menu_portfolio_root"
               action="action_fund_valuation_list"
               sequence="53"/>
+    <menuitem id="menu_valuations"
+              name="Cours instrument"
+              parent="menu_portfolio_root"
+              action="action_efund_fund_instrument_price"
+              sequence="54"/>
+
+    <menuitem id="menu_emetteur"
+              name="Emetteur"
+              parent="menu_portfolio_root"
+              action="action_efund_instrument_issuer"
+              sequence="55"/>
 
 
     <!-- =========================
@@ -160,7 +170,7 @@
               name="Écritures Comptables"
               parent="menu_accounting_root"
               sequence="71"/>
-              <!--  action="account.action_move_journal_line" -->
+    <!--  action="account.action_move_journal_line" -->
 
 
     <menuitem id="menu_fees"
@@ -206,14 +216,20 @@
             parent="menu_fund_management_root"
             sequence="90"
     />
+    <menuitem id="menu_efund_fund_instrument_price_import"
+          name="Import des cours"
+          parent="menu_gestion_fonds_configuration"
+          action="action_efund_fund_instrument_price_import"
+          sequence="91"/>
+
     <menuitem id="menu_gestion_fonds"
               name="Instruments financiers"
               parent="menu_gestion_fonds_configuration"
-              sequence="91"/>
+              sequence="92"/>
     <menuitem id="menu_gestion_fonds"
               name="Instruments financiers"
               parent="menu_gestion_fonds_configuration"
-              sequence="91"/>
+              sequence="93"/>
 
 
 </odoo>

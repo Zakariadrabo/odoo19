@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue liste des cours -->
+    <record id="view_efund_fund_instrument_price_list" model="ir.ui.view">
+        <field name="name">efund.fund.instrument.price.list</field>
+        <field name="model">efund.fund.instrument.price</field>
+        <field name="arch" type="xml">
+            <list string="Cours des instruments">
+                <field name="instrument_id"/>
+                <field name="date"/>
+                <field name="price"/>
+                <field name="currency_id"/>
+                <field name="is_validated" widget="boolean"/>
+                <field name="validated_date"/>
+                <field name="validated_by"/>
+                <button name="action_validate" type="object" string="Valider" class="oe_highlight"
+                        invisible="is_validated = True"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue formulaire des cours -->
+    <record id="view_efund_fund_instrument_price_form" model="ir.ui.view">
+        <field name="name">efund.fund.instrument.price.form</field>
+        <field name="model">efund.fund.instrument.price</field>
+        <field name="arch" type="xml">
+            <form string="Cours d'instrument">
+                <header>
+                    <button name="action_validate" type="object" string="Valider" class="oe_highlight"
+                            invisible="is_validated = True"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="instrument_id"/>
+                            <field name="date"/>
+                            <field name="price"/>
+                            <field name="currency_id"/>
+                        </group>
+                        <group>
+                            <field name="is_validated"/>
+                            <field name="validated_date" readonly="is_validated = False"/>
+                            <field name="validated_by" readonly="is_validated = False"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

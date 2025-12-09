@@ -26,6 +26,11 @@
         'views/efund_menu_principal.xml',
         'views/efund_action_menu_parametre.xml',
         #'views/efund_action_fund.xml',
+        'views/efund_views_instrument.xml',
+        'wizard/efund_bon_amortization_wizard.xml',
+        'wizard/efund_fund_import_price_wizard_views.xml',
+        'views/efund_position_views.xml',
+        'wizard/efund_position_wizard_views.xml',
 
         'views/efund_menu_parametre.xml',
         'views/efund_investor_views.xml',

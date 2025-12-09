@@ -115,6 +115,52 @@
                                 </list>
                             </field>
                         </page>
+                        <!-- MODIFICATION DE efund_views_fund.xml -->
+                        <!-- Ajouter cet onglet dans le notebook existant -->
+                        <page string="Portfolio / Positions">
+                                <button name="action_open_position_wizard"
+                                        type="object"
+                                        string="Ajouter une position"
+                                        class="oe_highlight"
+                                        icon="fa-plus-circle"/>
+                                <button name="action_import_positions"
+                                        type="object"
+                                        string="Importer positions"
+                                        class="btn-primary"
+                                        icon="fa-upload"/>
+                                <button name="action_portfolio_report"
+                                        type="object"
+                                        string="Rapport portfolio"
+                                        class="btn-info"
+                                        icon="fa-bar-chart"/>
+
+                            <group>
+                                <group string="Resumé du portfolio">
+                                    <field name="total_market_value"/>
+                                    <field name="position_count"/>
+                                    <field name="total_unrealized_pl"/>
+                                    <field name="last_valuation_date"/>
+                                </group>
+                            </group>
+                            <!-- Liste des positions -->
+                            <field name="position_ids">
+                                <list string="Positions du fonds">
+                                    <field name="instrument_id"/>
+                                    <field name="valuation_date"/>
+                                    <field name="quantity"/>
+                                    <field name="avg_cost"/>
+                                    <field name="last_price"/>
+                                    <field name="market_value"/>
+                                    <field name="unrealized_pl"/>
+                                    <field name="unrealized_pl_percent" widget="progressbar"/>
+                                    <field name="status" widget="badge"/>
+                                    <button name="action_update_position" type="object" string="Modifier"
+                                            class="oe_highlight" invisible="status == 'closed'"/>
+                                    <button name="action_close_position" type="object" string="Clôturer"
+                                            invisible="status == 'closed'"/>
+                                </list>
+                            </field>
+                        </page>
 
                     </notebook>
                 </sheet>
@@ -173,6 +219,5 @@
             </kanban>
         </field>
     </record>
-
 
 </odoo>
