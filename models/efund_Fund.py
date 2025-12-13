@@ -397,3 +397,33 @@ class Fund(models.Model):
                 'default_market_value': self.market_value,
             }
         }
+
+    def get_dashboard_data(self):
+        self.ensure_one()
+
+        latest_nav = self.env['efund.fund.nav'].search([
+            ('fund_id', '=', self.id)
+        ], limit=1, order="date desc")
+
+        transactions = self.env['efund.fund.transaction'].search([
+            ('fund_id', '=', self.id)
+        ], limit=10, order="date desc")
+
+        return {
+            'fund': {
+                'name': self.name,
+                'fund_type': self.fund_type,
+                'risk_level': self.risk_level,
+                'benchmark_index': self.benchmark_index,
+                'aum': self.aum if hasattr(self, 'aum') else 0,
+                'nav_latest': latest_nav.nav_per_share if latest_nav else 0,
+                'perf_ytd': 0,  # calcul à compléter
+            },
+            'transactions': [{
+                'date': t.date,
+                'type': t.transaction_type,
+                'investor_id': t.investor_id,
+                'amount': t.amount
+            } for t in transactions]
+        }
+

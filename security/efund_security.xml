@@ -1,0 +1,5 @@
+<odoo>
+    <record id="group_opc_manager" model="res.groups">
+        <field name="name">Gestion OPCVM</field>
+    </record>
+</odoo>

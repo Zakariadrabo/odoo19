@@ -16,12 +16,12 @@ class FundAmlAlert(models.Model):
     investor_id = fields.Many2one(
         'efund.investor',
         string="Investor",
-        required=True
+       # required=True
     )
     fund_id = fields.Many2one(
         'res.company',
         string="Fund",
-        required=True
+       # required=True
     )
     alert_date = fields.Date(
         string="Alert Date",

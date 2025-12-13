@@ -1,0 +1,41 @@
+<odoo>
+    <record id="view_efund_cash_deposit_wizard_form" model="ir.ui.view">
+        <field name="name">efund.cash.deposit.wizard.form</field>
+        <field name="model">efund.cash.deposit.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Dépôt sur compte espèces">
+                <sheet>
+                    <group>
+                        <field name="investor_id" readonly="1"/>
+                        <field name="cash_account_id"/>
+                    </group>
+                    <group>
+                        <field name="date_operation"/>
+                        <field name="payment_mode"/>
+                        <field name="journal_id"/>
+                    </group>
+                    <group>
+                        <field name="amount"/>
+                        <field name="reference_payment"/>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                    <button string="Confirmer le dépôt"
+                            name="action_confirm_deposit"
+                            type="object"
+                            class="btn-primary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_efund_cash_deposit_wizard" model="ir.actions.act_window">
+        <field name="name">Dépôt sur compte espèces</field>
+        <field name="res_model">efund.cash.deposit.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

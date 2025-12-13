@@ -26,7 +26,7 @@
                 <sheet>
                     <h1>
                         <field name="name"/>
-                        <span class="badge" attrs="{'invisible': [('status', '=', 'closed')]}">
+                        <span class="badge" invisible="status == 'closed'">
                             <field name="status"/>
                         </span>
                     </h1>
@@ -61,11 +61,11 @@
 
                 <footer>
                     <button string="Mark Reviewed" type="object" name="action_mark_reviewed"
-                            class="btn-secondary" attrs="{'invisible': [('status', '!=', 'new')]}"/>
+                            class="btn-secondary" invisible="status != 'new'"/>
                     <button string="Escalate" type="object" name="action_escalate"
-                            class="btn-warning" attrs="{'invisible': [('status', 'not in', ['reviewed'])]}"/>
+                            class="btn-warning" invisible="status not in ('reviewed')"/>
                     <button string="Close Alert" type="object" name="action_close"
-                            class="btn-primary" attrs="{'invisible': [('status', '=', 'closed')]}"/>
+                            class="btn-primary" invisible="status == 'closed'"/>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>

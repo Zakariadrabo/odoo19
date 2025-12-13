@@ -25,7 +25,6 @@ class FundKycDocument(models.Model):
     verified_date = fields.Datetime()
     status = fields.Selection([('uploaded','Uploaded'),('verified','Verified'),('expired','Expired')], default='uploaded')
     notes = fields.Text()
-    company_id = fields.Many2one('res.company', related='investor_id.company_id', store=True, readonly=True)
     file_data = fields.Binary(string="File")
     file_name = fields.Char(string="File Name")
 
