@@ -133,6 +133,11 @@
               parent="menu_portfolio_root"
               action="action_fund_position_list"
               sequence="52"/>
+    <menuitem id="menu_ordres_bourse"
+              name="Transaction"
+              parent="menu_portfolio_root"
+              action="action_efund_bourse_order"
+              sequence="52"/>
     <menuitem id="menu_valuations"
               name="Valorisations"
               parent="menu_portfolio_root"

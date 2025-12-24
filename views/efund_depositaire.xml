@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- LIST VIEW -->
+    <record id="view_efund_depositaire_list" model="ir.ui.view">
+        <field name="name">efund.depositaire.list</field>
+        <field name="model">efund.depositaire</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sigle"/>
+                <field name="name"/>
+                <field name="forme_juridique"/>
+                <field name="country_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!--  FORME -->
+    <record id="view_efund_bourse_order_form" model="ir.ui.view">
+        <field name="name">efund.depositaire.form</field>
+        <field name="model">efund.depositaire</field>
+        <field name="arch" type="xml">
+            <form string="Dépositaire">
+                <header>
+                    <button name="action_validate"
+                            type="object"
+                            string="Valider"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_archived"
+                            type="object"
+                            string="Archiver"
+                            class="btn-danger"
+                            invisible="state != 'validate'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <group string="Informations">
+                            <field name="sigle"/>
+                            <field name="name"/>
+                        </group>
+                        <group string="Localisation">
+                            <field name="forme_juridique"/>
+                            <field name="country_id"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

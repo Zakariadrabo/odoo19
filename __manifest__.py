@@ -43,11 +43,11 @@
         'views/fund_initial_valuation_wizard_views.xml',
         'views/fund_share_class_views.xml',
         'views/efund_view_compliance_policy_tree.xml',
+        'views/efund_bourse_order_views.xml',
+        'views/efund_depositaire.xml',
         'views/efund_views_valuation.xml',
         'reports/efund_kyc_report.xml',
         'reports/efund_kyc_report_template.xml'
-
-
     ],
 
     'installable': True,
