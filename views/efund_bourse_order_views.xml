@@ -25,16 +25,14 @@
         <field name="arch" type="xml">
             <form string="Ordre de Bourse">
                 <header>
-                    <button name="action_validate"
-                            type="object"
-                            string="Valider"
-                            class="btn-primary"
+                    <button name="action_cancel" type="object" string="Annuler" class="btn-danger"
+                            invisible="state in ('draft','executed','cancelled')"/>
+                    <button name="action_validate" type="object" string="Valider" class="btn-primary"
                             invisible="state != 'draft'"/>
-                    <button name="action_cancel"
-                            type="object"
-                            string="Relâcher"
-                            class="btn-danger"
-                            invisible="state in ('executed','cancelled')"/>
+                    <button name="action_send" type="object" string="Envoyer" class="btn-primary"
+                            invisible="state != 'validated'"/>
+                    <button name="action_execute" type="object" string="Executé" class="btn-primary"
+                            invisible="state != 'send'"/>
                     <field name="state" widget="statusbar"/>
                 </header>
 
@@ -50,34 +48,36 @@
                             <field name="is_subscription"/>
                             <field name="is_buy"/>
                             <field name="is_sell"/>
-                            <field name="order_type"/>
                         </group>
                     </group>
+                    <group>
+                        <group string="Instrument">
+                            <field name="instrument_id"/>
+                            <field name="symbol"/>
+                            <field name="market_place"/>
+                            <field name="depository"/>
+                        </group>
 
-                    <group string="Instrument">
-                        <field name="instrument_id"/>
-                        <field name="symbol"/>
-                        <field name="market_place"/>
-                        <field name="depository"/>
+                        <group string="Conditions">
+                            <field name="quantity"/>
+                            <field name="order_type"/>
+                            <field name="price_limit"/>
+                            <field name="expiry_date"/>
+                        </group>
                     </group>
+                    <group>
+                        <group string="Execution">
+                            <field name="executed_quantity" readonly="1"/>
+                            <field name="execution_price" readonly="1"/>
+                            <field name="gross_amount" readonly="1"/>
+                            <field name="commission_sgi" readonly="1"/>
+                            <field name="commission_total" readonly="1"/>
+                        </group>
 
-                    <group string="Conditions">
-                        <field name="quantity"/>
-                        <field name="price_limit"/>
-                        <field name="allow_loss"/>
-                        <field name="expiry_date"/>
+                        <group string="Signataires">
+                            <field name="signatory_ids" widget="many2many_tags"/>
+                        </group>
                     </group>
-
-                    <group string="Prénotation">
-                        <field name="gross_amount" readonly="1"/>
-                        <field name="commission_sgi" readonly="1"/>
-                        <field name="commission_total" readonly="1"/>
-                    </group>
-
-                    <group string="Signataires">
-                        <field name="signatory_ids" widget="many2many_tags"/>
-                    </group>
-
                     <group string="Commentaires">
                         <field name="comment"/>
                     </group>

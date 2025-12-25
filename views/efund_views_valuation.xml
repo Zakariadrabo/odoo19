@@ -49,10 +49,10 @@
     </record>
 
     <!-- =========================
-         Tree view - fund.valuation
+         List view - fund.valuation
          ========================= -->
-    <record id="view_fund_valuation_tree" model="ir.ui.view">
-        <field name="name">fund.valuation.tree</field>
+    <record id="view_fund_valuation_list" model="ir.ui.view">
+        <field name="name">fund.valuation.list</field>
         <field name="model">efund.fund.valuation</field>
         <field name="arch" type="xml">
             <list string="Valuations" decoration-danger="state == 'cancelled'">

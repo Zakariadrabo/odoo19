@@ -15,7 +15,7 @@ class FundDepositaire(models.Model):
     country_id = fields.Many2one("res.country", string="Pays")
     state = fields.Selection([
         ('draft', 'Draft'),
-        ('confirmed', 'Confirmed'),
+        ('validated', 'Validé'),
         ('archived', 'Archivé'),
     ], default='draft')
 

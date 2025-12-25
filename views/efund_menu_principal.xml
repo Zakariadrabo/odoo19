@@ -29,17 +29,24 @@
               parent="menu_fund_management_root"
               sequence="10"/>
 
+    <menuitem id="menu_management_company"
+              name="SGO"
+              parent="menu_management_company_root"
+              action="action_management_company"
+              sequence="11"/>
+
     <menuitem id="menu_management_company_profile"
               name="Profil / Licences"
               parent="menu_management_company_root"
               action="action_management_company_profile"
-              sequence="11"/>
+              sequence="12"/>
+
 
     <menuitem id="menu_management_company_compliance"
               name="Politiques et Conformité"
               parent="menu_management_company_root"
               action="action_efund_compliance_policy"
-              sequence="12"/>
+              sequence="13"/>
 
     <!-- =========================
          2. FONDS
@@ -134,26 +141,26 @@
               action="action_fund_position_list"
               sequence="52"/>
     <menuitem id="menu_ordres_bourse"
-              name="Transaction"
+              name="Ordre de Bourse"
               parent="menu_portfolio_root"
               action="action_efund_bourse_order"
-              sequence="52"/>
-    <menuitem id="menu_valuations"
-              name="Valorisations"
-              parent="menu_portfolio_root"
-              action="action_fund_valuation_list"
               sequence="53"/>
     <menuitem id="menu_valuations"
               name="Cours instrument"
               parent="menu_portfolio_root"
               action="action_efund_fund_instrument_price"
               sequence="54"/>
-
     <menuitem id="menu_emetteur"
               name="Emetteur"
               parent="menu_portfolio_root"
               action="action_efund_instrument_issuer"
               sequence="55"/>
+
+    <menuitem id="menu_SGI"
+              name="SGI"
+              parent="menu_portfolio_root"
+              action="action_efund_depositaire"
+              sequence="56"/>
 
 
     <!-- =========================

@@ -18,7 +18,7 @@
 """,
     'author': 'eSecureX',
     'website': 'https://www.esecurex.com',
-    'depends': ['base','account','contacts'],
+    'depends': ['base', 'account', 'contacts'],
     'data': [
         'security/ir.model.access.csv',
         'security/efund_security.xml',
@@ -34,7 +34,9 @@
         'wizard/efund_position_wizard_views.xml',
         'views/efund_fund_subscription_views.xml',
         'wizard/efund_cash_deposit_wizard.xml',
-
+        'wizard/efund_bourse_order_execution_wizard_views.xml',
+        'views/efund_bourse_order_views.xml',
+        'views/efund_depositaire.xml',
         'views/efund_menu_parametre.xml',
         'views/efund_investor_views.xml',
         'views/efund_views_parametre.xml',
@@ -43,8 +45,6 @@
         'views/fund_initial_valuation_wizard_views.xml',
         'views/fund_share_class_views.xml',
         'views/efund_view_compliance_policy_tree.xml',
-        'views/efund_bourse_order_views.xml',
-        'views/efund_depositaire.xml',
         'views/efund_views_valuation.xml',
         'reports/efund_kyc_report.xml',
         'reports/efund_kyc_report_template.xml'

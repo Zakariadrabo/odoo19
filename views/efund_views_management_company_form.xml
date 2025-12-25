@@ -42,8 +42,8 @@
     <!-- ===================== -->
     <!-- List View             -->
     <!-- ===================== -->
-    <record id="view_efund_management_company_tree" model="ir.ui.view">
-        <field name="name">efund.management.company.tree</field>
+    <record id="view_efund_management_company_list" model="ir.ui.view">
+        <field name="name">efund.management.company.list</field>
         <field name="model">efund.management.company</field>
 
         <field name="arch" type="xml">
@@ -69,7 +69,7 @@
                 <sheet>
                     <div class="oe_title">
                         <h1>
-                            <field name="name" readonly="1"/>
+                            <field name="name"/>
                         </h1>
                     </div>
 

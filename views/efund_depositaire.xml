@@ -15,7 +15,7 @@
     </record>
 
     <!--  FORME -->
-    <record id="view_efund_bourse_order_form" model="ir.ui.view">
+    <record id="view_efund_depositaire_form" model="ir.ui.view">
         <field name="name">efund.depositaire.form</field>
         <field name="model">efund.depositaire</field>
         <field name="arch" type="xml">
@@ -30,7 +30,7 @@
                             type="object"
                             string="Archiver"
                             class="btn-danger"
-                            invisible="state != 'validate'"/>
+                            invisible="state != 'validated'"/>
                     <field name="state" widget="statusbar"/>
                 </header>
 

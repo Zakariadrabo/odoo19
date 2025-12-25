@@ -31,6 +31,17 @@
             </p>
         </field>
     </record>
+    <!-- SGO -->
+    <record id="action_management_company" model="ir.actions.act_window">
+        <field name="name">Ordres de Bourse</field>
+        <field name="res_model">efund.management.company</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créez la SGO.
+            </p>
+        </field>
+    </record>
     <!-- Action Profil et licence  -->
     <record id="action_management_company_profile" model="ir.actions.act_window">
         <field name="name">Profil / Licences</field>
@@ -149,17 +160,18 @@
         <field name="view_mode">list,form,graph</field>
     </record>
 
-    <!-- Valorisation -->
-    <record id="action_fund_valuation_list" model="ir.actions.act_window">
-        <field name="name">Valorisations</field>
-        <field name="res_model">efund.fund.valuation</field>
-        <field name="view_mode">kanban,list,form</field>
+     <!-- order de bourse -->
+    <record id="action_efund_bourse_order" model="ir.actions.act_window">
+        <field name="name">Ordres de Bourse</field>
+        <field name="res_model">efund.bourse.order</field>
+        <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Créez une valorisation pour un fonds et calculez le NAV par part.
+                Créez la transaction.
             </p>
         </field>
     </record>
+
 
     <!-- Cours -->
     <record id="action_efund_fund_instrument_price" model="ir.actions.act_window">
@@ -169,17 +181,6 @@
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Créez la liste des cours.
-            </p>
-        </field>
-    </record>
-    <!-- ACTION -->
-    <record id="action_efund_bourse_order" model="ir.actions.act_window">
-        <field name="name">Ordres de Bourse</field>
-        <field name="res_model">efund.bourse.order</field>
-        <field name="view_mode">list,form</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Créez la transaction.
             </p>
         </field>
     </record>
@@ -193,6 +194,18 @@
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Créer et gérer votre premier Emetteur.
+            </p>
+        </field>
+    </record>
+
+    <!-- SGI -->
+    <record id="action_efund_depositaire" model="ir.actions.act_window">
+        <field name="name">SGI</field>
+        <field name="res_model">efund.depositaire</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer et gérer votre première SGI.
             </p>
         </field>
     </record>

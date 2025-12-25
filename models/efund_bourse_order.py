@@ -34,9 +34,9 @@ class EfundBourseOrder(models.Model):
     # STATUT
     # ---------------------------------------------------------------------
     state = fields.Selection([
-        ('draft', 'Non envoyé'),
+        ('draft', 'Brouillon'),
         ('validated', 'Validé'),
-        ('partial', 'Pris en charge'),
+        ('send', 'Envoyé'),
         ('executed', 'Exécuté'),
         ('cancelled', 'Relâché')
     ], default='draft', string="Statut")
@@ -92,6 +92,15 @@ class EfundBourseOrder(models.Model):
     # ---------------------------------------------------------------------
     price_limit = fields.Float(string="Cours limite")
     quantity = fields.Float(string="Quantité", required=True)
+    executed_quantity = fields.Float(string="Quantité exécutée")
+    execution_price = fields.Float(string="Cours executed")
+    execution_date = fields.Date(string="Date d'exécution",readonly=True)
+    execution_type = fields.Selection(
+        [('partial', 'Exécuté partiellement'), ('executed', 'Exécuté totalement')],
+        string="Type d'exécution",
+        readonly=True
+    )
+
 
     allow_loss = fields.Boolean(
         string="P ? (Vente à perte autorisée)",
@@ -142,7 +151,7 @@ class EfundBourseOrder(models.Model):
     @api.depends('price_limit', 'quantity')
     def _compute_prenotation(self):
         for rec in self:
-            rec.gross_amount = rec.price_limit * rec.quantity
+            rec.gross_amount = rec.execution_price * rec.executed_quantity
             rec.commission_sgi = rec.gross_amount * 0.005  # 0,5% exemple
             rec.commission_total = rec.commission_sgi
 
@@ -156,3 +165,21 @@ class EfundBourseOrder(models.Model):
     def action_cancel(self):
         for rec in self:
             rec.state = 'cancelled'
+
+    def action_send(self):
+        for rec in self:
+            rec.state = 'send'
+
+    def action_execute(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Exécution de l’ordre',
+            'res_model': 'efund.bourse.order.execution.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_order_id': self.id,
+                'default_remaining_quantity': self.quantity - self.executed_quantity,
+            }
+        }

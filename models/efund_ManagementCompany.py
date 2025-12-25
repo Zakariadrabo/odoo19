@@ -12,7 +12,8 @@ class FundManagementCompany(models.Model):
         'res.company',
         string='Company',
         required=True,
-        ondelete='cascade'
+        ondelete='cascade',
+        domain="[('is_management_company', '=', True)]"
     )
 
     # Propriétés spécifiques société de gestion
