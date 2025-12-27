@@ -12,21 +12,12 @@ class FundInvestor(models.Model):
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "id desc"
 
-    # NOTE: partner_id is NOT required to allow automatic creation from this model
-    partner_id = fields.Many2one(
-        "res.partner",
-        string="Related Partner",
-        required=True,
-        ondelete="cascade",
-    )
-
     partner_id = fields.Many2one(
         'res.partner',
         string="Partner",
         required=False,
         ondelete='cascade',
         domain="[('is_investor', '=', True)]",
-
     )
 
     company_id = fields.Many2one('res.company', string="Context Company (Fund)", required=True, index=True)
@@ -112,20 +103,24 @@ class FundInvestor(models.Model):
     company_currency_id = fields.Many2one('res.currency', related='company_id.currency_id', store=True, readonly=True)
 
     # Sécurité : limiter la création manuelle
-    @api.model
-    def create(self, vals):
-        """Créer automatiquement le partner si non fourni."""
-        if not vals.get("partner_id"):
-            partner_vals = self._prepare_partner_vals(vals)
-            partner = self.env["res.partner"].create(partner_vals)
-            vals["partner_id"] = partner.id
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if not vals.get("partner_id"):
+                partner_vals = self._prepare_partner_vals(vals)
+                partner = self.env["res.partner"].create(partner_vals)
+                vals["partner_id"] = partner.id
 
-        investor = super().create(vals)
+        investors = super().create(vals_list)
 
         # Marquer le partner comme investisseur
-        investor.partner_id.write({"is_investor": True})
+        for investor in investors:
+            if investor.partner_id:
+                investor.partner_id.write({"is_investor": True})
 
-        return investor
+        return investors
+
+
 
     def _prepare_partner_vals(self, vals):
         """Convertit les champs EfundInvestor → res.partner proprement."""
@@ -133,7 +128,6 @@ class FundInvestor(models.Model):
             "name": vals.get("full_name") or _("New Investor"),
             "email": vals.get("email"),
             "phone": vals.get("phone"),
-            "mobile": vals.get("mobile"),
             "street": vals.get("address"),
             "city": vals.get("city"),
             "country_id": vals.get("country_id"),
@@ -198,7 +192,7 @@ class FundInvestor(models.Model):
         if self.account_part_ids or self.account_cash_ids:
             raise UserError(_("Cet investisseur possède déjà des comptes."))
 
-        country = (self.country or "XX").upper()
+        country = (self.country_id.code or "XX").upper()
         inv_type = "IND"
         # if partner is a company
         if self.partner_id and self.partner_id.company_type == "company":
@@ -315,3 +309,6 @@ class FundInvestor(models.Model):
 
     def action_create_aml_alert(self):
         _logger.info("test")
+
+
+

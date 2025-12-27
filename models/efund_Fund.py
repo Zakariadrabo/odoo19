@@ -3,6 +3,7 @@ import logging
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.models import Constraint
+
 _logger = logging.getLogger(__name__)
 
 
@@ -87,6 +88,8 @@ class Fund(models.Model):
         'account.account',
         string='Redemption Account'
     )
+    redemption_delay = fields.Selection([('J', 'J'), ('J1', 'J+1'), ('J2', 'J+2'), ], string="Délai de rachat",
+                                        default='J2', required=True )
 
     fee_income_account_id = fields.Many2one(
         'account.account',
@@ -161,6 +164,7 @@ class Fund(models.Model):
         compute='_compute_cash_committed',
         currency_field='currency_id'
     )
+
     #################################################
     #      Constrainte
     ################################################
@@ -183,7 +187,6 @@ class Fund(models.Model):
             ('company_id', '=', self.company_id.id),
             ('type', '=', journal_type)
         ], limit=1)
-
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -292,7 +295,7 @@ class Fund(models.Model):
             }
         }
 
-    #Méthode positions
+    # Méthode positions
     @api.depends('position_ids', 'position_ids.market_value',
                  'position_ids.unrealized_pl', 'position_ids.valuation_date')
     def _compute_portfolio_summary(self):
@@ -450,4 +453,3 @@ class Fund(models.Model):
                 'amount': t.amount
             } for t in transactions]
         }
-

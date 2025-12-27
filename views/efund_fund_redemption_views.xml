@@ -1,0 +1,118 @@
+<odoo>
+
+    <!-- ========================= -->
+    <!-- LIST / TREE VIEW          -->
+    <!-- ========================= -->
+    <record id="view_efund_fund_redemption_list" model="ir.ui.view">
+        <field name="name">efund.fund.redemption.list</field>
+        <field name="model">efund.fund.redemption</field>
+        <field name="arch" type="xml">
+            <list string="Rachats de parts"
+                  decoration-success="state == 'executed'"
+                  decoration-warning="state == 'submitted'"
+                  decoration-danger="state == 'rejected'">
+                <field name="name"/>
+                <field name="request_date"/>
+                <field name="investor_id"/>
+                <field name="fund_id"/>
+                <field name="redemption_type"/>
+                <field name="parts"/>
+                <field name="nav_date"/>
+                <field name="nav_value"/>
+                <field name="amount"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <!-- ========================= -->
+    <!-- FORM VIEW                 -->
+    <!-- ========================= -->
+    <record id="view_efund_fund_redemption_form" model="ir.ui.view">
+        <field name="name">efund.fund.redemption.form</field>
+        <field name="model">efund.fund.redemption</field>
+        <field name="arch" type="xml">
+            <form string="Ordre de rachat de parts">
+
+                <!-- HEADER -->
+                <header>
+                    <field name="state"
+                           widget="statusbar"/>
+                    <button name="action_submit"
+                            type="object"
+                            string="Soumettre"
+                            class="oe_highlight"
+                             invisible ="state !='draft'"/>
+                    <button name="action_validate"
+                            type="object"
+                            string="Valider"
+                            class="btn-primary"
+                            invisible ="state != 'submitted'"/>
+                    <button name="action_execute"
+                            type="object"
+                            string="Exécuter"
+                            class="btn-success"
+                             invisible ="state !='validated'"/>
+                    <button name="action_cancel"
+                            type="object"
+                            string="Annuler"
+                            class="btn-secondary"
+                           invisible ="state in ('executed','cancelled')"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="request_date"/>
+                            <field name="execution_date"/>
+                        </group>
+                        <group>
+                            <field name="fund_id"/>
+                            <field name="company_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <!-- ONGLET INVESTISSEUR -->
+                        <page string="Investisseur">
+                            <group>
+                                <field name="investor_id"/>
+                                <field name="account_part_id"/>
+                            </group>
+                        </page>
+                        <!-- ONGLET RACHAT -->
+                        <page string="Détails du rachat">
+                            <group>
+                                <group>
+                                    <field name="redemption_type"/>
+                                    <field name="parts"/>
+                                </group>
+                                <group>
+                                    <field name="nav_date"/>
+                                    <field name="nav_value" readonly="1"/>
+                                    <field name="amount" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <!-- ONGLET CONTRÔLE -->
+                        <page string="Contrôle / conformité">
+                            <group>
+                                <field name="rejection_reason"
+                                       attrs="{'invisible':[('state','!=','rejected')]}"/>
+                            </group>
+                        </page>
+
+                    </notebook>
+                </sheet>
+
+                <!-- CHATTER -->
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+
+            </form>
+        </field>
+    </record>
+

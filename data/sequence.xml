@@ -1,0 +1,9 @@
+<odoo>
+    <record id="seq_efund_fund_redemption" model="ir.sequence">
+        <field name="name">Ordre de rachat OPCVM</field>
+        <field name="code">efund.fund.redemption</field>
+        <field name="prefix">RED/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

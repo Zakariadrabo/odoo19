@@ -7,33 +7,11 @@
         <field name="arch" type="xml">
 
             <form string="Investor">
-
-                <!-- ========================== -->
-                <!-- HEADER UX OPTIMISÉ        -->
-                <!-- ========================== -->
                 <header>
-                    <button name="action_check_kyc_compliance"
-                            string="Vérifier KYC"
-                            type="object"
-                            class="btn-primary"
-                            icon="fa-check-circle"/>
-
-                    <button name="%(action_efund_aml_alert)d"
-                            type="action"
-                            class="oe_stat_button"
-                            icon="fa-shield-alt">
-                        <field name="aml_alert_ids" widget="statinfo"
-                               string="Alertes AML"/>
-                    </button>
-
-                    <button name="action_create_aml_alert"
-                            type="object"
-                            class="btn-secondary"
-                            string="Nouvelle Alerte"
-                            icon="fa-plus"/>
-
-                    <field name="status" widget="statusbar"
-                           statusbar_visible="draft,kyc_pending,kyc_approved,kyc_rejected,archived"/>
+                    <button name="action_check_kyc_compliance" type="object" string="Check KYC" class="oe_stat_button"
+                            icon="fa-check-circle"
+                            invisible="status in ('archived','kyc_rejected')"/>
+                    <field name="status" widget="statusbar"/>
                 </header>
 
 
@@ -41,28 +19,24 @@
                 <!--    FICHE INVESTISSEUR     -->
                 <!-- ========================== -->
                 <sheet>
-                    <h1>
-
-
-                        <field name="full_name"/>
-                    </h1>
-
-                    <group>
+                    <group class="o_td_highlight">
                         <group string="Identité">
-                            <field name="partner_id" readonly="1"/>
-                            <field name="kyc_level"/>
-                            <field name="compliance_status" widget="badge"/>
-                            <field name="compliance_score" widget="progressbar" options="{'max_value': 100}"/>
+                            <field name="full_name"/>
+                            <field name="address"/>
+                            <field name="city"/>
+                            <field name="country_id"/>
+                            <field name="available_cash" readonly="1" string="Cash disponible"/>
                         </group>
-
                         <group string="Conformité">
-                            <field name="pep_flag"/>
-                            <field name="sanctions_flag"/>
-                            <field name="kyc_operator_id"/>
-                            <field name="kyc_last_update"/>
+                            <field name="compliance_status" widget="badge" string="Compliance"/>
+                            <field name="compliance_score" widget="progressbar" options="{'max_value': 100}"
+                                   string="Score"/>
+                            <field name="pep_flag" string="PEP"/>
+                            <field name="sanctions_flag" string="Sanctions"/>
+                            <field name="kyc_last_update" string="Last KYC Update"/>
+
                         </group>
                     </group>
-
                     <!-- ========================== -->
                     <!--         COMPTES            -->
                     <!-- ========================== -->
@@ -70,55 +44,50 @@
                     <notebook>
                         <page string="Comptes Client">
                             <group>
-
-                                <!-- ========================== -->
-                                <!--   Bouton création comptes  -->
-                                <!-- ========================== -->
-                                <button name="action_create_investor_accounts"
-                                        type="object"
-                                        string="Créer les comptes client"
-                                        class="btn-primary"
-                                        icon="fa-plus"
-                                        invisible="account_part_ids or account_cash_ids"/>
-
                                 <group>
+                                    <button name="action_create_investor_accounts" type="object" string="Créer comptes"
+                                            class="oe_highlight" icon="fa-plus"
+                                            invisible="account_part_ids or account_cash_ids"/>
+                                </group>
+                                <group>
+                                    <button name="action_open_cash_deposit_wizard" type="object"
+                                            string="Dépôt espèces"
+                                            class="btn-primary" icon="fa-money"
+                                            invisible="not account_cash_ids"/>
+                                    <button name="action_open_subscription_wizard" type="object"
+                                            string="+ Souscription"
+                                            class="btn-success" icon="fa-arrow-up"
+                                            invisible="not account_cash_ids"/>
+                                </group>
+                            </group>
 
-                                    <!-- ===== Compte Titre ===== -->
-                                    <group string="Compte Titres">
-                                        <field name="account_part_ids" nolabel="1">
-                                            <list>
-                                                <field name="account_number"/>
-                                                <field name="total_parts"/>
-                                                <field name="state" widget="badge"/>
-                                            </list>
-                                        </field>
-                                    </group>
-
-                                    <!-- ===== Compte Espèces ===== -->
-                                    <group string="Compte Espèces">
-                                        <button name="action_open_cash_deposit_wizard"
-                                                string="Dépôt"
-                                                type="object"
-                                                class="btn-primary"
-                                                icon="fa-money"/>
-
-                                        <button name="action_open_subscription_wizard"
-                                                string="Souscription"
-                                                type="object"
-                                                class="btn-success"
-                                                icon="fa-arrow-up"/>
-
-                                        <field name="account_cash_ids" nolabel="1">
-                                            <list>
-                                                <field name="account_number"/>
-                                                <field name="balance"/>
-                                                <field name="state" widget="badge"/>
-                                            </list>
-                                        </field>
-                                    </group>
+                            <group>
+                                <group string="Comptes Titres">
+                                    <field name="account_part_ids" nolabel="1">
+                                        <list string="Comptes Titres">
+                                            <field name="name"/>
+                                            <field name="account_number"/>
+                                            <field name="fund_id"/>
+                                            <field name="total_parts"/>
+                                            <field name="state" widget="badge"/>
+                                            <button name="action_redeem_parts" type="object" string="Rachat de parts"
+                                                    class="oe_highlight" icon="fa-exchange" invisible ="state != 'active' or total_parts &lt;= 0"/>
+                                        </list>
+                                    </field>
+                                </group>
+                                <group string="Comptes Espèces">
+                                    <field name="account_cash_ids" nolabel="1">
+                                        <list string="Comptes Espèces">
+                                            <field name="name"/>
+                                            <field name="account_number"/>
+                                            <field name="balance"/>
+                                            <field name="state" widget="badge"/>
+                                        </list>
+                                    </field>
                                 </group>
                             </group>
                         </page>
+
 
                         <!-- ========================== -->
                         <!--           KYC              -->
