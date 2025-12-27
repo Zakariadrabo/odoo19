@@ -1,10 +1,13 @@
 import logging
+from datetime import date
 from email.policy import default
 
 from dateutil.relativedelta import relativedelta
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
+
 _logger = logging.getLogger(__name__)
+
 
 class FundInstrument(models.Model):
     _name = "efund.fund.instrument"
@@ -29,12 +32,11 @@ class FundInstrument(models.Model):
     ], default='other', required=True, string="Type d’instrument")
 
     currency_id = fields.Many2one('res.currency', string="Devise", required=True)
-    status = fields.Selection([
-        ('draft', 'Draft'),
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
-        ('archived', 'Archived')
+    state = fields.Selection([
+        ('draft', 'Brouillon'),
+        ('pending', 'Vérification'),
+        ('approved', 'Approuvé'),
+        ('archived', 'Archivé')
     ], default='draft')
 
     price_ids = fields.One2many(
@@ -47,7 +49,6 @@ class FundInstrument(models.Model):
         'efund.fund.instrument.price.import',
         string="Configuration d'import"
     )
-
 
     # ----------------------------------------------------
     # PARTIES IMPLIQUÉES
@@ -82,24 +83,17 @@ class FundInstrument(models.Model):
 
     # === INFORMATIONS MARCHÉ (ajouts) ===
     is_listed = fields.Boolean(
-        string='Listed Instrument',
+        string='Est Coté',
         default=True,
         tracking=True,
-        help="Indicates if the bond is listed on a stock exchange"
-    )
-
-    listing_exchange = fields.Char(
-        string='Listing Exchange',
-        tracking=True,
-        help="Stock exchange where the bond is listed (e.g., EURONEXT, LSE)"
+        help="Indique si l'instrument est coté"
     )
 
     listing_date = fields.Date(
-        string='Listing Date',
+        string='Date 1ère Cotation',
         tracking=True,
-        help="Date when the bond was first listed"
+        help="Indique la date de la 1ère cotation"
     )
-
 
     # Dernier cours validé
     last_validated_price = fields.Float(
@@ -110,6 +104,24 @@ class FundInstrument(models.Model):
     last_price_date = fields.Date(
         compute='_compute_last_validated_price',
         string="Date dernier cours"
+    )
+    # ----------------------------------------------------
+    # Taux des taxes
+    # ----------------------------------------------------
+    taxe_irvm = fields.Float(
+        string='Taux IRVM',
+        digits=(16, 4),
+        help="Taux de la taxe IRVM"
+    )
+    taxe_taf = fields.Float(
+        string='Taux TAF',
+        digits=(16, 4),
+        help="Taux de la taxe TAF"
+    )
+    taxe_irc = fields.Float(
+        string='Taux IRC',
+        digits=(16, 4),
+        help="Taux de la taxe IRC"
     )
 
     # ----------------------------------------------------
@@ -122,7 +134,7 @@ class FundInstrument(models.Model):
 
     # --- OBLIGATIONS ---
     bond_type = fields.Selection([
-        ('fixed_rate', 'Fixed Rate Bond'),
+        ('fixed_rate', 'Taux Fixe'),
         ('floating_rate', 'Floating Rate Note (FRN)'),
         ('zero_coupon', 'Zero Coupon Bond'),
         ('convertible', 'Convertible Bond'),
@@ -246,9 +258,9 @@ class FundInstrument(models.Model):
 
     days_to_next_coupon = fields.Integer(
         string='Days to Next Coupon',
-        compute='_compute_coupon_schedule',
-        store=True,  # ✅ Stocké aussi, mais recalculé moins souvent
-        help="Nombre de jours jusqu'au prochain coupon"
+        compute='_compute_days_to_next_coupon',
+        help="Nombre de jours jusqu'au prochain coupon",
+        store=False
     )
     maturity_years = fields.Float(compute="_compute_maturity_years", store=True)
 
@@ -271,6 +283,66 @@ class FundInstrument(models.Model):
     # ----------------------------------------------------
     is_active = fields.Boolean(default=True, string="Actif pour la valorisation")
     position_ids = fields.One2many('efund.fund.position', 'instrument_id', string="Positions détenues")
+
+    # ----------------------------------------------------
+    # ÉVÉNEMENTS
+    # ----------------------------------------------------
+    event_ids = fields.One2many(
+        'efund.fund.instrument.event',
+        'instrument_id',
+        string="Événements",
+        help="Événements sur cet instrument"
+    )
+
+    upcoming_event_count = fields.Integer(
+        string="Événements à venir",
+        compute='_compute_upcoming_event_count',
+        store=False
+    )
+
+    recent_event_ids = fields.One2many(
+        'efund.fund.instrument.event',
+        'instrument_id',
+        string="Événements récents",
+        domain=[('event_date', '>=', fields.Date.today())]
+    )
+
+    def _compute_upcoming_event_count(self):
+        for instrument in self:
+            count = self.env['efund.fund.instrument.event'].search_count([
+                ('instrument_id', '=', instrument.id),
+                ('event_date', '>=', fields.Date.today()),
+                ('state', 'in', ['draft', 'confirmed'])
+            ])
+            instrument.upcoming_event_count = count
+
+    # Ajoutez aussi cette méthode dans les actions
+    def action_view_events(self):
+        """Affiche les événements de l'instrument"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': f'Événements - {self.name}',
+            'res_model': 'efund.fund.instrument.event',
+            'view_mode': 'tree,form,calendar',
+            'domain': [('instrument_id', '=', self.id)],
+            'context': {'default_instrument_id': self.id},
+        }
+
+    def action_create_event(self):
+        """Créer un nouvel événement pour cet instrument"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': f'Créer un événement - {self.name}',
+            'res_model': 'efund.fund.instrument.event',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_instrument_id': self.id,
+                'default_currency_id': self.currency_id.id,
+            },
+        }
 
     # === MÉTHODES DE CALCUL ===
     # === MÉTHODE UNIFIÉE ===
@@ -297,6 +369,17 @@ class FundInstrument(models.Model):
             else:
                 rec.maturity_years = 0
 
+    @api.depends('next_coupon_date')
+    def _compute_days_to_next_coupon(self):
+        today = date.today()
+        for rec in self:
+            if rec.next_coupon_date:
+                rec.days_to_next_coupon = max(
+                    (rec.next_coupon_date - today).days, 0
+                )
+            else:
+                rec.days_to_next_coupon = 0
+
     @api.depends('first_coupon_date', 'coupon_frequency', 'coupon_calculation_date')
     def _compute_coupon_schedule(self):
         """Calcule toutes les informations de coupon en une passe"""
@@ -305,7 +388,6 @@ class FundInstrument(models.Model):
         for bond in self:
             # Réinitialisation
             bond.next_coupon_date = False
-            bond.days_to_next_coupon = 0
 
             # Vérification des prérequis
             if not bond.first_coupon_date:
@@ -494,7 +576,6 @@ class FundInstrument(models.Model):
         if coupons:
             self.env['efund.bond.coupon'].create(coupons)
 
-
         # Message de confirmation
         return {
             'type': 'ir.actions.client',
@@ -574,6 +655,7 @@ class FundInstrument(models.Model):
                 'sticky': False,
             }
         }
+
     # Appel wizard tableau d'amortissement
     def action_open_amortization_wizard(self):
         """Ouvre le wizard de génération du tableau d'amortissement"""
@@ -597,7 +679,6 @@ class FundInstrument(models.Model):
                 'default_start_date': self.issue_date or False,
             },
         }
-
 
     def action_import_price_today(self):
         """Importer le cours du jour pour cet instrument"""
@@ -651,4 +732,21 @@ class FundInstrument(models.Model):
             'target': 'new',
         }
 
+    def action_archived(self):
+        for order in self:
+            if order.state != 'approved':
+                continue
+            order.state = 'archived'
+
+    def action_check(self):
+        for order in self:
+            if order.state != 'draft':
+                continue
+            order.state = 'pending'
+
+    def action_approve(self):
+        for order in self:
+            if order.state != 'pending':
+                continue
+            order.state = 'approved'
 

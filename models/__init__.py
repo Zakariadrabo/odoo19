@@ -6,4 +6,5 @@ from . import res_company, forme_juridique, statut_operationnel, type_fonds, sec
     efund_fund_valuation_log, efund_fund_report_regulatory, res_partner, efund_account_cash, efund_account_part, \
     efund_initial_valuation_wizard, efund_initial_valuation_investor_line, efund_investor_position, \
     efund_compliance_policy, efund_instrument_issuer, efund_instrument_bond_amortization, efund_instrument_bond, \
-    efund_fund_instrument_price, efund_config_import_price, menu_visibility,efund_bourse_order, efund_depositaire
+    efund_fund_instrument_price, efund_config_import_price, menu_visibility, efund_bourse_order, efund_depositaire, \
+    efund_bourse_order_execution_line, efund_fund_instrument_event, efund_position_adjustment

@@ -35,8 +35,13 @@
         <field name="arch" type="xml">
             <form string="Instrument Financier" create="true" edit="true">
                 <header>
-                    <field name="status" widget="statusbar"
-                           statusbar_visible="draft,pending,approved,rejected,archived"/>
+                    <button name="action_archived" type="object" string="Archivé" class="btn-danger"
+                            invisible="state != 'approved'"/>
+                    <button name="action_check" type="object" string="Vérifier" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve" type="object" string="Approuvé" class="btn-primary"
+                            invisible="state != 'pending'"/>
+                    <field name="state" widget="statusbar"/>
                 </header>
                 <sheet>
                     <group>
@@ -50,8 +55,10 @@
                             <field name="custodian"/>
                         </group>
                         <group string="Informations sur la cotation">
+                            <field name="taxe_irvm"/>
+                            <field name="taxe_taf"/>
+                            <field name="taxe_irc"/>
                             <field name="is_listed"/>
-                            <field name="listing_exchange"/>
                             <field name="listing_date"/>
                         </group>
 
@@ -135,7 +142,7 @@
                                 </list>
                             </field>
                         </page>
-                        <page string="Calculs">
+                        <page string="Calculs" invisible="instrument_type != 'equity'">
                             <group>
                                 <div class="o_form_label">Yield to Maturity (YTM)</div>
                                 <div class="o_stat_info">
@@ -151,7 +158,8 @@
                                 </div>
                             </group>
                         </page>
-                        <page string="Tableau d'Amortissement" name="bond_amortization">
+                        <page string="Tableau d'Amortissement" name="bond_amortization"
+                              invisible="instrument_type != 'bond'">
                             <button string="Générer le tableau"
                                     type="object"
                                     class="btn-primary"
@@ -190,6 +198,10 @@
                                 <field name="right_expiry_date"/>
                             </group>
                         </page>
+                        <!-- =========================== -->
+                        <!-- TAB: Historique des évènements -->
+                        <!-- =========================== -->
+
 
                         <!-- TAB: Positions détenues -->
                         <page string="Positions">
@@ -209,18 +221,17 @@
                         <!-- TAB: Cours        -->
                         <!-- =========================== -->
                         <page string="Cours" invisible="instrument_type not in ('bond','equity')">
-                            <div class="oe_button_box" name="button_box">
-                                <button name="action_import_price_today"
-                                        type="object"
-                                        string="Importer cours"
-                                        class="oe_highlight"
-                                        icon="fa-download"/>
-                                <button name="action_open_price_import_wizard"
-                                        type="object"
-                                        string="Importer depuis fichier/API"
-                                        class="btn-primary"
-                                        icon="fa-upload"/>
-                            </div>
+                            <button name="action_import_price_today"
+                                    type="object"
+                                    string="Importer cours"
+                                    class="oe_highlight"
+                                    icon="fa-download"/>
+                            <button name="action_open_price_import_wizard"
+                                    type="object"
+                                    string="Importer depuis fichier/API"
+                                    class="btn-primary"
+                                    icon="fa-upload"/>
+
                             <field name="price_ids">
                                 <list string="Historique des cours" editable="bottom">
                                     <field name="date"/>

@@ -47,7 +47,6 @@
         <field name="name">Profil / Licences</field>
         <field name="res_model">efund.management.company</field>
         <field name="view_mode">form</field>
-        <field name="view_id" ref="efundOpc.view_management_company_profile_form"/>
         <field name="target">current</field>
     </record>
 
@@ -181,6 +180,29 @@
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Créez la liste des cours.
+            </p>
+        </field>
+    </record>
+
+    <!-- Événements sur Instruments -->
+    <record id="action_efund_fund_instrument_event" model="ir.actions.act_window">
+        <field name="name">Événements sur Instruments</field>
+        <field name="res_model">efund.fund.instrument.event</field>
+        <field name="view_mode">list,form,calendar,pivot,graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créez la liste des cours.
+            </p>
+        </field>
+    </record>
+    <!-- Ajustement Événements sur Instruments -->
+    <record id="action_efund_position_adjustment" model="ir.actions.act_window">
+        <field name="name">Ajustement Événements sur Instruments</field>
+        <field name="res_model">efund.position.adjustment</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer Ajustement évènement sur valeur.
             </p>
         </field>
     </record>

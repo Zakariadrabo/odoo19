@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue Liste des Événements -->
+    <record id="view_efund_fund_instrument_event_list" model="ir.ui.view">
+        <field name="name">efund.fund.instrument.event.list</field>
+        <field name="model">efund.fund.instrument.event</field>
+        <field name="arch" type="xml">
+            <list string="Événements sur Instruments" decoration-info="state=='confirmed'"
+                  decoration-danger="state=='cancelled'" decoration-success="state=='processed'">
+                <field name="name" string="Référence"/>
+                <field name="instrument_id" widget="many2one_avatar"/>
+                <field name="isin" invisible="1"/>
+                <field name="event_type"/>
+                <field name="event_date"/>
+                <field name="state" widget="badge" decoration-success="state=='processed'"
+                       decoration-info="state=='confirmed'" decoration-warning="state=='pending'"/>
+                <field name="cash_amount" sum="Montant Total"/>
+                <field name="affected_position_count" string="Positions"/>
+                <field name="is_processed" invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue Formulaire des Événements -->
+    <record id="view_efund_fund_instrument_event_form" model="ir.ui.view">
+        <field name="name">efund.fund.instrument.event.form</field>
+        <field name="model">efund.fund.instrument.event</field>
+        <field name="arch" type="xml">
+            <form string="Événement sur Instrument">
+                <header>
+                    <button name="action_confirm" string="Confirmer" type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_process" string="Traiter" type="object" class="btn-success"
+                            invisible="state != 'confirmed'"/>
+                    <button name="action_cancel" string="Annuler" type="object" class="btn-secondary"
+                            invisible="state in ('cancelled', 'processed')"/>
+                    <button name="action_reset_to_draft" string="Réinitialiser" type="object" class="btn-secondary"
+                            invisible="state != 'cancelled'"/>
+                    <button name="action_view_affected_positions" string="Voir Positions" type="object" class="btn-info"
+                            invisible="affected_position_count == 0"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_affected_positions" type="object" class="oe_stat_button"
+                                invisible="affected_position_count == 0">
+                            <div class="o_stat_info">
+                                <field name="affected_position_count" widget="statinfo" string="Positions"/>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Référence de l'événement"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Identification">
+                            <field name="instrument_id"/>
+                            <field name="event_type"/>
+                            <field name="impact_type"/>
+                        </group>
+                        <group string="Dates">
+                            <field name="announcement_date"/>
+                            <field name="event_date"/>
+                            <field name="record_date"/>
+                            <field name="payment_date"/>
+                            <field name="processed_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Caractéristiques">
+                            <field name="adjustment_ratio"
+                                   required="event_type in ('stock_split', 'reverse_split', 'capital_increase', 'capital_reduction')"/>
+                            <field name="quantity_ratio" required="event_type in ('merger', 'spin_off')"/>
+                        </group>
+                        <group string="Montants">
+                            <field name="cash_amount"/>
+                            <field name="tax_rate"/>
+                            <field name="net_amount" readonly="1"/>
+                            <field name="currency_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Description" colspan="2">
+                            <field name="description" nolabel="1"
+                                   placeholder="Description détaillée de l'événement..."/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Historique" invisible="affected_position_count == 0">
+                            <field name="position_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                        </page>
+                        <page string="Notes">
+                            <div class="oe_chatter">
+                                <field name="message_ids" widget="mail_thread"/>
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vue Recherche des Événements -->
+    <record id="view_efund_fund_instrument_event_search" model="ir.ui.view">
+        <field name="name">efund.fund.instrument.event.search</field>
+        <field name="model">efund.fund.instrument.event</field>
+        <field name="arch" type="xml">
+            <search string="Rechercher Événements">
+                <field name="name"/>
+                <field name="instrument_id"/>
+                <field name="isin"/>
+                <field name="event_type"/>
+                <field name="event_date"/>
+                <filter name="filter_draft" string="Brouillon" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_confirmed" string="Confirmés" domain="[('state', '=', 'confirmed')]"/>
+                <filter name="filter_processed" string="Traités" domain="[('state', '=', 'processed')]"/>
+                <filter name="filter_current_month" string="Ce mois"
+                        domain="[('event_date', '>=', context_today().replace(day=1))]"/>
+                <filter name="filter_upcoming" string="À venir" domain="[('event_date', '>=', context_today())]"/>
+                <separator/>
+                <filter name="group_by_instrument" string="Par Instrument" context="{'group_by': 'instrument_id'}"/>
+                <filter name="group_by_event_type" string="Par Type" context="{'group_by': 'event_type'}"/>
+                <filter name="group_by_state" string="Par Statut" context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
+   <!-- Vue Calendrier CORRIGÉE -->
+    <record id="view_efund_fund_instrument_event_calendar" model="ir.ui.view">
+        <field name="name">efund.fund.instrument.event.calendar</field>
+        <field name="model">efund.fund.instrument.event</field>
+        <field name="arch" type="xml">
+            <calendar string="Calendrier des Événements"
+                      date_start="event_date">
+                <field name="name"/>
+                <field name="instrument_id"/>
+                <field name="event_type"/>
+                <field name="state"/>
+                <field name="cash_amount"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- Vue Pivot -->
+    <record id="view_efund_fund_instrument_event_pivot" model="ir.ui.view">
+        <field name="name">efund.fund.instrument.event.pivot</field>
+        <field name="model">efund.fund.instrument.event</field>
+        <field name="arch" type="xml">
+            <pivot string="Analyse des Événements">
+                <field name="instrument_id" type="col"/>
+                <field name="event_type" type="row"/>
+                <field name="event_date" type="col" interval="month"/>
+                <field name="cash_amount" type="measure"/>
+                <field name="state" type="row"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Vue Graphique -->
+    <record id="view_efund_fund_instrument_event_graph" model="ir.ui.view">
+        <field name="name">efund.fund.instrument.event.graph</field>
+        <field name="model">efund.fund.instrument.event</field>
+        <field name="arch" type="xml">
+            <graph string="Graphique des Événements" type="bar">
+                <field name="event_date" type="row" interval="month"/>
+                <field name="instrument_id" type="col"/>
+                <field name="cash_amount" type="measure"/>
+                <field name="event_type" type="col"/>
+            </graph>
+        </field>
+    </record>
+
+
+</odoo>

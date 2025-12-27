@@ -152,6 +152,30 @@ class Fund(models.Model):
         digits=(16, 2)
     )
 
+    cash_available = fields.Monetary(
+        compute='_compute_cash_available',
+        currency_field='currency_id'
+    )
+
+    cash_committed = fields.Monetary(
+        compute='_compute_cash_committed',
+        currency_field='currency_id'
+    )
+    #################################################
+    #      Constrainte
+    ################################################
+
+    def _compute_cash_available(self):
+        for fund in self:
+            deposits = sum(fund.cash_account_id.move_line_ids.mapped('balance'))
+            commitments = sum(
+                fund.bourse_order_ids.filtered(
+                    lambda o: o.state in ('validated', 'partial')
+                ).mapped('amount')
+            )
+            fund.cash_available = deposits - commitments
+            fund.cash_committed = commitments
+
     # Méthode utilitaire pour récupérer un journal
     def _get_default_journal(self, journal_type='bank'):
         """Retourne le journal par défaut selon le type"""

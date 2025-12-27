@@ -22,7 +22,7 @@
     'data': [
         'security/ir.model.access.csv',
         'security/efund_security.xml',
-        'views/efund_view_management_company_profile_form.xml',
+        'views/efund_views_management_company_form.xml',
         'views/efund_action_menu_principal.xml',
         'views/efund_menu_principal.xml',
         'views/efund_action_menu_parametre.xml',
@@ -47,7 +47,9 @@
         'views/efund_view_compliance_policy_tree.xml',
         'views/efund_views_valuation.xml',
         'reports/efund_kyc_report.xml',
-        'reports/efund_kyc_report_template.xml'
+        'reports/efund_kyc_report_template.xml',
+        'views/efund_fund_instrument_event_views.xml',
+        'views/efund_position_adjustment_views.xml',
     ],
 
     'installable': True,

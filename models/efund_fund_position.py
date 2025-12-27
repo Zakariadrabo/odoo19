@@ -1,11 +1,16 @@
 # efund_fund_position.py
+import logging
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
+
+_logger = logging.getLogger(__name__)
 
 
 class FundPosition(models.Model):
     _name = "efund.fund.position"
     _description = "Position d'un fonds sur un instrument"
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = "display_name"
     _order = "valuation_date desc, instrument_id"
 
@@ -108,7 +113,7 @@ class FundPosition(models.Model):
         store=True,
     )
 
-    status = fields.Selection([
+    state = fields.Selection([
         ('active', 'Active'),
         ('closed', 'Clôturée'),
         ('suspended', 'Suspendue')
@@ -120,6 +125,12 @@ class FundPosition(models.Model):
         string="Nom",
         compute='_compute_display_name',
         store=True
+    )
+
+    adjustment_ids = fields.One2many(
+        'efund.position.adjustment',
+        'position_id',
+        string="Ajustements"
     )
 
     # les méthodes de dépendances
@@ -240,3 +251,65 @@ class FundPosition(models.Model):
             'view_mode': 'form',
             'res_id': self.instrument_id.id,
         }
+
+    def _apply_instrument_event(self, event):
+        """
+        Applique un événement d'instrument à la position
+        """
+        self.ensure_one()
+
+        _logger.info(f"Applying event {event.name} to position {self.id}")
+
+        # Créer un enregistrement d'ajustement
+        adjustment_vals = {
+            'position_id': self.id,
+            'event_id': event.id,
+            'adjustment_date': fields.Date.today(),
+            'adjustment_type': event.event_type,
+            'description': f"Ajustement suite à l'événement: {event.name}",
+        }
+
+        # Appliquer les ajustements selon le type d'événement
+        if event.event_type == 'dividend':
+            # Pour un dividende, on crée un revenu
+            adjustment_vals.update({
+                'cash_impact': event.net_amount * self.quantity,
+                'tax_amount': (event.cash_amount * (event.tax_rate / 100)) * self.quantity,
+            })
+
+        elif event.event_type in ['stock_split', 'reverse_split']:
+            # Pour un split, on ajuste la quantité
+            new_quantity = self.quantity * event.adjustment_ratio
+            adjustment_vals.update({
+                'quantity_change': new_quantity - self.quantity,
+                'new_quantity': new_quantity,
+                'price_adjustment': 1.0 / event.adjustment_ratio if event.adjustment_ratio > 0 else 1.0,
+            })
+
+            # Mettre à jour la position
+            self.write({'quantity': new_quantity})
+
+        elif event.event_type == 'capital_increase':
+            # Pour une augmentation de capital
+            adjustment_vals.update({
+                'quantity_change': self.quantity * event.quantity_ratio,
+                'description': f"Augmentation de capital - Ratio: {event.quantity_ratio}",
+            })
+
+        elif event.event_type == 'coupon_payment':
+            # Pour un paiement de coupon
+            adjustment_vals.update({
+                'cash_impact': event.net_amount,
+                'tax_amount': event.cash_amount - event.net_amount,
+            })
+
+        # Créer l'enregistrement d'ajustement
+        adjustment = self.env['efund.position.adjustment'].create(adjustment_vals)
+
+        # Poste un message sur la position
+        self.message_post(
+            body=_("Événement appliqué: %s") % event.name,
+            subject=_("Ajustement de position")
+        )
+
+        return adjustment

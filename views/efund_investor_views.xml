@@ -1,75 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="view_efund_investor_form_clean" model="ir.ui.view">
-        <field name="name">efund.investor.form</field>
+
+    <record id="view_efund_investor_form" model="ir.ui.view">
+        <field name="name">efund.investor.form.enhanced</field>
         <field name="model">efund.investor</field>
         <field name="arch" type="xml">
-            <form string="Investor" create="true" edit="true">
-                <header>
-                    <!-- action buttons -->
-                    <button name="action_check_kyc_compliance" type="object" string="Check KYC" class="oe_stat_button"
-                            icon="fa-check-circle"
-                            invisible="status in ('archived','kyc_rejected')"/>
-                    <button name="action_create_investor_accounts" type="object" string="Créer comptes"
-                            class="oe_highlight" icon="fa-plus"
-                            invisible="account_part_ids != False"/>
 
-                    <!-- show KYC status & score -->
+            <form string="Investor">
+
+                <!-- ========================== -->
+                <!-- HEADER UX OPTIMISÉ        -->
+                <!-- ========================== -->
+                <header>
+                    <button name="action_check_kyc_compliance"
+                            string="Vérifier KYC"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-check-circle"/>
+
+                    <button name="%(action_efund_aml_alert)d"
+                            type="action"
+                            class="oe_stat_button"
+                            icon="fa-shield-alt">
+                        <field name="aml_alert_ids" widget="statinfo"
+                               string="Alertes AML"/>
+                    </button>
+
+                    <button name="action_create_aml_alert"
+                            type="object"
+                            class="btn-secondary"
+                            string="Nouvelle Alerte"
+                            icon="fa-plus"/>
+
                     <field name="status" widget="statusbar"
                            statusbar_visible="draft,kyc_pending,kyc_approved,kyc_rejected,archived"/>
                 </header>
 
-                <sheet>
-                    <!-- Top summary row -->
-                    <group class="o_td_highlight">
-                        <group>
-                            <field name="full_name"/>
-                            <field name="address"/>
-                            <field name="city"/>
-                            <field name="country_id"/>
 
+                <!-- ========================== -->
+                <!--    FICHE INVESTISSEUR     -->
+                <!-- ========================== -->
+                <sheet>
+                    <h1>
+
+
+                        <field name="full_name"/>
+                    </h1>
+
+                    <group>
+                        <group string="Identité">
+                            <field name="partner_id" readonly="1"/>
+                            <field name="kyc_level"/>
+                            <field name="compliance_status" widget="badge"/>
+                            <field name="compliance_score" widget="progressbar" options="{'max_value': 100}"/>
                         </group>
-                        <group>
-                            <field name="compliance_status" widget="badge" string="Compliance"/>
-                            <field name="compliance_score" widget="progressbar" options="{'max_value': 100}"
-                                   string="Score"/>
-                            <field name="available_cash" readonly="1" string="Cash disponible"/>
-                        </group>
-                        <group>
-                            <field name="pep_flag" string="PEP"/>
-                            <field name="sanctions_flag" string="Sanctions"/>
-                            <field name="kyc_last_update" string="Last KYC Update"/>
+
+                        <group string="Conformité">
+                            <field name="pep_flag"/>
+                            <field name="sanctions_flag"/>
+                            <field name="kyc_operator_id"/>
+                            <field name="kyc_last_update"/>
                         </group>
                     </group>
 
-                    <notebook>
+                    <!-- ========================== -->
+                    <!--         COMPTES            -->
+                    <!-- ========================== -->
 
-                        <page string="Comptes / Actions">
+                    <notebook>
+                        <page string="Comptes Client">
                             <group>
+
+                                <!-- ========================== -->
+                                <!--   Bouton création comptes  -->
+                                <!-- ========================== -->
+                                <button name="action_create_investor_accounts"
+                                        type="object"
+                                        string="Créer les comptes client"
+                                        class="btn-primary"
+                                        icon="fa-plus"
+                                        invisible="account_part_ids or account_cash_ids"/>
+
                                 <group>
-                                    <button name="action_open_cash_deposit_wizard" type="object" string="Dépôt espèces"
-                                            class="btn-primary" icon="fa-money" invisible="account_cash_ids == False"/>
-                                    <button name="action_open_subscription_wizard" type="object" string="+ Souscription"
-                                            class="btn-success" icon="fa-arrow-up"
-                                            invisible="account_cash_ids == False"/>
-                                </group>
-                                <group>
-                                    <group string="Comptes Titres">
-                                        <field name="account_part_ids" nolabel="1"
-                                               options="{'no_create': True, 'no_create_edit': True}">
-                                            <list string="Comptes Titres">
-                                                <field name="name"/>
+
+                                    <!-- ===== Compte Titre ===== -->
+                                    <group string="Compte Titres">
+                                        <field name="account_part_ids" nolabel="1">
+                                            <list>
                                                 <field name="account_number"/>
                                                 <field name="total_parts"/>
                                                 <field name="state" widget="badge"/>
                                             </list>
                                         </field>
                                     </group>
-                                    <group string="Comptes Espèces">
-                                        <field name="account_cash_ids" nolabel="1"
-                                               options="{'no_create': True, 'no_create_edit': True}">
-                                            <list string="Comptes Espèces">
-                                                <field name="name"/>
+
+                                    <!-- ===== Compte Espèces ===== -->
+                                    <group string="Compte Espèces">
+                                        <button name="action_open_cash_deposit_wizard"
+                                                string="Dépôt"
+                                                type="object"
+                                                class="btn-primary"
+                                                icon="fa-money"/>
+
+                                        <button name="action_open_subscription_wizard"
+                                                string="Souscription"
+                                                type="object"
+                                                class="btn-success"
+                                                icon="fa-arrow-up"/>
+
+                                        <field name="account_cash_ids" nolabel="1">
+                                            <list>
                                                 <field name="account_number"/>
                                                 <field name="balance"/>
                                                 <field name="state" widget="badge"/>
@@ -80,91 +120,58 @@
                             </group>
                         </page>
 
-                        <page string="KYC - Identité">
+                        <!-- ========================== -->
+                        <!--           KYC              -->
+                        <!-- ========================== -->
+
+                        <page string="KYC – Informations Client">
                             <group>
                                 <group>
+                                    <separator string="Identité"/>
                                     <field name="civilite"/>
-                                    <field name="full_name"/>
-                                    <field name="birthplace"/>
+                                    <field name="birthdate"/>
                                     <field name="nationality"/>
-                                    <field name="sex"/>
-                                    <field name="tranche"/>
+                                    <field name="activite"/>
+                                    <field name="city"/>
                                 </group>
                                 <group>
-                                    <field name="birthdate"/>.
-
-                                    .
-                                    0
-                                    <field name="marital_status"/>
-                                </group>
-                            </group>
-                        </page>
-
-                        <page string="KYC - Financier">
-                            <group>
-                                <group>
+                                    <separator string="Profil Financier"/>
                                     <field name="estimation"/>
                                     <field name="revenu"/>
-                                    <field name="montant_mois"/>
-                                    <field name="periodicite"/>
-                                </group>
-                                <group>
-                                    <field name="origine"/>
-                                    <field name="activite"/>
                                     <field name="objectif"/>
                                 </group>
                             </group>
                         </page>
 
-                        <page string="Documents">
-                            <field name="document_ids" create="true" edit="true">
+
+                        <page string="Documents KYC">
+                            <field name="document_ids">
                                 <list editable="bottom">
                                     <field name="name"/>
                                     <field name="document_type"/>
-                                    <field name="issued_date"/>
-                                    <field name="expiry_date"/>
+                                    <field name="file_name"/>
+                                    <field name="file_data" widget="binary"/>
                                     <field name="status"/>
-                                    <field name="file_id" widget="many2one_binary"/>
                                 </list>
                             </field>
                         </page>
 
-                        <page string="KYC Checks">
-                            <field name="kyc_check_ids" create="true" edit="true">
-                                <list editable="bottom">
-                                    <field name="check_type"/>
-                                    <field name="result"/>
-                                    <field name="checked_at"/>
-                                    <field name="operator_id"/>
-                                </list>
-                            </field>
-                        </page>
-
-                        <page string="AML Alerts">
-                            <field name="aml_alert_ids" nolabel="1">
+                        <page string="AML Monitoring">
+                            <field name="aml_alert_ids">
                                 <list>
                                     <field name="name"/>
                                     <field name="severity" widget="badge"/>
                                     <field name="status" widget="badge"/>
-                                    <field name="score"/>
-                                    <field name="assigned_to"/>
-                                    <field name="create_date"/>
+                                    <field name="created_at"/>
                                 </list>
                             </field>
                         </page>
 
-                        <page string="Notes">
-                            <field name="notes" widget="text"/>
-                        </page>
-
                     </notebook>
                 </sheet>
-
-                <div class="o_thread_message_container">
-                    <field name="message_follower_ids"/>
-                    <field name="message_ids"/>
-                </div>
             </form>
+
         </field>
     </record>
+
 </odoo>

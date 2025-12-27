@@ -79,7 +79,7 @@
                         <field name="compliance_officer_id"/>
                     </group>
 
-                    <group name="financials" string="Financial Information" colspan="2">
+                    <group name="financials" string="Financial Information">
                         <field name="aum" widget="monetary"/>
                         <field name="currency_id" readonly="1"/>
                         <field name="funds_count" readonly="1"/>
@@ -90,13 +90,13 @@
                             <field name="risk_management_policy" nolabel="1"/>
                         </page>
                         <page string="Managed Funds">
-                            <field name="managed_funds" context="{'default_management_company_id': active_id}">
-                                <tree>
+                            <field name="managed_funds">
+                                <list>
                                     <field name="name"/>
                                     <field name="fund_type"/>
                                     <field name="risk_level"/>
                                     <field name="state"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                     </notebook>

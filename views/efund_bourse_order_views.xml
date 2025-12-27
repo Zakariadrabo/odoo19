@@ -11,7 +11,8 @@
                 <field name="depositaire_sgi"/>
                 <field name="instrument_id"/>
                 <field name="quantity"/>
-                <field name="price_limit"/>
+                <field name="executed_quantity" />
+                <field name="average_execution_price"/>
                 <field name="gross_amount"/>
                 <field name="state" widget="badge"/>
             </list>
@@ -32,7 +33,7 @@
                     <button name="action_send" type="object" string="Envoyer" class="btn-primary"
                             invisible="state != 'validated'"/>
                     <button name="action_execute" type="object" string="Executé" class="btn-primary"
-                            invisible="state != 'send'"/>
+                            invisible="state not in ('sent', 'partially_executed')"/>
                     <field name="state" widget="statusbar"/>
                 </header>
 
@@ -61,7 +62,7 @@
                         <group string="Conditions">
                             <field name="quantity"/>
                             <field name="order_type"/>
-                            <field name="price_limit"/>
+                            <field name="price_limit" required="order_type in ['limit', 'threshold']" invisible="order_type == 'market'"/>
                             <field name="expiry_date"/>
                         </group>
                     </group>

@@ -153,11 +153,11 @@
                                     <field name="market_value"/>
                                     <field name="unrealized_pl"/>
                                     <field name="unrealized_pl_percent" widget="progressbar"/>
-                                    <field name="status" widget="badge"/>
+                                    <field name="state" widget="badge"/>
                                     <button name="action_update_position" type="object" string="Modifier"
-                                            class="oe_highlight" invisible="status == 'closed'"/>
+                                            class="oe_highlight" invisible="state == 'closed'"/>
                                     <button name="action_close_position" type="object" string="Clôturer"
-                                            invisible="status == 'closed'"/>
+                                            invisible="state == 'closed'"/>
                                 </list>
                             </field>
                         </page>

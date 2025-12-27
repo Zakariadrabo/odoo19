@@ -26,7 +26,7 @@ class FundInvestor(models.Model):
         required=False,
         ondelete='cascade',
         domain="[('is_investor', '=', True)]",
-        context="{'default_is_investor': True}"
+
     )
 
     company_id = fields.Many2one('res.company', string="Context Company (Fund)", required=True, index=True)
@@ -312,3 +312,6 @@ class FundInvestor(models.Model):
     def action_check_kyc_compliance(self):
         # keep your existing implementation (omitted here for brevity)
         return super(FundInvestor, self).action_check_kyc_compliance() if hasattr(super(), 'action_check_kyc_compliance') else {}
+
+    def action_create_aml_alert(self):
+        _logger.info("test")

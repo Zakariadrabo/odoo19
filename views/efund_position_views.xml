@@ -16,13 +16,13 @@
                 <field name="unrealized_pl"/>
                 <field name="unrealized_pl_percent"/>
 
-                <field name="status" widget="badge" decoration-info="status=='active'"
-                       decoration-warning="status=='suspended'" decoration-danger="status=='closed'"/>
+                <field name="state" widget="badge" decoration-info="state=='active'"
+                       decoration-warning="state=='suspended'" decoration-danger="state=='closed'"/>
 
                 <button name="action_update_position" type="object" string="Modifier" class="oe_highlight"
-                        invisible="status == 'closed'"/>
+                        invisible="state == 'closed'"/>
 
-                <button name="action_close_position" type="object" string="Clôturer" invisible="status == 'closed'"/>
+                <button name="action_close_position" type="object" string="Clôturer" invisible="state == 'closed'"/>
 
                 <button name="action_view_instrument" type="object" string="Instrument" class="oe_link"
                         icon="fa-external-link"/>
@@ -38,9 +38,9 @@
             <form string="Position">
                 <header>
                     <button name="action_update_position" type="object" string="Modifier" class="oe_highlight"
-                            invisible="status == 'closed'"/>
+                            invisible="state == 'closed'"/>
                     <button name="action_close_position" type="object" string="Clôturer"
-                            invisible="status == 'closed'"/>
+                            invisible="state == 'closed'"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
@@ -53,7 +53,7 @@
                             <field name="fund_id"/>
                             <field name="instrument_id"/>
                             <field name="valuation_date"/>
-                            <field name="status"/>
+                            <field name="state"/>
                         </group>
                         <group string="Informations de cours">
                             <field name="last_price" readonly="1"/>

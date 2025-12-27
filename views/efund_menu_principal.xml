@@ -150,17 +150,28 @@
               parent="menu_portfolio_root"
               action="action_efund_fund_instrument_price"
               sequence="54"/>
+    <menuitem id="menu_evenement"
+              name="Evènements"
+              parent="menu_portfolio_root"
+              action="action_efund_fund_instrument_event"
+              sequence="55"/>
+    <menuitem id="menu_evenement_ajustement"
+              name="Evènements Ajustement"
+              parent="menu_portfolio_root"
+              action="action_efund_position_adjustment"
+              sequence="56"/>
+
     <menuitem id="menu_emetteur"
               name="Emetteur"
               parent="menu_portfolio_root"
               action="action_efund_instrument_issuer"
-              sequence="55"/>
+              sequence="57"/>
 
     <menuitem id="menu_SGI"
               name="SGI"
               parent="menu_portfolio_root"
               action="action_efund_depositaire"
-              sequence="56"/>
+              sequence="58"/>
 
 
     <!-- =========================
