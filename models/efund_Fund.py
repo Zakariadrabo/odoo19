@@ -90,6 +90,15 @@ class Fund(models.Model):
     )
     redemption_delay = fields.Selection([('J', 'J'), ('J1', 'J+1'), ('J2', 'J+2'), ], string="Délai de rachat",
                                         default='J2', required=True )
+    cutoff_time = fields.Float(
+        string="Heure de cut-off",
+        default=16.0,
+        help=(
+            "Heure limite de réception des ordres (format décimal).\n"
+            "Exemples : 14.0 = 14h00, 14.5 = 14h30, 16.75 = 16h45."
+        ),
+    )
+
 
     fee_income_account_id = fields.Many2one(
         'account.account',

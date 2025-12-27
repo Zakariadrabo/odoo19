@@ -42,6 +42,15 @@
                     <!-- ========================== -->
 
                     <notebook>
+                        <page string="Fonds">
+                            <field name="fund_investor_ids" context="{'default_investor_id': id}">
+                                <list editable="bottom">
+                                    <field name="fund_id"/>
+                                    <field name="state"/>
+                                    <field name="validation_date"/>
+                                </list>
+                            </field>
+                        </page>
                         <page string="Comptes Client">
                             <group>
                                 <group>
@@ -71,7 +80,8 @@
                                             <field name="total_parts"/>
                                             <field name="state" widget="badge"/>
                                             <button name="action_redeem_parts" type="object" string="Rachat de parts"
-                                                    class="oe_highlight" icon="fa-exchange" invisible ="state != 'active' or total_parts &lt;= 0"/>
+                                                    class="oe_highlight" icon="fa-exchange"
+                                                    invisible="state != 'active' or total_parts &lt;= 0"/>
                                         </list>
                                     </field>
                                 </group>

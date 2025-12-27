@@ -77,6 +77,11 @@
               parent="menu_fund_root"
               action="action_nav_list"
               sequence="24"/>
+    <menuitem id="menu_fund_investisseur"
+              name="Investisseur"
+              parent="menu_fund_root"
+              action="action_efund_fund_investor"
+              sequence="25"/>
 
     <!-- =========================
          3. CLIENTS / PORTEURS

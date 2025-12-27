@@ -50,6 +50,7 @@
         'reports/efund_kyc_report_template.xml',
         'views/efund_fund_instrument_event_views.xml',
         'views/efund_position_adjustment_views.xml',
+        'views/efund_fund_investor_views.xml',
     ],
 
     'installable': True,

@@ -48,6 +48,7 @@ class FundInvestor(models.Model):
     kyc_check_ids = fields.One2many('efund.kyc.check', 'investor_id', string="KYC Checks")
     aml_alert_ids = fields.One2many('efund.aml.alert', 'investor_id', string="AML Alerts")
     active = fields.Boolean(default=True)
+    fund_investor_ids = fields.One2many('efund.fund.investor','investor_id',string="Fonds")
 
     # compliance computed fields
     compliance_status = fields.Selection([
