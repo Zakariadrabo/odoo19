@@ -65,10 +65,25 @@ class FundInvestor(models.Model):
     compliance_notes = fields.Text()
 
     # Personal info (allow using form to create partner data)
+    investor_type = fields.Selection(
+        [
+            ("individual", "Personne physique"),
+            ("company", "Personne morale"),
+        ],
+        string="Type de client",
+        required=True
+    )
     civilite = fields.Selection([('Mr','Monsieur'),('Mrs','Madame')])
     full_name = fields.Char(string="Nom complet")
     birthdate = fields.Date(string="Date de naissance")
     birthplace = fields.Char(string="Lieu de naissance")
+    birth_country_id = fields.Many2one(
+        "res.country",
+        string="Pays de naissance"
+    )
+    minor = fields.Boolean(
+        string="Mineur ?"
+    )
     nationality = fields.Char(string="Nationalité")
     sex = fields.Selection([('male','Homme'),('female','Femme')])
     tranche = fields.Selection([("<55","Jusqu'à 55ans"),("56T74","56-74"),(">75",">75")])
@@ -77,7 +92,103 @@ class FundInvestor(models.Model):
     country_id = fields.Many2one("res.country", string="Pays")
     city = fields.Char(string="Ville")
     address = fields.Char(string="Adresse")
+    language_id = fields.Many2one(
+        "res.lang",
+        string="Langue"
+    )
     marital_status=fields.Selection([('single','Célibataire'),('married','Marié(e)'),('divorced','Divorcé(e)'),('widowed','Veuf/veuve')])
+
+    # Situation professionnelle
+
+    socio_professional_category = fields.Char(
+        string="Catégorie socio-professionnelle"
+    )
+
+    profession = fields.Char(
+        string="Profession"
+    )
+
+    function = fields.Char(
+        string="Fonction"
+    )
+
+    activity_sector = fields.Char(
+        string="Secteur d’activité"
+    )
+
+    # Qualité & Statut
+    quality = fields.Selection(
+        [
+            ("subscriber", "Souscripteur"),
+            ("holder", "Porteur de parts"),
+            ("both", "Souscripteur & Porteur"),
+        ],
+        string="Qualité"
+    )
+
+    active = fields.Boolean(
+        default=True
+    )
+
+    # Personne Morale
+
+    # Identité Juridique
+    company_name = fields.Char(
+        string="Raison sociale"
+    )
+
+    company_short_name = fields.Char(
+        string="Sigle"
+    )
+
+    legal_form = fields.Char(
+        string="Forme juridique"
+    )
+
+    # Création et Agrément
+
+    creation_date = fields.Date(
+        string="Date de création"
+    )
+
+    license_number = fields.Char(
+        string="N° Agrément"
+    )
+
+    insae_number = fields.Char(
+        string="N° INSAE"
+    )
+
+    # Données Financières & Activité
+
+    company_country_id = fields.Many2one(
+        "res.country",
+        string="Pays"
+    )
+
+    language_id = fields.Many2one(
+        "res.lang",
+        string="Langue"
+    )
+
+    activity_sector = fields.Char(
+        string="Secteur d’activité"
+    )
+
+    # Qualité & Statut
+
+    quality = fields.Selection(
+        [
+            ("subscriber", "Souscripteur"),
+            ("holder", "Porteur de parts"),
+            ("both", "Souscripteur & Porteur"),
+        ],
+        string="Qualité"
+    )
+
+    active = fields.Boolean(
+        default=True
+    )
 
     # Financial profile
     estimation = fields.Selection([('M5','<5M'),('E5','5-50M'),('P5','>50M')], string="Patrimoine")
@@ -310,6 +421,35 @@ class FundInvestor(models.Model):
 
     def action_create_aml_alert(self):
         _logger.info("test")
+
+        # Workflow
+
+    def action_submit_kyc(self):
+        for rec in self:
+            if rec.status != "draft":
+                raise UserError("Seuls les investisseurs en draft peuvent être soumis au KYC.")
+            rec.status = "kyc_pending"
+
+    def action_approve_kyc(self):
+        for rec in self:
+            if rec.status != "kyc_pending":
+                raise UserError("Seuls les investisseurs en attente peuvent être approuvés.")
+            rec.status = "kyc_approved"
+
+    def action_reject_kyc(self):
+        for rec in self:
+            if rec.status != "kyc_pending":
+                raise UserError("Seuls les investisseurs en attente peuvent être rejetés.")
+            rec.status = "kyc_rejected"
+
+    def action_archive(self):
+        for rec in self:
+            rec.status = "archived"
+
+    def _check_kyc_approved(self):
+        for rec in self:
+            if rec.status != 'kyc_approved':
+                raise UserError("Le client doit être KYC validé pour effectuer cette action.")
 
 
 

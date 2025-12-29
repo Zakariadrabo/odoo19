@@ -2,8 +2,8 @@
     <!-- =====================================================
          3️⃣  VUE TREE
     ====================================================== -->
-    <record id="view_fund_fund_tree" model="ir.ui.view">
-        <field name="name">fund.fund.tree</field>
+    <record id="view_fund_fund_list" model="ir.ui.view">
+        <field name="name">fund.fund.list</field>
         <field name="model">efund.fund</field>
         <field name="arch" type="xml">
             <list string="Funds" decoration-danger="state == 'liquidated'" decoration-warning="state == 'suspended'">
@@ -31,7 +31,7 @@
         <field name="name">efund.fund.form</field>
         <field name="model">efund.fund</field>
         <field name="arch" type="xml">
-            <form string="Fund" create="true" edit="true">
+            <form string="Fonds" create="true" edit="true">
                 <header>
                     <button name="action_activate" type="object" string="Activate" invisible="state != 'draft'"
                             class="btn-primary"/>
@@ -44,25 +44,39 @@
 
                 <sheet>
                     <group>
-                        <group string="Identification">
+                        <group string="Informations Génerales">
                             <field name="name"/>
-                            <field name="code"/>
                             <field name="fund_type"/>
                             <field name="risk_level"/>
                             <field name="nav_frequency"/>
                         </group>
 
                         <group string="Informations financières">
-                            <field name="launch_date"/>
-                            <field name="ter"/>
-                            <field name="benchmark_index"/>
+                            <field name="initial_nav"/>
+                            <field name="current_nav"/>
+                            <field name="initial_price"/>
                             <field name="current_vl"/>
-                        </group>
-                    </group>
 
+                        </group>
+
+                        <group string="Cadre Réglementaire">
+                            <field name="license_number"/>
+                            <field name="license_date"/>
+                            <field name="info_visa_number"/>
+                        </group>
+
+                        <group string="Frais, Taxes et Commissions">
+                            <field name="taf_rate"/>
+                            <field name="subscription_fee_rate"/>
+                            <field name="redemption_fee_rate"/>
+                            <field name="retro_subscription_rate"/>
+                            <field name="retro_redemption_rate"/>
+                        </group>
+
+                    </group>
                     <notebook>
-                        <page string="Informations Réglementaires">
-                            <!--
+                        <!--<page string="Informations Réglementaires">
+
                              <group>
                                  <group string="Agréments">
                                      <field name="regulateur"/>
@@ -70,7 +84,7 @@
                                      <field name="dossier_reglementaire_id"/>
                                  </group>
                              </group>
-                             -->
+
                         </page>
                         <page string="Gestion Opérationnelle">
 
@@ -78,27 +92,43 @@
                         <page string="Valeur du fonds">
 
                         </page>
-
-                        <page string="Investment Objective">
-                            <field name="investment_objective" nolabel="1" widget="html"/>
-                        </page>
-
-                        <page string="Accounting / Currency">
-                            <group string="Fund Accounts Configuration">
-                                <field name="cash_account_id"/>
-                                <field name="capital_account_id"/>
-                                <field name="subscription_account_id"/>
-                                <field name="redemption_account_id"/>
-                                <field name="fee_income_account_id"/>
-                                <field name="currency_id" readonly="1" string="Monnaie"/>
-                            </group>
-                            <group string="Fund Journals Configuration">
-                                <field name="subscription_journal_id"/>
-                                <field name="redemption_journal_id"/>
-                                <field name="operations_journal_id"/>
+                        -->
+                        <page string="Profil du Fond">
+                            <group string="Profil du Fond">
+                                <field name="fund_type"/>
+                                <field name="target_investors"/>
+                                <field name="investment_horizon"/>
                             </group>
                         </page>
-                        <page string="Shares Class">
+
+                        <page string="Paramètre comptable">
+                            <group>
+                                <group string="Paramètre comptable">
+                                    <field name="cash_account_id"/>
+                                    <field name="capital_account_id"/>
+                                    <field name="subscription_account_id"/>
+                                    <field name="redemption_account_id"/>
+                                    <field name="fee_income_account_id"/>
+                                    <field name="currency_id" readonly="1" string="Monnaie"/>
+                                </group>
+
+                                <group string="Fund Journals Configuration">
+                                    <field name="subscription_journal_id"/>
+                                    <field name="redemption_journal_id"/>
+                                    <field name="operations_journal_id"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Parts">
+                            <group string="Parts">
+                                    <field name="initial_units"/>
+                                    <field name="opening_units"/>
+                                    <field name="current_units"/>
+                            </group>
+                        </page>
+
+                        <page string="Catégorie de parts">
                             <field name="share_class_ids" create="true" edit="true">
                                 <list editable="bottom">
                                     <field name="name"/>
@@ -113,9 +143,23 @@
                                     <field name="total_shares" readonly="1"/>
                                     <field name="total_net_assets" readonly="1"/>
                                     <field name="current_nav" readonly="1"/>
-
                                 </list>
                             </field>
+                        </page>
+                        <page string="Acteurs du Fonds">
+                            <group string="Acteurs du Fonds">
+                                    <field name="depositary_id"/>
+                                    <field name="manager_id"/>
+                            </group>
+                        </page>
+
+                        <page string="Exercice et Calculs">
+                            <group string="Exercice et Calculs">
+                                    <field name="nav_calculation_period"/>
+                                    <field name="fiscal_year_start"/>
+                                    <field name="fiscal_year_end"/>
+                                    <field name="next_nav_date"/>
+                            </group>
                         </page>
                         <!-- MODIFICATION DE efund_views_fund.xml -->
                         <!-- Ajouter cet onglet dans le notebook existant -->

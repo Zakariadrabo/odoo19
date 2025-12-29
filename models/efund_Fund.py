@@ -15,55 +15,294 @@ class Fund(models.Model):
 
     name = fields.Char(string="Fund Name", required=True)
     code = fields.Char(string="Fund Code", required=True)
-    company_id = fields.Many2one('res.company',string='Company',ondelete='cascade')
-    management_company_id = fields.Many2one('efund.management.company',string='Management Company',domain="[('company_id', '!=', company_id)]" )
+    company_id = fields.Many2one('res.company', string='Company', ondelete='cascade')
+    management_company_id = fields.Many2one('efund.management.company', string='Management Company',
+                                            domain="[('company_id', '!=', company_id)]")
 
     # Propriétés spécifiques fonds
-    fund_type = fields.Selection([('equity', 'Equity Fund'),('bond', 'Bond Fund'),('mixed', 'Mixed Fund'),], string='Fund Type', required=True)
-    risk_level = fields.Selection([('low', 'Low Risk'),('medium', 'Medium Risk'),('high', 'High Risk'),], string='Risk Level')
-    nav_frequency = fields.Selection([('daily', 'Daily'),('weekly', 'Weekly'),('monthly', 'Monthly'),], string="NAV Frequency", default='daily')
+    fund_type = fields.Selection([('equity', 'Equity Fund'), ('bond', 'Bond Fund'), ('mixed', 'Mixed Fund'), ],
+                                 string='Fund Type', required=True)
+    risk_level = fields.Selection([('low', 'Low Risk'), ('medium', 'Medium Risk'), ('high', 'High Risk'), ],
+                                  string='Risk Level')
+    nav_frequency = fields.Selection([('daily', 'Daily'), ('weekly', 'Weekly'), ('monthly', 'Monthly'), ],
+                                     string="NAV Frequency", default='daily')
     launch_date = fields.Date(string='Launch Date')
     ter = fields.Float(string='Total Expense Ratio (%)', digits=(6, 4))
     investment_objective = fields.Text(string='Investment Objective')
     benchmark_index = fields.Char(string='Benchmark Index')
-    redemption_delay = fields.Selection([('J', 'J'), ('J1', 'J+1'), ('J2', 'J+2'), ], string="Délai de rachat",default='J2', required=True)
-    cutoff_time = fields.Float(string="Heure de cut-off",default=16.0,help="Heure limite de réception des ordres (format décimal).\nExemples : 14.0 = 14h00, 14.5 = 14h30, 16.75 = 16h45.")
-
+    redemption_delay = fields.Selection([('J', 'J'), ('J1', 'J+1'), ('J2', 'J+2'), ], string="Délai de rachat",
+                                        default='J2', required=True)
+    cutoff_time = fields.Float(string="Heure de cut-off", default=16.0,
+                               help="Heure limite de réception des ordres (format décimal).\nExemples : 14.0 = 14h00, 14.5 = 14h30, 16.75 = 16h45.")
 
     # Statuts
-    state = fields.Selection([('draft', 'Draft'),('active', 'Active'),('suspended', 'Suspended'),('liquidated', 'Liquidated'),], string='Status', default='draft')
+    state = fields.Selection(
+        [('draft', 'Draft'), ('active', 'Active'), ('suspended', 'Suspended'), ('liquidated', 'Liquidated'), ],
+        string='Status', default='draft')
 
     # Relations
     share_class_ids = fields.One2many('efund.fund.class', 'fund_id', string='Share Classes')
     currency_id = fields.Many2one(related='company_id.currency_id')
 
     # Comptabilité
-    cash_account_id = fields.Many2one('account.account',string='Cash Account',domain="[('account_type', '=', 'asset_cash')]",help="Compte bancaire principal du fonds")
-    capital_account_id = fields.Many2one('account.account',string='Capital Account',domain="[('account_type', '=', 'equity')]",help="Compte de capital social du fonds")
-    subscription_account_id = fields.Many2one('account.account',string='Subscription Account',help="Compte de souscription du fonds")
-    redemption_account_id = fields.Many2one('account.account',string='Redemption Account',help="Compte de rachat du fonds")
-    fee_income_account_id = fields.Many2one('account.account',string='Fee Income Account',help="Compte de recettes de frais du fonds")
+    cash_account_id = fields.Many2one('account.account', string='Cash Account',
+                                      domain="[('account_type', '=', 'asset_cash')]",
+                                      help="Compte bancaire principal du fonds")
+    capital_account_id = fields.Many2one('account.account', string='Capital Account',
+                                         domain="[('account_type', '=', 'equity')]",
+                                         help="Compte de capital social du fonds")
+    subscription_account_id = fields.Many2one('account.account', string='Subscription Account',
+                                              help="Compte de souscription du fonds")
+    redemption_account_id = fields.Many2one('account.account', string='Redemption Account',
+                                            help="Compte de rachat du fonds")
+    fee_income_account_id = fields.Many2one('account.account', string='Fee Income Account',
+                                            help="Compte de recettes de frais du fonds")
     # === JOURNAUX par Fonds ===
-    subscription_journal_id = fields.Many2one('account.journal',string='Subscription Journal',domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]",help="Journal de souscription du fonds")
-    redemption_journal_id = fields.Many2one('account.journal',string='Redemption Journal',domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]",help="Journal de rachat du fonds")
-    operations_journal_id = fields.Many2one('account.journal',string='Miscellaneous Journal',domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]",help="Journal divers du fonds")
+    subscription_journal_id = fields.Many2one('account.journal', string='Subscription Journal',
+                                              domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]",
+                                              help="Journal de souscription du fonds")
+    redemption_journal_id = fields.Many2one('account.journal', string='Redemption Journal',
+                                            domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]",
+                                            help="Journal de rachat du fonds")
+    operations_journal_id = fields.Many2one('account.journal', string='Miscellaneous Journal',
+                                            domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]",
+                                            help="Journal divers du fonds")
 
     # Données sur les positions du fond
-    position_ids = fields.One2many('efund.fund.position','fund_id',string="Positions")
+    position_ids = fields.One2many('efund.fund.position', 'fund_id', string="Positions")
 
     # Champs calculés pour le résumé
-    total_market_value = fields.Monetary(string="Valeur totale du portfolio",currency_field='currency_id',compute='_compute_portfolio_summary',store=False)
-    position_count = fields.Integer(string="Nombre de positions",compute='_compute_portfolio_summary',store=False)
-    total_unrealized_pl = fields.Monetary(string="Total Plus/Moins-values",currency_field='currency_id',compute='_compute_portfolio_summary',store=False)
-    last_valuation_date = fields.Date(string="Dernière valorisation",compute='_compute_portfolio_summary',store=False)
-    portfolio_concentration = fields.Float(string="Concentration du top 5",compute='_compute_portfolio_concentration',digits=(16, 2))
-    cash_available = fields.Monetary(compute='_compute_cash_available',currency_field='currency_id')
-    cash_committed = fields.Monetary(compute='_compute_cash_committed',currency_field='currency_id')
-    allow_fractional_parts = fields.Boolean(string="Autoriser les parts fractionnées",default=False,help="Si décoché, les souscriptions sont arrondies à l'entier inférieur.")
+    total_market_value = fields.Monetary(string="Valeur totale du portfolio", currency_field='currency_id',
+                                         compute='_compute_portfolio_summary', store=False)
+    position_count = fields.Integer(string="Nombre de positions", compute='_compute_portfolio_summary', store=False)
+    total_unrealized_pl = fields.Monetary(string="Total Plus/Moins-values", currency_field='currency_id',
+                                          compute='_compute_portfolio_summary', store=False)
+    last_valuation_date = fields.Date(string="Dernière valorisation", compute='_compute_portfolio_summary', store=False)
+    portfolio_concentration = fields.Float(string="Concentration du top 5", compute='_compute_portfolio_concentration',
+                                           digits=(16, 2))
+    cash_available = fields.Monetary(compute='_compute_cash_available', currency_field='currency_id')
+    cash_committed = fields.Monetary(compute='_compute_cash_committed', currency_field='currency_id')
+    allow_fractional_parts = fields.Boolean(string="Autoriser les parts fractionnées", default=False,
+                                            help="Si décoché, les souscriptions sont arrondies à l'entier inférieur.")
 
     ## TEST VL
     current_vl = fields.Float(string="VL actuelle")
-    VL_share_class_id = fields.Many2one('efund.fund.class',string="Classes de partage VL")
+    VL_share_class_id = fields.Many2one('efund.fund.class', string="Classes de partage VL")
+
+    #Ajout
+    # =========================================================
+    # 1. IDENTIFICATION DU FONDS
+    # =========================================================
+
+    legal_form = fields.Char(
+        string="Forme juridique"
+    )
+
+    commercial_register = fields.Char(
+        string="Registre de commerce"
+    )
+
+    country_id = fields.Many2one(
+        "res.country",
+        string="Pays"
+    )
+
+    city = fields.Char(
+        string="Ville"
+    )
+
+    active = fields.Boolean(
+        default=True
+    )
+
+    # =========================================================
+    # 2. CADRE RÉGLEMENTAIRE
+    # =========================================================
+    license_number = fields.Char(
+        string="N° Agrément"
+    )
+
+    license_date = fields.Date(
+        string="Date d’agrément"
+    )
+
+    info_visa_number = fields.Char(
+        string="N° Visa Note d'information"
+    )
+
+    info_visa_date = fields.Date(
+        string="Date édition note"
+    )
+
+    regulatory_note = fields.Text(
+        string="Informations réglementaires"
+    )
+
+    # =========================================================
+    # 3. ACTEURS DU FONDS
+    # =========================================================
+    issuer_id = fields.Many2one(
+        "res.partner",
+        string="Émetteur",
+        domain=[("is_company", "=", True)]
+    )
+
+    depositary_id = fields.Many2one(
+        "res.partner",
+        string="Dépositaire",
+        domain=[("is_company", "=", True)]
+    )
+
+    manager_id = fields.Many2one(
+        "res.partner",
+        string="Gestionnaire",
+        domain=[("is_company", "=", True)]
+    )
+
+    # =========================================================
+    # 4. PARAMÈTRES FINANCIERS
+    # =========================================================
+    currency_id = fields.Many2one(
+        "res.currency",
+        string="Devise",
+        required=True,
+        default=lambda self: self.env.company.currency_id
+    )
+
+    initial_price = fields.Selection([
+        ('Cours Connu', 'Cours Connu'),
+        ('Cours Inconnu', 'Cours Inconnu'),
+    ], string='Type de Souscription ')
+
+    current_price = fields.Monetary(
+        string="Cours actuel",
+        currency_field="currency_id"
+    )
+
+    initial_nav = fields.Monetary(
+        string="VL d’origine",
+        currency_field="currency_id"
+    )
+
+    current_nav = fields.Monetary(
+        string="VL actuelle",
+        currency_field="currency_id"
+    )
+
+    investment_value = fields.Monetary(
+        string="Valeur de placement",
+        currency_field="currency_id"
+    )
+
+    capital_amount = fields.Monetary(
+        string="Capital",
+        currency_field="currency_id"
+    )
+
+    investment_duration = fields.Integer(
+        string="Durée de placement (mois)"
+    )
+
+    # =========================================================
+    # 5. PARTS (GLOBAL FONDS)
+    # =========================================================
+    initial_units = fields.Float(
+        string="Parts initiales",
+        digits=(16, 4)
+    )
+
+    opening_units = fields.Float(
+        string="Parts début exercice",
+        digits=(16, 4)
+    )
+
+    current_units = fields.Float(
+        string="Parts actuelles",
+        digits=(16, 4)
+    )
+
+    # =========================================================
+    # 6. FRAIS, TAXES & COMMISSIONS
+    # =========================================================
+    taf_rate = fields.Float(
+        string="TAF (%)",
+        digits=(16, 4)
+    )
+
+    subscription_fee_rate = fields.Float(
+        string="Frais de souscription (%)",
+        digits=(16, 4)
+    )
+
+    redemption_fee_rate = fields.Float(
+        string="Frais de rachat (%)",
+        digits=(16, 4)
+    )
+
+    retro_subscription_rate = fields.Float(
+        string="Rétrocession souscription (%)",
+        digits=(16, 4)
+    )
+
+    retro_redemption_rate = fields.Float(
+        string="Rétrocession rachat (%)",
+        digits=(16, 4)
+    )
+
+    # =========================================================
+    # 7. EXERCICE & CALCUL VL
+    # =========================================================
+    nav_calculation_period = fields.Selection(
+        [
+            ("daily", "Quotidien"),
+            ("weekly", "Hebdomadaire"),
+            ("monthly", "Mensuel"),
+        ],
+        string="Périodicité calcul VL",
+        default="daily"
+    )
+
+    fiscal_year_start = fields.Date(
+        string="Début exercice"
+    )
+
+    fiscal_year_end = fields.Date(
+        string="Fin exercice"
+    )
+
+    next_nav_date = fields.Date(
+        string="Prochaine date VL"
+    )
+    # profil du fond
+
+    fund_type = fields.Selection(
+        [
+            ("opcvm", "OPCVM"),
+            ("fia", "FIA"),
+            ("monetary", "Fonds monétaire"),
+            ("bond", "Fonds obligataire"),
+            ("equity", "Fonds actions"),
+            ("balanced", "Fonds diversifié"),
+        ],
+        string="Type de fonds"
+    )
+
+    target_investors = fields.Selection(
+        [
+            ("retail", "Particuliers"),
+            ("institutional", "Institutionnels"),
+            ("both", "Mixtes"),
+        ],
+        string="Investisseurs ciblés"
+    )
+    investment_horizon = fields.Selection(
+        [
+            ("short", "Court terme"),
+            ("medium", "Moyen terme"),
+            ("long", "Long terme"),
+        ],
+        string="Horizon d’investissement"
+    )
 
     #################################################
     #      Constrainte

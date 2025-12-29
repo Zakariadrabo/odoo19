@@ -8,9 +8,45 @@
 
             <form string="Investor">
                 <header>
-                    <button name="action_check_kyc_compliance" type="object" string="Check KYC" class="oe_stat_button"
-                            icon="fa-check-circle"
-                            invisible="status in ('archived','kyc_rejected')"/>
+                    <!-- ========================= -->
+                        <!-- DRAFT → KYC PENDING -->
+                        <!-- ========================= -->
+                        <button name="action_submit_kyc"
+                                type="object"
+                                string="Soumettre KYC"
+                                class="btn-primary"
+                                icon="fa-paper-plane"
+                                invisible= "status != 'draft'"/>
+
+                        <!-- ========================= -->
+                        <!-- KYC PENDING → APPROVED -->
+                        <!-- ========================= -->
+                        <button name="action_approve_kyc"
+                                type="object"
+                                string="Approuver KYC"
+                                class="btn-success"
+                                icon="fa-check"
+                                invisible="status != 'kyc_pending'"/>
+
+                        <!-- ========================= -->
+                        <!-- KYC PENDING → REJECTED -->
+                        <!-- ========================= -->
+                        <button name="action_reject_kyc"
+                                type="object"
+                                string="Rejeter KYC"
+                                class="btn-danger"
+                                icon="fa-times"
+                                invisible="status != 'kyc_pending'"/>
+
+                        <!-- ========================= -->
+                        <!-- APPROVED / REJECTED → ARCHIVED -->
+                        <!-- ========================= -->
+                        <button name="action_archive"
+                                type="object"
+                                string="Archiver"
+                                class="btn-secondary"
+                                icon="fa-archive"
+                                invisible="status not in ['kyc_approved', 'kyc_rejected']"/>
                     <field name="status" widget="statusbar"/>
                 </header>
 
@@ -19,22 +55,75 @@
                 <!--    FICHE INVESTISSEUR     -->
                 <!-- ========================== -->
                 <sheet>
-                    <group class="o_td_highlight">
-                        <group string="Identité">
-                            <field name="full_name"/>
-                            <field name="address"/>
-                            <field name="city"/>
-                            <field name="country_id"/>
-                            <field name="available_cash" readonly="1" string="Cash disponible"/>
-                        </group>
-                        <group string="Conformité">
-                            <field name="compliance_status" widget="badge" string="Compliance"/>
-                            <field name="compliance_score" widget="progressbar" options="{'max_value': 100}"
-                                   string="Score"/>
-                            <field name="pep_flag" string="PEP"/>
-                            <field name="sanctions_flag" string="Sanctions"/>
-                            <field name="kyc_last_update" string="Last KYC Update"/>
+                    <!-- ========================= -->
+                    <!-- IDENTITÉ & TYPE CLIENT -->
+                    <!-- ========================= -->
+                    <group class="o_td_highlight" col="4">
+                        <field name="investor_type" required="1"/>
+                        <field name="quality"/>
+                        <field name="full_name"/>
+                    </group>
 
+                    <!-- ========================= -->
+                    <!-- PERSONNE PHYSIQUE -->
+                    <!-- ========================= -->
+                    <group string="Personne Physique"
+                        invisible="investor_type != 'individual'">
+
+                        <group col="4">
+                            <field name="sex"/>
+                            <field name="birthdate"/>
+                            <field name="birthplace"/>
+                              <field name="birth_country_id"/>
+                            <field name="minor"/>
+                            <field name="socio_professional_category"/>
+
+                        </group>
+
+                        <group col="4">
+                            <field name="country_id"/>
+                            <field name="language_id"/>
+                            <field name="city"/>
+                             <field name="function"/>
+                            <field name="activity_sector"/>
+                            <field name="profession"/>
+                        </group>
+                    </group>
+
+                    <!-- ========================= -->
+                    <!-- PERSONNE MORALE -->
+                    <!-- ========================= -->
+                    <group string="Personne Morale"
+                           invisible="investor_type != 'company' ">
+
+                        <group col="4">
+                            <field name="company_name"/>
+                            <field name="company_short_name"/>
+                            <field name="legal_form"/>
+                             <field name="company_country_id"/>
+                            <field name="language_id"/>
+                        </group>
+
+                        <group col="4">
+                            <field name="creation_date"/>
+                            <field name="license_number"/>
+                            <field name="insae_number"/>
+                            <field name="activity_sector"/>
+                        </group>
+                    </group><!-- ========================= -->
+                    <!-- CONFORMITÉ (SYNTHÈSE) -->
+                    <!-- ========================= -->
+                    <group string="Conformité">
+                        <group>
+                            <field name="compliance_status" widget="badge"/>
+                            <field name="compliance_score"
+                                   widget="progressbar"
+                                   options="{'max_value': 100}"/>
+                            <field name="kyc_last_update"/>
+                        </group>
+                        <group>
+                            <field name="pep_flag"/>
+                            <field name="sanctions_flag"/>
                         </group>
                     </group>
                     <!-- ========================== -->
@@ -105,14 +194,6 @@
 
                         <page string="KYC – Informations Client">
                             <group>
-                                <group>
-                                    <separator string="Identité"/>
-                                    <field name="civilite"/>
-                                    <field name="birthdate"/>
-                                    <field name="nationality"/>
-                                    <field name="activite"/>
-                                    <field name="city"/>
-                                </group>
                                 <group>
                                     <separator string="Profil Financier"/>
                                     <field name="estimation"/>
