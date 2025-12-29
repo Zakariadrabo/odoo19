@@ -42,56 +42,56 @@
                     <!-- ========================== -->
 
                     <notebook>
-                        <page string="Fonds">
+                        <page string="Abonnemement Fonds">
                             <field name="fund_investor_ids" context="{'default_investor_id': id}">
                                 <list editable="bottom">
                                     <field name="fund_id"/>
-                                    <field name="state"/>
+                                    <field name="state" readonly="1"/>
                                     <field name="validation_date"/>
                                 </list>
                             </field>
                         </page>
-                        <page string="Comptes Client">
+                        <page string="Comptes et portefeuille">
                             <group>
-                                <group>
-                                    <button name="action_create_investor_accounts" type="object" string="Créer comptes"
-                                            class="oe_highlight" icon="fa-plus"
-                                            invisible="account_part_ids or account_cash_ids"/>
-                                </group>
-                                <group>
-                                    <button name="action_open_cash_deposit_wizard" type="object"
-                                            string="Dépôt espèces"
-                                            class="btn-primary" icon="fa-money"
-                                            invisible="not account_cash_ids"/>
-                                    <button name="action_open_subscription_wizard" type="object"
-                                            string="+ Souscription"
-                                            class="btn-success" icon="fa-arrow-up"
-                                            invisible="not account_cash_ids"/>
-                                </group>
-                            </group>
-
-                            <group>
-                                <group string="Comptes Titres">
-                                    <field name="account_part_ids" nolabel="1">
-                                        <list string="Comptes Titres">
-                                            <field name="name"/>
-                                            <field name="account_number"/>
+                                <group string="Compte espèce">
+                                    <field name="cash_account_ids" nolabel="1">
+                                        <list create="false">
                                             <field name="fund_id"/>
-                                            <field name="total_parts"/>
-                                            <field name="state" widget="badge"/>
-                                            <button name="action_redeem_parts" type="object" string="Rachat de parts"
-                                                    class="oe_highlight" icon="fa-exchange"
-                                                    invisible="state != 'active' or total_parts &lt;= 0"/>
+                                            <field name="account_number"/>
+                                            <field name="date_opened"/>
+                                            <field name="balance"/>
+                                            <field name="state"/>
+                                            <button name="action_active_account_wizard" type="object"
+                                                    string="Activer"
+                                                    class="btn-primary" icon="fa-money"
+                                                    invisible="state != 'draft'"/>
+                                            <button name="action_open_cash_deposit_wizard" type="object"
+                                                    string="Dépôt espèces"
+                                                    class="btn-primary" icon="fa-money"
+                                                    invisible="state != 'active'"/>
+
                                         </list>
                                     </field>
                                 </group>
-                                <group string="Comptes Espèces">
-                                    <field name="account_cash_ids" nolabel="1">
-                                        <list string="Comptes Espèces">
-                                            <field name="name"/>
+                                <group string="Compte Titre">
+                                    <field name="part_account_ids" nolabel="1">
+                                        <list create="false">
+                                            <field name="fund_id"/>
                                             <field name="account_number"/>
-                                            <field name="balance"/>
-                                            <field name="state" widget="badge"/>
+                                            <field name="date_opened"/>
+                                            <field name="total_parts"/>
+                                            <field name="state"/>
+                                            <button name="action_active_account_wizard" type="object"
+                                                    string="Activer"
+                                                    class="btn-primary" icon="fa-money"
+                                                    invisible="state != 'draft'"/>
+                                            <button name="action_open_subscription_wizard" type="object"
+                                                    string="+ Souscription"
+                                                    class="btn-success" icon="fa-arrow-up"
+                                                    invisible="state != 'active'"/>
+                                            <button name="action_redeem_parts" type="object" string="Rachat de parts"
+                                                    class="oe_highlight" icon="fa-exchange"
+                                                    invisible="state != 'active' or total_parts &lt;= 0"/>
                                         </list>
                                     </field>
                                 </group>

@@ -1,31 +1,34 @@
 <odoo>
 
-    <record id="view_efund_fund_redemption_wizard_form" model="ir.ui.view">
-        <field name="name">efund.fund.redemption.wizard.form</field>
-        <field name="model">efund.fund.redemption.wizard</field>
+    <record id="view_efund_fund_subscription_wizard_form" model="ir.ui.view">
+        <field name="name">efund.fund.subscription.wizard.form</field>
+        <field name="model">efund.fund.subscription.wizard</field>
         <field name="arch" type="xml">
-            <form string="Rachat de parts">
+            <form string="Souscription de parts">
                 <sheet>
                     <group>
-                        <div class="o_form_label text-warning">
-                            Vous êtes sur le point de saisir une demande de rachat.
+                        <div class="o_form_label text-info">
+                            Vous êtes sur le point de saisir une demande de souscription.
                         </div>
                     </group>
 
-                    <group col="2">
+                    <group col="3">
                         <group>
                             <field name="investor_id" readonly="1"/>
                             <field name="fund_id" readonly="1"/>
                         </group>
                         <group>
-                            <field name="part_account_id" readonly="1"/>
                             <field name="cash_account_id" readonly="1"/>
+                            <field name="balance" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="part_account_id" readonly="1"/>
+                            <field name="total_parts" readonly="1"/>
                         </group>
                     </group>
 
-                    <group string="Détails du rachat">
-                        <field name="parts"/>
-                        <field name="currency_id" readonly="1"/>
+                    <group string="Détails de la souscription">
+                        <field name="amount"/>
                     </group>
 
                 </sheet>
@@ -33,7 +36,7 @@
                 <footer>
                     <button name="action_confirm"
                             type="object"
-                            string="Soumettre le rachat"
+                            string="Soumettre la souscription"
                             class="btn-primary"/>
 
                     <button string="Annuler"

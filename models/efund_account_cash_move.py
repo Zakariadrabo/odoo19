@@ -24,6 +24,7 @@ class EfundAccountCashMove(models.Model):
         ('deposit','Dépôt'),
         ('subscription','Souscription'),
         ('redemption','Rachat'),
+        ('refund', 'Remboursement'),
     ], required=True)
 
     amount = fields.Monetary(required=True, currency_field='currency_id')

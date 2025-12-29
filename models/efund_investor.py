@@ -20,7 +20,7 @@ class FundInvestor(models.Model):
         domain="[('is_investor', '=', True)]",
     )
 
-    company_id = fields.Many2one('res.company', string="Context Company (Fund)", required=True, index=True)
+    company_id = fields.Many2one('res.company', string="Context Company (Fund)", index=True)
 
     # store the name for easier reading (populated from partner)
     name = fields.Char(related="partner_id.name", store=True, readonly=True)
@@ -49,6 +49,8 @@ class FundInvestor(models.Model):
     aml_alert_ids = fields.One2many('efund.aml.alert', 'investor_id', string="AML Alerts")
     active = fields.Boolean(default=True)
     fund_investor_ids = fields.One2many('efund.fund.investor','investor_id',string="Fonds")
+    cash_account_ids = fields.One2many('efund.account.cash','investor_id',string="Comptes espèces")
+    part_account_ids = fields.One2many('efund.account.part','investor_id',string="Comptes titres")
 
     # compliance computed fields
     compliance_status = fields.Selection([
@@ -120,8 +122,6 @@ class FundInvestor(models.Model):
                 investor.partner_id.write({"is_investor": True})
 
         return investors
-
-
 
     def _prepare_partner_vals(self, vals):
         """Convertit les champs EfundInvestor → res.partner proprement."""

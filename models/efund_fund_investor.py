@@ -14,6 +14,9 @@ class FundInvestor(models.Model):
         index=True,
         ondelete='cascade'
     )
+    partner_id = fields.Many2one(related='investor_id.partner_id',string="Partenaire")
+    full_name = fields.Char(related='investor_id.full_name',string="Nom complet")
+    name=fields.Char(related='investor_id.name',string="Nom")
 
     fund_id = fields.Many2one(
         'efund.fund',
@@ -136,14 +139,18 @@ class FundInvestor(models.Model):
             return
 
         cash_account = Cash.create({
+            'name': f"Compte Espèces-{self.fund_id.name}-{self.full_name or self.name or 'Investor'}",
             'investor_id': self.investor_id.id,
             'fund_id': self.fund_id.id,
+            'date_opened': fields.Date.today(),
             'account_number': self._generate_cash_account_number(),
         })
 
         part_account = Part.create({
+            'name': f"Compte Titre - {self.fund_id.name} - {self.full_name or self.name or 'Investor'}",
             'investor_id': self.investor_id.id,
             'fund_id': self.fund_id.id,
+            'date_opened': fields.Date.today(),
             'account_number': self._generate_part_account_number(),
         })
 
@@ -161,8 +168,14 @@ class FundInvestor(models.Model):
 
     def _generate_cash_account_number(self):
         self.ensure_one()
-        return f"ES-{self.fund_id.code or self.fund_id.id}-{str(self.investor_id.id).zfill(6)}"
+        inv_type = "IND"
+        if self.partner_id and self.partner_id.company_type == "company":
+            inv_type = "COR"
+        return f"ES-{inv_type}-{self.fund_id.code or self.fund_id.id}-{str(self.investor_id.id).zfill(6)}"
 
     def _generate_part_account_number(self):
         self.ensure_one()
-        return f"PT-{self.fund_id.code or self.fund_id.id}-{str(self.investor_id.id).zfill(6)}"
+        inv_type = "IND"
+        if self.partner_id and self.partner_id.company_type == "company":
+            inv_type = "COR"
+        return f"PT-{inv_type}-{self.fund_id.code or self.fund_id.id}-{str(self.investor_id.id).zfill(6)}"

@@ -46,6 +46,7 @@
                     <group>
                         <group string="Identification">
                             <field name="name"/>
+                            <field name="code"/>
                             <field name="fund_type"/>
                             <field name="risk_level"/>
                             <field name="nav_frequency"/>
@@ -55,6 +56,7 @@
                             <field name="launch_date"/>
                             <field name="ter"/>
                             <field name="benchmark_index"/>
+                            <field name="current_vl"/>
                         </group>
                     </group>
 

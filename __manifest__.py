@@ -38,6 +38,7 @@
         'views/efund_bourse_order_views.xml',
         'views/efund_depositaire.xml',
         'views/efund_menu_parametre.xml',
+        'views/efund_fund_investor_views.xml',
         'views/efund_investor_views.xml',
         'views/efund_views_parametre.xml',
         'views/efund_views_fund.xml',
@@ -50,7 +51,11 @@
         'reports/efund_kyc_report_template.xml',
         'views/efund_fund_instrument_event_views.xml',
         'views/efund_position_adjustment_views.xml',
-        'views/efund_fund_investor_views.xml',
+        'wizard/efund_account_activate_wizard_views.xml',
+        'wizard/efund_cash_deposit_wizard.xml',
+        'wizard/efund_fund_redemption_wizard_views.xml',
+        'wizard/efund_fund_subscription_wizard_views.xml',
+
     ],
 
     'installable': True,

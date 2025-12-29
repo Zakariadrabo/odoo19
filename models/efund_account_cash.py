@@ -3,6 +3,7 @@ from odoo.exceptions import UserError, ValidationError
 
 class EfundAccountCash(models.Model):
     _name = 'efund.account.cash'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'Compte Espèces Client'
 
     name = fields.Char(string="Libellé", required=True, copy=False)
@@ -33,7 +34,43 @@ class EfundAccountCash(models.Model):
                 ('cash_account_id', '=', acc.id)
             ])
             acc.balance = sum(
-                m.amount if m.move_type == 'deposit' else -m.amount
+                m.amount if m.move_type in('deposit','refund') else -m.amount
                 for m in moves
             )
+
+    def action_open_cash_deposit_wizard(self):
+        self.ensure_one()
+        if self.state != 'active':
+            raise UserError(_("Aucun compte espèces n’est associé à cet investisseur."))
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Dépôt sur compte espèces"),
+            "res_model": "efund.cash.deposit.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_cash_account_id": self.id,
+                "company_id": self.company_id.id,
+            }
+        }
+
+    def action_active_account_wizard(self):
+        self.ensure_one()
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Activation du compte',
+            'res_model': 'efund.account.activate.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_account_model': 'cash',
+                'default_cash_account_id': self.id,
+                'default_fund_id': self.fund_id.id,
+                'default_investor_id': self.investor_id.id,
+                'force_company': self.company_id.id,
+            }
+        }
+
+
 

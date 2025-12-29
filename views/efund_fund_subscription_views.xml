@@ -5,16 +5,16 @@
         <field name="model">efund.fund.subscription</field>
         <field name="arch" type="xml">
             <list string="Souscriptions">
-                <field name="name"/>
                 <field name="investor_id"/>
                 <field name="fund_id"/>
                 <field name="date_operation"/>
-                <field name="nb_parts"/>
-                <field name="vl"/>
+                <field name="unit_value"/>
                 <field name="amount"/>
-                <field name="payment_mode"/>
+                <field name="cash_used"/>
+                <field name="parts"/>
+                <field name="cash_refund"/>
+                <field name="date_valeur"/>
                 <field name="state"/>
-                <field name="journal_entry_id"/>
             </list>
         </field>
     </record>
@@ -25,11 +25,21 @@
         <field name="arch" type="xml">
             <form string="Subscription">
                 <header>
+                    <button name="action_cancel_subscription"
+                            type="object"
+                            string="Annuler"
+                            class="btn-primary"
+                            invisible="state == 'executed'"/>
+                    <button name="action_submit_subscription"
+                            type="object"
+                            string="Soumettre"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
                     <button name="action_validate_subscription"
                             type="object"
                             string="Valider"
                             class="btn-primary"
-                            invisible="state != 'draft'"/>
+                            invisible="state != 'submitted'"/>
                     <button name="action_account"
                             type="object"
                             string="Comptabiliser"
@@ -41,52 +51,27 @@
                 <sheet>
                     <group>
                         <group string="Informations générales">
-                            <field name="name" readonly="1"/>
                             <field name="investor_id" readonly="1"/>
-                            <field name="fund_id"/>
-                            <field name="company_id" readonly="1"/>
+                            <field name="fund_id" readonly="1"/>
                             <field name="date_operation"/>
+                            <field name="allow_fractional_parts"/>
+                        </group>
+                        <group string="Compte espèces utilisé">
+                            <field name="cash_account_id" readonly="1"/>
+                            <field name="balance" readonly="1"/>
                         </group>
                         <group string="Montant / Parts">
-                            <field name="nb_parts"/>
-                            <field name="vl"/>
                             <field name="amount"/>
-                            <field name="currency_id" readonly="1"/>
+                            <field name="unit_value"/>
+                            <field name="cash_used"/>
+                            <field name="parts"/>
+                            <field name="cash_refund"/>
                         </group>
-                    </group>
-
-                    <group string="Paiement">
-                        <field name="payment_mode"/>
-                        <field name="reference_payment"/>
-                        <field name="bank_id"/>
-                    </group>
-
-                    <group string="Compte espèces utilisé">
-                        <field name="cash_account_id"/>
-                        <field name="available_cash" readonly="1"/>
-                    </group>
-
-                    <group string="Divers">
-                        <field name="is_initial"/>
-                        <field name="journal_entry_id" readonly="1"/>
-                        <field name="note"/>
                     </group>
                 </sheet>
             </form>
         </field>
     </record>
-
-    <record id="action_fund_subscription_list" model="ir.actions.act_window">
-        <field name="name">Souscriptions</field>
-        <field name="res_model">efund.fund.subscription</field>
-        <field name="view_mode">list,form</field>
-    </record>
-
-    <menuitem id="menu_subscriptions"
-              name="Souscriptions"
-              parent="menu_operations_root"
-              action="action_fund_subscription_list"
-              sequence="41"/>
 </odoo>
 
 

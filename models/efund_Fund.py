@@ -14,165 +14,56 @@ class Fund(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(string="Fund Name", required=True)
-    company_id = fields.Many2one(
-        'res.company',
-        string='Company',
-        ondelete='cascade'
-    )
-
-    management_company_id = fields.Many2one(
-        'efund.management.company',
-        string='Management Company',
-        domain="[('company_id', '!=', company_id)]"  # Évite bouclage
-    )
+    code = fields.Char(string="Fund Code", required=True)
+    company_id = fields.Many2one('res.company',string='Company',ondelete='cascade')
+    management_company_id = fields.Many2one('efund.management.company',string='Management Company',domain="[('company_id', '!=', company_id)]" )
 
     # Propriétés spécifiques fonds
-    fund_type = fields.Selection([
-        ('equity', 'Equity Fund'),
-        ('bond', 'Bond Fund'),
-        ('mixed', 'Mixed Fund'),
-    ], string='Fund Type', required=True)
-
-    risk_level = fields.Selection([
-        ('low', 'Low Risk'),
-        ('medium', 'Medium Risk'),
-        ('high', 'High Risk'),
-    ], string='Risk Level')
-
-    nav_frequency = fields.Selection([
-        ('daily', 'Daily'),
-        ('weekly', 'Weekly'),
-        ('monthly', 'Monthly'),
-    ], string="NAV Frequency", default='daily')
-
-    # Statuts
-    state = fields.Selection([
-        ('draft', 'Draft'),
-        ('active', 'Active'),
-        ('suspended', 'Suspended'),
-        ('liquidated', 'Liquidated'),
-    ], string='Status', default='draft')
-
+    fund_type = fields.Selection([('equity', 'Equity Fund'),('bond', 'Bond Fund'),('mixed', 'Mixed Fund'),], string='Fund Type', required=True)
+    risk_level = fields.Selection([('low', 'Low Risk'),('medium', 'Medium Risk'),('high', 'High Risk'),], string='Risk Level')
+    nav_frequency = fields.Selection([('daily', 'Daily'),('weekly', 'Weekly'),('monthly', 'Monthly'),], string="NAV Frequency", default='daily')
     launch_date = fields.Date(string='Launch Date')
     ter = fields.Float(string='Total Expense Ratio (%)', digits=(6, 4))
     investment_objective = fields.Text(string='Investment Objective')
     benchmark_index = fields.Char(string='Benchmark Index')
+    redemption_delay = fields.Selection([('J', 'J'), ('J1', 'J+1'), ('J2', 'J+2'), ], string="Délai de rachat",default='J2', required=True)
+    cutoff_time = fields.Float(string="Heure de cut-off",default=16.0,help="Heure limite de réception des ordres (format décimal).\nExemples : 14.0 = 14h00, 14.5 = 14h30, 16.75 = 16h45.")
+
+
+    # Statuts
+    state = fields.Selection([('draft', 'Draft'),('active', 'Active'),('suspended', 'Suspended'),('liquidated', 'Liquidated'),], string='Status', default='draft')
 
     # Relations
     share_class_ids = fields.One2many('efund.fund.class', 'fund_id', string='Share Classes')
     currency_id = fields.Many2one(related='company_id.currency_id')
 
     # Comptabilité
-
-    cash_account_id = fields.Many2one(
-        'account.account',
-        string='Cash Account',
-        domain="[('account_type', '=', 'asset_cash')]",
-        help="Compte bancaire principal du fonds"
-    )
-
-    capital_account_id = fields.Many2one(
-        'account.account',
-        string='Capital Account',
-        domain="[('account_type', '=', 'equity')]",
-        help="Compte de capital social du fonds"
-    )
-
-    # Comptes supplémentaires
-    subscription_account_id = fields.Many2one(
-        'account.account',
-        string='Subscription Account'
-    )
-
-    redemption_account_id = fields.Many2one(
-        'account.account',
-        string='Redemption Account'
-    )
-    redemption_delay = fields.Selection([('J', 'J'), ('J1', 'J+1'), ('J2', 'J+2'), ], string="Délai de rachat",
-                                        default='J2', required=True )
-    cutoff_time = fields.Float(
-        string="Heure de cut-off",
-        default=16.0,
-        help=(
-            "Heure limite de réception des ordres (format décimal).\n"
-            "Exemples : 14.0 = 14h00, 14.5 = 14h30, 16.75 = 16h45."
-        ),
-    )
-
-
-    fee_income_account_id = fields.Many2one(
-        'account.account',
-        string='Fee Income Account'
-    )
+    cash_account_id = fields.Many2one('account.account',string='Cash Account',domain="[('account_type', '=', 'asset_cash')]",help="Compte bancaire principal du fonds")
+    capital_account_id = fields.Many2one('account.account',string='Capital Account',domain="[('account_type', '=', 'equity')]",help="Compte de capital social du fonds")
+    subscription_account_id = fields.Many2one('account.account',string='Subscription Account',help="Compte de souscription du fonds")
+    redemption_account_id = fields.Many2one('account.account',string='Redemption Account',help="Compte de rachat du fonds")
+    fee_income_account_id = fields.Many2one('account.account',string='Fee Income Account',help="Compte de recettes de frais du fonds")
     # === JOURNAUX par Fonds ===
-    subscription_journal_id = fields.Many2one(
-        'account.journal',
-        string='Subscription Journal',
-        domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]"
-    )
-
-    redemption_journal_id = fields.Many2one(
-        'account.journal',
-        string='Redemption Journal',
-        domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]"
-    )
-
-    operations_journal_id = fields.Many2one(
-        'account.journal',
-        string='Miscellaneous Journal',
-        domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]"
-    )
+    subscription_journal_id = fields.Many2one('account.journal',string='Subscription Journal',domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]",help="Journal de souscription du fonds")
+    redemption_journal_id = fields.Many2one('account.journal',string='Redemption Journal',domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]",help="Journal de rachat du fonds")
+    operations_journal_id = fields.Many2one('account.journal',string='Miscellaneous Journal',domain="[('type', '=', 'bank'), ('company_id', 'in', [company_id])]",help="Journal divers du fonds")
 
     # Données sur les positions du fond
-
-    position_ids = fields.One2many(
-        'efund.fund.position',
-        'fund_id',
-        string="Positions"
-    )
+    position_ids = fields.One2many('efund.fund.position','fund_id',string="Positions")
 
     # Champs calculés pour le résumé
-    total_market_value = fields.Monetary(
-        string="Valeur totale du portfolio",
-        currency_field='currency_id',
-        compute='_compute_portfolio_summary',
-        store=True
-    )
+    total_market_value = fields.Monetary(string="Valeur totale du portfolio",currency_field='currency_id',compute='_compute_portfolio_summary',store=False)
+    position_count = fields.Integer(string="Nombre de positions",compute='_compute_portfolio_summary',store=False)
+    total_unrealized_pl = fields.Monetary(string="Total Plus/Moins-values",currency_field='currency_id',compute='_compute_portfolio_summary',store=False)
+    last_valuation_date = fields.Date(string="Dernière valorisation",compute='_compute_portfolio_summary',store=False)
+    portfolio_concentration = fields.Float(string="Concentration du top 5",compute='_compute_portfolio_concentration',digits=(16, 2))
+    cash_available = fields.Monetary(compute='_compute_cash_available',currency_field='currency_id')
+    cash_committed = fields.Monetary(compute='_compute_cash_committed',currency_field='currency_id')
+    allow_fractional_parts = fields.Boolean(string="Autoriser les parts fractionnées",default=False,help="Si décoché, les souscriptions sont arrondies à l'entier inférieur.")
 
-    position_count = fields.Integer(
-        string="Nombre de positions",
-        compute='_compute_portfolio_summary',
-        store=True
-    )
-
-    total_unrealized_pl = fields.Monetary(
-        string="Total Plus/Moins-values",
-        currency_field='currency_id',
-        compute='_compute_portfolio_summary',
-        store=True
-    )
-
-    last_valuation_date = fields.Date(
-        string="Dernière valorisation",
-        compute='_compute_portfolio_summary',
-        store=True
-    )
-
-    portfolio_concentration = fields.Float(
-        string="Concentration du top 5",
-        compute='_compute_portfolio_concentration',
-        digits=(16, 2)
-    )
-
-    cash_available = fields.Monetary(
-        compute='_compute_cash_available',
-        currency_field='currency_id'
-    )
-
-    cash_committed = fields.Monetary(
-        compute='_compute_cash_committed',
-        currency_field='currency_id'
-    )
+    ## TEST VL
+    current_vl = fields.Float(string="VL actuelle")
+    VL_share_class_id = fields.Many2one('efund.fund.class',string="Classes de partage VL")
 
     #################################################
     #      Constrainte
@@ -311,7 +202,7 @@ class Fund(models.Model):
         """Calcule les totaux du portfolio"""
         for fund in self:
             active_positions = fund.position_ids.filtered(
-                lambda p: p.status == 'active'
+                lambda p: p.state == 'active'
             )
 
             fund.total_market_value = sum(active_positions.mapped('market_value'))
