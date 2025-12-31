@@ -9,44 +9,44 @@
             <form string="Investor">
                 <header>
                     <!-- ========================= -->
-                        <!-- DRAFT → KYC PENDING -->
-                        <!-- ========================= -->
-                        <button name="action_submit_kyc"
-                                type="object"
-                                string="Soumettre KYC"
-                                class="btn-primary"
-                                icon="fa-paper-plane"
-                                invisible= "status != 'draft'"/>
+                    <!-- DRAFT → KYC PENDING -->
+                    <!-- ========================= -->
+                    <button name="action_submit_kyc"
+                            type="object"
+                            string="Soumettre KYC"
+                            class="btn-primary"
+                            icon="fa-paper-plane"
+                            invisible="status != 'draft'"/>
 
-                        <!-- ========================= -->
-                        <!-- KYC PENDING → APPROVED -->
-                        <!-- ========================= -->
-                        <button name="action_approve_kyc"
-                                type="object"
-                                string="Approuver KYC"
-                                class="btn-success"
-                                icon="fa-check"
-                                invisible="status != 'kyc_pending'"/>
+                    <!-- ========================= -->
+                    <!-- KYC PENDING → APPROVED -->
+                    <!-- ========================= -->
+                    <button name="action_approve_kyc"
+                            type="object"
+                            string="Approuver KYC"
+                            class="btn-success"
+                            icon="fa-check"
+                            invisible="status != 'kyc_pending'"/>
 
-                        <!-- ========================= -->
-                        <!-- KYC PENDING → REJECTED -->
-                        <!-- ========================= -->
-                        <button name="action_reject_kyc"
-                                type="object"
-                                string="Rejeter KYC"
-                                class="btn-danger"
-                                icon="fa-times"
-                                invisible="status != 'kyc_pending'"/>
+                    <!-- ========================= -->
+                    <!-- KYC PENDING → REJECTED -->
+                    <!-- ========================= -->
+                    <button name="action_reject_kyc"
+                            type="object"
+                            string="Rejeter KYC"
+                            class="btn-danger"
+                            icon="fa-times"
+                            invisible="status != 'kyc_pending'"/>
 
-                        <!-- ========================= -->
-                        <!-- APPROVED / REJECTED → ARCHIVED -->
-                        <!-- ========================= -->
-                        <button name="action_archive"
-                                type="object"
-                                string="Archiver"
-                                class="btn-secondary"
-                                icon="fa-archive"
-                                invisible="status not in ['kyc_approved', 'kyc_rejected']"/>
+                    <!-- ========================= -->
+                    <!-- APPROVED / REJECTED → ARCHIVED -->
+                    <!-- ========================= -->
+                    <button name="action_archive"
+                            type="object"
+                            string="Archiver"
+                            class="btn-secondary"
+                            icon="fa-archive"
+                            invisible="status not in ['kyc_approved', 'kyc_rejected']"/>
                     <field name="status" widget="statusbar"/>
                 </header>
 
@@ -68,13 +68,13 @@
                     <!-- PERSONNE PHYSIQUE -->
                     <!-- ========================= -->
                     <group string="Personne Physique"
-                        invisible="investor_type != 'individual'">
+                           invisible="investor_type != 'individual'">
 
                         <group col="4">
                             <field name="sex"/>
                             <field name="birthdate"/>
                             <field name="birthplace"/>
-                              <field name="birth_country_id"/>
+                            <field name="birth_country_id"/>
                             <field name="minor"/>
                             <field name="socio_professional_category"/>
 
@@ -84,7 +84,7 @@
                             <field name="country_id"/>
                             <field name="language_id"/>
                             <field name="city"/>
-                             <field name="function"/>
+                            <field name="function"/>
                             <field name="activity_sector"/>
                             <field name="profession"/>
                         </group>
@@ -100,7 +100,7 @@
                             <field name="company_name"/>
                             <field name="company_short_name"/>
                             <field name="legal_form"/>
-                             <field name="company_country_id"/>
+                            <field name="company_country_id"/>
                             <field name="language_id"/>
                         </group>
 
@@ -131,14 +131,27 @@
                     <!-- ========================== -->
 
                     <notebook>
-                        <page string="Abonnemement Fonds">
-                            <field name="fund_investor_ids" context="{'default_investor_id': id}">
-                                <list editable="bottom">
-                                    <field name="fund_id"/>
-                                    <field name="state" readonly="1"/>
-                                    <field name="validation_date"/>
-                                </list>
-                            </field>
+                        <page string="Abonnemement Fonds / Mandats">
+                            <group>
+                                <group string="Fonds">
+                                    <field name="fund_investor_ids" context="{'default_investor_id': id}">
+                                        <list editable="bottom">
+                                            <field name="fund_id"/>
+                                            <field name="state" readonly="1"/>
+                                            <field name="validation_date"/>
+                                        </list>
+                                    </field>
+                                </group>
+                                <group string="Mandats">
+                                    <field name="mandate_investor_ids" context="{'default_mandat_id': id}">
+                                        <list editable="bottom">
+                                            <field name="mandate_id"/>
+                                            <field name="state" readonly="1"/>
+                                            <field name="validation_date"/>
+                                        </list>
+                                    </field>
+                                </group>
+                            </group>
                         </page>
                         <page string="Comptes et portefeuille">
                             <group>
@@ -146,8 +159,8 @@
                                     <field name="cash_account_ids" nolabel="1">
                                         <list create="false">
                                             <field name="fund_id"/>
+                                            <field name="mandate_id" invisible="1"/>
                                             <field name="account_number"/>
-                                            <field name="date_opened"/>
                                             <field name="balance"/>
                                             <field name="state"/>
                                             <button name="action_active_account_wizard" type="object"
@@ -155,7 +168,11 @@
                                                     class="btn-primary" icon="fa-money"
                                                     invisible="state != 'draft'"/>
                                             <button name="action_open_cash_deposit_wizard" type="object"
-                                                    string="Dépôt espèces"
+                                                    string="Déposit"
+                                                    class="btn-primary" icon="fa-money"
+                                                    invisible="state != 'active'"/>
+                                            <button name="action_open_cash_withdraw_wizard" type="object"
+                                                    string="Retrait"
                                                     class="btn-primary" icon="fa-money"
                                                     invisible="state != 'active'"/>
 
@@ -167,7 +184,6 @@
                                         <list create="false">
                                             <field name="fund_id"/>
                                             <field name="account_number"/>
-                                            <field name="date_opened"/>
                                             <field name="total_parts"/>
                                             <field name="state"/>
                                             <button name="action_active_account_wizard" type="object"
@@ -178,7 +194,7 @@
                                                     string="+ Souscription"
                                                     class="btn-success" icon="fa-arrow-up"
                                                     invisible="state != 'active'"/>
-                                            <button name="action_redeem_parts" type="object" string="Rachat de parts"
+                                            <button name="action_redeem_parts" type="object" string="Rachat"
                                                     class="oe_highlight" icon="fa-exchange"
                                                     invisible="state != 'active' or total_parts &lt;= 0"/>
                                         </list>

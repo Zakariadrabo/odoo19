@@ -1,5 +1,10 @@
+import logging
+import math
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 
 class FundSubscriptionWizard(models.TransientModel):
@@ -11,10 +16,40 @@ class FundSubscriptionWizard(models.TransientModel):
     part_account_id = fields.Many2one('efund.account.part',required=True,readonly=True)
     total_parts = fields.Float(string="Nombre de parts",related="part_account_id.total_parts",readonly=True)
     fund_id = fields.Many2one(related='part_account_id.fund_id',store=True)
+    subscription_fee_rate = fields.Float(string=" % Frais de souscription",related="fund_id.subscription_fee_rate",readonly=True)
+    subscription_fee_amount = fields.Monetary(string="Montant frais de souscription",compute="_compute_subscription_fee_amount",readonly=True)
+    net_amount = fields.Monetary(string="Montant net",compute="_compute_subscription_fee_amount",readonly=True)
+    allow_fractional_parts = fields.Boolean(string="Parts fractionnées",related='cash_account_id.fund_id.allow_fractional_parts',)
+    parts = fields.Float(string="Nombre de parts",compute="_compute_subscription_fee_amount",readonly=True)
     investor_id = fields.Many2one(related='part_account_id.investor_id',store=True)
     company_id = fields.Many2one(related='fund_id.company_id',store=True)
     currency_id = fields.Many2one(related='company_id.currency_id',store=True)
     amount = fields.Monetary(string="Montant à souscrire",required=True)
+    unit_value = fields.Float(string="VL appliquée", related="fund_id.current_vl", readonly=True)
+    reliquat = fields.Monetary(string="Reliquat",compute="_compute_subscription_fee_amount",readonly=True)
+
+
+    @api.depends('amount', 'subscription_fee_rate', 'unit_value', 'net_amount', 'parts')
+    def _compute_subscription_fee_amount(self):
+        for sub in self:
+
+            prix_unitaire_ttc = sub.unit_value * (1 + sub.subscription_fee_rate/100)
+
+            if sub.allow_fractional_parts:
+                # On calcule avec des décimales (souvent 4 pour les OPCVM)
+                sub.parts = round(sub.amount / prix_unitaire_ttc, 4)
+            else:
+                # On force l'entier inférieur
+                sub.parts = math.floor(sub.amount / prix_unitaire_ttc)
+
+            montant_reel = sub.parts * prix_unitaire_ttc
+            reliquat = sub.amount - montant_reel
+
+
+            sub.net_amount = montant_reel
+            sub.subscription_fee_amount = sub.parts * sub.unit_value * sub.subscription_fee_rate /100
+            sub.reliquat = reliquat
+
 
     def action_confirm(self):
         self.ensure_one()
@@ -44,5 +79,10 @@ class FundSubscriptionWizard(models.TransientModel):
             'cash_account_id': self.cash_account_id.id,
             'part_account_id': self.part_account_id.id,
             'amount': self.amount,
+            'cash_refund': self.reliquat,
+            'subscription_fee_amount': self.subscription_fee_amount,
+            'cash_used': self.net_amount,
+            'parts': self.parts,
+            'unit_value': self.unit_value,
             'state': 'draft',
         })

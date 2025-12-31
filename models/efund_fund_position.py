@@ -73,6 +73,7 @@ class FundPosition(models.Model):
 
     )
 
+
     # ========== CALCULS DE PERFORMANCE ==========
     unrealized_pl = fields.Monetary(
         string="Plus/Moins-value latente",

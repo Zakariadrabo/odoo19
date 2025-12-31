@@ -50,23 +50,43 @@
                 </header>
                 <sheet>
                     <group>
-                        <group string="Informations générales">
+                        <div class="o_form_label text-info">
+                            Vous êtes sur le processus de validation d'une souscription.
+                        </div>
+                    </group>
+
+                    <group col="3">
+                        <group>
                             <field name="investor_id" readonly="1"/>
                             <field name="fund_id" readonly="1"/>
-                            <field name="date_operation"/>
-                            <field name="allow_fractional_parts"/>
+                            <field name="allow_fractional_parts" readonly="1"/>
                         </group>
-                        <group string="Compte espèces utilisé">
+                        <group>
                             <field name="cash_account_id" readonly="1"/>
                             <field name="balance" readonly="1"/>
                         </group>
-                        <group string="Montant / Parts">
+                        <group>
+                            <field name="part_account_id" readonly="1"/>
+                            <field name="total_parts" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Détails de la souscription" col="3">
+                        <group>
                             <field name="amount"/>
                             <field name="unit_value"/>
+                        </group>
+                        <group>
+                            <field name="subscription_fee_rate"/>
+                            <field name="subscription_fee_amount"/>
+                        </group>
+                        <group>
                             <field name="cash_used"/>
                             <field name="parts"/>
                             <field name="cash_refund"/>
                         </group>
+
+
                     </group>
                 </sheet>
             </form>

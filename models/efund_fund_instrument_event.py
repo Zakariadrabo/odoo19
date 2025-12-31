@@ -203,7 +203,7 @@ class FundInstrumentEvent(models.Model):
     )
 
     affected_position_count = fields.Integer(
-        string="Positions impactées",
+        string="Nombre Positions impactées",
         compute='_compute_affected_positions',
         store=False
     )

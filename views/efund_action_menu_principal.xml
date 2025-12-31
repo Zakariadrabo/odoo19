@@ -67,7 +67,7 @@
     </record>
 
 
-    <record id="action_fund_list" model="ir.actions.act_window">
+    <record id="action_efund_fund" model="ir.actions.act_window">
         <field name="name">Fonds</field>
         <field name="res_model">efund.fund</field>
         <field name="view_mode">list,form,kanban</field>
@@ -77,6 +77,21 @@
             </p>
             <p>
                 Avant de créer un fonds, assurez-vous d'avoir une société de gestion configurée.
+            </p>
+        </field>
+    </record>
+
+    <!-- Action Mandat -->
+    <record id="action_efund_mandat" model="ir.actions.act_window">
+        <field name="name">Mandats</field>
+        <field name="res_model">efund.mandate</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer un nouveau mandat
+            </p>
+            <p>
+                Avant de créer un mandat, assurez-vous d'avoir une société de gestion configurée.
             </p>
         </field>
     </record>
@@ -129,6 +144,12 @@
     <!-- =========================
          4. OPÉRATIONS
     ========================== -->
+    <record id="action_fund_deposit" model="ir.actions.act_window">
+        <field name="name">Déposit Souscription</field>
+        <field name="res_model">efund.fund.cash.deposit</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
     <record id="action_fund_subscription_list" model="ir.actions.act_window">
         <field name="name">Souscriptions</field>
         <field name="res_model">efund.fund.subscription</field>
@@ -138,6 +159,12 @@
     <record id="action_fund_redemption_list" model="ir.actions.act_window">
         <field name="name">Rachats</field>
         <field name="res_model">efund.fund.redemption</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_fund_cash_withdraw" model="ir.actions.act_window">
+        <field name="name">Rétrait Rachat</field>
+        <field name="res_model">efund.fund.cash.withdraw</field>
         <field name="view_mode">list,form</field>
     </record>
 

@@ -52,9 +52,13 @@
         'views/efund_fund_instrument_event_views.xml',
         'views/efund_position_adjustment_views.xml',
         'wizard/efund_account_activate_wizard_views.xml',
-        'wizard/efund_cash_deposit_wizard.xml',
         'wizard/efund_fund_redemption_wizard_views.xml',
         'wizard/efund_fund_subscription_wizard_views.xml',
+        'views/efund_mandate_views.xml',
+        'wizard/efund_mandate_termination_wizard_views.xml',
+        'views/efund_cash_deposit_views.xml',
+        'views/efund_fund_redemption_views.xml',
+        'views/efund_cash_withdraw_views.xml',
 
     ],
 

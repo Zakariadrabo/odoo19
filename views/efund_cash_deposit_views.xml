@@ -1,0 +1,108 @@
+<odoo>
+
+    <!-- =============================== -->
+    <!-- LIST VIEW : DEPOTS ESPECES      -->
+    <!-- =============================== -->
+    <record id="view_efund_cash_deposit_list" model="ir.ui.view">
+        <field name="name">efund.cash.deposit.list</field>
+        <field name="model">efund.fund.cash.deposit</field>
+        <field name="arch" type="xml">
+            <list string="Dépôts espèces"
+                  decoration-info="state == 'received'"
+                  decoration-success="state == 'validated'"
+                  decoration-muted="state == 'cancelled'">
+
+                <field name="name"/>
+                <field name="fund_id"/>
+                <field name="investor_id"/>
+                <field name="date_operation"/>
+                <field name="date_valeur"/>
+                <field name="amount"/>
+                <field name="payment_mode"/>
+                <field name="state"/>
+
+            </list>
+        </field>
+    </record>
+
+    <!-- =============================== -->
+    <!-- FORM VIEW : DEPOT ESPECES       -->
+    <!-- =============================== -->
+    <record id="view_efund_cash_deposit_form" model="ir.ui.view">
+        <field name="name">efund.cash.deposit.form</field>
+        <field name="model">efund.fund.cash.deposit</field>
+        <field name="arch" type="xml">
+            <form string="Dépôt espèces">
+
+                <!-- HEADER -->
+                <header>
+                    <button name="action_cancel_subscription"
+                            type="object"
+                            string="Soumettre"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_submit_subscription"
+                            type="object"
+                            string="Soumettre"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_validate_subscription"
+                            type="object"
+                            string="Valider"
+                            class="btn-primary"
+                            invisible="state != 'submitted'"/>
+                    <button name="action_account"
+                            type="object"
+                            string="Comptabiliser"
+                            class="btn-secondary"
+                            invisible="state != 'validated'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,submitted,validated,accounted,cancelled"/>
+                </header>
+
+                <sheet>
+                    <!-- MESSAGE CONTEXTUEL -->
+                    <group>
+                        <div class="o_form_label text-info">
+                            Cet enregistrement représente un ordre de dépôt.
+                            Le solde espèces du produit n’est impacté qu’à la comptabilisation.
+                        </div>
+                    </group>
+
+                    <!-- IDENTIFICATION -->
+                    <group col="2">
+                        <group col="2">
+                            <field name="fund_id" readonly="1"/>
+                            <field name="investor_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="cash_account_id" readonly="1"/>
+                            <field name="name" readonly="1"/>
+                            <field name="date_operation"/>
+                        </group>
+                    </group>
+                    <!-- DETAILS DU DEPOT -->
+                    <group string="Détails du dépôt" col="2">
+                        <group>
+                            <field name="reference_payment"/>
+                            <field name="amount"/>
+                        </group>
+                        <group>
+                            <field name="payment_mode"/>
+                            <field name="date_valeur" readonly="state !='submitted'"/>
+                        </group>
+                    </group>
+
+                </sheet>
+
+               <chatter>
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </chatter>
+
+            </form>
+        </field>
+    </record>
+
+</odoo>
+

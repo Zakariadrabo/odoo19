@@ -10,11 +10,11 @@ _logger = logging.getLogger(__name__)
 # models/fund.py
 class Fund(models.Model):
     _name = 'efund.fund'
-    _description = 'Fund'
+    _description = 'Fond'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(string="Fund Name", required=True)
-    code = fields.Char(string="Fund Code", required=True)
+    name = fields.Char(string="Nom du fond", required=True)
+    code = fields.Char(string="Code du fond", required=True)
     company_id = fields.Many2one('res.company', string='Company', ondelete='cascade')
     management_company_id = fields.Many2one('efund.management.company', string='Management Company',
                                             domain="[('company_id', '!=', company_id)]")
@@ -94,70 +94,27 @@ class Fund(models.Model):
     # 1. IDENTIFICATION DU FONDS
     # =========================================================
 
-    legal_form = fields.Char(
-        string="Forme juridique"
-    )
-
-    commercial_register = fields.Char(
-        string="Registre de commerce"
-    )
-
-    country_id = fields.Many2one(
-        "res.country",
-        string="Pays"
-    )
-
-    city = fields.Char(
-        string="Ville"
-    )
-
-    active = fields.Boolean(
-        default=True
-    )
+    legal_form = fields.Char(string="Forme juridique")
+    commercial_register = fields.Char(string="Registre de commerce")
+    country_id = fields.Many2one("res.country",string="Pays")
+    city = fields.Char(string="Ville")
+    active = fields.Boolean(default=True)
 
     # =========================================================
     # 2. CADRE RÉGLEMENTAIRE
     # =========================================================
-    license_number = fields.Char(
-        string="N° Agrément"
-    )
-
-    license_date = fields.Date(
-        string="Date d’agrément"
-    )
-
-    info_visa_number = fields.Char(
-        string="N° Visa Note d'information"
-    )
-
-    info_visa_date = fields.Date(
-        string="Date édition note"
-    )
-
-    regulatory_note = fields.Text(
-        string="Informations réglementaires"
-    )
+    license_number = fields.Char(string="N° Agrément")
+    license_date = fields.Date(string="Date d’agrément")
+    info_visa_number = fields.Char(string="N° Visa Note d'information")
+    info_visa_date = fields.Date(string="Date édition note")
+    regulatory_note = fields.Text(string="Informations réglementaires")
 
     # =========================================================
     # 3. ACTEURS DU FONDS
     # =========================================================
-    issuer_id = fields.Many2one(
-        "res.partner",
-        string="Émetteur",
-        domain=[("is_company", "=", True)]
-    )
-
-    depositary_id = fields.Many2one(
-        "res.partner",
-        string="Dépositaire",
-        domain=[("is_company", "=", True)]
-    )
-
-    manager_id = fields.Many2one(
-        "res.partner",
-        string="Gestionnaire",
-        domain=[("is_company", "=", True)]
-    )
+    issuer_id = fields.Many2one("res.partner",string="Émetteur",domain=[("is_company", "=", True)])
+    depositary_id = fields.Many2one("efund.depositaire",string="Dépositaire")
+    manager_id = fields.Many2one("efund.management.company",string="Gestionnaire")
 
     # =========================================================
     # 4. PARAMÈTRES FINANCIERS
@@ -181,11 +138,6 @@ class Fund(models.Model):
 
     initial_nav = fields.Monetary(
         string="VL d’origine",
-        currency_field="currency_id"
-    )
-
-    current_nav = fields.Monetary(
-        string="VL actuelle",
         currency_field="currency_id"
     )
 

@@ -5,9 +5,9 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 _logger = logging.getLogger(__name__)
 
-class CashDeposit(models.Model):
-    _name = 'efund.fund.cash.deposit'
-    _description = 'Opération de dépôt d’espèces dans un fond'
+class CashWithdraw(models.Model):
+    _name = 'efund.fund.cash.withdraw'
+    _description = 'Opération de retrait d’espèces dans un fond'
     _inherit = ["efund.operation.base", "mail.thread", "mail.activity.mixin"]
     _order = "create_date desc"
 
@@ -52,7 +52,7 @@ class CashDeposit(models.Model):
 
             self.env['efund.account.cash.move'].create({
                 'cash_account_id':  rec.cash_account_id.id,
-                'move_type': 'deposit',
+                'move_type': 'withdraw',
                 'amount': rec.amount,
             })
 

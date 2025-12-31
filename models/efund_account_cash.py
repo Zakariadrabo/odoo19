@@ -9,6 +9,7 @@ class EfundAccountCash(models.Model):
     name = fields.Char(string="Libellé", required=True, copy=False)
     account_number=fields.Char(string="Numéro compte", required=True, copy=False)
     fund_id = fields.Many2one('efund.fund',string="Fonds",index=True,required=False)
+    mandate_id = fields.Many2one('efund.mandate', string="Mandat", index=True)
     company_id = fields.Many2one('res.company', related='fund_id.company_id', store=True, index=True, readonly=True)
     investor_id = fields.Many2one('efund.investor', string="Investisseur", ondelete='cascade')
     balance = fields.Float(string="Solde disponible", compute='_compute_balance',store=False)
@@ -18,6 +19,8 @@ class EfundAccountCash(models.Model):
         ('active', 'Activé'),
         ('suspended', 'Désactivé'),
     ], string="Status", default='draft', )
+
+
 
     _account_number_fund_uniq = models.Constraint(
             'unique(account_number, fund_id)',
@@ -34,7 +37,7 @@ class EfundAccountCash(models.Model):
                 ('cash_account_id', '=', acc.id)
             ])
             acc.balance = sum(
-                m.amount if m.move_type in('deposit','refund') else -m.amount
+                m.amount if m.move_type in('deposit','refund','redemption_net') else -m.amount
                 for m in moves
             )
 
@@ -67,10 +70,29 @@ class EfundAccountCash(models.Model):
                 'default_account_model': 'cash',
                 'default_cash_account_id': self.id,
                 'default_fund_id': self.fund_id.id,
+                'default_mandat_id': self.mandate_id.id,
                 'default_investor_id': self.investor_id.id,
                 'force_company': self.company_id.id,
             }
         }
+
+    def action_open_cash_withdraw_wizard(self):
+        self.ensure_one()
+        if self.state != 'active':
+            raise UserError(_("Aucun compte espèces n’est associé à cet investisseur."))
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Retrait sur compte espèces"),
+            "res_model": "efund.cash.deposit.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_cash_account_id": self.id,
+                "default_move_type": "withdraw",
+                "company_id": self.company_id.id,
+            }
+        }
+
 
 
 

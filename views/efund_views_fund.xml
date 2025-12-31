@@ -53,9 +53,9 @@
 
                         <group string="Informations financières">
                             <field name="initial_nav"/>
-                            <field name="current_nav"/>
                             <field name="initial_price"/>
                             <field name="current_vl"/>
+                            <field name="allow_fractional_parts" />
 
                         </group>
 

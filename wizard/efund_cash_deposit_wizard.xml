@@ -5,9 +5,14 @@
         <field name="arch" type="xml">
             <form string="Dépôt sur compte espèces">
                 <sheet>
-                    <group>
+                    <group invisible="move_type != 'deposit'">
                         <div class="o_form_label text-info">
                             Vous êtes sur le point d’effectuer un dépôt sur un compte espèces.
+                        </div>
+                    </group>
+                     <group invisible="move_type != 'withdraw'">
+                        <div class="o_form_label text-info">
+                            Vous êtes sur le point d’effectuer un retrait sur un compte espèces.
                         </div>
                     </group>
                     <!-- CONTEXTE -->

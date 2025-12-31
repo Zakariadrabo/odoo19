@@ -12,22 +12,34 @@
                         </div>
                     </group>
 
-                    <group col="2">
+                    <group col="3">
                         <group>
                             <field name="investor_id" readonly="1"/>
                             <field name="fund_id" readonly="1"/>
                         </group>
                         <group>
                             <field name="part_account_id" readonly="1"/>
+                            <field name="total_parts_available" readonly="1"/>
+                        </group>
+                        <group>
                             <field name="cash_account_id" readonly="1"/>
+                            <field name="balance" readonly="1"/>
                         </group>
                     </group>
-
-                    <group string="Détails du rachat">
-                        <field name="parts"/>
-                        <field name="currency_id" readonly="1"/>
+                    <group string="Détails du rachat" col="3">
+                        <group>
+                            <field name="redemption_type"/>
+                            <field name="parts_to_redeem" readonly="redemption_type == 'total'" required="redemption_type == 'partial'"/>
+                        </group>
+                        <group>
+                            <field name="estimated_nav"  readonly="1" />
+                            <field name="estimated_amount" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="estimated_amount"  readonly="1" />
+                            <field name="date_operation" readonly="1"/>
+                        </group>
                     </group>
-
                 </sheet>
 
                 <footer>

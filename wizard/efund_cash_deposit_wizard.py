@@ -11,44 +11,21 @@ class EfundCashDepositWizard(models.TransientModel):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = "Wizard Dépôt sur compte espèces"
 
-    cash_account_id = fields.Many2one(
-        'efund.account.cash', required=True, readonly=True
-    )
-
-    fund_id = fields.Many2one(
-        related='cash_account_id.fund_id',
-        store=True
-    )
-
-    investor_id = fields.Many2one(
-        related='cash_account_id.investor_id',
-        store=True
-    )
-
+    cash_account_id = fields.Many2one('efund.account.cash', required=True, readonly=True)
+    fund_id = fields.Many2one(related='cash_account_id.fund_id',store=True,string="Fonds",index=True)
+    investor_id = fields.Many2one(related='cash_account_id.investor_id',store=True, string="Investisseur",index=True)
     amount = fields.Monetary(required=True)
-    currency_id = fields.Many2one(
-        related='cash_account_id.company_id.currency_id'
-    )
-    # 🔹 Champ manquant : date_operation
-    date_operation = fields.Date(
-        string="Date de l'opération",
-        required=True,
-        default=fields.Date.context_today,
-    )
+    currency_id = fields.Many2one(related='cash_account_id.company_id.currency_id',string="Devise",readonly=True)
+    date_operation = fields.Date(string="Date de l'opération",required=True,default=fields.Date.context_today,)
+    payment_mode = fields.Selection([('bank', 'Virement bancaire'),('cheque', 'Chèque'),('cash', 'Espèces'),],
+        string="Mode de paiement",default='bank', required=True,)
+    reference_payment = fields.Char(string="Référence paiement / justificatif",)
+    note = fields.Text(string="Note interne")
+    move_type = fields.Selection(
+        [('deposit', 'Dépôt'), ('withdraw', 'Rétrait'), ], required=True)
 
-    payment_mode = fields.Selection(
-        [
-            ('bank', 'Virement bancaire'),
-            ('cheque', 'Chèque'),
-            ('cash', 'Espèces'),
-        ],
-        string="Mode de paiement",
-        default='bank',
-        required=True,
-    )
     #### Rappel dans la gestion de la comptabilité
-    """
- 
+    """ 
     journal_id = fields.Many2one(
         'account.journal',
         string="Journal de trésorerie",
@@ -56,11 +33,9 @@ class EfundCashDepositWizard(models.TransientModel):
         domain="[('type', 'in', ['bank', 'cash']), ('company_id', '=', company_id)]",
     )
     """
-    reference_payment = fields.Char(
-        string="Référence paiement / justificatif",
-    )
 
-    note = fields.Text(string="Note interne")
+
+
 
     def action_confirm(self):
         self.ensure_one()
@@ -73,14 +48,32 @@ class EfundCashDepositWizard(models.TransientModel):
         if self.cash_account_id.state != 'active':
             raise UserError(_("Compte espèces inactif."))
 
-        # Création de l’ORDRE de deposit
-        self.env['efund.fund.cash.deposit'].create({
-            'fund_id': self.fund_id.id,
-            'investor_id': self.investor_id.id,
-            'cash_account_id': self.cash_account_id.id,
-            'amount': self.amount,
-            'state': 'draft',
-        })
+        if self.move_type == 'deposit':
+            # Création de l’ORDRE de deposit
+            self.env['efund.fund.cash.deposit'].create({
+                'fund_id': self.fund_id.id,
+                'investor_id': self.investor_id.id,
+                'cash_account_id': self.cash_account_id.id,
+                'payment_mode': self.payment_mode,
+                'reference_payment': self.reference_payment,
+                'note': self.note,
+                'date_operation': self.date_operation,
+                'amount': self.amount,
+                'state': 'draft',
+            })
+        else:
+            # Création de l’ORDRE de deposit
+            self.env['efund.fund.cash.withdraw'].create({
+                'fund_id': self.fund_id.id,
+                'investor_id': self.investor_id.id,
+                'cash_account_id': self.cash_account_id.id,
+                'payment_mode': self.payment_mode,
+                'reference': self.reference_payment,
+                'note': self.note,
+                'date_operation': self.date_operation,
+                'amount': self.amount,
+                'state': 'draft',
+            })
 
         """
         # Création du mouvement

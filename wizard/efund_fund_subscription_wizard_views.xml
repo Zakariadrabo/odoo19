@@ -16,6 +16,7 @@
                         <group>
                             <field name="investor_id" readonly="1"/>
                             <field name="fund_id" readonly="1"/>
+                            <field name="allow_fractional_parts" readonly="1"/>
                         </group>
                         <group>
                             <field name="cash_account_id" readonly="1"/>
@@ -27,8 +28,22 @@
                         </group>
                     </group>
 
-                    <group string="Détails de la souscription">
-                        <field name="amount"/>
+                    <group string="Détails de la souscription" col="3">
+                        <group>
+                            <field name="amount"/>
+                            <field name="unit_value"/>
+                        </group>
+                        <group>
+                            <field name="subscription_fee_rate"/>
+                            <field name="subscription_fee_amount"/>
+                        </group>
+                        <group>
+                            <field name="net_amount"/>
+                            <field name="parts"/>
+                            <field name="reliquat"/>
+                        </group>
+
+
                     </group>
 
                 </sheet>

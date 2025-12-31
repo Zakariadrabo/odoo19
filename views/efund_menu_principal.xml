@@ -56,32 +56,39 @@
               parent="menu_fund_management_root"
               sequence="20"/>
 
-    <menuitem id="menu_fund_fund_list"
+    <!--
+    <menuitem id="menu_fund_fund_dash"
               name="Vue 360° du Fonds"
               parent="menu_fund_root"
               action="action_fund_dashboard"
               sequence="21"/>
+              -->
 
-    <menuitem id="menu_fund_fund_list"
+    <menuitem id="menu_fund_fund"
               name="Fonds enregistrés"
               parent="menu_fund_root"
-              action="action_fund_list"
+              action="action_efund_fund"
               sequence="22"/>
+    <menuitem id="menu_fund_mandat"
+              name="Mandats enregistrés"
+              parent="menu_fund_root"
+              action="action_efund_mandat"
+              sequence="23"/>
     <menuitem id="menu_fund_classes"
               name="Classes de parts"
               parent="menu_fund_root"
               action="action_fund_class_list"
-              sequence="23"/>
+              sequence="24"/>
     <menuitem id="menu_nav_list"
               name="Valorisations"
               parent="menu_fund_root"
               action="action_nav_list"
-              sequence="24"/>
+              sequence="25"/>
     <menuitem id="menu_fund_investisseur"
               name="Investisseur"
               parent="menu_fund_root"
               action="action_efund_fund_investor"
-              sequence="25"/>
+              sequence="26"/>
 
     <!-- =========================
          3. CLIENTS / PORTEURS
@@ -105,27 +112,39 @@
               name="Opérations"
               parent="menu_fund_management_root"
               sequence="40"/>
+
+    <menuitem id="menu_deposit"
+              name="Déposit souscription"
+              parent="menu_operations_root"
+              action="action_fund_deposit"
+              sequence="41"/>
+
     <menuitem id="menu_subscriptions"
               name="Souscriptions"
               parent="menu_operations_root"
               action="action_fund_subscription_list"
-              sequence="41"/>
+              sequence="42"/>
     <menuitem id="menu_redemptions"
               name="Rachats"
               parent="menu_operations_root"
               action="action_fund_redemption_list"
-              sequence="42"/>
+              sequence="43"/>
+    <menuitem id="menu_withdraw"
+              name="Retrait Rachat"
+              parent="menu_operations_root"
+              action="action_fund_cash_withdraw"
+              sequence="44"/>
+
     <menuitem id="menu_arbitrages"
               name="Arbitrages"
               parent="menu_operations_root"
               action="action_fund_arbitrage_list"
-              sequence="43"/>
+              sequence="45"/>
     <menuitem id="menu_distributions"
               name="Distributions"
               parent="menu_operations_root"
               action="action_fund_distribution_list"
-              sequence="44"/>
-
+              sequence="46"/>
 
     <!-- =========================
          5. PORTFEUILLE

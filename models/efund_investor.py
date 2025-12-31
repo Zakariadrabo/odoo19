@@ -12,27 +12,15 @@ class FundInvestor(models.Model):
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "id desc"
 
-    partner_id = fields.Many2one(
-        'res.partner',
-        string="Partner",
-        required=False,
-        ondelete='cascade',
-        domain="[('is_investor', '=', True)]",
-    )
-
+    partner_id = fields.Many2one('res.partner',string="Partner",required=False,ondelete='cascade',domain="[('is_investor', '=', True)]",)
     company_id = fields.Many2one('res.company', string="Context Company (Fund)", index=True)
 
     # store the name for easier reading (populated from partner)
     name = fields.Char(related="partner_id.name", store=True, readonly=True)
 
     # lifecycle / compliance
-    status = fields.Selection([
-        ('draft', 'Draft'),
-        ('kyc_pending', 'KYC Pending'),
-        ('kyc_approved', 'KYC Approved'),
-        ('kyc_rejected', 'KYC Rejected'),
-        ('archived', 'Archived')
-    ], default='draft', tracking=True)
+    status = fields.Selection([('draft', 'Brouillon'),('kyc_pending', 'KYC en attente'),('kyc_approved', 'KYC approuvé'),
+        ('kyc_rejected', 'KYC refusé'),('archived', 'Archivé')], default='draft', tracking=True)
     kyc_level = fields.Selection([('low','Low'),('medium','Medium'),('high','High')], default='low')
     kyc_score = fields.Integer(default=0)
     kyc_last_update = fields.Datetime()
@@ -48,147 +36,61 @@ class FundInvestor(models.Model):
     kyc_check_ids = fields.One2many('efund.kyc.check', 'investor_id', string="KYC Checks")
     aml_alert_ids = fields.One2many('efund.aml.alert', 'investor_id', string="AML Alerts")
     active = fields.Boolean(default=True)
+
     fund_investor_ids = fields.One2many('efund.fund.investor','investor_id',string="Fonds")
+    mandate_investor_ids = fields.One2many('efund.mandate.investor','investor_id',string="Mandats")
+
     cash_account_ids = fields.One2many('efund.account.cash','investor_id',string="Comptes espèces")
     part_account_ids = fields.One2many('efund.account.part','investor_id',string="Comptes titres")
 
     # compliance computed fields
-    compliance_status = fields.Selection([
-        ('compliant','Compliant'),
-        ('non_compliant','Non-Compliant'),
-        ('medium_risk','Medium Risk'),
-        ('high_risk','High Risk'),
-        ('pending_review','Pending Review'),
+    compliance_status = fields.Selection([('compliant','Compliant'),('non_compliant','Non-Compliant'),
+        ('medium_risk','Medium Risk'),('high_risk','High Risk'),('pending_review','Pending Review'),
     ], compute='_compute_compliance_status', store=True)
     compliance_score = fields.Integer(compute='_compute_compliance_status', store=True)
     last_compliance_check = fields.Datetime()
     compliance_notes = fields.Text()
 
     # Personal info (allow using form to create partner data)
-    investor_type = fields.Selection(
-        [
-            ("individual", "Personne physique"),
-            ("company", "Personne morale"),
-        ],
-        string="Type de client",
-        required=True
-    )
+    investor_type = fields.Selection([("individual", "Personne physique"),("company", "Personne morale"),],
+        string="Type de client",required=True)
     civilite = fields.Selection([('Mr','Monsieur'),('Mrs','Madame')])
     full_name = fields.Char(string="Nom complet")
     birthdate = fields.Date(string="Date de naissance")
     birthplace = fields.Char(string="Lieu de naissance")
-    birth_country_id = fields.Many2one(
-        "res.country",
-        string="Pays de naissance"
-    )
-    minor = fields.Boolean(
-        string="Mineur ?"
-    )
+    birth_country_id = fields.Many2one("res.country",string="Pays de naissance")
+    minor = fields.Boolean(string="Mineur ?")
     nationality = fields.Char(string="Nationalité")
     sex = fields.Selection([('male','Homme'),('female','Femme')])
     tranche = fields.Selection([("<55","Jusqu'à 55ans"),("56T74","56-74"),(">75",">75")])
 
-    # address-ish (we will synchronize with partner street/city/country if we create partner)
     country_id = fields.Many2one("res.country", string="Pays")
     city = fields.Char(string="Ville")
     address = fields.Char(string="Adresse")
-    language_id = fields.Many2one(
-        "res.lang",
-        string="Langue"
-    )
+    language_id = fields.Many2one("res.lang",string="Langue")
     marital_status=fields.Selection([('single','Célibataire'),('married','Marié(e)'),('divorced','Divorcé(e)'),('widowed','Veuf/veuve')])
 
     # Situation professionnelle
-
-    socio_professional_category = fields.Char(
-        string="Catégorie socio-professionnelle"
-    )
-
-    profession = fields.Char(
-        string="Profession"
-    )
-
-    function = fields.Char(
-        string="Fonction"
-    )
-
-    activity_sector = fields.Char(
-        string="Secteur d’activité"
-    )
-
+    socio_professional_category = fields.Char(string="Catégorie socio-professionnelle")
+    profession = fields.Char(string="Profession")
+    function = fields.Char(string="Fonction")
+    activity_sector = fields.Char(string="Secteur d’activité")
     # Qualité & Statut
-    quality = fields.Selection(
-        [
-            ("subscriber", "Souscripteur"),
-            ("holder", "Porteur de parts"),
-            ("both", "Souscripteur & Porteur"),
-        ],
-        string="Qualité"
-    )
-
-    active = fields.Boolean(
-        default=True
-    )
-
-    # Personne Morale
+    quality = fields.Selection([("subscriber", "Souscripteur"),("holder", "Porteur de parts"),
+            ("both", "Souscripteur & Porteur"),], string="Qualité")
 
     # Identité Juridique
-    company_name = fields.Char(
-        string="Raison sociale"
-    )
-
-    company_short_name = fields.Char(
-        string="Sigle"
-    )
-
-    legal_form = fields.Char(
-        string="Forme juridique"
-    )
+    company_name = fields.Char(string="Raison sociale")
+    company_short_name = fields.Char(string="Sigle")
+    legal_form = fields.Char(string="Forme juridique")
 
     # Création et Agrément
-
-    creation_date = fields.Date(
-        string="Date de création"
-    )
-
-    license_number = fields.Char(
-        string="N° Agrément"
-    )
-
-    insae_number = fields.Char(
-        string="N° INSAE"
-    )
+    creation_date = fields.Date(string="Date de création")
+    license_number = fields.Char(string="N° Agrément")
+    insae_number = fields.Char(string="N° INSAE")
 
     # Données Financières & Activité
-
-    company_country_id = fields.Many2one(
-        "res.country",
-        string="Pays"
-    )
-
-    language_id = fields.Many2one(
-        "res.lang",
-        string="Langue"
-    )
-
-    activity_sector = fields.Char(
-        string="Secteur d’activité"
-    )
-
-    # Qualité & Statut
-
-    quality = fields.Selection(
-        [
-            ("subscriber", "Souscripteur"),
-            ("holder", "Porteur de parts"),
-            ("both", "Souscripteur & Porteur"),
-        ],
-        string="Qualité"
-    )
-
-    active = fields.Boolean(
-        default=True
-    )
+    company_country_id = fields.Many2one("res.country",string="Pays compagnie")
 
     # Financial profile
     estimation = fields.Selection([('M5','<5M'),('E5','5-50M'),('P5','>50M')], string="Patrimoine")

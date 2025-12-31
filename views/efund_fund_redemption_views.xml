@@ -1,118 +1,108 @@
 <odoo>
-
-    <!-- ========================= -->
-    <!-- LIST / TREE VIEW          -->
-    <!-- ========================= -->
     <record id="view_efund_fund_redemption_list" model="ir.ui.view">
         <field name="name">efund.fund.redemption.list</field>
         <field name="model">efund.fund.redemption</field>
         <field name="arch" type="xml">
-            <list string="Rachats de parts"
+            <list string="Rachats"
+                  decoration-info="state == 'validated'"
                   decoration-success="state == 'executed'"
-                  decoration-warning="state == 'submitted'"
-                  decoration-danger="state == 'rejected'">
+                  decoration-muted="state == 'cancelled'">
+
                 <field name="name"/>
-                <field name="request_date"/>
-                <field name="investor_id"/>
+                <field name="date_operation"/>
                 <field name="fund_id"/>
+                <field name="investor_id"/>
                 <field name="redemption_type"/>
-                <field name="parts"/>
-                <field name="nav_date"/>
-                <field name="nav_value"/>
+                <field name="parts_to_redeem"/>
                 <field name="amount"/>
                 <field name="state"/>
+
             </list>
         </field>
     </record>
-    <!-- ========================= -->
-    <!-- FORM VIEW                 -->
-    <!-- ========================= -->
+
     <record id="view_efund_fund_redemption_form" model="ir.ui.view">
         <field name="name">efund.fund.redemption.form</field>
         <field name="model">efund.fund.redemption</field>
         <field name="arch" type="xml">
-            <form string="Ordre de rachat de parts">
-
-                <!-- HEADER -->
+            <form string="Rachat de parts">
+                <!-- ================= HEADER ================= -->
                 <header>
-                    <field name="state"
-                           widget="statusbar"/>
-                    <button name="action_submit"
+                    <button name="action_cancel_subscription"
+                            type="object"
+                            string="Annuler"
+                            class="btn-primary"
+                            invisible="state == 'executed'"/>
+                    <button name="action_submit_subscription"
                             type="object"
                             string="Soumettre"
-                            class="oe_highlight"
-                             invisible ="state !='draft'"/>
-                    <button name="action_validate"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_validate_subscription"
                             type="object"
                             string="Valider"
                             class="btn-primary"
-                            invisible ="state != 'submitted'"/>
-                    <button name="action_execute"
+                            invisible="state != 'submitted'"/>
+                    <button name="action_account"
                             type="object"
-                            string="Exécuter"
-                            class="btn-success"
-                             invisible ="state !='validated'"/>
-                    <button name="action_cancel"
-                            type="object"
-                            string="Annuler"
+                            string="Comptabiliser"
                             class="btn-secondary"
-                           invisible ="state in ('executed','cancelled')"/>
+                            invisible="state != 'validated'"/>
+                     <field name="state" widget="statusbar"
+                           statusbar_visible="draft,submitted,validated,accounted,cancelled"/>
                 </header>
 
+                <!-- ================= SHEET ================= -->
                 <sheet>
+
+                    <!-- MESSAGE CONTEXTUEL -->
                     <group>
-                        <group>
-                            <field name="name"/>
-                            <field name="request_date"/>
-                            <field name="execution_date"/>
-                        </group>
-                        <group>
-                            <field name="fund_id"/>
-                            <field name="company_id" invisible="1"/>
-                        </group>
+                        <div class="o_form_label text-warning">
+                            Ordre de rachat – impacte le compte titres et la trésorerie du fonds.
+                        </div>
                     </group>
 
-                    <notebook>
-                        <!-- ONGLET INVESTISSEUR -->
-                        <page string="Investisseur">
-                            <group>
-                                <field name="investor_id"/>
-                                <field name="account_part_id"/>
-                            </group>
-                        </page>
-                        <!-- ONGLET RACHAT -->
-                        <page string="Détails du rachat">
-                            <group>
-                                <group>
-                                    <field name="redemption_type"/>
-                                    <field name="parts"/>
-                                </group>
-                                <group>
-                                    <field name="nav_date"/>
-                                    <field name="nav_value" readonly="1"/>
-                                    <field name="amount" readonly="1"/>
-                                </group>
-                            </group>
-                        </page>
-                        <!-- ONGLET CONTRÔLE -->
-                        <page string="Contrôle / conformité">
-                            <group>
-                                <field name="rejection_reason"
-                                       attrs="{'invisible':[('state','!=','rejected')]}"/>
-                            </group>
-                        </page>
-
-                    </notebook>
+                    <!-- IDENTIFICATION -->
+                    <group col="3">
+                        <group>
+                            <field name="investor_id" readonly="1"/>
+                            <field name="fund_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="part_account_id" readonly="1"/>
+                            <field name="total_parts_available" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="cash_account_id" readonly="1"/>
+                            <field name="balance" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Détails du rachat" col="3">
+                        <group>
+                            <field name="redemption_type"/>
+                            <field name="parts_to_redeem" readonly="redemption_type == 'total'" required="redemption_type == 'partial'"/>
+                        </group>
+                        <group>
+                            <field name="estimated_nav"  readonly="1" />
+                            <field name="estimated_amount" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="estimated_amount"  readonly="1" />
+                            <field name="date_operation" readonly="1"/>
+                        </group>
+                    </group>
                 </sheet>
 
-                <!-- CHATTER -->
-                <div class="oe_chatter">
+                <!-- ================= CHATTER ================= -->
+                <chatter>
                     <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
                     <field name="message_ids"/>
-                </div>
+                </chatter>
 
             </form>
+
         </field>
     </record>
 
+
+</odoo>

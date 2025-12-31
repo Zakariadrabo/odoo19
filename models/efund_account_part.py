@@ -42,6 +42,11 @@ class EfundAccountPart(models.Model):
         if self.investor_id.compliance_status != 'compliant':
             raise UserError(_("Investisseur non conforme KYC."))
 
+        cash_account = self.env['efund.account.cash'].search([('investor_id', '=', self.investor_id.id),
+                                                              ('fund_id', '=', self.fund_id.id), ])
+        if not cash_account:
+            raise UserError(_("Aucun compte cash n’est associé à cet investisseur."))
+
         # ouvrir le wizard de rachat
         return {
             'type': 'ir.actions.act_window',
@@ -50,9 +55,8 @@ class EfundAccountPart(models.Model):
             'view_mode': 'form',
             'target': 'new',
             'context': {
-                'default_account_part_id': self.id,
-                'default_investor_id': self.investor_id.id,
-                'default_fund_id': self.fund_id.id,
+                'default_part_account_id': self.id,
+                "default_cash_account_id": cash_account.id,
                 'default_company_id': self.company_id.id,
             }
         }
@@ -63,7 +67,7 @@ class EfundAccountPart(models.Model):
                 ('part_account_id', '=', acc.id)
             ])
             acc.total_parts = sum(
-                m.parts if m.move_type == 'subscription' else -m.parts
+                m.parts if m.move_type in ('subscription','refund') else -m.parts
                 for m in moves
             )
 
@@ -106,6 +110,7 @@ class EfundAccountPart(models.Model):
                 'default_part_account_id': self.id,
                 'default_fund_id': self.fund_id.id,
                 'default_investor_id': self.investor_id.id,
-                'force_company': self.company_id.id,
+                "company_id": self.company_id.id,
             }
         }
+
