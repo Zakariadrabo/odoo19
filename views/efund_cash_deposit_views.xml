@@ -38,7 +38,7 @@
                 <header>
                     <button name="action_cancel_subscription"
                             type="object"
-                            string="Soumettre"
+                            string="Annuler"
                             class="btn-primary"
                             invisible="state != 'draft'"/>
                     <button name="action_submit_subscription"
@@ -78,7 +78,7 @@
                         <group>
                             <field name="cash_account_id" readonly="1"/>
                             <field name="name" readonly="1"/>
-                            <field name="date_operation"/>
+                            <field name="date_operation" options="{'numeric': true}"/>
                         </group>
                     </group>
                     <!-- DETAILS DU DEPOT -->
@@ -89,7 +89,7 @@
                         </group>
                         <group>
                             <field name="payment_mode"/>
-                            <field name="date_valeur" readonly="state !='submitted'"/>
+                            <field name="date_valeur" readonly="state !='validated'" required="state =='validated'" options="{'numeric': true}"/>
                         </group>
                     </group>
 

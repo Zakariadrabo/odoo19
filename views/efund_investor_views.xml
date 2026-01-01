@@ -174,7 +174,7 @@
                                             <button name="action_open_cash_withdraw_wizard" type="object"
                                                     string="Retrait"
                                                     class="btn-primary" icon="fa-money"
-                                                    invisible="state != 'active'"/>
+                                                    invisible="state != 'active' or balance &lt;= 0"/>
 
                                         </list>
                                     </field>
@@ -225,9 +225,11 @@
                                 <list editable="bottom">
                                     <field name="name"/>
                                     <field name="document_type"/>
+                                    <field name="expiry_date" options="{'numeric': true}"/>
                                     <field name="file_name"/>
                                     <field name="file_data" widget="binary"/>
                                     <field name="status"/>
+                                    <field name="verified_date" options="{'numeric': true}"/>
                                 </list>
                             </field>
                         </page>

@@ -34,9 +34,6 @@ class EfundCashDepositWizard(models.TransientModel):
     )
     """
 
-
-
-
     def action_confirm(self):
         self.ensure_one()
 
@@ -47,6 +44,9 @@ class EfundCashDepositWizard(models.TransientModel):
         # Compte actif
         if self.cash_account_id.state != 'active':
             raise UserError(_("Compte espèces inactif."))
+
+        if self.amount <= 0:
+            raise UserError(_("Montant doit être supérieur à zéro."))
 
         if self.move_type == 'deposit':
             # Création de l’ORDRE de deposit
@@ -68,7 +68,7 @@ class EfundCashDepositWizard(models.TransientModel):
                 'investor_id': self.investor_id.id,
                 'cash_account_id': self.cash_account_id.id,
                 'payment_mode': self.payment_mode,
-                'reference': self.reference_payment,
+                'reference_payment': self.reference_payment,
                 'note': self.note,
                 'date_operation': self.date_operation,
                 'amount': self.amount,

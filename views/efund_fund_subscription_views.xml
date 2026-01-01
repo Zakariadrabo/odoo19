@@ -46,7 +46,7 @@
                             class="btn-secondary"
                             invisible="state != 'validated'"/>
                     <field name="state" widget="statusbar"
-                           statusbar_visible="draft,validated,accounted,cancelled"/>
+                           statusbar_visible="draft,submitted,validated,accounted,cancelled"/>
                 </header>
                 <sheet>
                     <group>
@@ -75,6 +75,7 @@
                         <group>
                             <field name="amount"/>
                             <field name="unit_value"/>
+                            <field name="date_operation"/>
                         </group>
                         <group>
                             <field name="subscription_fee_rate"/>
@@ -84,6 +85,7 @@
                             <field name="cash_used"/>
                             <field name="parts"/>
                             <field name="cash_refund"/>
+                            <field name="date_valeur" readonly="state !='validated'" required="state =='validated'" options="{'numeric': true}"/>
                         </group>
 
 

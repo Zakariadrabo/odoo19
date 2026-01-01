@@ -20,7 +20,7 @@ class FundSubscriptionWizard(models.TransientModel):
     subscription_fee_amount = fields.Monetary(string="Montant frais de souscription",compute="_compute_subscription_fee_amount",readonly=True)
     net_amount = fields.Monetary(string="Montant net",compute="_compute_subscription_fee_amount",readonly=True)
     allow_fractional_parts = fields.Boolean(string="Parts fractionnées",related='cash_account_id.fund_id.allow_fractional_parts',)
-    parts = fields.Float(string="Nombre de parts",compute="_compute_subscription_fee_amount",readonly=True)
+    parts = fields.Float(string="Nombre de parts")
     investor_id = fields.Many2one(related='part_account_id.investor_id',store=True)
     company_id = fields.Many2one(related='fund_id.company_id',store=True)
     currency_id = fields.Many2one(related='company_id.currency_id',store=True)
@@ -49,6 +49,17 @@ class FundSubscriptionWizard(models.TransientModel):
             sub.net_amount = montant_reel
             sub.subscription_fee_amount = sub.parts * sub.unit_value * sub.subscription_fee_rate /100
             sub.reliquat = reliquat
+
+    @api.onchange('parts')
+    def _onchange_parts(self):
+        a_des_decimales = self.parts % 1 != 0
+        if a_des_decimales and not self.allow_fractional_parts:
+            raise UserError(_("Ce fonds n'accepte que des nombres de parts entières."))
+
+        self.net_amount = self.parts * self.unit_value
+        self.subscription_fee_amount = self.parts * self.unit_value * self.subscription_fee_rate / 100
+        self.amount = self.net_amount + self.subscription_fee_amount
+        self.net_amount = 0
 
 
     def action_confirm(self):

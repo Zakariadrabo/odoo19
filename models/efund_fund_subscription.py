@@ -65,6 +65,9 @@ class FundSubscription(models.Model):
 
     def action_account(self):
         for rec in self:
+            if rec.date_valeur < rec.date_operation:
+                raise UserError(_("La date de l'opération ne peut pas être supérieure à la date de valeur"))
+
             if rec.state != 'validated':
                 raise UserError(_("La souscription doit être validée avant exécution."))
 

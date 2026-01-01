@@ -11,7 +11,7 @@ class CashDeposit(models.Model):
     _inherit = ["efund.operation.base", "mail.thread", "mail.activity.mixin"]
     _order = "create_date desc"
 
-    reference=fields.Char(string="Référence", required=True)
+
     cash_account_id = fields.Many2one('efund.account.cash', required=True)
     currency_id = fields.Many2one(related='cash_account_id.fund_id.currency_id')
 
@@ -23,6 +23,7 @@ class CashDeposit(models.Model):
                                     string='Mode de paiement')
     reference_payment = fields.Char(string="Référence paiement / justificatif", )
     note = fields.Text(string="Note interne")
+
 
     def action_validate_subscription(self):
         for rec in self:

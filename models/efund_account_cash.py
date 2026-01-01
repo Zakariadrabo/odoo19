@@ -53,6 +53,7 @@ class EfundAccountCash(models.Model):
             "target": "new",
             "context": {
                 "default_cash_account_id": self.id,
+                "default_move_type": "deposit",
                 "company_id": self.company_id.id,
             }
         }

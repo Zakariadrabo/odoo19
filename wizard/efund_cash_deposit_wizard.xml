@@ -28,7 +28,7 @@
                             <field name="amount"/>
                         </group>
                         <group>
-                            <field name="reference_payment"/>
+                            <field name="reference_payment" required="1"/>
                             <field name="note"/>
                         </group>
                     </group>
