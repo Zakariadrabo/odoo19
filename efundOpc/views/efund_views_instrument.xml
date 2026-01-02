@@ -1,0 +1,326 @@
+<odoo>
+    <!-- ============================= -->
+    <!--   LIST VIEW                  -->
+    <!-- ============================= -->
+    <record id="efund_fund_instrument_view_list" model="ir.ui.view">
+        <field name="name">efund.fund.instrument.list</field>
+        <field name="model">efund.fund.instrument</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="isin"/>
+                <field name="instrument_type"/>
+                <field name="currency_id"/>
+                <field name="issuer_id"/>
+                <field name="custodian"/>
+
+                <!-- Champs spécifiques par type -->
+                <field name="equity_sector" invisible="instrument_type != 'equity'"/>
+                <field name="maturity_date" invisible="instrument_type !='bond'"/>
+                <field name="tcn_maturity_date" invisible="instrument_type !='tcn'"/>
+                <field name="right_expiry_date" invisible="instrument_type !='right'"/>
+
+                <field name="last_validated_price"/>
+                <field name="last_price_date"/>
+            </list>
+
+        </field>
+    </record>
+    <!-- ============================= -->
+    <!--   FORM VIEW: Instrument       -->
+    <!-- ============================= -->
+    <record id="efund_fund_instrument_view_form" model="ir.ui.view">
+        <field name="name">efund.fund.instrument.form</field>
+        <field name="model">efund.fund.instrument</field>
+        <field name="arch" type="xml">
+            <form string="Instrument Financier" create="true" edit="true">
+                <header>
+                    <button name="action_archived" type="object" string="Archivé" class="btn-danger"
+                            invisible="state != 'approved'"/>
+                    <button name="action_check" type="object" string="Vérifier" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve" type="object" string="Approuvé" class="btn-primary"
+                            invisible="state != 'pending'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Information générale sur l'instrument financier">
+                            <field name="instrument_type"/>
+                            <field name="name"/>
+                            <field name="isin"/>
+                            <field name="ticker"/>
+                            <field name="currency_id"/>
+                            <field name="issuer_id"/>
+                            <field name="custodian"/>
+                        </group>
+                        <group string="Informations sur la cotation">
+                            <field name="taxe_irvm"/>
+                            <field name="taxe_taf"/>
+                            <field name="taxe_irc"/>
+                            <field name="is_listed"/>
+                            <field name="listing_date"/>
+                        </group>
+
+                    </group>
+
+                    <notebook>
+                        <!-- =========================== -->
+                        <!-- TAB: Informations générales -->
+                        <!-- =========================== -->
+                        <page string="Informations générales">
+                            <group>
+                                <field name="market"/>
+                                <field name="market_price_source"/>
+                                <field name="last_validated_price"/>
+                                <field name="last_price_date"/>
+                            </group>
+                        </page>
+
+                        <!-- =========================== -->
+                        <!-- TAB: Actions (Equity)      -->
+                        <!-- =========================== -->
+                        <page string="Actions / Equity" invisible="instrument_type !='equity'">
+                            <group>
+                                <field name="equity_sector"/>
+                                <field name="equity_dividend_yield"/>
+                            </group>
+                        </page>
+
+                        <!-- =========================== -->
+                        <!-- TAB: Obligations            -->
+                        <!-- =========================== -->
+                        <page string="Obligations" invisible="instrument_type != 'bond'">
+                            <group>
+                                <group string="Information générale sur l'obligation">
+                                    <field name="bond_type"/>
+                                    <field name="bond_issuer_rating"/>
+                                    <field name="rating_agency"/>
+                                </group>
+                                <group string="Caractéristiques Financières">
+                                    <field name="issue_amount" required="1"/>
+                                    <field name="face_value" required="1"/>
+                                    <field name="coupon_rate" required="1"/>
+                                    <field name="interest_rate_type" required="1"/>
+                                    <field name="coupon_frequency" required="1"/>
+                                </group>
+                            </group>
+
+                            <group string="Dates Clés">
+                                <group>
+                                    <field name="issue_date" required="1"/>
+                                    <field name="value_date" required="1"/>
+                                    <field name="first_coupon_date" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="maturity_date" required="1"/>
+                                    <field name="next_coupon_date" readonly="1"/>
+                                    <field name="days_to_next_coupon" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Coupon Schedule">
+                            <button name="action_generate_coupon_schedule"
+                                    type="object"
+                                    class="btn-primary"
+                                    icon="fa-calculator"
+                                    string="Generate Coupon Schedule"/>
+                            <!-- invisible="coupon_ids != False" -->
+
+
+                            <button name="action_update_coupon_status"
+                                    type="object"
+                                    class="btn-primary"
+                                    icon="fa-calculator"
+                                    string="Update Coupon Status"/>
+                            <field name="coupon_ids" readonly="1">
+                                <list>
+                                    <field name="coupon_number"/>
+                                    <field name="payment_date"/>
+                                    <field name="coupon_amount"/>
+                                    <field name="status"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Calculs" invisible="instrument_type != 'equity'">
+                            <group>
+                                <div class="o_form_label">Yield to Maturity (YTM)</div>
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">À calculer</span>
+                                </div>
+                                <div class="o_form_label">Duration</div>
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">À calculer</span>
+                                </div>
+                                <div class="o_form_label">Convexity</div>
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">À calculer</span>
+                                </div>
+                            </group>
+                        </page>
+                        <page string="Tableau d'Amortissement" name="bond_amortization"
+                              invisible="instrument_type != 'bond'">
+                            <button string="Générer le tableau"
+                                    type="object"
+                                    class="btn-primary"
+                                    icon="fa-calculator"
+                                    name="action_open_amortization_wizard"/>
+
+                            <field name="bond_amortization_ids">
+                                <list>
+                                    <field name="installment_number"/>
+                                    <field name="due_date"/>
+                                    <field name="opening_principal"/>
+                                    <field name="coupon_amount"/>
+                                    <field name="principal_repayment"/>
+                                    <field name="closing_principal"/>
+                                    <field name="total_payment"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- =========================== -->
+                        <!-- TAB: TCN                    -->
+                        <!-- =========================== -->
+                        <page string="TCN" invisible="instrument_type != 'tcn'">
+                            <group>
+                                <field name="tcn_rate"/>
+                                <field name="tcn_maturity_date"/>
+                            </group>
+                        </page>
+
+                        <!-- =========================== -->
+                        <!-- TAB: Droits / Options       -->
+                        <!-- =========================== -->
+                        <page string="Droits / Options" invisible="instrument_type != 'right'">
+                            <group>
+                                <field name="right_strike_price"/>
+                                <field name="right_expiry_date"/>
+                            </group>
+                        </page>
+                        <!-- =========================== -->
+                        <!-- TAB: Historique des évènements -->
+                        <!-- =========================== -->
+
+
+                        <!-- TAB: Positions détenues -->
+                        <page string="Positions">
+                            <field name="position_ids">
+                                <list editable="bottom">
+                                    <field name="fund_id"/>
+                                    <field name="valuation_date"/>
+                                    <field name="quantity"/>
+                                    <field name="market_value"/>
+                                    <field name="avg_cost"/>
+
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- =========================== -->
+                        <!-- TAB: Cours        -->
+                        <!-- =========================== -->
+                        <page string="Cours" invisible="instrument_type not in ('bond','equity')">
+                            <button name="action_import_price_today"
+                                    type="object"
+                                    string="Importer cours"
+                                    class="oe_highlight"
+                                    icon="fa-download"/>
+                            <button name="action_open_price_import_wizard"
+                                    type="object"
+                                    string="Importer depuis fichier/API"
+                                    class="btn-primary"
+                                    icon="fa-upload"/>
+
+                            <field name="price_ids">
+                                <list string="Historique des cours" editable="bottom">
+                                    <field name="date"/>
+                                    <field name="price"/>
+                                    <field name="currency_id"/>
+                                    <field name="is_validated"/>
+                                    <field name="validated_date"/>
+                                    <field name="validated_by"/>
+                                    <button name="action_validate"
+                                            type="object"
+                                            string="Valider"
+                                            class="oe_highlight"
+                                            invisible="is_validated == True"
+                                            icon="fa-check"/>
+                                </list>
+                                <form>
+                                    <group>
+                                        <group>
+                                            <field name="instrument_id"/>
+                                            <field name="date"/>
+                                            <field name="price"/>
+                                            <field name="currency_id"/>
+                                        </group>
+                                        <group>
+                                            <field name="is_validated"/>
+                                            <field name="validated_date" readonly="is_validated == False"/>
+                                            <field name="validated_by" readonly="is_validated == False"/>
+                                        </group>
+                                    </group>
+                                </form>
+                            </field>
+
+                        </page>
+
+                    </notebook>
+                </sheet>
+                <chatter>
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </chatter>
+            </form>
+
+        </field>
+    </record>
+
+    <!-- ============================= -->
+    <!--   KANBAN VIEW                 -->
+    <!-- ============================= -->
+    <record id="efund_fund_instrument_view_kanban" model="ir.ui.view">
+        <field name="name">efund.fund.instrument.kanban</field>
+        <field name="model">efund.fund.instrument</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_small_column">
+
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+
+                            <div class="o_kanban_card_header">
+                                <strong>
+                                    <t t-esc="record.name.value"/>
+                                </strong>
+                                <span class="badge badge-info">
+                                    <t t-esc="record.instrument_type.value"/>
+                                </span>
+                            </div>
+
+                            <div class="o_kanban_card_body">
+                                <div>ISIN:
+                                    <t t-esc="record.isin.value"/>
+                                </div>
+                                <div>Émetteur:
+                                    <t t-esc="record.issuer_id.value"/>
+                                </div>
+                                <div>Dépositaire:
+                                    <t t-esc="record.custodian"/>
+                                </div>
+                                <div>Dernier prix:
+                                    <t t-esc="record.last_validated_price.value"/>
+                                </div>
+                            </div>
+
+                        </div>
+                    </t>
+                </templates>
+
+            </kanban>
+
+        </field>
+    </record>
+
+</odoo>

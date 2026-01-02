@@ -1,0 +1,17 @@
+<odoo>
+  <data noupdate="0">
+    <record id="aml_rule_threshold_1" model="fund.aml.rule">
+      <field name="name">High amount threshold</field>
+      <field name="rule_type">threshold</field>
+      <field name="params">{"amount": 100000}</field>
+      <field name="severity_default">high</field>
+    </record>
+
+    <record id="aml_rule_velocity_1" model="fund.aml.rule">
+      <field name="name">High velocity weekly</field>
+      <field name="rule_type">velocity</field>
+      <field name="params">{"amount": 50000, "days": 7}</field>
+      <field name="severity_default">medium</field>
+    </record>
+  </data>
+</odoo>

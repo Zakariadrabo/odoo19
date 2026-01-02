@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_fund_investor_tree" model="ir.ui.view">
+    <field name="name">fund.investor.tree</field>
+    <field name="model">fund.investor</field>
+    <field name="arch" type="xml">
+      <list string="Investors">
+        <field name="partner_id"/>
+        <field name="company_id"/>
+        <field name="status"/>
+        <field name="kyc_level"/>
+        <field name="kyc_score"/>
+        <field name="pep_flag"/>
+        <field name="sanctions_flag"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_fund_investor_form" model="ir.ui.view">
+    <field name="name">fund.investor.form</field>
+    <field name="model">fund.investor</field>
+    <field name="arch" type="xml">
+      <form string="Investor KYC">
+        <sheet>
+          <group>
+            <field name="partner_id"/>
+            <field name="company_id"/>
+            <field name="status" widget="statusbar" statusbar_visible="kyc_pending,kyc_approved,kyc_rejected,draft"/>
+          </group>
+          <notebook>
+            <page string="KYC Summary">
+              <group>
+                <field name="kyc_score"/>
+                <field name="kyc_level"/>
+                <field name="pep_flag"/>
+                <field name="sanctions_flag"/>
+                <field name="risk_category"/>
+                <field name="whitelisted"/>
+              </group>
+            </page>
+            <page string="Documents">
+              <field name="document_ids">
+                <list editable="bottom">
+                  <field name="document_type"/>
+                  <field name="filename"/>
+                  <field name="status"/>
+                  <field name="expiry_date"/>
+                </list>
+              </field>
+            </page>
+            <page string="Checks / Alerts">
+              <field name="kyc_check_ids">
+                <list>
+                  <field name="check_type"/>
+                  <field name="result"/>
+                  <field name="checked_at"/>
+                  <field name="source"/>
+                </list>
+              </field>
+              <field name="aml_alert_ids">
+                <list>
+                  <field name="name"/>
+                  <field name="severity"/>
+                  <field name="status"/>
+                  <field name="created_at"/>
+                </list>
+              </field>
+            </page>
+            <page string="Notes">
+              <field name="notes" widget="text"/>
+            </page>
+          </notebook>
+          <footer>
+            <button name="action_request_more_info" type="object" string="Request More Info" class="btn-secondary"/>
+            <button name="action_approve_kyc" type="object" string="Approve KYC" class="btn-primary"/>
+            <button name="action_reject_kyc" type="object" string="Reject KYC" class="btn-danger"/>
+          </footer>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_fund_investor" model="ir.actions.act_window">
+    <field name="name">Porteurs</field>
+    <field name="res_model">fund.investor</field>
+    <field name="view_mode">list,form</field>
+    <field name="help" type="html">
+      <p class="oe_view_nocontent_create">Créez un nouveau dossier investisseur pour commencer l'onboarding KYC.</p>
+    </field>
+  </record>
+
+  <!-- Documents view -->
+  <record id="view_fund_kyc_document_tree" model="ir.ui.view">
+    <field name="name">fund.kyc.document.tree</field>
+    <field name="model">fund.kyc.document</field>
+    <field name="arch" type="xml">
+      <list>
+        <field name="investor_id"/>
+        <field name="document_type"/>
+        <field name="filename"/>
+        <field name="status"/>
+        <field name="expiry_date"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_fund_kyc_document" model="ir.actions.act_window">
+    <field name="name">KYC Documents</field>
+    <field name="res_model">fund.kyc.document</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <!-- AML Alerts -->
+  <record id="view_fund_aml_alert_tree" model="ir.ui.view">
+    <field name="name">fund.aml.alert.tree</field>
+    <field name="model">fund.aml.alert</field>
+    <field name="arch" type="xml">
+      <list>
+        <field name="name"/>
+        <field name="investor_id"/>
+        <field name="fund_id"/>
+        <field name="severity"/>
+        <field name="status"/>
+        <field name="created_at"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_fund_aml_alert_form" model="ir.ui.view">
+    <field name="name">fund.aml.alert.form</field>
+    <field name="model">fund.aml.alert</field>
+    <field name="arch" type="xml">
+      <form string="AML Alert">
+        <sheet>
+          <group>
+            <field name="name"/>
+            <field name="investor_id"/>
+            <field name="fund_id"/>
+            <field name="severity"/>
+            <field name="status"/>
+            <field name="assigned_to"/>
+          </group>
+          <group>
+            <field name="matched_transactions" widget="many2many_tags"/>
+            <field name="notes" widget="text"/>
+          </group>
+          <footer>
+            <button name="action_assign" type="object" string="Assign" class="btn-secondary"/>
+            <button name="action_escalate" type="object" string="Escalate" class="btn-warning"/>
+            <button name="action_close" type="object" string="Close" class="btn-primary"/>
+          </footer>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_fund_aml_alert" model="ir.actions.act_window">
+    <field name="name">AML Alerts</field>
+    <field name="res_model">fund.aml.alert</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+</odoo>

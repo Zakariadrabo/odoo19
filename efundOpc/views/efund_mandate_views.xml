@@ -1,0 +1,132 @@
+<odoo>
+
+    <!-- ===================== -->
+    <!-- LIST VIEW             -->
+    <!-- ===================== -->
+    <record id="view_efund_mandate_list" model="ir.ui.view">
+        <field name="name">efund.mandate.list</field>
+        <field name="model">efund.mandate</field>
+        <field name="arch" type="xml">
+            <list string="Mandats de gestion"
+                  decoration-success="state == 'active'"
+                  decoration-muted="state == 'terminated'">
+                <field name="name"/>
+                <field name="investor_id"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="capital_committed"/>
+                <field name="coupon_rate"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ===================== -->
+    <!-- FORM VIEW             -->
+    <!-- ===================== -->
+    <record id="view_efund_mandate_form" model="ir.ui.view">
+        <field name="name">efund.mandate.form</field>
+        <field name="model">efund.mandate</field>
+        <field name="arch" type="xml">
+            <form string="Mandat de gestion">
+
+                <!-- HEADER -->
+                <header>
+                    <field name="state"
+                           widget="statusbar"
+                           statusbar_visible="draft,active,terminated"/>
+
+                    <button name="action_activate"
+                            type="object"
+                            string="Activer"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+
+                    <button name="action_open_termination_wizard"
+                            type="object"
+                            string="Clôturer le mandat"
+                            class="btn-danger"
+                            invisible="state != 'active'"/>
+                </header>
+                <sheet>
+                    <!-- IDENTITÉ -->
+                    <group>
+                        <group string="Informations Mandat">
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="investor_id"/>
+                            <field name="management_company_id"/>
+                        </group>
+                        <group string="Paramètres financiers">
+                            <field name="capital_committed"/>
+                            <field name="coupon_rate"/>
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                            <field name="duration_years" readonly="1"/>
+                        </group>
+                    </group>
+                    <!-- NOTEBOOK -->
+                    <notebook>
+                        <page string="compte investisseur">
+
+                        </page>
+
+                        <!-- ONGLET COUPONS -->
+                        <page string="Coupons">
+                            <button name="action_generate_coupons"
+                                    type="object"
+                                    string="Générer les coupons"
+                                    class="oe_highlight"
+                                    icon="fa-plus-circle"
+                                    invisible="state != 'active'"/>
+                            <group>
+                                <field name="coupon_ids" nolabel="1">
+                                    <list>
+                                        <field name="year"/>
+                                        <field name="amount"/>
+                                        <field name="state"/>
+                                        <button name="action_pay" type="object" string="Payer"
+                                                invisible="state != 'planned'"/>
+                                    </list>
+                                </field>
+                            </group>
+                        </page>
+
+                        <!-- ONGLET FLUX -->
+                        <page string="Flux financiers">
+                            <field name="cash_move_ids">
+                                <list>
+                                    <field name="date"/>
+                                    <field name="move_type"/>
+                                    <field name="amount"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- ONGLET SYNTHÈSE -->
+                        <page string="Synthèse">
+                            <group>
+                                <field name="capital_committed" readonly="1"/>
+                                <field name="capital_remaining" readonly="1"/>
+                                <field name="coupons_paid" readonly="1"/>
+                                <field name="cash_balance" readonly="1"/>
+                            </group>
+                        </page>
+
+                    </notebook>
+
+                </sheet>
+
+                <!-- CHATTER
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
+
+                -->
+
+            </form>
+        </field>
+    </record>
+</odoo>
+

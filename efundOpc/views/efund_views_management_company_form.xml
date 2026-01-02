@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===================== -->
+    <!-- Kanban View           -->
+    <!-- ===================== -->
+    <record id="view_efund_management_company_kanban" model="ir.ui.view">
+        <field name="name">efund.management.company.kanban</field>
+        <field name="model">efund.management.company</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_small_column" default_group_by="company_id">
+                <field name="name"/>
+                <field name="regulatory_license"/>
+                <field name="funds_count"/>
+                <field name="aum"/>
+                <field name="currency_id"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record">
+                            <div class="o_kanban_primary_left">
+                                <strong t-esc="record.name.value"/>
+                                <div class="text-muted">
+                                    License: <t t-esc="record.regulatory_license.value or '-'"/>
+                                </div>
+                            </div>
+                            <div class="o_kanban_primary_right">
+                                <div>
+                                    <span class="text-muted">Funds:</span>
+                                    <span><t t-esc="record.funds_count.value"/></span>
+                                </div>
+                                <div>
+                                    <span class="text-muted">AUM:</span>
+                                    <span><t t-esc="record.aum.value"/> <t t-esc="record.currency_id.value"/></span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ===================== -->
+    <!-- List View             -->
+    <!-- ===================== -->
+    <record id="view_efund_management_company_list" model="ir.ui.view">
+        <field name="name">efund.management.company.list</field>
+        <field name="model">efund.management.company</field>
+
+        <field name="arch" type="xml">
+            <list string="Fund Management Companies" decoration-info="funds_count &gt; 0">
+                <field name="name"/>
+                <field name="regulatory_license"/>
+                <field name="funds_count"/>
+                <field name="aum" widget="monetary"/>
+                <field name="currency_id"/>
+                <field name="compliance_officer_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ===================== -->
+    <!-- Form View             -->
+    <!-- ===================== -->
+    <record id="view_efund_management_company_form" model="ir.ui.view">
+        <field name="name">efund.management.company.form</field>
+        <field name="model">efund.management.company</field>
+        <field name="arch" type="xml">
+            <form string="Fund Management Company" create="true" edit="true">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+
+                    <group name="main_info" string="General Information">
+                        <field name="company_id"/>
+                        <field name="regulatory_license"/>
+                        <field name="compliance_officer_id"/>
+                    </group>
+
+                    <group name="financials" string="Financial Information">
+                        <field name="aum" widget="monetary"/>
+                        <field name="currency_id" readonly="1"/>
+                        <field name="funds_count" readonly="1"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Risk Management">
+                            <field name="risk_management_policy" nolabel="1"/>
+                        </page>
+                        <page string="Managed Funds">
+                            <field name="managed_funds">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="fund_type"/>
+                                    <field name="risk_level"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Wizard d'import des cours -->
+    <record id="view_efund_fund_import_price_wizard_form" model="ir.ui.view">
+        <field name="name">efund.fund.import.price.wizard.form</field>
+        <field name="model">efund.fund.import.price.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Importer des cours">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Import des cours</h1>
+                    </div>
+
+                    <group>
+                        <field name="import_type"/>
+                    </group>
+
+                    <!-- Section pour import unique -->
+                    <group invisible="import_type != 'single'">
+                        <group>
+                            <field name="instrument_id" required="import_type == 'single'"/>
+                            <field name="price_date" required="import_type == 'single'"/>
+                            <field name="price" required="import_type == 'single'"/>
+                        </group>
+                    </group>
+
+                    <!-- Section pour import fichier -->
+                    <group invisible="import_type != 'file'">
+                        <group>
+                            <field name="import_file" filename="filename" required="import_type == 'file'"/>
+                            <div class="alert alert-info" role="alert">
+                                <strong>Format attendu:</strong><br/>
+                                - Fichier CSV avec séparateur virgule<br/>
+                                - Colonnes: Code_Instrument, Prix, Date<br/>
+                                - Exemple: AAPL,150.25,2024-01-15<br/>
+                                - La première ligne peut être un en-tête
+                            </div>
+                        </group>
+                    </group>
+
+                    <!-- Section pour import API -->
+                    <group invisible="import_type != 'api'">
+                        <group>
+                            <field name="api_config_id" required="import_type == 'api'"/>
+                        </group>
+                    </group>
+
+                    <footer>
+                        <button name="action_import" type="object" string="Importer" class="btn-primary"/>
+                        <button special="cancel" string="Annuler" class="btn-secondary"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action pour ouvrir le wizard -->
+    <record id="action_efund_fund_import_price_wizard" model="ir.actions.act_window">
+        <field name="name">Importer des cours</field>
+        <field name="res_model">efund.fund.import.price.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

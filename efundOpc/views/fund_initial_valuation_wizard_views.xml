@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_fund_initial_valuation_wizard_form" model="ir.ui.view">
+        <field name="name">fund.initial.valuation.wizard.form</field>
+        <field name="model">efund.initial.valuation.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Initial Fund Valuation - Investors">
+                <sheet>
+                    <group>
+                        <group string="Fond et Paramètres">
+                            <field name="fund_id" required="1" options="{'no_create': True}"/>
+                            <field name="share_class_id" required="1" options="{'no_create': True}"/>
+                            <field name="valuation_date" required="1"/>
+                            <field name="initial_nav_per_share" required="1"/>
+                        </group>
+                        <group string="Totaux Calculés">
+                            <field name="initial_nav_per_share" readonly="1"/>
+                            <field name="total_capital" readonly="1"/>
+                            <field name="total_shares" readonly="1"/>
+
+                        </group>
+                    </group>
+
+                    <group string="Investisseurs et Souscriptions Initiales">
+                        <field name="investor_line_ids"
+                               context="{'show_ownership': True, 'default_wizard_id': id}"
+                               create="true" edit="true">
+                            <list editable="bottom" form_view_id="view_efund_initial_valuation_investor_line_form">
+                                <field name="sequence" widget="handle"/>
+                                <field name="investor_id" required="1" options="{'no_create': True}"/>
+                                <field name="amount" required="1"/>
+                                <field name="units" readonly="1"/>
+                                <field name="percentage_ownership" string="%" widget="percentage"/>
+                                <button name="unlink" string="Remove" type="object" class="btn-danger"/>
+                            </list>
+
+                        </field>
+                    </group>
+
+
+                </sheet>
+                <footer>
+                    <button name="action_create_initial_valuation" string="Créer la Valorisation et Émettre les Parts"
+                            type="object" class="btn-primary"
+                            invisible="not show_create_button"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

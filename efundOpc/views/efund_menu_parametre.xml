@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem
+        id="menu_efund_secteur_activite"
+        name="Secteur activité"
+        parent="menu_gestion_fonds_configuration"
+        action="action_efund_secteur_activite"
+        sequence="3"
+    />
+    <menuitem
+        id="menu_efund_statut_operationnel"
+        name="Statut"
+        parent="menu_gestion_fonds_configuration"
+        action="action_efund_statut_operationnel"
+        sequence="4"
+    />
+    <menuitem
+        id="menu_efund_type_fonds"
+        name="type Fond"
+        parent="menu_gestion_fonds_configuration"
+        action="action_efund_type_fonds"
+        sequence="5"
+    />
+</odoo>

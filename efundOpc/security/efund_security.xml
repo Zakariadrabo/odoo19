@@ -1,0 +1,15 @@
+<odoo>
+    <record id="group_opc_manager" model="res.groups">
+        <field name="name">Gestion OPCVM - Groupe Accès</field>
+    </record>
+    <record id="group_sgo_admin" model="res.groups">
+        <field name="name">Gestion OPCVM - Gestionnaire de fonds</field>
+    </record>
+    <record id="group_fund_operator" model="res.groups">
+        <field name="name">Gestion OPCVM - Groupe Opérateur</field>
+    </record>
+    <record id="group_compliance" model="res.groups">
+        <field name="name">Gestion OPCVM - groupe Compliance </field>
+    </record>
+
+</odoo>

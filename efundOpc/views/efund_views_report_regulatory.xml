@@ -1,0 +1,86 @@
+<odoo>
+    <record id="view_fund_report_regulatory_form" model="ir.ui.view">
+        <field name="name">fund.report.regulatory.form</field>
+        <field name="model">efund.fund.report.regulatory</field>
+        <field name="arch" type="xml">
+            <form string="Regulatory Report">
+                <header>
+                    <button name="action_submit" type="object" string="Submit" states="draft,in_review" class="btn-primary"/>
+                    <button name="action_validate" type="object" string="Validate" states="submitted" class="btn-success"/>
+                    <button name="action_export_excel" type="object" string="Export Excel" class="btn-secondary" states="validated,submitted"/>
+                    <field name="status" widget="statusbar" statusbar_visible="draft,in_review,submitted,validated,archived"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="fund_id"/>
+                            <field name="report_type"/>
+                            <field name="report_date"/>
+                        </group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="generated_by"/>
+                            <field name="generated_on"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Financial Data">
+                            <group>
+                                <field name="total_nav"/>
+                                <field name="total_assets"/>
+                                <field name="total_liabilities"/>
+                            </group>
+                        </page>
+                        <page string="Compliance Ratios">
+                            <group>
+                                <field name="ratio_liquidity"/>
+                                <field name="ratio_concentration"/>
+                                <field name="ratio_diversification"/>
+                                <field name="ratio_exposure"/>
+                                <field name="ratio_coverage"/>
+                            </group>
+                        </page>
+                        <page string="Notes & Attachments">
+                            <field name="notes"/>
+                            <field name="attachment_ids" widget="many2many_binary"/>
+                        </page>
+                        <page string="Export File">
+                            <group>
+                                <field name="export_filename" readonly="1"/>
+                                <field name="export_file" filename="export_filename" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_fund_report_regulatory_tree" model="ir.ui.view">
+        <field name="name">fund.report.regulatory.tree</field>
+        <field name="model">fund.report.regulatory</field>
+        <field name="arch" type="xml">
+            <tree string="Regulatory Reports" decoration-success="status=='validated'" decoration-warning="status=='in_review'" decoration-muted="status=='archived'">
+                <field name="name"/>
+                <field name="fund_id"/>
+                <field name="report_type"/>
+                <field name="report_date"/>
+                <field name="total_nav"/>
+                <field name="status"/>
+                <field name="generated_by"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_fund_report_regulatory" model="ir.actions.act_window">
+        <field name="name">Regulatory Reports</field>
+        <field name="res_model">fund.report.regulatory</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_fund_report_regulatory_root" name="Regulatory Reports" parent="menu_fund_management" sequence="60"/>
+    <menuitem id="menu_fund_report_regulatory" name="Reports" parent="menu_fund_report_regulatory_root" action="action_fund_report_regulatory"/>
+</odoo>

@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_efund_investor_form" model="ir.ui.view">
+        <field name="name">efund.investor.form.enhanced</field>
+        <field name="model">efund.investor</field>
+        <field name="arch" type="xml">
+
+            <form string="Investor">
+                <header>
+                    <!-- ========================= -->
+                    <!-- DRAFT → KYC PENDING -->
+                    <!-- ========================= -->
+                    <button name="action_submit_kyc"
+                            type="object"
+                            string="Soumettre KYC"
+                            class="btn-primary"
+                            icon="fa-paper-plane"
+                            invisible="status != 'draft'"/>
+
+                    <!-- ========================= -->
+                    <!-- KYC PENDING → APPROVED -->
+                    <!-- ========================= -->
+                    <button name="action_approve_kyc"
+                            type="object"
+                            string="Approuver KYC"
+                            class="btn-success"
+                            icon="fa-check"
+                            invisible="status != 'kyc_pending'"/>
+
+                    <!-- ========================= -->
+                    <!-- KYC PENDING → REJECTED -->
+                    <!-- ========================= -->
+                    <button name="action_reject_kyc"
+                            type="object"
+                            string="Rejeter KYC"
+                            class="btn-danger"
+                            icon="fa-times"
+                            invisible="status != 'kyc_pending'"/>
+
+                    <!-- ========================= -->
+                    <!-- APPROVED / REJECTED → ARCHIVED -->
+                    <!-- ========================= -->
+                    <button name="action_archive"
+                            type="object"
+                            string="Archiver"
+                            class="btn-secondary"
+                            icon="fa-archive"
+                            invisible="status not in ['kyc_approved', 'kyc_rejected']"/>
+                    <field name="status" widget="statusbar"/>
+                </header>
+
+
+                <!-- ========================== -->
+                <!--    FICHE INVESTISSEUR     -->
+                <!-- ========================== -->
+                <sheet>
+                    <!-- ========================= -->
+                    <!-- Smart Button -->
+                    <!-- ========================= -->
+                    <div class="oe_button_box" name="button_box">
+                        <!-- Votre Smart Button 1 -->
+                        <button class="oe_stat_button" name="action_open_deposit" type="object"
+                                icon="fa-book">
+                            <field name="deposit_count" widget="statinfo" string="Déposit"/>
+                        </button>
+                        <button class="oe_stat_button" name="action_open_subscriptions" type="object"
+                                icon="fa-book">
+                            <field name="subscription_count" widget="statinfo" string="Souscription"/>
+                        </button>
+                        <button class="oe_stat_button" name="action_open_redemption" type="object"
+                                icon="fa-book">
+                            <field name="redemption_count" widget="statinfo" string="Rachat"/>
+                        </button>
+                        <button class="oe_stat_button" name="action_open_withdraw" type="object"
+                                icon="fa-book">
+                            <field name="withdraw_count" widget="statinfo" string="Retrait Escpèce"/>
+                        </button>
+
+                    </div>
+
+
+                    <!-- ========================= -->
+                    <!-- IDENTITÉ & TYPE CLIENT -->
+                    <!-- ========================= -->
+                    <group string="Type Client">
+                        <field name="investor_type" required="1"/>
+                        <field name="full_name" readonly="1" invisible="investor_type != 'individual'"/>
+                        <field name="company_name" invisible="investor_type != 'company'" required="1"/>
+                    </group>
+
+                    <group string="Identité" invisible="investor_type != 'company'">
+                        <group string="Société">
+                            <field name="company_short_name" required="investor_type  == 'company'"/>
+                            <field name="legal_form" required="investor_type  == 'company'"/>
+                            <field name="license_number" required="investor_type  == 'company'"/>
+                            <field name="creation_date" required="investor_type  == 'company'"/>
+                        </group>
+                        <group string="Adresse">
+                            <field name="company_address" required="investor_type  == 'company'"/>
+                            <field name="company_town" required="investor_type  == 'company'"/>
+                            <field name="company_country_id" required="investor_type  == 'company'"/>
+                            <field name="identical_address"/>
+                            <field name="company_direction_address" invisible="identical_address"
+                                   required="not identical_address"/>
+                            <field name="company_direction_town" invisible="identical_address"
+                                   required="not identical_address"/>
+                            <field name="company_direction_country_id" invisible="identical_address"
+                                   required="not identical_address"/>
+                        </group>
+                    </group>
+                    <group string="Identité" invisible="investor_type != 'individual'">
+                        <field name="nom" required="investor_type  == 'individual'"/>
+                        <field name="prenom" required="investor_type  == 'individual'"/>
+                        <field name="birthdate" required="investor_type  == 'individual'"/>
+                        <field name="birthplace" required="investor_type  == 'individual'"/>
+                        <field name="birth_country_id" required="investor_type  == 'individual'"/>
+                        <field name="sex" required="investor_type  == 'individual'"/>
+                        <field name="minor"/>
+                    </group>
+
+                    <!-- ========================= -->
+                    <!-- PERSONNE PHYSIQUE -->
+                    <!-- ========================= -->
+                    <group string="Personne Physique" invisible="1">
+                        <group col="4">
+                            <field name="sex"/>
+                            <field name="birthdate"/>
+                            <field name="socio_professional_category"/>
+                        </group>
+                        <group col="4">
+                            <field name="country_id"/>
+                            <field name="language_id"/>
+                            <field name="city"/>
+                            <field name="function"/>
+                            <field name="activity_sector"/>
+                            <field name="profession"/>
+                        </group>
+                    </group>
+
+                    <!-- ========================= -->
+                    <!-- PERSONNE MORALE -->
+                    <!-- ========================= -->
+                    <group string="Personne Morale" invisible="1 ">
+
+                        <group col="4">
+                            <field name="activity_sector"/>
+                        </group>
+                    </group><!-- ========================= -->
+                    <!-- CONFORMITÉ (SYNTHÈSE) -->
+                    <!-- ========================= -->
+                    <group string="Conformité">
+                        <group>
+                            <field name="compliance_status" widget="badge"/>
+                            <field name="compliance_score"
+                                   widget="progressbar"
+                                   options="{'max_value': 100}"/>
+                            <field name="kyc_last_update"/>
+                        </group>
+                        <group>
+                            <field name="pep_flag"/>
+                            <field name="sanctions_flag"/>
+                        </group>
+                    </group>
+                    <!-- ========================== -->
+                    <!--         COMPTES            -->
+                    <!-- ========================== -->
+
+                    <notebook>
+                        <page string="Abonnemement Fonds / Mandats">
+                            <group>
+                                <group string="Fonds">
+                                    <field name="fund_investor_ids" context="{'default_investor_id': id}">
+                                        <list editable="bottom">
+                                            <field name="fund_id"/>
+                                            <field name="state" readonly="1"/>
+                                            <field name="validation_date"/>
+                                        </list>
+                                    </field>
+                                </group>
+                                <group string="Mandats">
+                                    <field name="mandate_investor_ids" context="{'default_mandat_id': id}">
+                                        <list editable="bottom">
+                                            <field name="mandate_id"/>
+                                            <field name="state" readonly="1"/>
+                                            <field name="validation_date"/>
+                                        </list>
+                                    </field>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Comptes et portefeuille">
+                            <group>
+                                <group string="Compte espèce">
+                                    <field name="cash_account_ids" nolabel="1">
+                                        <list create="false">
+                                            <field name="fund_id"/>
+                                            <field name="mandate_id" invisible="1"/>
+                                            <field name="account_number"/>
+                                            <field name="balance"/>
+                                            <field name="state"/>
+                                            <button name="action_active_account_wizard" type="object"
+                                                    string="Activer"
+                                                    class="btn-primary" icon="fa-money"
+                                                    invisible="state != 'draft'"/>
+                                            <button name="action_open_cash_deposit_wizard" type="object"
+                                                    string="Déposit"
+                                                    class="btn-primary" icon="fa-money"
+                                                    invisible="state != 'active'"/>
+                                            <button name="action_open_cash_withdraw_wizard" type="object"
+                                                    string="Retrait"
+                                                    class="btn-primary" icon="fa-money"
+                                                    invisible="state != 'active' or balance &lt;= 0"/>
+
+                                        </list>
+                                    </field>
+                                </group>
+                                <group string="Compte Titre">
+                                    <field name="part_account_ids" nolabel="1">
+                                        <list create="false">
+                                            <field name="fund_id"/>
+                                            <field name="account_number"/>
+                                            <field name="total_parts"/>
+                                            <field name="state"/>
+                                            <button name="action_active_account_wizard" type="object"
+                                                    string="Activer"
+                                                    class="btn-primary" icon="fa-money"
+                                                    invisible="state != 'draft'"/>
+                                            <button name="action_open_subscription_wizard" type="object"
+                                                    string="+ Souscription"
+                                                    class="btn-success" icon="fa-arrow-up"
+                                                    invisible="state != 'active'"/>
+                                            <button name="action_redeem_parts" type="object" string="Rachat"
+                                                    class="oe_highlight" icon="fa-exchange"
+                                                    invisible="state != 'active' or total_parts &lt;= 0"/>
+                                        </list>
+                                    </field>
+                                </group>
+                            </group>
+                        </page>
+
+
+                        <!-- ========================== -->
+                        <!--           KYC              -->
+                        <!-- ========================== -->
+
+                        <page string="KYC – Informations Client">
+                            <group>
+                                <group>
+                                    <separator string="Profil Financier"/>
+                                    <field name="estimation"/>
+                                    <field name="revenu"/>
+                                    <field name="objectif"/>
+                                </group>
+                            </group>
+                        </page>
+
+
+                        <page string="Documents KYC">
+                            <field name="document_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="document_type"/>
+                                    <field name="expiry_date" options="{'numeric': true}"/>
+                                    <field name="file_name"/>
+                                    <field name="file_data" widget="binary"/>
+                                    <field name="status"/>
+                                    <field name="verified_date" options="{'numeric': true}"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="AML Monitoring">
+                            <field name="aml_alert_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="severity" widget="badge"/>
+                                    <field name="status" widget="badge"/>
+                                    <field name="created_at"/>
+                                </list>
+                            </field>
+                        </page>
+
+                    </notebook>
+                </sheet>
+            </form>
+
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,35 @@
+/* Styles pour le dashboard gestion de fonds */
+.o_kanban_dashboard .o_kanban_group {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.o_kanban_dashboard .o_kanban_header {
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+
+.o_kanban_dashboard .o_kanban_record {
+    background: white;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.o_kanban_dashboard .o_kanban_card_header {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+/* Cartes de statistiques */
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}

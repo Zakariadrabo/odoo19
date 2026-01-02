@@ -1,0 +1,48 @@
+<odoo>
+    <record id="view_efund_cash_deposit_wizard_form" model="ir.ui.view">
+        <field name="name">efund.cash.deposit.wizard.form</field>
+        <field name="model">efund.cash.deposit.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Dépôt sur compte espèces">
+                <sheet>
+                    <group invisible="move_type != 'deposit'">
+                        <div class="o_form_label text-info">
+                            Vous êtes sur le point d’effectuer un dépôt sur un compte espèces.
+                        </div>
+                    </group>
+                     <group invisible="move_type != 'withdraw'">
+                        <div class="o_form_label text-info">
+                            Vous êtes sur le point d’effectuer un retrait sur un compte espèces.
+                        </div>
+                    </group>
+                    <!-- CONTEXTE -->
+                    <group>
+                        <group string="Informations sur le dépot">
+                            <field name="investor_id" readonly="1"/>
+                            <field name="fund_id" readonly="1"/>
+                            <field name="cash_account_id" readonly="1"/>
+                        </group>
+                        <group string="Opération">
+                            <field name="date_operation"/>
+                            <field name="payment_mode"/>
+                            <field name="amount"/>
+                        </group>
+                        <group>
+                            <field name="reference_payment" required="1"/>
+                            <field name="note"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                    <button string="Confirmer le dépôt"
+                            name="action_confirm"
+                            type="object"
+                            class="btn-primary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+
+</odoo>

@@ -1,0 +1,72 @@
+<odoo>
+  <templates id="template" xml:space="preserve">
+
+    <t t-name="efund_fund_dashboard">
+      <div class="o_fund_dashboard_container">
+
+        <!-- Header -->
+        <div class="o_fund_header">
+          <h2>Vue 360° – <t t-esc="fund.name"/></h2>
+          <p>
+            Type : <t t-esc="fund.fund_type"/> |
+            Risque : <t t-esc="fund.risk_level"/> |
+            Benchmark : <t t-esc="fund.benchmark_index"/>
+          </p>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="o_fund_kpis">
+          <div class="kpi_card">
+            <h3>Actif Net (AUM)</h3>
+            <span t-esc="fund.aum"/>
+          </div>
+
+          <div class="kpi_card">
+            <h3>VL du Jour</h3>
+            <span t-esc="fund.nav_latest"/>
+          </div>
+
+          <div class="kpi_card">
+            <h3>Performance YTD</h3>
+            <span t-esc="fund.perf_ytd"/> %
+          </div>
+        </div>
+
+        <!-- Graph Performance -->
+        <div class="o_fund_graph">
+          <h3>Évolution de la VL</h3>
+          <canvas id="fund_nav_chart"/>
+        </div>
+
+        <!-- Portfolio Breakdown -->
+        <div class="o_fund_breakdown">
+          <h3>Répartition du Portefeuille</h3>
+          <div id="fund_portfolio_pie"></div>
+        </div>
+
+        <!-- Latest Transactions -->
+        <div class="o_fund_transactions">
+          <h3>Dernières Transactions</h3>
+          <table class="table table-sm">
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Investor</th>
+              <th>Montant</th>
+            </tr>
+            <t t-foreach="transactions" t-as="t">
+              <tr>
+                <td t-esc="t.date"/>
+                <td t-esc="t.type"/>
+                <td t-esc="t.investor_id.name"/>
+                <td t-esc="t.amount"/>
+              </tr>
+            </t>
+          </table>
+        </div>
+
+      </div>
+    </t>
+
+  </templates>
+</odoo>

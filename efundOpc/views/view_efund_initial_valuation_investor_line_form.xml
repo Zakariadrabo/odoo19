@@ -1,0 +1,17 @@
+<odoo>
+    <record id="view_efund_initial_valuation_investor_line_form" model="ir.ui.view">
+        <field name="name">efund.initial.valuation.investor.line.form</field>
+        <field name="model">efund.initial.valuation.investor.line</field>
+        <field name="arch" type="xml">
+            <form string="Investor Subscription Line">
+                <group>
+                    <field name="investor_id" required="1"/>
+                    <field name="amount" required="1"/>
+                    <field name="units" readonly="1"/>
+                    <field name="percentage_ownership" string="%" widget="percentage"/>
+                </group>
+            </form>
+        </field>
+    </record>
+
+</odoo>

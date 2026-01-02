@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_fund_share_class_tree" model="ir.ui.view">
+        <field name="name">fund.share.class.tree</field>
+        <field name="model">efund.fund.class</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="fund_id"/>
+                <field name="fee_structure"/>
+                <field name="management_fee_rate"/>
+                <field name="subscription_fee_rate"/>
+                <field name="redemption_fee_rate"/>
+                <field name="is_accumulating"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_fund_share_class_form" model="ir.ui.view">
+        <field name="name">fund.share.class.form</field>
+        <field name="model">efund.fund.class</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" required="1"/>
+                            <field name="fund_id" required="1"/>
+                        </group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="is_accumulating"/>
+                            <field name="minimum_subscription"/>
+                        </group>
+                    </group>
+                    <group string="Fee Structure">
+                        <group>
+                            <field name="management_fee_rate"/>
+                            <field name="performance_fee_rate"/>
+                        </group>
+                        <group>
+                            <field name="subscription_fee_rate"/>
+                            <field name="redemption_fee_rate"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>
