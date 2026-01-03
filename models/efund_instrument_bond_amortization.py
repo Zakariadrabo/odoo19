@@ -7,28 +7,18 @@ class BondAmortization(models.Model):
     _description = "Bond Amortization Schedule"
     _order = "installment_number asc"
 
-    instrument_id = fields.Many2one(
-        'efund.fund.instrument',
-        string="Instrument",
-        required=True,
-        ondelete="cascade"
-    )
-
+    instrument_id = fields.Many2one('efund.fund.instrument',string="Instrument",required=True, ondelete="cascade")
     installment_number = fields.Integer(string="Installment No.", required=True)
     due_date = fields.Date(string="Due Date", required=True)
-
     opening_principal = fields.Monetary(string="Opening Principal", required=True)
     coupon_amount = fields.Monetary(string="Interest (Coupon)", required=True)
     principal_repayment = fields.Monetary(string="Principal Repayment", required=True)
     closing_principal = fields.Monetary(string="Closing Principal", required=True)
-
     currency_id = fields.Many2one(related="instrument_id.currency_id", store=True, readonly=True)
-
     total_payment = fields.Monetary(
         string="Total Payment",
         compute="_compute_total_payment",
-        store=True
-    )
+        store=True    )
 
     @api.depends("coupon_amount", "principal_repayment")
     def _compute_total_payment(self):

@@ -14,19 +14,9 @@ class PositionAdjustment(models.Model):
     _order = "adjustment_date desc"
 
     # Identification
-    name = fields.Char(
-        string="Référence",
-        default=lambda self: _('Nouvel ajustement'),
-        compute='_compute_name',
-        store=True
-    )
+    name = fields.Char(string="Référence",default=lambda self: _('Nouvel ajustement'),compute='_compute_name', store=True)
+    position_id = fields.Many2one('efund.fund.position',string="Position",required=True, ondelete='cascade')
 
-    position_id = fields.Many2one(
-        'efund.fund.position',
-        string="Position",
-        required=True,
-        ondelete='cascade'
-    )
     # Ajoutez ce champ
     state = fields.Selection([
         ('draft', 'Brouillon'),
@@ -36,33 +26,12 @@ class PositionAdjustment(models.Model):
         default='draft',
         tracking=True)
 
-    event_id = fields.Many2one(
-        'efund.fund.instrument.event',
-        string="Événement",
-        required=True,
-        ondelete='cascade'
-    )
-
-    instrument_id = fields.Many2one(
-        'efund.fund.instrument',
-        related='position_id.instrument_id',
-        store=True,
-        string="Instrument"
-    )
-
-    fund_id = fields.Many2one(
-        'efund.fund',
-        related='position_id.fund_id',
-        store=True,
-        string="Fonds"
-    )
+    event_id = fields.Many2one('efund.fund.instrument.event',string="Événement",required=True,ondelete='cascade')
+    instrument_id = fields.Many2one('efund.fund.instrument',related='position_id.instrument_id',store=True,string="Instrument")
+    fund_id = fields.Many2one('efund.fund',related='position_id.fund_id',store=True,string="Fonds")
 
     # Dates
-    adjustment_date = fields.Date(
-        string="Date d'ajustement",
-        required=True,
-        default=fields.Date.today
-    )
+    adjustment_date = fields.Date(string="Date d'ajustement",required=True,default=fields.Date.today)
 
     # Type d'ajustement
     adjustment_type = fields.Selection([
@@ -77,41 +46,19 @@ class PositionAdjustment(models.Model):
         required=True)
 
     # Impacts quantitatifs
-    quantity_change = fields.Float(
-        string="Changement de quantité",
-        digits=(16, 4)
-    )
-
-    new_quantity = fields.Float(
-        string="Nouvelle quantité",
-        digits=(16, 4)
-    )
+    quantity_change = fields.Float(string="Changement de quantité",digits=(16, 4))
+    new_quantity = fields.Float(string="Nouvelle quantité",digits=(16, 4))
 
     # Impacts financiers
-    cash_impact = fields.Monetary(
-        string="Impact cash",
-        currency_field='currency_id'
-    )
-
-    tax_amount = fields.Monetary(
-        string="Montant taxe",
-        currency_field='currency_id'
-    )
-
-    price_adjustment = fields.Float(
-        string="Ratio de prix",
-        digits=(16, 6)
-    )
+    cash_impact = fields.Monetary(string="Impact cash",currency_field='currency_id')
+    tax_amount = fields.Monetary(string="Montant taxe",currency_field='currency_id')
+    price_adjustment = fields.Float(string="Ratio de prix",digits=(16, 6))
 
     # Informations
     description = fields.Text(string="Description")
 
     # Métadonnées
-    currency_id = fields.Many2one(
-        'res.currency',
-        related='position_id.currency_id',
-        store=True
-    )
+    currency_id = fields.Many2one('res.currency',related='position_id.currency_id',store=True)
 
     # Calcul du nom
     @api.depends('position_id', 'adjustment_date', 'adjustment_type')

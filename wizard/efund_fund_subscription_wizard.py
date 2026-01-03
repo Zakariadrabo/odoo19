@@ -33,6 +33,9 @@ class FundSubscriptionWizard(models.TransientModel):
     def _compute_subscription_fee_amount(self):
         for sub in self:
 
+            if sub.unit_value <= 0:
+                raise UserError("La valeur liquidative doit être positive")
+
             prix_unitaire_ttc = sub.unit_value * (1 + sub.subscription_fee_rate/100)
 
             if sub.allow_fractional_parts:

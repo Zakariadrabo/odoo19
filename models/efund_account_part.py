@@ -21,14 +21,8 @@ class EfundAccountPart(models.Model):
         ('suspended', 'Désactivé'),
     ], string="Status", default='draft', )
 
-    _account_number_fund_uniq = models.Constraint(
-        'unique(account_number, fund_id)',
-        'Numéro de compte titres déjà utilisé pour ce fonds'
-    )
-    _investor_id_fund_uniq = models.Constraint(
-        'unique(investor_id, fund_id)',
-        'Un investisseur ne peut avoir qu’un compte titres par fonds'
-    )
+    _account_number_fund_uniq = models.Constraint('unique(account_number, fund_id)','Numéro de compte titres déjà utilisé pour ce fonds')
+    _investor_id_fund_uniq = models.Constraint('unique(investor_id, fund_id)','Un investisseur ne peut avoir qu’un compte titres par fonds')
 
     def action_redeem_parts(self):
         self.ensure_one()

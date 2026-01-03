@@ -10,50 +10,15 @@ class FundInitialValuationWizard(models.TransientModel):
     _name = 'efund.initial.valuation.wizard'
     _description = 'Wizard for Initial Fund Valuation with Investors'
 
-    fund_id = fields.Many2one(
-        'efund.fund',
-        string='Fund',
-        required=True,
-        domain="[('state', '=', 'draft')]"
-    )
-
-    share_class_id = fields.Many2one(
-        'efund.fund.class',
-        string='Share Class',
-        required=True,
-        domain="[('fund_id', '=', fund_id), ('state', '=', 'active')]"
-    )
-
-    valuation_date = fields.Date(
-        string='Valuation Date',
-        required=True,
-        default=fields.Date.context_today
-    )
-
-    initial_nav_per_share = fields.Float(
-        string='Initial NAV per Share',
-        default=10000.0,  # Souvent 100€ pour démarrer
-        required=True
-    )
+    fund_id = fields.Many2one('efund.fund',string='Fund',required=True,domain="[('state', '=', 'draft')]")
+    share_class_id = fields.Many2one('efund.fund.class',string='Share Class',required=True,domain="[('fund_id', '=', fund_id), ('state', '=', 'active')]")
+    valuation_date = fields.Date(string='Valuation Date',required=True,default=fields.Date.context_today)
+    initial_nav_per_share = fields.Float(string='Initial NAV per Share',default=10000.0,required=True)
 
     # Lignes détaillées pour chaque investisseur
-    investor_line_ids = fields.One2many(
-        'efund.initial.valuation.investor.line',
-        'wizard_id',
-        string='Investors and Their Subscriptions',
-        required=True
-    )
-
-    total_capital = fields.Float(
-        string='Total Capital',
-        compute='_compute_totals'
-    )
-
-    total_shares = fields.Float(
-        string='Total Shares',
-        digits=(16, 2),
-        compute='_compute_totals'
-    )
+    investor_line_ids = fields.One2many('efund.initial.valuation.investor.line','wizard_id',string='Investors and Their Subscriptions',required=True)
+    total_capital = fields.Float(string='Total Capital',compute='_compute_totals')
+    total_shares = fields.Float(string='Total Shares',digits=(16, 2),compute='_compute_totals' )
     show_create_button = fields.Boolean(compute="_compute_show_button")
 
     @api.depends('total_capital')

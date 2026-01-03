@@ -7,6 +7,10 @@ class FundInstrumentIssuer(models.Model):
 
     name = fields.Char("Nom de l'émetteur", required=True)
     country_id = fields.Many2one("res.country", string="Pays")
+    instrument_count = fields.Integer(string="Nombre d'instruments", compute="_compute_instrument_count")
+    rating = fields.Char("Notation (S&P / Moody’s / Bloomfield)")
+    website = fields.Char("Site Web")
+    description = fields.Text("Informations complémentaires")
     industry = fields.Selection([
         ('finance', 'FINANCE'),
         ('agriculture', 'AGRICULTURE'),
@@ -15,9 +19,6 @@ class FundInstrumentIssuer(models.Model):
         ('transport', 'TRANSPORT'),
         ('autre', 'AUTRE')
     ], default='finance')
-    rating = fields.Char("Notation (S&P / Moody’s / Bloomfield)")
-    website = fields.Char("Site Web")
-    description = fields.Text("Informations complémentaires")
     #Nouveau
     issuer_type = fields.Selection([
         ('sovereign', 'Sovereign (État)'),
@@ -28,11 +29,6 @@ class FundInstrumentIssuer(models.Model):
         ('municipal', 'Municipal'),
     ], string='Issuer Type', )
 
-
-    instrument_count = fields.Integer(
-        string="Nombre d'instruments",
-        compute="_compute_instrument_count"
-    )
 
     def _compute_instrument_count(self):
         for rec in self:

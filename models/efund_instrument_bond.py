@@ -9,29 +9,10 @@ class FundBondCoupon(models.Model):
     _order = 'payment_date asc'
 
     instrument_id = fields.Many2one('efund.fund.instrument', required=True)
-
-    coupon_number = fields.Integer(
-        string='Coupon #',
-        #required=True
-    )
-
-    payment_date = fields.Date(
-        string='Payment Date',
-        #required=True
-    )
-
-    coupon_amount = fields.Monetary(
-        string='Coupon Amount',
-        currency_field='currency_id',
-        compute='_compute_coupon_amount',
-        store=True
-    )
-
-    currency_id = fields.Many2one(
-        related='instrument_id.currency_id',
-        string='Currency'
-    )
-
+    coupon_number = fields.Integer(string='Coupon #')
+    payment_date = fields.Date(string='Payment Date')
+    coupon_amount = fields.Monetary(string='Coupon Amount',currency_field='currency_id',compute='_compute_coupon_amount',store=True)
+    currency_id = fields.Many2one(related='instrument_id.currency_id',string='Currency')
     status = fields.Selection([
         ('upcoming', 'Upcoming'),
         ('paid', 'Paid'),

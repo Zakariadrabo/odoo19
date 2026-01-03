@@ -29,8 +29,7 @@ class EfundMandate(models.Model):
     capital_remaining = fields.Monetary(compute='_compute_financial_summary',currency_field='currency_id',)
     coupons_paid = fields.Monetary(compute='_compute_financial_summary',currency_field='currency_id',)
     cash_balance = fields.Monetary(compute='_compute_financial_summary',currency_field='currency_id',)
-    state = fields.Selection([('draft', 'Brouillon'), ('active', 'Actif'), ('terminated', 'Terminé')], default='draft',
-                             tracking=True)
+    state = fields.Selection([('draft', 'Brouillon'), ('active', 'Actif'), ('terminated', 'Terminé')], default='draft', tracking=True)
 
     # relations
     coupon_ids = fields.One2many('efund.mandate.coupon', 'mandate_id', string="Coupons")

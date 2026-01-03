@@ -8,26 +8,12 @@ class FundClass(models.Model):
     _order = 'fund_id, sequence, name'
 
     # === Fields ===
-    name = fields.Char(
-        string='Share Class Name',
-        required=True,
-        help="Nom de la classe de parts (ex: 'Class A EUR Acc', 'Class I USD Dist')"
-    )
+    name = fields.Char(string='Share Class Name',required=True,help="Nom de la classe de parts (ex: 'Class A EUR Acc', 'Class I USD Dist')")
 
-    sequence = fields.Integer(
-        string='Sequence',
-        default=10,
-        help="Ordre d'affichage dans les listes"
-    )
+    sequence = fields.Integer(string='Sequence',default=10,help="Ordre d'affichage dans les listes")
 
     # === Relations ===
-    fund_id = fields.Many2one(
-        'efund.fund',
-        string='Fund',
-        required=True,
-        ondelete='cascade'
-    )
-
+    fund_id = fields.Many2one('efund.fund',string='Fund',required=True,ondelete='cascade' )
 
     # === Structure de Frais ===
     fee_structure = fields.Selection([
@@ -43,55 +29,16 @@ class FundClass(models.Model):
     )
 
     # === Frais ===
-    management_fee_rate = fields.Float(
-        string='Management Fee Rate (%)',
-        digits=(6, 4),
-        default=1.5,
-        help="Frais de gestion annuels exprimés en pourcentage de l'actif"
-    )
-
-    subscription_fee_rate = fields.Float(
-        string='Subscription Fee Rate (%)',
-        digits=(6, 4),
-        default=0.0,
-        help="Frais de souscription (entrée) en pourcentage"
-    )
-
-    redemption_fee_rate = fields.Float(
-        string='Redemption Fee Rate (%)',
-        digits=(6, 4),
-        default=0.0,
-        help="Frais de rachat (sortie) en pourcentage"
-    )
-
-    performance_fee_rate = fields.Float(
-        string='Performance Fee Rate (%)',
-        digits=(6, 4),
-        default=0.0,
-        help="Frais de performance sur la plus-value"
-    )
+    management_fee_rate = fields.Float(string='Management Fee Rate (%)',digits=(6, 4),default=1.5,help="Frais de gestion annuels exprimés en pourcentage de l'actif")
+    subscription_fee_rate = fields.Float(string='Subscription Fee Rate (%)',digits=(6, 4),default=0.0,help="Frais de souscription (entrée) en pourcentage")
+    redemption_fee_rate = fields.Float(string='Redemption Fee Rate (%)',digits=(6, 4),default=0.0,help="Frais de rachat (sortie) en pourcentage")
+    performance_fee_rate = fields.Float(string='Performance Fee Rate (%)',digits=(6, 4), default=0.0,help="Frais de performance sur la plus-value")
 
     # === Caractéristiques ===
-    is_accumulating = fields.Boolean(
-        string='Accumulating Shares',
-        default=True,
-        help="Si coché, les dividendes sont réinvestis automatiquement (Acc). Sinon, ils sont distribués (Dist)."
-    )
-
-    minimum_subscription = fields.Float(
-        string='Minimum Subscription Amount',
-        help="Montant minimum de souscription initiale"
-    )
-
-    minimum_additional_subscription = fields.Float(
-        string='Minimum Additional Subscription',
-        help="Montant minimum pour les souscriptions supplémentaires"
-    )
-
-    minimum_redemption = fields.Float(
-        string='Minimum Redemption Amount',
-        help="Montant minimum de rachat"
-    )
+    is_accumulating = fields.Boolean(string='Accumulating Shares',default=True,help="Si coché, les dividendes sont réinvestis automatiquement (Acc). Sinon, ils sont distribués (Dist).")
+    minimum_subscription = fields.Float(string='Minimum Subscription Amount',help="Montant minimum de souscription initiale")
+    minimum_additional_subscription = fields.Float(string='Minimum Additional Subscription',help="Montant minimum pour les souscriptions supplémentaires")
+    minimum_redemption = fields.Float(string='Minimum Redemption Amount',help="Montant minimum de rachat")
 
     # === Statuts et Dates ===
     state = fields.Selection([
@@ -101,41 +48,15 @@ class FundClass(models.Model):
         ('closed', 'Closed to New Investors'),
     ],
         string='Status',
-        default='draft',
+        default='draft',)
 
-    )
-
-    launch_date = fields.Date(
-        string='Launch Date',
-        default=fields.Date.context_today
-    )
-
-    closure_date = fields.Date(
-        string='Closure Date',
-        help="Date de fermeture aux nouveaux investisseurs"
-    )
+    launch_date = fields.Date(string='Launch Date',default=fields.Date.context_today)
+    closure_date = fields.Date(string='Closure Date',help="Date de fermeture aux nouveaux investisseurs" )
 
     # === Calculs et Statistiques ===
-    total_shares = fields.Float(
-        string='Total Shares Outstanding',
-        digits=(16, 2),
-        compute='_compute_share_statistics',
-        store=True,
-        help="Nombre total de parts en circulation"
-    )
-
-    total_net_assets = fields.Float(
-        string='Total Net Assets',
-        compute='_compute_share_statistics',
-        store=True,
-        help="Actifs nets attribués à cette classe"
-    )
-
-    current_nav = fields.Float(
-        string='Current NAV per Share',
-        compute='_compute_current_nav',
-        help="Dernière valeur liquidative disponible"
-    )
+    total_shares = fields.Float(string='Total Shares Outstanding',digits=(16, 2),compute='_compute_share_statistics',store=True,help="Nombre total de parts en circulation")
+    total_net_assets = fields.Float(string='Total Net Assets',compute='_compute_share_statistics',store=True,help="Actifs nets attribués à cette classe")
+    current_nav = fields.Float(string='Current NAV per Share',compute='_compute_current_nav',help="Dernière valeur liquidative disponible")
 
 
     # === Computed Methods ===

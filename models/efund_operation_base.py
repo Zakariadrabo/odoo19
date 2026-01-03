@@ -7,6 +7,9 @@ class FundOperation(models.AbstractModel):
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(readonly=True)
+    fund_id = fields.Many2one('efund.fund', required=True, string="Fonds", index=True)
+    investor_id = fields.Many2one('efund.investor', required=True, string="Investisseur", index=True)
+    company_id = fields.Many2one('res.company',related='fund_id.company_id',store=True)
     state = fields.Selection([
         ('draft', 'Brouillon'),
         ('submitted', 'Soumis'),
@@ -16,9 +19,6 @@ class FundOperation(models.AbstractModel):
         ('cancelled', 'Annulé'),
     ], default='draft', tracking=True)
 
-    fund_id = fields.Many2one('efund.fund', required=True, string="Fonds", index=True)
-    investor_id = fields.Many2one('efund.investor', required=True, string="Investisseur", index=True)
-    company_id = fields.Many2one('res.company',related='fund_id.company_id',store=True)
 
     def action_submit(self):
         self.write({'state': 'submitted'})

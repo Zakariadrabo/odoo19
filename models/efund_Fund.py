@@ -115,6 +115,7 @@ class Fund(models.Model):
     issuer_id = fields.Many2one("res.partner",string="Émetteur",domain=[("is_company", "=", True)])
     depositary_id = fields.Many2one("efund.depositaire",string="Dépositaire")
     manager_id = fields.Many2one("efund.management.company",string="Gestionnaire")
+    fund_type_id = fields.Many2one('efund.fund.type',string="Type de fonds",required=True)
 
     # =========================================================
     # 4. PARAMÈTRES FINANCIERS
@@ -136,109 +137,44 @@ class Fund(models.Model):
         currency_field="currency_id"
     )
 
-    initial_nav = fields.Monetary(
-        string="VL d’origine",
-        currency_field="currency_id"
-    )
-
-    investment_value = fields.Monetary(
-        string="Valeur de placement",
-        currency_field="currency_id"
-    )
-
-    capital_amount = fields.Monetary(
-        string="Capital",
-        currency_field="currency_id"
-    )
-
-    investment_duration = fields.Integer(
-        string="Durée de placement (mois)"
-    )
+    initial_nav = fields.Monetary(string="VL d’origine",currency_field="currency_id")
+    investment_value = fields.Monetary(string="Valeur de placement",currency_field="currency_id")
+    capital_amount = fields.Monetary(string="Capital",currency_field="currency_id" )
+    investment_duration = fields.Integer(string="Durée de placement (mois)")
 
     # =========================================================
     # 5. PARTS (GLOBAL FONDS)
     # =========================================================
-    initial_units = fields.Float(
-        string="Parts initiales",
-        digits=(16, 4)
-    )
-
-    opening_units = fields.Float(
-        string="Parts début exercice",
-        digits=(16, 4)
-    )
-
-    current_units = fields.Float(
-        string="Parts actuelles",
-        digits=(16, 4)
-    )
+    initial_units = fields.Float(string="Parts initiales",digits=(16, 4))
+    opening_units = fields.Float(string="Parts début exercice",digits=(16, 4))
+    current_units = fields.Float(string="Parts actuelles",digits=(16, 4))
 
     # =========================================================
     # 6. FRAIS, TAXES & COMMISSIONS
     # =========================================================
-    taf_rate = fields.Float(
-        string="TAF (%)",
-        digits=(16, 4)
-    )
-
-    subscription_fee_rate = fields.Float(
-        string="Frais de souscription (%)",
-        digits=(16, 4)
-    )
-
-    redemption_fee_rate = fields.Float(
-        string="Frais de rachat (%)",
-        digits=(16, 4)
-    )
-
-    retro_subscription_rate = fields.Float(
-        string="Rétrocession souscription (%)",
-        digits=(16, 4)
-    )
-
-    retro_redemption_rate = fields.Float(
-        string="Rétrocession rachat (%)",
-        digits=(16, 4)
-    )
+    taf_rate = fields.Float(string="TAF (%)",digits=(16, 4))
+    subscription_fee_rate = fields.Float(string="Frais de souscription (%)",digits=(16, 4))
+    redemption_fee_rate = fields.Float(string="Frais de rachat (%)",digits=(16, 4))
+    retro_subscription_rate = fields.Float(string="Rétrocession souscription (%)",digits=(16, 4))
+    retro_redemption_rate = fields.Float(string="Rétrocession rachat (%)",digits=(16, 4))
 
     # =========================================================
     # 7. EXERCICE & CALCUL VL
     # =========================================================
     nav_calculation_period = fields.Selection(
-        [
-            ("daily", "Quotidien"),
-            ("weekly", "Hebdomadaire"),
-            ("monthly", "Mensuel"),
+        [("daily", "Quotidien"),
+        ("weekly", "Hebdomadaire"),
+        ("monthly", "Mensuel"),
         ],
         string="Périodicité calcul VL",
         default="daily"
     )
+    fiscal_year_start = fields.Date(string="Début exercice")
+    fiscal_year_end = fields.Date(string="Fin exercice")
+    next_nav_date = fields.Date(string="Prochaine date VL" )
 
-    fiscal_year_start = fields.Date(
-        string="Début exercice"
-    )
-
-    fiscal_year_end = fields.Date(
-        string="Fin exercice"
-    )
-
-    next_nav_date = fields.Date(
-        string="Prochaine date VL"
-    )
     # profil du fond
-
-    fund_type = fields.Selection(
-        [
-            ("opcvm", "OPCVM"),
-            ("fia", "FIA"),
-            ("monetary", "Fonds monétaire"),
-            ("bond", "Fonds obligataire"),
-            ("equity", "Fonds actions"),
-            ("balanced", "Fonds diversifié"),
-        ],
-        string="Type de fonds"
-    )
-
+    fund_type_id = fields.Many2one('efund.fund.type',string="Type de fonds",required=True)
     target_investors = fields.Selection(
         [
             ("retail", "Particuliers"),
@@ -253,8 +189,7 @@ class Fund(models.Model):
             ("medium", "Moyen terme"),
             ("long", "Long terme"),
         ],
-        string="Horizon d’investissement"
-    )
+        string="Horizon d’investissement")
 
     #################################################
     #      Constrainte

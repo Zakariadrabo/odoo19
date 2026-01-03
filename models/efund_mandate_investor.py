@@ -17,6 +17,9 @@ class MandatInvestor(models.Model):
     # -------------------------
     # STATUT METIER
     # -------------------------
+    validation_date = fields.Datetime(readonly=True)
+    validated_by = fields.Many2one('res.users', readonly=True)
+    rejection_reason = fields.Text()
     state = fields.Selection([
         ('draft', 'Brouillon'),
         ('kyc_pending', 'KYC en cours'),
@@ -25,9 +28,6 @@ class MandatInvestor(models.Model):
         ('suspended', 'Suspendu'),
     ], default='draft', tracking=True)
 
-    validation_date = fields.Datetime(readonly=True)
-    validated_by = fields.Many2one('res.users', readonly=True)
-    rejection_reason = fields.Text()
 
     # -------------------------
     # PARAMÈTRES FONDS
@@ -35,10 +35,7 @@ class MandatInvestor(models.Model):
     currency_id = fields.Many2one('res.currency',related='company_id.currency_id',store=True)
     compliance_status = fields.Selection(related='investor_id.compliance_status', compute='_compute_compliance_status', store=True)
     kyc_score = fields.Integer(related='investor_id.kyc_score',string='Score KYC')
-    _investor_id_fund_uniq = models.Constraint(
-        'unique(investor_id, mandate_id)',
-        'Un investisseur est déjà rattaché à ce fonds.'
-    )
+    _investor_id_fund_uniq = models.Constraint('unique(investor_id, mandate_id)','Un investisseur est déjà rattaché à ce fonds.')
 
     # =========================
     # ACTIONS METIER

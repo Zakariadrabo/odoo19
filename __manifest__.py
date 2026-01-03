@@ -26,6 +26,7 @@
         'views/efund_action_menu_principal.xml',
         'views/efund_menu_principal.xml',
         'views/efund_action_menu_parametre.xml',
+        'views/efund_views_kyc_document.xml',
         'views/efund_aml_alert_views.xml',
         'views/efund_views_instrument.xml',
         'wizard/efund_bon_amortization_wizard.xml',
@@ -59,6 +60,9 @@
         'views/efund_cash_deposit_views.xml',
         'views/efund_fund_redemption_views.xml',
         'views/efund_cash_withdraw_views.xml',
+        'wizard/efund_confirm_wizard_views.xml',
+        'views/efund_fund_type_views.xml',
+        'views/efund_asset_class_views.xml',
 
     ],
 

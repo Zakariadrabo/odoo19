@@ -11,11 +11,7 @@ class FundValuationLine(models.Model):
     unit_price = fields.Monetary(string="Market Price", required=True, currency_field='currency_id')
     market_value = fields.Monetary(string="Market Value", compute="_compute_market_value", store=True, currency_field='currency_id')
     currency_id = fields.Many2one(related='valuation_id.currency_id', store=True, readonly=True)
-    accrued_interest = fields.Monetary(
-        string="Accrued Interest",
-        currency_field='currency_id',
-        help="Interest accrued but not yet received on interest-bearing instruments (bonds, deposits, etc.)"
-    )
+    accrued_interest = fields.Monetary(string="Accrued Interest",currency_field='currency_id',help="Interest accrued but not yet received on interest-bearing instruments (bonds, deposits, etc.)")
 
     @api.depends("quantity", "unit_price", "accrued_interest")
     def _compute_market_value(self):

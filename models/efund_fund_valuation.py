@@ -22,7 +22,6 @@ class FundValuation(models.Model):
         ('validated', 'Validated'),
         ('cancelled', 'Cancelled'),
     ], string="Status", default='draft', tracking=True)
-
     valuation_type = fields.Selection([
         ('daily', 'Daily'),
         ('weekly', 'Weekly'),
@@ -34,18 +33,14 @@ class FundValuation(models.Model):
     total_liabilities = fields.Monetary(string="Total Liabilities", currency_field='currency_id')
     net_assets = fields.Monetary(string="Net Assets", currency_field='currency_id', compute="_compute_net_assets", store=True)
     nav_per_share = fields.Monetary(string="NAV per Share", currency_field='currency_id', compute="_compute_nav_per_share", store=True)
-
     total_shares = fields.Float(string="Total Outstanding Shares", required=True, default=1.0)
     currency_id = fields.Many2one(related='fund_id.currency_id', store=True, readonly=True)
-
     valuation_line_ids = fields.One2many("efund.fund.valuation.line", "valuation_id", string="Valuation Lines")
     fee_line_ids = fields.One2many("efund.fund.valuation.fee", "valuation_id", string="Fees")
     log_ids = fields.One2many("efund.fund.valuation.log", "valuation_id", string="Valuation Logs")
-
     computed_by = fields.Many2one("res.users", string="Computed By")
     validated_by = fields.Many2one("res.users", string="Validated By")
     validation_date = fields.Datetime(string="Validation Date")
-
     notes = fields.Text(string="Comments / Observations")
 
     def _prepare_vals_sequence(self, vals):

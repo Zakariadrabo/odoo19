@@ -14,13 +14,14 @@ class EfundMandateCoupon(models.Model):
     year = fields.Integer(string="Année",required=True)
     amount = fields.Monetary(string="Montant du coupon",required=True)
     currency_id = fields.Many2one(related='company_id.currency_id',store=True)
+    payment_date = fields.Date()
     state = fields.Selection([
         ('planned', 'Prévu'),
         ('paid', 'Payé'),
         ('cancelled', 'Annulé'),
     ], default='planned', tracking=True)
 
-    payment_date = fields.Date()
+
 
     def action_pay(self):
         """Paiement effectif du coupon"""

@@ -9,7 +9,7 @@ _logger = logging.getLogger(__name__)
 
 class FundSubscription(models.Model):
     _name = 'efund.fund.subscription'
-    _inherit = 'efund.operation.base'
+    _inherit = ['efund.operation.base', 'mail.thread', 'mail.activity.mixin', 'efund.confirmable.mixin']
     _description = 'Opération de souscription à un fond'
 
     cash_account_id = fields.Many2one('efund.account.cash', required=True, readonly=True)

@@ -8,16 +8,14 @@ _logger = logging.getLogger(__name__)
 class CashDeposit(models.Model):
     _name = 'efund.fund.cash.deposit'
     _description = 'Opération de dépôt d’espèces dans un fond'
-    _inherit = ["efund.operation.base", "mail.thread", "mail.activity.mixin"]
+    _inherit = ['efund.operation.base', 'mail.thread', 'mail.activity.mixin', 'efund.confirmable.mixin']
     _order = "create_date desc"
 
 
     cash_account_id = fields.Many2one('efund.account.cash', required=True)
     currency_id = fields.Many2one(related='cash_account_id.fund_id.currency_id')
-
     date_operation = fields.Datetime(string="Date de l'opération", default=fields.Datetime.now)
     date_valeur = fields.Datetime(string="Date de valeur")
-
     amount = fields.Monetary(string="montant", currency_field="currency_id", required=True)
     payment_mode = fields.Selection([('bank', 'Bank Transfer'), ('cheque', 'Cheque'), ('cash', 'Cash')],
                                     string='Mode de paiement')

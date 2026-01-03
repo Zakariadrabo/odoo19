@@ -15,124 +15,46 @@ class FundPosition(models.Model):
     _order = "valuation_date desc, instrument_id"
 
     # ========== CHAMPS DE BASE ==========
-    fund_id = fields.Many2one(
-        'efund.fund',
-        string="Fonds",
-        required=True,
-        index=True,
-        ondelete='cascade'
-    )
+    fund_id = fields.Many2one('efund.fund',string="Fonds",required=True,index=True,ondelete='cascade')
 
-    instrument_id = fields.Many2one(
-        'efund.fund.instrument',
-        string="Instrument",
-        required=True,
-        index=True,
-        domain="[('is_active', '=', True)]"
-    )
+    instrument_id = fields.Many2one('efund.fund.instrument',string="Instrument",required=True,index=True,domain="[('is_active', '=', True)]")
 
     # ========== INFORMATIONS DE POSITION ==========
-    quantity = fields.Float(
-        string="Quantité",
-        digits=(16, 4),
-        default=0.0,
-        required=True
-    )
+    quantity = fields.Float(string="Quantité",digits=(16, 4),default=0.0,required=True)
+    avg_cost = fields.Monetary(string="Coût moyen unitaire",currency_field='currency_id')
 
-    avg_cost = fields.Monetary(
-        string="Coût moyen unitaire",
-        currency_field='currency_id'
-    )
+    market_value = fields.Monetary(string="Valeur de marché",currency_field='currency_id',compute='_compute_market_value',store=True)
 
-    market_value = fields.Monetary(
-        string="Valeur de marché",
-        currency_field='currency_id',
-        compute='_compute_market_value',
-        store=True,
-    )
-
-    valuation_date = fields.Date(
-        string="Date de valorisation",
-        default=fields.Date.today,
-        required=True,
-        index=True
-    )
+    valuation_date = fields.Date(string="Date de valorisation",default=fields.Date.today,required=True,index=True)
 
     # ========== INFORMATIONS DE COURS ==========
-    last_price = fields.Float(
-        string="Dernier cours",
-        digits=(16, 4),
-        compute='_compute_last_price',
-        store=True,
-    )
-
-    last_price_date = fields.Date(
-        string="Date dernier cours",
-        compute='_compute_last_price',
-        store=True,
-
-    )
-
+    last_price = fields.Float(string="Dernier cours",digits=(16, 4),compute='_compute_last_price',store=True)
+    last_price_date = fields.Date(string="Date dernier cours",compute='_compute_last_price',store=True)
 
     # ========== CALCULS DE PERFORMANCE ==========
-    unrealized_pl = fields.Monetary(
-        string="Plus/Moins-value latente",
-        currency_field='currency_id',
-        compute='_compute_performance',
-        store=True,
-    )
-
-    unrealized_pl_percent = fields.Float(
-        string="PL %",
-        digits=(16, 2),
-        compute='_compute_performance',
-        store=True,
-    )
+    unrealized_pl = fields.Monetary(string="Plus/Moins-value latente",currency_field='currency_id', compute='_compute_performance',store=True)
+    unrealized_pl_percent = fields.Float(string="PL %",digits=(16, 2), compute='_compute_performance',store=True)
     decoration_state = fields.Selection(
         [('normal', 'Normal'),
          ('success', 'Success'),
          ('danger', 'Danger')],
         string="Decoration State",
         compute='_compute_decoration_state',
-        store=True  # Important pour la performance
-    )
+        store=True )
 
 
 
     # ========== AUTRES INFORMATIONS ==========
-    currency_id = fields.Many2one(
-        'res.currency',
-        string="Devise de valorisation",
-        related='fund_id.currency_id',
-        store=True,
-    )
-
-    instrument_currency_id = fields.Many2one(
-        'res.currency',
-        string="Devise de l'instrument",
-        related='instrument_id.currency_id',
-        store=True,
-    )
-
+    currency_id = fields.Many2one('res.currency',string="Devise de valorisation",related='fund_id.currency_id',store=True,)
+    instrument_currency_id = fields.Many2one('res.currency',string="Devise de l'instrument",related='instrument_id.currency_id',store=True)
     state = fields.Selection([
         ('active', 'Active'),
         ('closed', 'Clôturée'),
         ('suspended', 'Suspendue')
     ], string="Statut", default='active', required=True)
-
     notes = fields.Text(string="Notes")
-
-    display_name = fields.Char(
-        string="Nom",
-        compute='_compute_display_name',
-        store=True
-    )
-
-    adjustment_ids = fields.One2many(
-        'efund.position.adjustment',
-        'position_id',
-        string="Ajustements"
-    )
+    display_name = fields.Char(string="Nom",compute='_compute_display_name', store=True)
+    adjustment_ids = fields.One2many('efund.position.adjustment','position_id',string="Ajustements")
 
     # les méthodes de dépendances
 

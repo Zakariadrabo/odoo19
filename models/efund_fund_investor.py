@@ -27,28 +27,17 @@ class FundInvestor(models.Model):
 
     validation_date = fields.Datetime(readonly=True)
     validated_by = fields.Many2one('res.users', readonly=True)
-
     rejection_reason = fields.Text()
 
     # -------------------------
     # PARAMÈTRES FONDS
     # -------------------------
-
-
-    currency_id = fields.Many2one(
-        'res.currency',
-        related='company_id.currency_id',
-        store=True
-    )
+    currency_id = fields.Many2one('res.currency',related='company_id.currency_id',store=True)
     compliance_status = fields.Selection(related='investor_id.compliance_status', compute='_compute_compliance_status', store=True)
     kyc_score = fields.Integer(related='investor_id.kyc_score',string='Score KYC')
     redemption_delay = fields.Selection(related='fund_id.redemption_delay', string="Délai de rachat",)
     cutoff_time = fields.Float(related='fund_id.cutoff_time', string="Heure de cut-off",)
-
-    _investor_id_fund_uniq = models.Constraint(
-        'unique(investor_id, fund_id)',
-        'Un investisseur est déjà rattaché à ce fonds.'
-    )
+    _investor_id_fund_uniq = models.Constraint('unique(investor_id, fund_id)','Un investisseur est déjà rattaché à ce fonds.')
 
     # =========================
     # ACTIONS METIER

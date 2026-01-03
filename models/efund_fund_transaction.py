@@ -11,18 +11,8 @@ class FundTransaction(models.Model):
     # --- Informations principales ---
     name = fields.Char(string="Reference", required=True, copy=False, readonly=True,
                        default=lambda self: _('New'))
-    fund_id = fields.Many2one(
-        'efund.fund',
-        string="Fonds concerné",
-        required=True,
-        index=True
-    )
-    investor_id = fields.Many2one(
-        'efund.investor',
-        string="Investisseur",
-        required=True,
-
-    )
+    fund_id = fields.Many2one('efund.fund',string="Fonds concerné", required=True,index=True )
+    investor_id = fields.Many2one('efund.investor',string="Investisseur",required=True)
     transaction_type = fields.Selection([
         ('subscription', 'Souscription'),
         ('redemption', 'Rachat'),
@@ -31,29 +21,16 @@ class FundTransaction(models.Model):
         ('dividend', 'Distribution de dividendes'),
         ('fee', 'Frais de gestion')
     ], string="Type de transaction", required=True)
-
     date = fields.Date(required=True, default=fields.Date.today, index=True)
-    currency_id = fields.Many2one(
-        'res.currency',
-        required=True,
-        default=lambda self: self.env.company.currency_id
-    )
+    currency_id = fields.Many2one('res.currency',required=True,default=lambda self: self.env.company.currency_id)
 
     # --- Données financières ---
-    nav_id = fields.Many2one(
-        'efund.fund.nav',
-        string="Valorisation de référence",
-        help="Valorisation du fonds utilisée pour cette transaction."
-    )
+    nav_id = fields.Many2one('efund.fund.nav',string="Valorisation de référence",help="Valorisation du fonds utilisée pour cette transaction.")
     unit_value = fields.Monetary(string="Valeur liquidative (VL)", currency_field='currency_id')
     units = fields.Float(string="Nombre de parts", digits=(16, 6))
     amount = fields.Monetary(string="Montant total", currency_field='currency_id')
     is_initial_capital = fields.Boolean(string="Initial capital", default=False)
-    share_class_id = fields.Many2one(
-        'efund.fund.class',
-        string='Share Class',
-        required=True,
-        domain="[('fund_id', '=', fund_id), ('state', '=', 'active')]")
+    share_class_id = fields.Many2one('efund.fund.class',string='Share Class',required=True,domain="[('fund_id', '=', fund_id), ('state', '=', 'active')]")
 
     # --- Suivi opérationnel ---
     status = fields.Selection([
@@ -62,7 +39,6 @@ class FundTransaction(models.Model):
         ('done', 'Comptabilisée'),
         ('cancelled', 'Annulée')
     ], string="Statut", default='draft', tracking=True)
-
     related_move_id = fields.Many2one('account.move', string="Écriture comptable liée", readonly=True)
     journal_id = fields.Many2one('account.journal', string="Journal comptable", domain="[('type','in',('bank','cash'))]")
 

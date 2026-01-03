@@ -10,44 +10,12 @@ class EfundBourseOrder(models.Model):
     # ---------------------------------------------------------------------
     # IDENTIFICATION
     # ---------------------------------------------------------------------
-    name = fields.Char(
-        string="Référence",
-        default=lambda self: _('ORD/%s') % fields.Date.today(),
-        readonly=True
-    )
-
-    order_date = fields.Date(
-        string="Date Ordre",
-        default=fields.Date.context_today,
-        required=True
-    )
-
-    fund_id = fields.Many2one(
-        'efund.fund',
-        string="Fonds (OPCVM)",
-        required=True,
-        index=True,
-        domain=lambda self: [('company_id', '=', self.env.company.id)]
-    )
-    fund_name = fields.Char(
-        related='fund_id.name',
-        string="Fonds",
-        store=True
-    )
-    company_id = fields.Many2one(
-        'res.company',
-        string="Société",
-        required=True,
-        readonly=True,
-        default=lambda self: self.env.company
-    )
-
-    execution_line_ids = fields.One2many(
-        'efund.bourse.order.execution.line',
-        'order_id',
-        string="Historique d’exécution"
-    )
-
+    name = fields.Char(string="Référence",default=lambda self: _('ORD/%s') % fields.Date.today(),readonly=True)
+    order_date = fields.Date(string="Date Ordre",default=fields.Date.context_today,required=True)
+    fund_id = fields.Many2one('efund.fund',string="Fonds (OPCVM)",equired=True,index=True,domain=lambda self: [('company_id', '=', self.env.company.id)])
+    fund_name = fields.Char(related='fund_id.name',string="Fonds",store=True)
+    company_id = fields.Many2one('res.company',string="Société",required=True,readonly=True,default=lambda self: self.env.company)
+    execution_line_ids = fields.One2many('efund.bourse.order.execution.line','order_id',string="Historique d’exécution")
     # ---------------------------------------------------------------------
     # STATUT
     # ---------------------------------------------------------------------
@@ -66,7 +34,6 @@ class EfundBourseOrder(models.Model):
     is_subscription = fields.Boolean(string="Souscription")
     is_buy = fields.Boolean(string="Achat")
     is_sell = fields.Boolean(string="Vente")
-
     order_type = fields.Selection([
         ('market', 'Au marché'),
         ('limit', 'À cours limité'),
@@ -76,34 +43,11 @@ class EfundBourseOrder(models.Model):
     # ---------------------------------------------------------------------
     # INSTRUMENT FINANCIER
     # ---------------------------------------------------------------------
-    instrument_id = fields.Many2one(
-        'efund.fund.instrument',
-        string="Instrument Financier",
-        required=True
-    )
-    depositaire_sgi = fields.Many2one(
-        'efund.depositaire',
-        string="Dépositaire du fond",
-        required=True
-    )
-
-    symbol = fields.Char(
-        related='instrument_id.ticker',
-        string="Symbole",
-        readonly=True
-    )
-
-    market_place = fields.Selection(
-        related='instrument_id.market',
-        string="Place",
-        readonly=True
-    )
-
-    depository = fields.Selection(
-        related='instrument_id.custodian',
-        string="Dépositaire",
-        readonly=True
-    )
+    instrument_id = fields.Many2one('efund.fund.instrument',string="Instrument Financier",required=True)
+    depositaire_sgi = fields.Many2one('efund.depositaire',tring="Dépositaire du fond",required=True)
+    symbol = fields.Char(related='instrument_id.ticker',string="Symbole",readonly=True)
+    market_place = fields.Selection(related='instrument_id.market',string="Place",readonly=True)
+    depository = fields.Selection(related='instrument_id.custodian', string="Dépositaire",readonly=True)
 
     # ---------------------------------------------------------------------
     # CONDITIONS FINANCIÈRES
@@ -115,52 +59,25 @@ class EfundBourseOrder(models.Model):
     average_execution_price = fields.Float(string="Cours moyen exécuté", store=True)
     execution_date = fields.Date(string="Date d'exécution", readonly=True)
     execution_type = fields.Selection(
-        [('partial', 'Exécuté partiellement'), ('executed', 'Exécuté totalement')],
+        [('partial', 'Exécuté partiellement'),
+         ('executed', 'Exécuté totalement')],
         string="Type d'exécution",
-        readonly=True
-    )
-
-    allow_loss = fields.Boolean(
-        string="P ? (Vente à perte autorisée)",
-        help="Valable uniquement pour les ordres d'achat"
-    )
-
+        readonly=True)
+    allow_loss = fields.Boolean(string="P ? (Vente à perte autorisée)",help="Valable uniquement pour les ordres d'achat")
     expiry_date = fields.Date(string="Date limite")
 
     # ---------------------------------------------------------------------
     # PRÉNOTATION (CALCULÉE)
     # ---------------------------------------------------------------------
-    gross_amount = fields.Monetary(
-        string="Montant brut",
-        compute="_compute_prenotation",
-        currency_field="currency_id"
-    )
-
-    commission_sgi = fields.Monetary(
-        string="Commission SGI",
-        compute="_compute_prenotation",
-        currency_field="currency_id"
-    )
-
-    commission_total = fields.Monetary(
-        string="Total commissions",
-        compute="_compute_prenotation",
-        currency_field="currency_id"
-    )
-
-    currency_id = fields.Many2one(
-        related='company_id.currency_id',
-        readonly=True
-    )
+    gross_amount = fields.Monetary(string="Montant brut",compute="_compute_prenotation",currency_field="currency_id")
+    commission_sgi = fields.Monetary(string="Commission SGI",compute="_compute_prenotation",currency_field="currency_id")
+    commission_total = fields.Monetary(string="Total commissions",compute="_compute_prenotation",currency_field="currency_id")
+    currency_id = fields.Many2one(related='company_id.currency_id',readonly=True)
 
     # ---------------------------------------------------------------------
     # SIGNATAIRES
     # ---------------------------------------------------------------------
-    signatory_ids = fields.Many2many(
-        'res.partner',
-        string="Signataires"
-    )
-
+    signatory_ids = fields.Many2many('res.partner',string="Signataires")
     comment = fields.Text(string="Commentaires")
 
     # ----------------------------------------------------

@@ -21,7 +21,6 @@ class FundInstrumentPrice(models.Model):
     # Champs calculés
     display_name = fields.Char(string="Nom", compute='_compute_display_name', store=True)
 
-
     @api.depends('instrument_id', 'date', 'price')
     def _compute_display_name(self):
         for rec in self:

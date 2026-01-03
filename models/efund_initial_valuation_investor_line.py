@@ -6,42 +6,12 @@ class FundInitialValuationInvestorLine(models.TransientModel):
     _name = 'efund.initial.valuation.investor.line'
     _description = 'Initial Valuation Investor Line'
 
-    wizard_id = fields.Many2one(
-        'efund.initial.valuation.wizard',
-        string='Wizard',
-        readonly=True,
-        ondelete='cascade'
-    )
-
-    investor_id = fields.Many2one(
-        'efund.investor',
-        string='Investor',
-        required=True
-    )
-
-    amount = fields.Float(
-        string='Investment Amount',
-        required=True
-    )
-
-    units = fields.Float(
-        string='Number of Shares',
-        digits=(16, 2),
-        compute='_compute_units',
-        readonly=False,
-        store=True
-    )
-
-    percentage_ownership = fields.Float(
-        string='Ownership %',
-        compute='_compute_percentage_ownership',
-        digits=(5, 4)
-    )
-    sequence = fields.Integer(
-        string='Sequence',
-        default=10,
-        help="Ordre d'affichage dans les listes"
-    )
+    wizard_id = fields.Many2one('efund.initial.valuation.wizard',string='Wizard',readonly=True,ondelete='cascade')
+    investor_id = fields.Many2one('efund.investor',string='Investor',required=True)
+    amount = fields.Float(string='Investment Amount',required=True)
+    units = fields.Float(string='Number of Shares',digits=(16, 2),compute='_compute_units',readonly=False,store=True)
+    percentage_ownership = fields.Float(string='Ownership %',compute='_compute_percentage_ownership',digits=(5, 4))
+    sequence = fields.Integer(string='Sequence',default=10,help="Ordre d'affichage dans les listes")
 
     @api.depends('amount', 'wizard_id.initial_nav_per_share')
     def _compute_units(self):

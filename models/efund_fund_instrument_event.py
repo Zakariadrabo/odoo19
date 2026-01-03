@@ -15,33 +15,10 @@ class FundInstrumentEvent(models.Model):
     # ----------------------------------------------------
     # IDENTIFICATION
     # ----------------------------------------------------
-    name = fields.Char(
-        string="Référence",
-        required=True,
-        default=lambda self: _('Nouvel événement'),
-        tracking=True
-    )
-
-    instrument_id = fields.Many2one(
-        'efund.fund.instrument',
-        string="Instrument",
-        required=True,
-        ondelete='cascade',
-        domain="[('state', '=', 'approved')]",
-        tracking=True
-    )
-
-    instrument_name = fields.Char(
-        related='instrument_id.name',
-        string="Nom de l'instrument",
-        store=True
-    )
-
-    isin = fields.Char(
-        related='instrument_id.isin',
-        string="Code ISIN",
-        store=True
-    )
+    name = fields.Char(string="Référence",required=True,default=lambda self: _('Nouvel événement'),tracking=True)
+    instrument_id = fields.Many2one('efund.fund.instrument',string="Instrument",required=True,ondelete='cascade',domain="[('state', '=', 'approved')]",tracking=True)
+    instrument_name = fields.Char(related='instrument_id.name',string="Nom de l'instrument",store=True)
+    isin = fields.Char(related='instrument_id.isin',string="Code ISIN",store=True)
 
     # ----------------------------------------------------
     # TYPE D'ÉVÉNEMENT
@@ -72,40 +49,15 @@ class FundInstrumentEvent(models.Model):
     # ----------------------------------------------------
     # DATES
     # ----------------------------------------------------
-    announcement_date = fields.Date(
-        string="Date d'annonce",
-        tracking=True,
-        help="Date à laquelle l'événement a été annoncé"
-    )
-
-    event_date = fields.Date(
-        string="Date de l'événement",
-        required=True,
-        tracking=True,
-        default=fields.Date.today,
-        help="Date effective de l'événement"
-    )
-
-    record_date = fields.Date(
-        string="Date de détachement",
-        tracking=True,
-        help="Date de détachement/record date"
-    )
-
-    payment_date = fields.Date(
-        string="Date de paiement",
-        tracking=True,
-        help="Date de paiement effectif"
-    )
+    announcement_date = fields.Date(string="Date d'annonce",tracking=True,help="Date à laquelle l'événement a été annoncé")
+    event_date = fields.Date(string="Date de l'événement",required=True,tracking=True,default=fields.Date.today,help="Date effective de l'événement")
+    record_date = fields.Date(string="Date de détachement",tracking=True,help="Date de détachement/record date")
+    payment_date = fields.Date(string="Date de paiement",tracking=True,help="Date de paiement effectif")
 
     # ----------------------------------------------------
     # CARACTÉRISTIQUES DE L'ÉVÉNEMENT
     # ----------------------------------------------------
-    description = fields.Text(
-        string="Description",
-        tracking=True,
-        help="Description détaillée de l'événement"
-    )
+    description = fields.Text(string="Description",tracking=True,help="Description détaillée de l'événement")
 
     impact_type = fields.Selection([
         ('positive', 'Positif'),
@@ -114,36 +66,10 @@ class FundInstrumentEvent(models.Model):
         ('adjustment', 'Ajustement technique')
     ], string="Impact",
         tracking=True)
-
-    adjustment_ratio = fields.Float(
-        string="Ratio d'ajustement",
-        digits=(16, 8),
-        default=1.0,
-        tracking=True,
-        help="Ratio pour ajuster les positions (ex: 0.5 pour 1 pour 2 split)"
-    )
-
-    cash_amount = fields.Monetary(
-        string="Montant monétaire",
-        currency_field='currency_id',
-        tracking=True,
-        help="Montant de cash distribué (dividende, intérêt, etc.)"
-    )
-
-    new_instrument_id = fields.Many2one(
-        'efund.fund.instrument',
-        string="Nouvel instrument",
-        tracking=True,
-        help="Nouvel instrument créé (fusion, scission, etc.)"
-    )
-
-    quantity_ratio = fields.Float(
-        string="Ratio de quantité",
-        digits=(16, 8),
-        default=1.0,
-        tracking=True,
-        help="Ratio de conversion pour les nouvelles actions"
-    )
+    adjustment_ratio = fields.Float(string="Ratio d'ajustement",digits=(16, 8),default=1.0,tracking=True,help="Ratio pour ajuster les positions (ex: 0.5 pour 1 pour 2 split)")
+    cash_amount = fields.Monetary(string="Montant monétaire",currency_field='currency_id', tracking=True,help="Montant de cash distribué (dividende, intérêt, etc.)")
+    new_instrument_id = fields.Many2one('efund.fund.instrument',string="Nouvel instrument",tracking=True,help="Nouvel instrument créé (fusion, scission, etc.)")
+    quantity_ratio = fields.Float(string="Ratio de quantité",digits=(16, 8),default=1.0,tracking=True,help="Ratio de conversion pour les nouvelles actions" )
 
     # ----------------------------------------------------
     # STATUT ET VALIDATION
@@ -157,67 +83,26 @@ class FundInstrumentEvent(models.Model):
     ], string="Statut",
         default='draft',
         tracking=True)
-
-    is_processed = fields.Boolean(
-        string="Traité",
-        compute='_compute_is_processed',
-        store=True
-    )
-
-    processed_date = fields.Date(
-        string="Date de traitement",
-        tracking=True
-    )
+    is_processed = fields.Boolean(string="Traité",compute='_compute_is_processed',store=True)
+    processed_date = fields.Date(string="Date de traitement",tracking=True)
 
     # ----------------------------------------------------
     # INFORMATIONS FINANCIÈRES
     # ----------------------------------------------------
-    currency_id = fields.Many2one(
-        'res.currency',
-        string="Devise",
-        related='instrument_id.currency_id',
-        store=True
-    )
-
-    tax_rate = fields.Float(
-        string="Taux de taxe (%)",
-        digits=(16, 4),
-        tracking=True
-    )
-
-    net_amount = fields.Monetary(
-        string="Montant net",
-        currency_field='currency_id',
-        compute='_compute_net_amount',
-        store=True
-    )
+    currency_id = fields.Many2one('res.currency',string="Devise",related='instrument_id.currency_id',store=True)
+    tax_rate = fields.Float(string="Taux de taxe (%)",digits=(16, 4),tracking=True)
+    net_amount = fields.Monetary(string="Montant net",currency_field='currency_id',compute='_compute_net_amount',store=True)
 
     # ----------------------------------------------------
     # LIENS AVEC LES POSITIONS
     # ----------------------------------------------------
-    position_ids = fields.Many2many(
-        'efund.fund.position',
-        string="Positions impactées",
-        compute='_compute_affected_positions',
-        store=False
-    )
-
-    affected_position_count = fields.Integer(
-        string="Nombre Positions impactées",
-        compute='_compute_affected_positions',
-        store=False
-    )
+    position_ids = fields.Many2many('efund.fund.position',string="Positions impactées",compute='_compute_affected_positions',store=False)
+    affected_position_count = fields.Integer(string="Nombre Positions impactées",compute='_compute_affected_positions',store=False)
 
     # ----------------------------------------------------
     # FICHIERS ET DOCUMENTS
     # ----------------------------------------------------
-    attachment_ids = fields.Many2many(
-        'ir.attachment',
-        string="Documents joints",
-        help="Documents relatifs à l'événement"
-    )
-
-
+    attachment_ids = fields.Many2many('ir.attachment',string="Documents joints",help="Documents relatifs à l'événement")
 
     # ----------------------------------------------------
     # MÉTHODES COMPUTÉES

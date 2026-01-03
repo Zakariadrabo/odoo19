@@ -6,58 +6,16 @@ class FundInvestorPosition(models.Model):
     _description = 'Investor Position in Fund'
     _order = 'investor_id, fund_id'
 
-    investor_id = fields.Many2one(
-        'efund.investor',
-        string='Investor',
-        required=True,
-    )
-
-    fund_id = fields.Many2one(
-        'efund.fund',
-        string='Fund',
-        required=True
-    )
-
-    share_class_id = fields.Many2one(
-        'efund.fund.class',
-        string='Share Class',
-        required=True
-    )
-
-    units = fields.Float(
-        string='Units Held',
-        digits=(16, 2),
-        default=0.0
-    )
-
-    average_price = fields.Float(
-        string='Average Price',
-        digits=(16, 6)
-    )
-
-    total_cost = fields.Float(
-        string='Total Cost'
-    )
-
-    current_value = fields.Float(
-        string='Current Value',
-        compute='_compute_current_value'
-    )
-
-    unrealized_pnl = fields.Float(
-        string='Unrealized P&L',
-        compute='_compute_pnl'
-    )
-
-    unrealized_pnl_percent = fields.Float(
-        string='Unrealized P&L %',
-        compute='_compute_pnl'
-    )
-
-    as_of_date = fields.Date(
-        string='As of Date',
-        default=fields.Date.context_today
-    )
+    investor_id = fields.Many2one('efund.investor',string='Investor',required=True)
+    fund_id = fields.Many2one('efund.fund',string='Fund',required=True )
+    share_class_id = fields.Many2one('efund.fund.class',string='Share Class',required=True)
+    units = fields.Float(string='Units Held',digits=(16, 2),default=0.0)
+    average_price = fields.Float(string='Average Price',digits=(16, 6))
+    total_cost = fields.Float(string='Total Cost')
+    current_value = fields.Float(string='Current Value', compute='_compute_current_value')
+    unrealized_pnl = fields.Float(string='Unrealized P&L',compute='_compute_pnl')
+    unrealized_pnl_percent = fields.Float(string='Unrealized P&L %',compute='_compute_pnl')
+    as_of_date = fields.Date(string='As of Date',default=fields.Date.context_today)
 
     @api.depends('units', 'fund_id', 'share_class_id')
     def _compute_current_value(self):
