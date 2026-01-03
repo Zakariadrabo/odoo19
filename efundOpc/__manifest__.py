@@ -26,6 +26,7 @@
         'views/efund_action_menu_principal.xml',
         'views/efund_menu_principal.xml',
         'views/efund_action_menu_parametre.xml',
+        'views/efund_views_kyc_document.xml',
         'views/efund_aml_alert_views.xml',
         'views/efund_views_instrument.xml',
         'wizard/efund_bon_amortization_wizard.xml',

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import re
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 from datetime import date
@@ -26,13 +28,19 @@ class FundInvestor(models.Model):
 
     #Personne physique
     civilite = fields.Selection([('Mr', 'Monsieur'), ('Mrs', 'Madame')])
-    full_name = fields.Char(string="Nom complet", compute='_compute_full_name', store=True)
+    full_name = fields.Char(string="Nom complet", compute="_compute_full_name", store=True)
     nom = fields.Char(string="Nom", store=True)
     prenom = fields.Char(string="Prénom", store=True)
     birthdate = fields.Date(string="Date de naissance")
     birthplace = fields.Char(string="Lieu de naissance")
     birth_country_id = fields.Many2one("res.country", string="Pays de naissance")
     sex = fields.Selection([('male', 'Homme'), ('female', 'Femme')], string="Sexe")
+    country_id = fields.Many2one("res.country", string="Pays")
+    address = fields.Char(string="Adresse pays")
+    marital_status = fields.Selection(
+        [('single', 'Célibataire'), ('married', 'Marié(e)'), ('divorced', 'Divorcé(e)'), ('widowed', 'Veuf/veuve')], string="Statut matrimonial")
+    email = fields.Char(string="Adresse Email")
+    phone = fields.Char(string="Numéro de Téléphone")
 
     #Personne Morale
     # Identité Juridique
@@ -50,10 +58,14 @@ class FundInvestor(models.Model):
     company_direction_town = fields.Char(string="Ville Direction")
     company_direction_country_id = fields.Many2one("res.country", string="Pays Direction")
 
+    #infos commune
+    name_bank = fields.Char(string="Nom de la banque")
+    bank_address = fields.Char(string="Adresse de la banque")
+    account_number = fields.Char(string="Numéro de compte")
+    iban = fields.Char(string="IBAN")
+    swift_bic = fields.Char(string="SWIFT/BIC")
 
-    # Création et Agrément
 
-    insae_number = fields.Char(string="N° INSAE")
 
 
     # lifecycle / compliance
@@ -90,24 +102,21 @@ class FundInvestor(models.Model):
     compliance_notes = fields.Text()
 
     # Personal info (allow using form to create partner data)
-
-
     minor = fields.Boolean(string="Mineur ?")
-    nationality = fields.Char(string="Nationalité")
-
+    nationality = fields.Many2one("res.country", string="Nationalité")
     tranche = fields.Selection([("<55","Jusqu'à 55ans"),("56T74","56-74"),(">75",">75")])
-
-    country_id = fields.Many2one("res.country", string="Pays")
-    city = fields.Char(string="Ville")
-    address = fields.Char(string="Adresse")
     language_id = fields.Many2one("res.lang",string="Langue")
-    marital_status=fields.Selection([('single','Célibataire'),('married','Marié(e)'),('divorced','Divorcé(e)'),('widowed','Veuf/veuve')])
+
 
     # Situation professionnelle
     socio_professional_category = fields.Char(string="Catégorie socio-professionnelle")
     profession = fields.Char(string="Profession")
     function = fields.Char(string="Fonction")
-    activity_sector = fields.Char(string="Secteur d’activité")
+    activity_sector = fields.Selection([('agriculture', 'Agriculture'),('industrie', 'Industrie'),('batiment', 'Bâtiment et Travaux Publics'),
+    ('commerce', 'Commerce'),('transport', 'Transport et Logistique'),('tourisme', 'Tourisme et Hôtellerie'),('sante', 'Santé et Social'),
+    ('education', 'Éducation et Formation'),('finances', 'Finances et Assurance'),('immobilier', 'Immobilier'),('services', 'Services aux Entreprises'),
+    ('tic', 'Technologies de l\'Information et Communication'),('culture', 'Culture et Loisirs'),('energie', 'Énergie et Environnement'),
+    ('autre', 'Autre'),], string="Secteur d'activité", default='finances')
 
 
     # Financial profile
@@ -116,9 +125,9 @@ class FundInvestor(models.Model):
     montant_mois = fields.Integer(string="Montant estimé transactions / mois")
     periodicite = fields.Selection([('Monthly','Mensuel'),('Quarterly','Trimestriel'),('Semi-Annual','Semestriel'),('Annual','Annuel')])
 
-    origine = fields.Selection([('salary','Salaire'),('investment','Investissement'),('legacy','Héritage'),('savings','Epargne'),('other','Autre')])
-    activite = fields.Selection([('employee','Salarié'),('liberal','Profession libérale'),('business','Entrepreneur'),('other','Autre')])
-    objectif = fields.Selection([('investment','Investissement'),('savings','Epargne'),('transactions','Transactions'),('other','Autre')])
+    origine = fields.Selection([('salary','Salaire'),('investment','Investissement'),('legacy','Héritage'),('savings','Epargne'),('other','Autre')], string="Origine des fonds")
+    activite = fields.Selection([('employee','Salarié'),('liberal','Profession libérale'),('business','Entrepreneur'),('other','Autre')], string="Activité principale")
+    objectif = fields.Selection([('investissement','Investissement'),('savings','Epargne'),('transactions','Transactions'),('autre','Autre')], string="Objectif financier"  )
 
     pep = fields.Selection([('Yes','Oui'),('No','Non')], string="PEP (info)")
     violation = fields.Selection([('Yes','Oui'),('No','Non')], string="Antécédents")
@@ -142,7 +151,22 @@ class FundInvestor(models.Model):
     redemption_count = fields.Integer(compute='_compute_redemption_count', string="Rachat")
     withdraw_count = fields.Integer(compute='_compute_withdraw_count', string="Retrait Cash")
 
+    @api.depends('nom', 'prenom')
     def _compute_full_name(self):
+        for rec in self:
+            rec.full_name = f"{rec.prenom} {rec.nom}" if rec.prenom or rec.nom else ""
+
+    @api.constrains('email')
+    def _check_email_format(self):
+        email_regex = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+        for record in self:
+            if record.email and not email_regex.match(record.email):
+                raise ValidationError(
+                    "L'adresse e-mail '%s' n'est pas valide. Veuillez utiliser un format comme 'utilisateur@domaine.com'." % record.email)
+
+
+    @api.onchange('nom', 'prenom')
+    def _onchange_nom_prenom(self):
         for rec in self:
             rec.full_name = f"{rec.prenom} {rec.nom}" if rec.prenom or rec.nom else ""
 
@@ -188,6 +212,7 @@ class FundInvestor(models.Model):
             "country_id": vals.get("country_id"),
             "is_investor": True,
         }
+
 
     # -------------------------
     # BUSINESS / COMPUTED

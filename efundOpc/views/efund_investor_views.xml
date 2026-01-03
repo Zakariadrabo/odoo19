@@ -83,20 +83,21 @@
                     <!-- ========================= -->
                     <!-- IDENTITÉ & TYPE CLIENT -->
                     <!-- ========================= -->
-                    <group string="Type Client">
+                    <group>
                         <field name="investor_type" required="1"/>
                         <field name="full_name" readonly="1" invisible="investor_type != 'individual'"/>
                         <field name="company_name" invisible="investor_type != 'company'" required="1"/>
                     </group>
 
                     <group string="Identité" invisible="investor_type != 'company'">
-                        <group string="Société">
+                        <group>
                             <field name="company_short_name" required="investor_type  == 'company'"/>
                             <field name="legal_form" required="investor_type  == 'company'"/>
                             <field name="license_number" required="investor_type  == 'company'"/>
-                            <field name="creation_date" required="investor_type  == 'company'"/>
+                            <field name="creation_date" required="investor_type  == 'company'"
+                                   options="{'numeric': true}"/>
                         </group>
-                        <group string="Adresse">
+                        <group>
                             <field name="company_address" required="investor_type  == 'company'"/>
                             <field name="company_town" required="investor_type  == 'company'"/>
                             <field name="company_country_id" required="investor_type  == 'company'"/>
@@ -110,43 +111,26 @@
                         </group>
                     </group>
                     <group string="Identité" invisible="investor_type != 'individual'">
-                        <field name="nom" required="investor_type  == 'individual'"/>
-                        <field name="prenom" required="investor_type  == 'individual'"/>
-                        <field name="birthdate" required="investor_type  == 'individual'"/>
-                        <field name="birthplace" required="investor_type  == 'individual'"/>
-                        <field name="birth_country_id" required="investor_type  == 'individual'"/>
-                        <field name="sex" required="investor_type  == 'individual'"/>
-                        <field name="minor"/>
-                    </group>
-
-                    <!-- ========================= -->
-                    <!-- PERSONNE PHYSIQUE -->
-                    <!-- ========================= -->
-                    <group string="Personne Physique" invisible="1">
-                        <group col="4">
-                            <field name="sex"/>
-                            <field name="birthdate"/>
-                            <field name="socio_professional_category"/>
+                        <group>
+                            <field name="nom" required="investor_type  == 'individual'"/>
+                            <field name="prenom" required="investor_type  == 'individual'"/>
+                            <field name="sex" required="investor_type  == 'individual'"/>
+                            <field name="birthdate" required="investor_type  == 'individual'"
+                                   options="{'numeric': true}"/>
+                            <field name="birthplace" required="investor_type  == 'individual'"/>
+                            <field name="birth_country_id" required="investor_type  == 'individual'"/>
+                            <field name="nationality"/>
                         </group>
-                        <group col="4">
-                            <field name="country_id"/>
-                            <field name="language_id"/>
-                            <field name="city"/>
-                            <field name="function"/>
-                            <field name="activity_sector"/>
-                            <field name="profession"/>
+                        <group>
+                            <field name="minor"/>
+                            <field name="phone" widget="phone"/>
+                            <field name="email" widget="email"/>
+                            <field name="address" required="investor_type  == 'company'"/>
+                            <field name="country_id" required="investor_type  == 'company'"/>
                         </group>
                     </group>
 
                     <!-- ========================= -->
-                    <!-- PERSONNE MORALE -->
-                    <!-- ========================= -->
-                    <group string="Personne Morale" invisible="1 ">
-
-                        <group col="4">
-                            <field name="activity_sector"/>
-                        </group>
-                    </group><!-- ========================= -->
                     <!-- CONFORMITÉ (SYNTHÈSE) -->
                     <!-- ========================= -->
                     <group string="Conformité">
@@ -167,6 +151,70 @@
                     <!-- ========================== -->
 
                     <notebook>
+                        <page string="Informations Bancaires">
+                            <group>
+                                <group>
+                                    <field name="name_bank"/>
+                                    <field name="bank_address"/>
+                                    <field name="account_number"/>
+                                </group>
+                                <group>
+                                    <field name="iban"/>
+                                    <field name="swift_bic"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="PP - Information KYC" invisible="investor_type != 'individual'">
+                            <group>
+                                <group>
+                                    <field name="profession"/>
+                                    <field name="function"/>
+                                    <field name="marital_status"/>
+                                    <field name="estimation"/>
+                                    <field name="revenu"/>
+                                </group>
+                                <group>
+                                    <field name="montant_mois"/>
+                                    <field name="periodicite"/>
+                                    <field name="origine"/>
+                                    <field name="activite"/>
+                                    <field name="objectif"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="PM - Information KYC" invisible="investor_type != 'company'">
+                            <group>
+                                <field name="activity_sector"/>
+                            </group>
+                        </page>
+                        <!-- ========================== -->
+                        <!--           KYC              -->
+                        <!-- ========================== -->
+                        <page string="Documents KYC">
+                            <field name="document_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="document_type"/>
+                                    <field name="issued_date" options="{'numeric': true}"/>
+                                    <field name="expiry_date" options="{'numeric': true}"/>
+                                    <field name="file_name_fname"/>
+                                    <field name="file_data" widget="binary" filename="file_name_fname"/>
+                                    <field name="state"/>
+                                    <field name="verified_date" options="{'numeric': true}"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="AML Monitoring">
+                            <field name="aml_alert_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="severity" widget="badge"/>
+                                    <field name="status" widget="badge"/>
+                                    <field name="created_at"/>
+                                </list>
+                            </field>
+                        </page>
                         <page string="Abonnemement Fonds / Mandats">
                             <group>
                                 <group string="Fonds">
@@ -174,7 +222,7 @@
                                         <list editable="bottom">
                                             <field name="fund_id"/>
                                             <field name="state" readonly="1"/>
-                                            <field name="validation_date"/>
+                                            <field name="validation_date" options="{'numeric': true}"/>
                                         </list>
                                     </field>
                                 </group>
@@ -183,7 +231,7 @@
                                         <list editable="bottom">
                                             <field name="mandate_id"/>
                                             <field name="state" readonly="1"/>
-                                            <field name="validation_date"/>
+                                            <field name="validation_date" options="{'numeric': true}"/>
                                         </list>
                                     </field>
                                 </group>
@@ -239,50 +287,12 @@
                             </group>
                         </page>
 
-
-                        <!-- ========================== -->
-                        <!--           KYC              -->
-                        <!-- ========================== -->
-
-                        <page string="KYC – Informations Client">
-                            <group>
-                                <group>
-                                    <separator string="Profil Financier"/>
-                                    <field name="estimation"/>
-                                    <field name="revenu"/>
-                                    <field name="objectif"/>
-                                </group>
-                            </group>
-                        </page>
-
-
-                        <page string="Documents KYC">
-                            <field name="document_ids">
-                                <list editable="bottom">
-                                    <field name="name"/>
-                                    <field name="document_type"/>
-                                    <field name="expiry_date" options="{'numeric': true}"/>
-                                    <field name="file_name"/>
-                                    <field name="file_data" widget="binary"/>
-                                    <field name="status"/>
-                                    <field name="verified_date" options="{'numeric': true}"/>
-                                </list>
-                            </field>
-                        </page>
-
-                        <page string="AML Monitoring">
-                            <field name="aml_alert_ids">
-                                <list>
-                                    <field name="name"/>
-                                    <field name="severity" widget="badge"/>
-                                    <field name="status" widget="badge"/>
-                                    <field name="created_at"/>
-                                </list>
-                            </field>
-                        </page>
-
                     </notebook>
                 </sheet>
+                <chatter>
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </chatter>
             </form>
 
         </field>

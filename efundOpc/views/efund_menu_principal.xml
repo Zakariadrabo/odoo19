@@ -103,6 +103,16 @@
               parent="menu_clients_root"
               action="action_fund_investor_list"
               sequence="31"/>
+    <menuitem id="menu_kyc_document"
+              name="Vérification document KYC"
+              parent="menu_clients_root"
+              action="action_fund_kyc_document"
+              sequence="32"/>
+    <menuitem id="menu_aml_alerte"
+              name="Alertes AML"
+              parent="menu_clients_root"
+              action="action_fund_aml_alerte"
+              sequence="33"/>
 
 
     <!-- =========================
