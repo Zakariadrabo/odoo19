@@ -1,0 +1,10 @@
+<odoo>
+    <record id="action_report_efund_fund_regulatory" model="ir.actions.report">
+    <field name="name">État réglementaire OPCVM</field>
+    <field name="model">efund.fund.regulatory.report</field>
+    <field name="report_type">qweb-pdf</field>
+    <field name="report_name">efund.report_efund_fund_regulatory</field>
+    <field name="print_report_name">'Etat_reglementaire_%s' % (object.fund_id.name)</field>
+</record>
+
+</odoo>

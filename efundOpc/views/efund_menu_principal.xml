@@ -89,6 +89,11 @@
               parent="menu_fund_root"
               action="action_efund_fund_investor"
               sequence="26"/>
+    <menuitem id="menu_fund_type"
+              name="Type de fonds"
+              parent="menu_fund_root"
+              action="action_efund_fund_type"
+              sequence="27"/>
 
     <!-- =========================
          3. CLIENTS / PORTEURS
@@ -206,6 +211,12 @@
               parent="menu_portfolio_root"
               action="action_efund_depositaire"
               sequence="58"/>
+
+    <menuitem id="menu_asset_class"
+              name="Classe d'actif"
+              parent="menu_portfolio_root"
+              action="action_efund_asset_class"
+              sequence="59"/>
 
 
     <!-- =========================

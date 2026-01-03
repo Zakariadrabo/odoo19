@@ -1,0 +1,59 @@
+<odoo>
+    <record id="view_efund_fund_type_list" model="ir.ui.view">
+        <field name="name">efund.fund.type.list</field>
+        <field name="model">efund.fund.type</field>
+        <field name="arch" type="xml">
+            <list string="Types de fonds OPCVM">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="allocation_rule_ids"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_efund_fund_type_form" model="ir.ui.view">
+        <field name="name">efund.fund.type.form</field>
+        <field name="model">efund.fund.type</field>
+        <field name="arch" type="xml">
+            <form string="Type de fonds OPCVM">
+
+                <sheet>
+                    <header>
+                        <button name="action_validate"
+                                type="object"
+                                string="Valider"
+                                class="btn-primary"
+                                invisible="state != 'draft'"/>
+                        <button name="action_archived"
+                                type="object"
+                                string="Archiver"
+                                class="btn-danger"
+                                invisible="state != 'validated'"/>
+                        <field name="state" widget="statusbar"/>
+                    </header>
+
+                    <group>
+                        <field name="name"/>
+                        <field name="code"/>
+                        <field name="description"/>
+                    </group>
+                    <notebook>
+                        <page string="Règles d’allocation">
+                            <field name="allocation_rule_ids">
+                                <list>
+                                    <field name="asset_class_id"/>
+                                    <field name="min_pct"/>
+                                    <field name="max_pct"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter>
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </chatter>
+
+            </form>
+        </field>
+    </record>
+</odoo>

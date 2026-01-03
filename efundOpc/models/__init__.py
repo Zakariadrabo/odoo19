@@ -10,4 +10,4 @@ from . import confirmable_mixin,res_company, forme_juridique, statut_operationne
     efund_operation_base, efund_bourse_order_execution_line, efund_fund_instrument_event, efund_position_adjustment, \
     efund_fund_investor, efund_account_part_move, efund_account_cash_move, efund_fund_cash_deposit, \
     efund_fund_redemption, efund_fund_subscription, efund_mandate, efund_mandate_coupon, efund_mandate_termination,\
-    efund_mandate_investor, efund_fund_cash_withdraw
+    efund_mandate_investor, efund_fund_cash_withdraw,efund_fund_instrument_fee,efund_fund_type,efund_asset_class,efund_fund_type_allocation

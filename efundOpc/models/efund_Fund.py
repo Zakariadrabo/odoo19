@@ -115,6 +115,7 @@ class Fund(models.Model):
     issuer_id = fields.Many2one("res.partner",string="Émetteur",domain=[("is_company", "=", True)])
     depositary_id = fields.Many2one("efund.depositaire",string="Dépositaire")
     manager_id = fields.Many2one("efund.management.company",string="Gestionnaire")
+    fund_type_id = fields.Many2one('efund.fund.type',string="Type de fonds",required=True)
 
     # =========================================================
     # 4. PARAMÈTRES FINANCIERS
@@ -226,18 +227,7 @@ class Fund(models.Model):
         string="Prochaine date VL"
     )
     # profil du fond
-
-    fund_type = fields.Selection(
-        [
-            ("opcvm", "OPCVM"),
-            ("fia", "FIA"),
-            ("monetary", "Fonds monétaire"),
-            ("bond", "Fonds obligataire"),
-            ("equity", "Fonds actions"),
-            ("balanced", "Fonds diversifié"),
-        ],
-        string="Type de fonds"
-    )
+    fund_type_id = fields.Many2one('efund.fund.type',string="Type de fonds",required=True)
 
     target_investors = fields.Selection(
         [

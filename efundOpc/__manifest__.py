@@ -61,6 +61,8 @@
         'views/efund_fund_redemption_views.xml',
         'views/efund_cash_withdraw_views.xml',
         'wizard/efund_confirm_wizard_views.xml',
+        'views/efund_fund_type_views.xml',
+        'views/efund_asset_class_views.xml',
 
     ],
 

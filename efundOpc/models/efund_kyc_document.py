@@ -15,6 +15,7 @@ class FundKycDocument(models.Model):
     document_type = fields.Selection([
         ('id_card','Carte d\'identité'),
         ('passport','Passeport'),
+        ('carte_sejour','Carte de séjour'),
         ('proof_of_address','Preuve d\'adresse'),
         ('company_doc','statut compagnie'),
         ('ubo','Document bénéficiaire effectif'),

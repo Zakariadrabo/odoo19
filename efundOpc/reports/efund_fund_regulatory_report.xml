@@ -1,0 +1,50 @@
+<template id="report_efund_fund_regulatory">
+    <t t-call="web.external_layout">
+
+        <div class="page">
+
+            <h2>ÉTAT RÉGLEMENTAIRE OPCVM</h2>
+
+            <p>
+                Fonds :
+                <strong><t t-esc="doc.fund_id.name"/></strong>
+            </p>
+
+            <p>Date de situation :
+                <strong><t t-esc="doc.date"/></strong>
+            </p>
+
+            <h3>Composition réelle du portefeuille</h3>
+
+            <table class="table table-sm">
+                <tr>
+                    <th>Classe d’actifs</th>
+                    <th>Montant</th>
+                    <th>Pourcentage</th>
+                </tr>
+                <tr>
+                    <td>Actions</td>
+                    <td><t t-esc="doc.snapshot_id.equity_amount"/></td>
+                    <td><t t-esc="doc.snapshot_id.equity_pct"/> %</td>
+                </tr>
+                <tr>
+                    <td>Obligations</td>
+                    <td><t t-esc="doc.snapshot_id.bond_amount"/></td>
+                    <td><t t-esc="doc.snapshot_id.bond_pct"/> %</td>
+                </tr>
+                <tr>
+                    <td>Liquidités</td>
+                    <td><t t-esc="doc.snapshot_id.cash_amount"/></td>
+                    <td><t t-esc="doc.snapshot_id.cash_pct"/> %</td>
+                </tr>
+            </table>
+
+            <h3>Conclusion réglementaire</h3>
+            <p>
+                <t t-esc="doc.conclusion"/>
+            </p>
+
+        </div>
+
+    </t>
+</template>

@@ -9,7 +9,7 @@
             <list string="Funds" decoration-danger="state == 'liquidated'" decoration-warning="state == 'suspended'">
                 <field name="company_id"/>
                 <field name="management_company_id"/>
-                <field name="fund_type"/>
+                <field name="fund_type_id"/>
                 <field name="risk_level"/>
                 <field name="nav_frequency"/>
                 <field name="launch_date"/>
@@ -46,7 +46,7 @@
                     <group>
                         <group string="Informations Génerales">
                             <field name="name"/>
-                            <field name="fund_type"/>
+                            <field name="fund_type_id"/>
                             <field name="risk_level"/>
                             <field name="nav_frequency"/>
                         </group>
@@ -95,7 +95,7 @@
                         -->
                         <page string="Profil du Fond">
                             <group string="Profil du Fond">
-                                <field name="fund_type"/>
+                                <field name="fund_type_id"/>
                                 <field name="target_investors"/>
                                 <field name="investment_horizon"/>
                             </group>
@@ -227,7 +227,7 @@
         <field name="arch" type="xml">
             <kanban default_group_by="state" class="o_kanban_small_column">
                 <field name="company_id"/>
-                <field name="fund_type"/>
+                <field name="fund_type_id"/>
                 <field name="risk_level"/>
                 <field name="state"/>
                 <templates>
@@ -239,7 +239,7 @@
                                 </strong>
                                 <div>
                                     <span class="text-muted">Type:</span>
-                                    <field name="fund_type"/>
+                                    <field name="fund_type_id"/>
                                 </div>
                                 <div>
                                     <span class="text-muted">Risk:</span>

@@ -125,12 +125,22 @@
             </p>
         </field>
     </record>
+    <record id="action_efund_fund_type" model="ir.actions.act_window">
+        <field name="name">Types de fonds</field>
+        <field name="res_model">efund.fund.type</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer un nouveau type de fond
+            </p>
+        </field>
+    </record>
 
     <!-- =========================
          3. CLIENTS / PORTEURS
     ========================== -->
-     <record id="action_fund_investor_list" model="ir.actions.act_window">
-         <field name="name">Porteurs de parts</field>
+    <record id="action_fund_investor_list" model="ir.actions.act_window">
+        <field name="name">Porteurs de parts</field>
         <field name="res_model">efund.investor</field>
         <field name="view_mode">list,form,kanban</field>
         <field name="help" type="html">
@@ -140,7 +150,7 @@
         </field>
     </record>
     <record id="action_fund_kyc_document" model="ir.actions.act_window">
-         <field name="name">Documents KYC</field>
+        <field name="name">Documents KYC</field>
         <field name="res_model">efund.kyc.document</field>
         <field name="view_mode">list,form</field>
         <field name="help" type="html">
@@ -150,7 +160,7 @@
         </field>
     </record>
     <record id="action_fund_aml_alerte" model="ir.actions.act_window">
-         <field name="name">Alertes AML</field>
+        <field name="name">Alertes AML</field>
         <field name="res_model">efund.aml.alert</field>
         <field name="view_mode">list,form</field>
         <field name="help" type="html">
@@ -294,6 +304,19 @@
             </p>
         </field>
     </record>
+
+    <!-- Classe d'actif  -->
+    <record id="action_efund_asset_class" model="ir.actions.act_window">
+        <field name="name">Classes d’actifs</field>
+        <field name="res_model">efund.asset.class</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer et gérer votre classe d'actif.
+            </p>
+        </field>
+    </record>
+
     <!-- =========================
          6. VALEUR LIQUIDATIVE
     ========================== -->

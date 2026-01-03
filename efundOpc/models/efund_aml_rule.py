@@ -12,13 +12,8 @@ class FundAmlRule(models.Model):
     name = fields.Char(required=True)
     description = fields.Text()
     active = fields.Boolean(default=True)
-    rule_type = fields.Selection([
-        ('threshold','Threshold'),
-        ('velocity','Velocity'),
-        ('pattern','Pattern'),
-        ('pep','PEP'),
-        ('sanctions','Sanctions'),
-        ('custom','Custom Python')
+    rule_type = fields.Selection([('threshold','Threshold'),('velocity','Velocity'),('pattern','Pattern'),('pep','PEP'),
+        ('sanctions','Sanctions'),('custom','Custom Python')
     ], default='threshold', required=True)
     params = fields.Text(help="JSON parameters for the rule, e.g. {'amount':10000}")
     severity_default = fields.Selection([('info','Info'),('medium','Medium'),('high','High'),('critical','Critical')], default='medium')

@@ -78,7 +78,6 @@
                             <field name="cash_amount"/>
                             <field name="tax_rate"/>
                             <field name="net_amount" readonly="1"/>
-                            <field name="currency_id" readonly="1"/>
                         </group>
                     </group>
                     <group>

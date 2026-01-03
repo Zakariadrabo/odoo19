@@ -13,9 +13,10 @@
                 <field name="currency_id"/>
                 <field name="issuer_id"/>
                 <field name="custodian"/>
+                <field name="asset_class_id"/>
 
                 <!-- Champs spécifiques par type -->
-                <field name="equity_sector" invisible="instrument_type != 'equity'"/>
+                <field name="sector" invisible="instrument_type != 'equity'"/>
                 <field name="maturity_date" invisible="instrument_type !='bond'"/>
                 <field name="tcn_maturity_date" invisible="instrument_type !='tcn'"/>
                 <field name="right_expiry_date" invisible="instrument_type !='right'"/>
@@ -50,16 +51,11 @@
                             <field name="name"/>
                             <field name="isin"/>
                             <field name="ticker"/>
-                            <field name="currency_id"/>
                             <field name="issuer_id"/>
                             <field name="custodian"/>
-                        </group>
-                        <group string="Informations sur la cotation">
-                            <field name="taxe_irvm"/>
-                            <field name="taxe_taf"/>
-                            <field name="taxe_irc"/>
-                            <field name="is_listed"/>
+                             <field name="is_listed"/>
                             <field name="listing_date"/>
+                            <field name="asset_class_id"/>
                         </group>
 
                     </group>
@@ -68,6 +64,16 @@
                         <!-- =========================== -->
                         <!-- TAB: Informations générales -->
                         <!-- =========================== -->
+                        <page string="Commission et Taxes">
+                             <field name="instrument_fee_ids">
+                                <list editable="bottom">
+                                    <field name="fee_type"/>
+                                    <field name="rate"/>
+                                    <field name="is_mandatory"/>
+                                </list>
+                             </field>
+                        </page>
+
                         <page string="Informations générales">
                             <group>
                                 <field name="market"/>
@@ -82,7 +88,7 @@
                         <!-- =========================== -->
                         <page string="Actions / Equity" invisible="instrument_type !='equity'">
                             <group>
-                                <field name="equity_sector"/>
+                                <field name="sector"/>
                                 <field name="equity_dividend_yield"/>
                             </group>
                         </page>

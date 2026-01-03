@@ -22,107 +22,32 @@ class FundInstrument(models.Model):
     isin = fields.Char(string="Code ISIN", index=True)
     ticker = fields.Char(string="Ticker / Mnémo")
 
-    instrument_type = fields.Selection([
-        ('equity', 'Action / Equity'),
-        ('bond', 'Obligation'),
-        ('tcn', 'TCN / Titre de Créance Négociable'),
-        ('right', 'Droit / Warrant / Option'),
-        ('mmf', 'Monétaire / Cash'),
-        ('other', 'Autre'),
+    instrument_type = fields.Selection([('equity', 'Action / Equity'),('bond', 'Obligation'),('tcn', 'TCN / Titre de Créance Négociable'),
+        ('right', 'Droit / Warrant / Option'),('mmf', 'Monétaire / Cash'),('other', 'Autre'),
     ], default='other', required=True, string="Type d’instrument")
-
     currency_id = fields.Many2one('res.currency', string="Devise", required=True)
-    state = fields.Selection([
-        ('draft', 'Brouillon'),
-        ('pending', 'Vérification'),
-        ('approved', 'Approuvé'),
-        ('archived', 'Archivé')
+    state = fields.Selection([('draft', 'Brouillon'),('pending', 'Vérification'),('approved', 'Approuvé'),('archived', 'Archivé')
     ], default='draft')
+    is_listed = fields.Boolean(string='Est Coté',default=True,tracking=True,help="Indique si l'instrument est coté")
+    listing_date = fields.Date(string='Date 1ère Cotation', tracking=True, help="Indique la date de la 1ère cotation")
+    last_validated_price = fields.Float(compute='_compute_last_validated_price', string="Dernier cours validé",digits=(16, 4))
+    last_price_date = fields.Date(compute='_compute_last_validated_price', string="Date dernier cours")
+    sector = fields.Selection([('agriculture', 'Agriculture'),('industrie', 'Industrie'),], string="Secteur d'activités")
 
-    price_ids = fields.One2many(
-        'efund.fund.instrument.price',
-        'instrument_id',
-        string="Historique des cours"
-    )
-    # Champs pour l'import
-    import_config_id = fields.Many2one(
-        'efund.fund.instrument.price.import',
-        string="Configuration d'import"
-    )
+    #--------------------------------------------------------
+    #  RELATIONS
+    #--------------------------------------------------------
+    price_ids = fields.One2many('efund.fund.instrument.price', 'instrument_id', string="Prix")
+    issuer_id = fields.Many2one("efund.instrument.issuer",string="Émetteur",help="Institution ou entreprise qui émet l'instrument financier.")
+    market = fields.Selection([('brvm', 'BRVM'), ('bvmac', 'BVMAC'), ('other', 'Autre marché'), ],string="Marché Principal", default='bvmac')
+    custodian = fields.Selection([('dcbr', 'DC/BR'), ('bceao', 'BCEAO'), ('autre', 'Autre'), ], default='dcbr',string="Dépositaire", )
+    asset_class_id = fields.Many2one('efund.asset.class',string="Classe d'actif",required=True)
 
-    # ----------------------------------------------------
-    # PARTIES IMPLIQUÉES
-    # ----------------------------------------------------
-    issuer_id = fields.Many2one("efund.instrument.issuer",
-                                string="Émetteur",
-                                help="Institution ou entreprise qui émet l'instrument financier."
-                                )
-    custodian = fields.Selection([
-        ('dcbr', 'DC/BR'),
-        ('bceao', 'BCEAO'),
-        ('autre', 'Autre'),
-    ], default='dcbr', string="Dépositaire", )
-
-    # ----------------------------------------------------
-    # MARCHÉ & SOURCES DE DONNÉES
-    # ----------------------------------------------------
-    market = fields.Selection([
-        ('brvm', 'BRVM'),
-        ('xpar', 'Euronext Paris'),
-        ('nyse', 'NYSE'),
-        ('lse', 'LSE'),
-        ('otc', 'OTC'),
-        ('other', 'Autre marché'),
-    ], string="Marché Principal")
-
-    market_price_source = fields.Selection([
-        ('brvm_api', 'BRVM – API officielle'),
-        ('manual', 'Saisie manuelle'),
-        ('datasource', 'Autre data provider'),
+    market_price_source = fields.Selection([('brvm_api', 'BRVM – API officielle'),('manual', 'Saisie manuelle'),('datasource', 'Autre data provider'),
     ], string="Source du Prix")
+    import_config_id = fields.Many2one('efund.fund.instrument.price.import', string="Configuration d'import")
 
-    # === INFORMATIONS MARCHÉ (ajouts) ===
-    is_listed = fields.Boolean(
-        string='Est Coté',
-        default=True,
-        tracking=True,
-        help="Indique si l'instrument est coté"
-    )
 
-    listing_date = fields.Date(
-        string='Date 1ère Cotation',
-        tracking=True,
-        help="Indique la date de la 1ère cotation"
-    )
-
-    # Dernier cours validé
-    last_validated_price = fields.Float(
-        compute='_compute_last_validated_price',
-        string="Dernier cours validé",
-        digits=(16, 4)
-    )
-    last_price_date = fields.Date(
-        compute='_compute_last_validated_price',
-        string="Date dernier cours"
-    )
-    # ----------------------------------------------------
-    # Taux des taxes
-    # ----------------------------------------------------
-    taxe_irvm = fields.Float(
-        string='Taux IRVM',
-        digits=(16, 4),
-        help="Taux de la taxe IRVM"
-    )
-    taxe_taf = fields.Float(
-        string='Taux TAF',
-        digits=(16, 4),
-        help="Taux de la taxe TAF"
-    )
-    taxe_irc = fields.Float(
-        string='Taux IRC',
-        digits=(16, 4),
-        help="Taux de la taxe IRC"
-    )
 
     # ----------------------------------------------------
     # CARACTÉRISTIQUES SPÉCIFIQUES PAR TYPE
@@ -130,7 +55,7 @@ class FundInstrument(models.Model):
 
     # --- ACTIONS ---
     equity_dividend_yield = fields.Float(string="Dividend Yield (%)")
-    equity_sector = fields.Char(string="Secteur (Action)")
+
 
     # --- OBLIGATIONS ---
     bond_type = fields.Selection([
@@ -294,6 +219,13 @@ class FundInstrument(models.Model):
         help="Événements sur cet instrument"
     )
 
+    instrument_fee_ids = fields.One2many(
+        'efund.fund.instrument.fee',
+        'instrument_id',
+        string="Frais",
+        help="Frais sur cet instrument"
+    )
+
     upcoming_event_count = fields.Integer(
         string="Événements à venir",
         compute='_compute_upcoming_event_count',
@@ -306,6 +238,8 @@ class FundInstrument(models.Model):
         string="Événements récents",
         domain=[('event_date', '>=', fields.Date.today())]
     )
+
+
 
     def _compute_upcoming_event_count(self):
         for instrument in self:

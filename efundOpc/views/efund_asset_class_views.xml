@@ -1,0 +1,58 @@
+<odoo>
+    <record id="view_efund_asset_class_list" model="ir.ui.view">
+        <field name="name">efund.asset.class.list</field>
+        <field name="model">efund.asset.class</field>
+        <field name="arch" type="xml">
+            <list string="Classes d’actifs"
+                  decoration-muted="state != 'Validé'">
+                <field name="sequence"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="regulatory_category"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_efund_asset_class_form" model="ir.ui.view">
+        <field name="name">efund.asset.class.form</field>
+        <field name="model">efund.asset.class</field>
+        <field name="arch" type="xml">
+            <form string="Classe d’actifs">
+                <sheet>
+                    <header>
+                        <button name="action_validate"
+                                type="object"
+                                string="Valider"
+                                class="btn-primary"
+                                invisible="state != 'draft'"/>
+                        <button name="action_archived"
+                                type="object"
+                                string="Archiver"
+                                class="btn-danger"
+                                invisible="state != 'validated'"/>
+                        <field name="state" widget="statusbar"/>
+                    </header>
+
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="sequence"/>
+                            <field name="regulatory_category"/>
+                            <field name="description"/>
+                        </group>
+                    </group>
+                    <group>
+                        <div class="o_form_label text-info">
+                            La classe d’actifs est utilisée pour la composition
+                            réglementaire du portefeuille OPCVM et le reporting du régulateur.
+                        </div>
+                    </group>
+
+                </sheet>
+
+            </form>
+        </field>
+    </record>
+
+</odoo>
