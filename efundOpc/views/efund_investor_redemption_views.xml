@@ -1,7 +1,7 @@
 <odoo>
-    <record id="view_efund_fund_redemption_list" model="ir.ui.view">
-        <field name="name">efund.fund.redemption.list</field>
-        <field name="model">efund.fund.redemption</field>
+    <record id="view_efund_investor_redemption_list" model="ir.ui.view">
+        <field name="name">efund.investor.redemption.list</field>
+        <field name="model">efund.investor.redemption</field>
         <field name="arch" type="xml">
             <list string="Rachats"
                   decoration-info="state == 'validated'"
@@ -12,6 +12,7 @@
                 <field name="date_operation"/>
                 <field name="fund_id"/>
                 <field name="investor_id"/>
+                <field name="share_class_id"/>
                 <field name="redemption_type"/>
                 <field name="parts_to_redeem"/>
                 <field name="amount"/>
@@ -21,9 +22,9 @@
         </field>
     </record>
 
-    <record id="view_efund_fund_redemption_form" model="ir.ui.view">
-        <field name="name">efund.fund.redemption.form</field>
-        <field name="model">efund.fund.redemption</field>
+    <record id="view_efund_investor_redemption_form" model="ir.ui.view">
+        <field name="name">efund.investor.redemption.form</field>
+        <field name="model">efund.investor.redemption</field>
         <field name="arch" type="xml">
             <form string="Rachat de parts">
                 <!-- ================= HEADER ================= -->
@@ -65,6 +66,8 @@
                         <group>
                             <field name="investor_id" readonly="1"/>
                             <field name="fund_id" readonly="1"/>
+                            <field name="share_class_id"
+                               domain="[('fund_id','=',fund_id)]"/>
                         </group>
                         <group>
                             <field name="part_account_id" readonly="1"/>

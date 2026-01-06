@@ -3,7 +3,7 @@ from odoo.exceptions import UserError, ValidationError
 
 
 class EfundAccountPart(models.Model):
-    _name = 'efund.account.part'
+    _name = 'efund.investor.part'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'Compte Parts / Actions'
 
@@ -42,7 +42,7 @@ class EfundAccountPart(models.Model):
         if self.investor_id.compliance_status != 'compliant':
             raise UserError(_("Investisseur non conforme KYC."))
 
-        cash_account = self.env['efund.account.cash'].search([('investor_id', '=', self.investor_id.id),
+        cash_account = self.env['efund.investor.cash'].search([('investor_id', '=', self.investor_id.id),
                                                               ('fund_id', '=', self.fund_id.id), ])
         if not cash_account:
             raise UserError(_("Aucun compte cash n’est associé à cet investisseur."))
@@ -51,7 +51,7 @@ class EfundAccountPart(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': _("Rachat de parts"),
-            'res_model': 'efund.fund.redemption.wizard',
+            'res_model': 'efund.investor.redemption.wizard',
             'view_mode': 'form',
             'target': 'new',
             'context': {
@@ -63,7 +63,7 @@ class EfundAccountPart(models.Model):
 
     def _compute_total_parts(self):
         for acc in self:
-            moves = self.env['efund.account.part.move'].search([
+            moves = self.env['efund.investor.part.move'].search([
                 ('part_account_id', '=', acc.id)
             ])
             acc.total_parts = sum(
@@ -77,7 +77,7 @@ class EfundAccountPart(models.Model):
         if self.state != 'active':
             raise UserError(_("Aucun compte titre n’est associé à cet investisseur."))
 
-        cash_account = self.env['efund.account.cash'].search([('investor_id', '=', self.investor_id.id),
+        cash_account = self.env['efund.investor.cash'].search([('investor_id', '=', self.investor_id.id),
             ('fund_id', '=', self.fund_id.id),])
         if not cash_account:
             raise UserError(_("Aucun compte cash n’est associé à cet investisseur."))
@@ -85,7 +85,7 @@ class EfundAccountPart(models.Model):
         return {
             "type": "ir.actions.act_window",
             "name": _("Nouvelle demande de souscription"),
-            "res_model": "efund.fund.subscription.wizard",
+            "res_model": "efund.investor.subscription.wizard",
             "view_mode": "form",
             "target": "new",
             "context": {

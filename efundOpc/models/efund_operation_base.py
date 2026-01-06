@@ -13,7 +13,9 @@ class FundOperation(models.AbstractModel):
         ('validated', 'Validé'),
         ('executed', 'Exécuté'),
         ('accounted', 'Comptabilisé'),
+        ('reconciled', 'Réconcilié'),
         ('cancelled', 'Annulé'),
+
     ], default='draft', tracking=True)
 
     fund_id = fields.Many2one('efund.fund', required=True, string="Fonds", index=True)

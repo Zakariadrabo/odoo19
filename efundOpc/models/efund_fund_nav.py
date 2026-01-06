@@ -11,7 +11,7 @@ class FundNAV(models.Model):
     #fund_currency_id = fields.Many2one('res.currency',string="Devise du fonds",required=True)
     nav_total = fields.Float(string="Actif net total")
     nav_per_share = fields.Float()
-    share_class_id = fields.Many2one('efund.fund.class')
+    share_class_id = fields.Many2one('efund.fund.share.class')
     status = fields.Selection([('draft','Draft'),('computed','Computed'),('posted','Posted')], default='draft')
     computed_by = fields.Many2one('res.users')
     computed_at = fields.Datetime()

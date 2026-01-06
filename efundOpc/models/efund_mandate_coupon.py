@@ -10,7 +10,7 @@ class EfundMandateCoupon(models.Model):
 
     mandate_id = fields.Many2one('efund.mandate',required=True,ondelete='cascade')
     company_id = fields.Many2one(related='mandate_id.management_company_id.company_id',store=True)
-    #cash_account_id = fields.Many2one('efund.account.cash',required=True,string="Compte espèces du mandat")
+    #cash_account_id = fields.Many2one('efund.investor.cash',required=True,string="Compte espèces du mandat")
     year = fields.Integer(string="Année",required=True)
     amount = fields.Monetary(string="Montant du coupon",required=True)
     currency_id = fields.Many2one(related='company_id.currency_id',store=True)
@@ -28,7 +28,7 @@ class EfundMandateCoupon(models.Model):
             if rec.state != 'planned':
                 continue
 
-            self.env['efund.account.cash.move'].create({
+            self.env['efund.investor.cash.move'].create({
                 'mandate_id': rec.mandate_id.id,
                 'cash_account_id': rec.cash_account_id.id,
                 'move_type': 'coupon',

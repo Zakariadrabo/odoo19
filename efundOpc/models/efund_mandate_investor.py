@@ -98,7 +98,7 @@ class MandatInvestor(models.Model):
         """Créer les comptes espèces et titres après validation"""
         self.ensure_one()
 
-        Cash = self.env['efund.account.cash']
+        Cash = self.env['efund.investor.cash']
 
         # Sécurité : éviter les doublons
         if Cash.search([

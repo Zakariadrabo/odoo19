@@ -8,7 +8,7 @@ class EfundMandateTermination(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
     mandate_id = fields.Many2one('efund.mandate',required=True)
-    cash_account_id = fields.Many2one('efund.account.cash',string="Compte espèce",store=True)
+    cash_account_id = fields.Many2one('efund.investor.cash',string="Compte espèce",store=True)
     company_id = fields.Many2one(related="mandate_id.management_company_id.company_id", string='Company', ondelete='cascade')
     capital_remaining = fields.Monetary(related='mandate_id.capital_remaining',compute='_compute_financial_summary')
     amount = fields.Monetary(string="Capital à rembourser",required=True)

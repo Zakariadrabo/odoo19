@@ -6,32 +6,11 @@ class EfundFundAllocationControl(models.Model):
     _description = 'Contrôle de conformité d’allocation'
     _order = 'date desc'
 
-    fund_id = fields.Many2one(
-        'efund.fund',
-        required=True
-    )
-
-    snapshot_id = fields.Many2one(
-        'efund.fund.allocation.snapshot',
-        required=True
-    )
-
-    fund_type_id = fields.Many2one(
-        related='fund_id.fund_type_id',
-        store=True
-    )
-
-    date = fields.Date(
-        related='snapshot_id.date',
-        store=True
-    )
-
-    state = fields.Selection([
-        ('compliant', 'Conforme'),
-        ('warning', 'Alerte'),
-        ('breach', 'Dépassement'),
-    ], default='compliant')
-
+    fund_id = fields.Many2one('efund.fund',required=True)
+    snapshot_id = fields.Many2one('efund.fund.allocation.snapshot',required=True)
+    fund_type_id = fields.Many2one(related='fund_id.fund_type_id',store=True)
+    date = fields.Date(related='snapshot_id.date',store=True)
+    state = fields.Selection([('compliant', 'Conforme'),('warning', 'Alerte'),('breach', 'Dépassement'),], default='compliant')
     message = fields.Text()
 
     def action_check_compliance(self):

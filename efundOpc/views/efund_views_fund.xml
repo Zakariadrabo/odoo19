@@ -56,12 +56,11 @@
                             <field name="initial_price"/>
                             <field name="current_vl"/>
                             <field name="allow_fractional_parts" />
-
                         </group>
 
                         <group string="Cadre Réglementaire">
                             <field name="license_number"/>
-                            <field name="license_date"/>
+                            <field name="license_date" options="{'numeric': true}"/>
                             <field name="info_visa_number"/>
                         </group>
 
@@ -132,17 +131,14 @@
                             <field name="share_class_ids" create="true" edit="true">
                                 <list editable="bottom">
                                     <field name="name"/>
-                                    <field name="fee_structure"/>
                                     <field name="management_fee_rate"/>
+                                    <field name="subscription_fee_rate"/>
                                     <field name="redemption_fee_rate"/>
                                     <field name="performance_fee_rate"/>
-                                    <field name="is_accumulating"/>
                                     <field name="minimum_subscription"/>
                                     <field name="minimum_additional_subscription"/>
                                     <field name="minimum_redemption"/>
-                                    <field name="total_shares" readonly="1"/>
-                                    <field name="total_net_assets" readonly="1"/>
-                                    <field name="current_nav" readonly="1"/>
+                                    <field name="is_default"/>
                                 </list>
                             </field>
                         </page>

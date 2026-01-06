@@ -20,6 +20,7 @@ class IrUiMenu(models.Model):
             return menus
 
         # Cas Fonds : masquer menus inutiles
+
         if company.is_fund:
             self._hide_menu(menus, "menu_management_company_root")
             self._hide_menu(menus, "menu_clients_root")

@@ -34,7 +34,7 @@ class EfundMandate(models.Model):
 
     # relations
     coupon_ids = fields.One2many('efund.mandate.coupon', 'mandate_id', string="Coupons")
-    cash_move_ids = fields.One2many('efund.account.cash.move', 'mandate_id', string="Flux financiers")
+    cash_move_ids = fields.One2many('efund.investor.cash.move', 'mandate_id', string="Flux financiers")
 
 
     @api.depends('start_date', 'end_date')
@@ -102,7 +102,7 @@ class EfundMandate(models.Model):
 
 
     def _compute_financial_summary(self):
-        CashMove = self.env['efund.account.cash.move']
+        CashMove = self.env['efund.investor.cash.move']
 
         for mandate in self:
             if not mandate.id:

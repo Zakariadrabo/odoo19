@@ -11,8 +11,8 @@ class ActivateAccountWizard(models.TransientModel):
         ('part','Compte titres'),
     ], required=True, string="Type compte")
 
-    cash_account_id = fields.Many2one('efund.account.cash', string="Compte espèces")
-    part_account_id = fields.Many2one('efund.account.part', string="Compte titre")
+    cash_account_id = fields.Many2one('efund.investor.cash', string="Compte espèces")
+    part_account_id = fields.Many2one('efund.investor.part', string="Compte titre")
 
     fund_id = fields.Many2one('efund.fund', readonly=True, string="Fond")
     mandat_id = fields.Many2one('efund.mandate', readonly=True, string="Mandat")

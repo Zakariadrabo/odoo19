@@ -1,8 +1,8 @@
 <odoo>
 
     <record id="view_efund_fund_redemption_wizard_form" model="ir.ui.view">
-        <field name="name">efund.fund.redemption.wizard.form</field>
-        <field name="model">efund.fund.redemption.wizard</field>
+        <field name="name">efund.investor.redemption.wizard.form</field>
+        <field name="model">efund.investor.redemption.wizard</field>
         <field name="arch" type="xml">
             <form string="Rachat de parts">
                 <sheet>

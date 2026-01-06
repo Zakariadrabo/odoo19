@@ -7,7 +7,7 @@ class EfundMandateTerminationWizard(models.TransientModel):
     _description = 'Wizard de clôture de mandat'
 
     mandate_id = fields.Many2one('efund.mandate', string="Mandat", required=True, readonly=True)
-    cash_account_id = fields.Many2one('efund.account.cash', string="Compte espèce", store=True)
+    cash_account_id = fields.Many2one('efund.investor.cash', string="Compte espèce", store=True)
     company_id = fields.Many2one(related='mandate_id.management_company_id.company_id', store=True, readonly=True)
     capital_remaining = fields.Monetary(string="Capital restant à rembourser", readonly=True)
     currency_id = fields.Many2one(related='company_id.management_company_id.currency_id', store=True, readonly=True)
@@ -50,7 +50,7 @@ class EfundMandateTerminationWizard(models.TransientModel):
             raise UserError(_("Contexte société incorrect."))
 
         # Récupération de l'Id du compte espèces du mandat
-        Cash = self.env['efund.account.cash'].search([('mandate_id', '=', self.mandate_id.id), ], limit=1)
+        Cash = self.env['efund.investor.cash'].search([('mandate_id', '=', self.mandate_id.id), ], limit=1)
 
         # Sécurité : éviter les doublons
         if not Cash:

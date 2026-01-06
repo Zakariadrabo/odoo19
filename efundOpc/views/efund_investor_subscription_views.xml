@@ -1,12 +1,13 @@
 <odoo>
 
-    <record id="view_efund_fund_subscription_tree" model="ir.ui.view">
-        <field name="name">efund.fund.subscription.tree</field>
-        <field name="model">efund.fund.subscription</field>
+    <record id="view_efund_investor_subscription_tree" model="ir.ui.view">
+        <field name="name">efund.investor.subscription.tree</field>
+        <field name="model">efund.investor.subscription</field>
         <field name="arch" type="xml">
             <list string="Souscriptions">
                 <field name="investor_id"/>
                 <field name="fund_id"/>
+                <field name="share_class_id"/>
                 <field name="date_operation"/>
                 <field name="unit_value"/>
                 <field name="amount"/>
@@ -19,9 +20,9 @@
         </field>
     </record>
 
-    <record id="view_efund_fund_subscription_form" model="ir.ui.view">
-        <field name="name">efund.fund.subscription.form</field>
-        <field name="model">efund.fund.subscription</field>
+    <record id="view_efund_investor_subscription_form" model="ir.ui.view">
+        <field name="name">efund.investor.subscription.form</field>
+        <field name="model">efund.investor.subscription</field>
         <field name="arch" type="xml">
             <form string="Subscription">
                 <header>
@@ -59,6 +60,7 @@
                         <group>
                             <field name="investor_id" readonly="1"/>
                             <field name="fund_id" readonly="1"/>
+                            <field name="share_class_id" domain="[('fund_id','=',fund_id)]"/>
                             <field name="allow_fractional_parts" readonly="1"/>
                         </group>
                         <group>

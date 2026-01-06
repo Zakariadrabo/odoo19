@@ -5,14 +5,14 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 _logger = logging.getLogger(__name__)
 
-class CashWithdraw(models.Model):
-    _name = 'efund.fund.cash.withdraw'
+class EfundInvestorWithdraw(models.Model):
+    _name = 'efund.investor.withdraw'
     _description = 'Opération de retrait d’espèces dans un fond'
     _inherit = ['efund.operation.base', 'mail.thread', 'mail.activity.mixin', 'efund.confirmable.mixin']
     _order = "create_date desc"
 
 
-    cash_account_id = fields.Many2one('efund.account.cash', required=True)
+    cash_account_id = fields.Many2one('efund.investor.cash', required=True)
     currency_id = fields.Many2one(related='cash_account_id.fund_id.currency_id')
 
     date_operation = fields.Datetime(string="Date de l'opération", default=fields.Datetime.now)
@@ -50,7 +50,7 @@ class CashWithdraw(models.Model):
             if rec.state != 'validated':
                 raise UserError(_("La souscription ne peut plus être annulée."))
 
-            self.env['efund.account.cash.move'].create({
+            self.env['efund.investor.cash.move'].create({
                 'cash_account_id':  rec.cash_account_id.id,
                 'move_type': 'withdraw',
                 'amount': rec.amount,

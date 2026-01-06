@@ -46,8 +46,11 @@ class FundInvestor(models.Model):
     # Identité Juridique
     company_name = fields.Char(string="Raison sociale")
     company_short_name = fields.Char(string="Sigle")
-    legal_form = fields.Selection([('sa', 'Société anonyme'),('sas','Société anonyme simplifiée'),('sarl', 'Société à responsabilité limitée'),
-    ], default='sa', string='forme juridique')
+    legal_form = fields.Selection([('sa', 'Société Anonyme (SA)'),('sas', 'Société par Actions Simplifiée (SAS)'),
+        ('sarl', 'Société à Responsabilité Limitée (SARL)'),('snc', 'Société en Nom Collectif (SNC)'),
+        ('scs', 'Société en Commandite Simple (SCS)'),('gie', "Groupement d'Intérêt Économique (GIE)"),
+        ('sep', 'Société en Participation (SEP)'),('coop', 'Société Coopérative'),
+        ('other', 'Autre')], string="Forme Juridique", default='sa', help="Forme juridique selon le droit OHADA")
     license_number = fields.Char(string="N° Immatriculation")
     creation_date = fields.Date(string="Date de création")
     company_address = fields.Char(string="Adresse siège social")
@@ -90,8 +93,8 @@ class FundInvestor(models.Model):
     fund_investor_ids = fields.One2many('efund.fund.investor','investor_id',string="Fonds")
     mandate_investor_ids = fields.One2many('efund.mandate.investor','investor_id',string="Mandats")
 
-    cash_account_ids = fields.One2many('efund.account.cash','investor_id',string="Comptes espèces")
-    part_account_ids = fields.One2many('efund.account.part','investor_id',string="Comptes titres")
+    cash_account_ids = fields.One2many('efund.investor.cash','investor_id',string="Comptes espèces")
+    part_account_ids = fields.One2many('efund.investor.part','investor_id',string="Comptes titres")
 
     # compliance computed fields
     compliance_status = fields.Selection([('compliant','Compliant'),('non_compliant','Non-Compliant'),
@@ -133,8 +136,8 @@ class FundInvestor(models.Model):
     violation = fields.Selection([('Yes','Oui'),('No','Non')], string="Antécédents")
 
     # Accounts relations
-    account_part_ids = fields.One2many('efund.account.part', 'investor_id', string='Comptes Parts / Actions')
-    account_cash_ids = fields.One2many('efund.account.cash', 'investor_id', string='Comptes Espèces')
+    account_part_ids = fields.One2many('efund.investor.part', 'investor_id', string='Comptes Parts / Actions')
+    account_cash_ids = fields.One2many('efund.investor.cash', 'investor_id', string='Comptes Espèces')
 
     # computed helper: available cash (sum of active cash accounts balances)
     available_cash = fields.Monetary(
@@ -280,7 +283,7 @@ class FundInvestor(models.Model):
         inv_id_fmt = str(self.id).zfill(4)
         seq_part = str(len(self.account_part_ids) + 1).zfill(3)
         account_part_number = f"PT-{country}-{inv_type}-{inv_id_fmt}-{seq_part}"
-        part = self.env['efund.account.part'].create({
+        part = self.env['efund.investor.part'].create({
             'name': f"Compte Titre - {self.full_name or self.name or 'Investor'}",
             'investor_id': self.id,
             'account_number': account_part_number,
@@ -289,7 +292,7 @@ class FundInvestor(models.Model):
         })
         seq_cash = str(len(self.account_cash_ids) + 1).zfill(3)
         account_cash_number = f"ES-{country}-{inv_type}-{inv_id_fmt}-{seq_cash}"
-        cash = self.env['efund.account.cash'].create({
+        cash = self.env['efund.investor.cash'].create({
             'name': f"Compte Espèces - {self.full_name or self.name or 'Investor'}",
             'investor_id': self.id,
             'account_number': account_cash_number,
@@ -315,7 +318,7 @@ class FundInvestor(models.Model):
         return {
             "type": "ir.actions.act_window",
             "name": _("Dépôt sur compte espèces"),
-            "res_model": "efund.cash.deposit.wizard",
+            "res_model": "efund.investor.deposit.wizard",
             "view_mode": "form",
             "target": "new",
             "context": {
@@ -333,7 +336,7 @@ class FundInvestor(models.Model):
         return {
             "type": "ir.actions.act_window",
             "name": _("Nouvelle souscription"),
-            "res_model": "efund.fund.subscription",
+            "res_model": "efund.investor.subscription",
             "view_mode": "form",
             "target": "new",
             "context": {
@@ -422,7 +425,7 @@ class FundInvestor(models.Model):
 
 
     def _compute_subscription_count(self):
-        Subscription = self.env['efund.fund.subscription']
+        Subscription = self.env['efund.investor.subscription']
         for investor in self:
             investor.subscription_count = Subscription.search_count([
                 ('investor_id', '=', investor.id),
@@ -431,7 +434,7 @@ class FundInvestor(models.Model):
             ])
 
     def _compute_deposit_count(self):
-        Deposit = self.env['efund.fund.cash.deposit']
+        Deposit = self.env['efund.investor.deposit']
         for investor in self:
             investor.deposit_count = Deposit.search_count([
                 ('investor_id', '=', investor.id),
@@ -440,7 +443,7 @@ class FundInvestor(models.Model):
             ])
 
     def _compute_redemption_count(self):
-        Redemption = self.env['efund.fund.redemption']
+        Redemption = self.env['efund.investor.redemption']
         for investor in self:
             investor.redemption_count = Redemption.search_count([
                 ('investor_id', '=', investor.id),
@@ -449,7 +452,7 @@ class FundInvestor(models.Model):
             ])
 
     def _compute_withdraw_count(self):
-        Withdraw = self.env['efund.fund.cash.withdraw']
+        Withdraw = self.env['efund.investor.withdraw']
         for investor in self:
             investor.withdraw_count = Withdraw.search_count([
                 ('investor_id', '=', investor.id),
@@ -463,7 +466,7 @@ class FundInvestor(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': 'Souscriptions',
-            'res_model': 'efund.fund.subscription',
+            'res_model': 'efund.investor.subscription',
             'view_mode': 'list,form',
             'domain': [('investor_id', '=', self.id)],
             'context': {
@@ -477,7 +480,7 @@ class FundInvestor(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': 'Souscriptions',
-            'res_model': 'efund.fund.cash.deposit',
+            'res_model': 'efund.investor.deposit',
             'view_mode': 'list,form',
             'domain': [('investor_id', '=', self.id)],
             'context': {
@@ -491,7 +494,7 @@ class FundInvestor(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': 'Souscriptions',
-            'res_model': 'efund.fund.redemption',
+            'res_model': 'efund.investor.redemption',
             'view_mode': 'list,form',
             'domain': [('investor_id', '=', self.id)],
             'context': {
@@ -505,7 +508,7 @@ class FundInvestor(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': 'Souscriptions',
-            'res_model': 'efund.fund.cash.withdraw',
+            'res_model': 'efund.investor.withdraw',
             'view_mode': 'list,form',
             'domain': [('investor_id', '=', self.id)],
             'context': {

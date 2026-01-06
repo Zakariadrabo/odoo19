@@ -19,7 +19,7 @@ class FundInvestorPosition(models.Model):
     )
 
     share_class_id = fields.Many2one(
-        'efund.fund.class',
+        'efund.fund.share.class',
         string='Share Class',
         required=True
     )

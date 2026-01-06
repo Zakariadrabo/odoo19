@@ -41,7 +41,7 @@ class Fund(models.Model):
         string='Status', default='draft')
 
     # Relations
-    share_class_ids = fields.One2many('efund.fund.class', 'fund_id', string='Share Classes')
+    share_class_ids = fields.One2many('efund.fund.share.class', 'fund_id', string='Share Classes')
     currency_id = fields.Many2one(related='company_id.currency_id')
 
     # Comptabilité
@@ -87,16 +87,15 @@ class Fund(models.Model):
 
     ## TEST VL
     current_vl = fields.Float(string="VL actuelle")
-    VL_share_class_id = fields.Many2one('efund.fund.class', string="Classes de partage VL")
 
-    #Ajout
+    # Ajout
     # =========================================================
     # 1. IDENTIFICATION DU FONDS
     # =========================================================
 
     legal_form = fields.Char(string="Forme juridique")
     commercial_register = fields.Char(string="Registre de commerce")
-    country_id = fields.Many2one("res.country",string="Pays")
+    country_id = fields.Many2one("res.country", string="Pays")
     city = fields.Char(string="Ville")
     active = fields.Boolean(default=True)
 
@@ -112,10 +111,10 @@ class Fund(models.Model):
     # =========================================================
     # 3. ACTEURS DU FONDS
     # =========================================================
-    issuer_id = fields.Many2one("res.partner",string="Émetteur",domain=[("is_company", "=", True)])
-    depositary_id = fields.Many2one("efund.depositaire",string="Dépositaire")
-    manager_id = fields.Many2one("efund.management.company",string="Gestionnaire")
-    fund_type_id = fields.Many2one('efund.fund.type',string="Type de fonds",required=True)
+    issuer_id = fields.Many2one("res.partner", string="Émetteur", domain=[("is_company", "=", True)])
+    depositary_id = fields.Many2one("efund.depositaire", string="Dépositaire")
+    manager_id = fields.Many2one("efund.management.company", string="Gestionnaire")
+    fund_type_id = fields.Many2one('efund.fund.type', string="Type de fonds", required=True)
 
     # =========================================================
     # 4. PARAMÈTRES FINANCIERS
@@ -227,7 +226,7 @@ class Fund(models.Model):
         string="Prochaine date VL"
     )
     # profil du fond
-    fund_type_id = fields.Many2one('efund.fund.type',string="Type de fonds",required=True)
+    fund_type_id = fields.Many2one('efund.fund.type', string="Type de fonds", required=True)
 
     target_investors = fields.Selection(
         [
@@ -249,6 +248,16 @@ class Fund(models.Model):
     #################################################
     #      Constrainte
     ################################################
+    @api.constrains('share_class_ids')
+    def _check_share_classes(self):
+        for fund in self:
+            if not fund.share_class_ids:
+                raise ValidationError(_("Un fond doit avoir au moins une classe de parts."))
+
+            # Vérifier qu'une seule classe est marquée comme par défaut
+            default_classes = fund.share_class_ids.filtered(lambda sc: sc.is_default)
+            if len(default_classes) > 1:
+                raise ValidationError(_("Une seule classe de parts peut être marquée comme par défaut."))
 
     def _compute_cash_available(self):
         for fund in self:
@@ -534,3 +543,232 @@ class Fund(models.Model):
                 'amount': t.amount
             } for t in transactions]
         }
+
+    def generate_allocation_snapshot(self, date=None):
+        """
+        Génère un snapshot de la composition réelle du fonds
+        par classe d’actifs à une date donnée.
+        """
+        self.ensure_one()
+        date = date or fields.Date.today()
+
+        totals = {}  # {asset_class: amount}
+
+        # 1️⃣ Positions titres
+        positions = self._get_security_positions(date)
+        for pos in positions:
+            asset_class = pos.instrument_id.asset_class_id
+            totals.setdefault(asset_class, 0.0)
+            totals[asset_class] += pos.market_value
+
+        # 2️⃣ Liquidités (cash)
+        cash_accounts = self._get_cash_accounts()
+        for cash in cash_accounts:
+            asset_class = cash.asset_class_id  # Liquidités
+            totals.setdefault(asset_class, 0.0)
+            totals[asset_class] += cash.balance
+
+        total_nav = sum(totals.values())
+
+        # 3️⃣ Création du snapshot
+        snapshot = self.env['efund.fund.allocation.snapshot'].create({
+            'fund_id': self.id,
+            'date': date,
+            'total_nav': total_nav,
+        })
+
+        # 4️⃣ Lignes du snapshot
+        for asset_class, amount in totals.items():
+            self.env['efund.fund.allocation.snapshot.line'].create({
+                'snapshot_id': snapshot.id,
+                'asset_class_id': asset_class.id,
+                'amount': amount,
+            })
+
+        return snapshot
+
+    def _get_security_positions(self, date=None):
+        """
+        Retourne les positions titres du fonds à une date donnée.
+        Chaque position contient :
+        - instrument
+        - quantité nette
+        - valeur de marché
+        """
+        self.ensure_one()
+        date = date or fields.Date.today()
+
+        PartMove = self.env['efund.investor.part.move']
+
+        moves = PartMove.search([
+            ('fund_id', '=', self.id),
+            ('state', 'in', ['posted', 'settled']),
+            ('date', '<=', date),
+        ])
+
+        positions = {}
+
+        for move in moves:
+            instrument = move.instrument_id
+            positions.setdefault(instrument, {
+                'instrument': instrument,
+                'quantity': 0.0,
+                'market_value': 0.0,
+            })
+            positions[instrument]['quantity'] += move.quantity
+
+        # Valorisation
+        for pos in positions.values():
+            instrument = pos['instrument']
+            price = instrument.get_market_price(date)
+            pos['market_value'] = pos['quantity'] * price
+
+        return positions.values()
+
+    def get_market_price(self, date=None):
+        """
+        Retourne le dernier prix connu à la date donnée.
+        """
+        self.ensure_one()
+        date = date or fields.Date.today()
+
+        price = self.last_price or 0.0
+        return price
+
+    def _get_cash_accounts(self):
+        """
+        Retourne les comptes espèces du fonds.
+        """
+        self.ensure_one()
+
+        CashAccount = self.env['efund.investor.cash']
+
+        cash_accounts = CashAccount.search([
+            ('fund_id', '=', self.id),
+            ('active', '=', True),
+        ])
+
+        return cash_accounts
+
+    # Remplacez la méthode _compute_management_fee_accrual :
+
+    def _compute_management_fee_accrual(self, share_class_id, net_assets, date):
+        """
+        Calcule l'accrual des frais de gestion pour une classe de parts spécifique
+        """
+        self.ensure_one()
+
+        share_class = self.env['efund.fund.share.class'].browse(share_class_id)
+
+        if not share_class.management_fee_rate:
+            return 0.0
+
+        annual_rate = share_class.management_fee_rate / 100.0
+        daily_rate = annual_rate / 365
+        accrued = net_assets * daily_rate
+
+        # Enregistrement de l'accrual spécifique à la classe
+        self.env['efund.management.fee.accrual'].create({
+            'fund_id': self.id,
+            'share_class_id': share_class_id,
+            'date': date,
+            'base_amount': net_assets,
+            'rate': share_class.management_fee_rate,
+            'accrued_amount': accrued,
+        })
+
+        return accrued
+
+
+# -----------------------------------------------------
+## Méthodes de recupération des frais
+# -----------------------------------------------------
+def get_fees_for_share_class(self, share_class_id, fee_type):
+    """
+    Retourne les frais pour une classe de parts spécifique
+    Types: 'management', 'subscription', 'redemption', 'performance'
+    """
+    self.ensure_one()
+
+    share_class = self.env['efund.fund.share.class'].browse(share_class_id)
+
+    fee_map = {
+        'management': share_class.management_fee_rate,
+        'subscription': share_class.subscription_fee_rate,
+        'redemption': share_class.redemption_fee_rate,
+        'performance': share_class.performance_fee_rate,
+        'retro_subscription': share_class.retro_subscription_rate,
+        'retro_redemption': share_class.retro_redemption_rate,
+        'entry': share_class.entry_load,
+        'exit': share_class.exit_load,
+    }
+
+    return fee_map.get(fee_type, 0.0)
+
+
+def calculate_subscription_fees(self, share_class_id, amount):
+    """
+    Calcule les frais de souscription pour un montant donné
+    """
+    self.ensure_one()
+
+    fee_rate = self.get_fees_for_share_class(share_class_id, 'subscription')
+    fees = amount * (fee_rate / 100.0)
+    net_amount = amount - fees
+
+    return {
+        'gross_amount': amount,
+        'fees': fees,
+        'net_amount': net_amount,
+        'fee_rate': fee_rate
+    }
+
+
+def calculate_redemption_fees(self, share_class_id, amount):
+    """
+    Calcule les frais de rachat pour un montant donné
+    """
+    self.ensure_one()
+
+    fee_rate = self.get_fees_for_share_class(share_class_id, 'redemption')
+    fees = amount * (fee_rate / 100.0)
+    net_amount = amount - fees
+
+    return {
+        'gross_amount': amount,
+        'fees': fees,
+        'net_amount': net_amount,
+        'fee_rate': fee_rate
+    }
+
+
+def calculate_management_fees_daily(self, share_class_id, nav_amount, date):
+    """
+    Calcule les frais de gestion journaliers
+    """
+    self.ensure_one()
+
+    annual_rate = self.get_fees_for_share_class(share_class_id, 'management')
+    daily_rate = annual_rate / 365.0
+    daily_fees = nav_amount * (daily_rate / 100.0)
+
+    return {
+        'daily_fees': daily_fees,
+        'annual_rate': annual_rate,
+        'nav_amount': nav_amount,
+        'date': date
+    }
+
+
+def get_default_share_class(self):
+    """
+    Retourne la classe de parts par défaut du fond
+    """
+    self.ensure_one()
+
+    default_class = self.share_class_ids.filtered(lambda sc: sc.is_default)
+    if default_class:
+        return default_class[0]
+
+    # Si aucune classe par défaut, retourne la première
+    return self.share_class_ids[0] if self.share_class_ids else False

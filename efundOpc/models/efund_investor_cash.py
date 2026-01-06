@@ -2,7 +2,7 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 
 class EfundAccountCash(models.Model):
-    _name = 'efund.account.cash'
+    _name = 'efund.investor.cash'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'Compte Espèces Client'
 
@@ -33,7 +33,7 @@ class EfundAccountCash(models.Model):
 
     def _compute_balance(self):
         for acc in self:
-            moves = self.env['efund.account.cash.move'].search([
+            moves = self.env['efund.investor.cash.move'].search([
                 ('cash_account_id', '=', acc.id)
             ])
             acc.balance = sum(
@@ -48,7 +48,7 @@ class EfundAccountCash(models.Model):
         return {
             "type": "ir.actions.act_window",
             "name": _("Dépôt sur compte espèces"),
-            "res_model": "efund.cash.deposit.wizard",
+            "res_model": "efund.investor.deposit.wizard",
             "view_mode": "form",
             "target": "new",
             "context": {
@@ -84,7 +84,7 @@ class EfundAccountCash(models.Model):
         return {
             "type": "ir.actions.act_window",
             "name": _("Retrait sur compte espèces"),
-            "res_model": "efund.cash.deposit.wizard",
+            "res_model": "efund.investor.deposit.wizard",
             "view_mode": "form",
             "target": "new",
             "context": {

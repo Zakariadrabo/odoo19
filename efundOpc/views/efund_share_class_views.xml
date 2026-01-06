@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_efund_fund_share_class_list" model="ir.ui.view">
+        <field name="name">efund.fund.share.class.list</field>
+        <field name="model">efund.fund.share.class</field>
+        <field name="arch" type="xml">
+            <list string="Classes de parts"
+                  decoration-muted="state !='validate'">
+                <field name="sequence" widget="handle"/>
+                <field name="fund_id"/>
+                <field name="name"/>
+                <field name="management_fee_rate"/>
+                <field name="subscription_fee_rate"/>
+                <field name="redemption_fee_rate"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_efund_fund_share_class_form" model="ir.ui.view">
+        <field name="name">efund.fund.share.class.form</field>
+        <field name="model">efund.fund.share.class</field>
+        <field name="arch" type="xml">
+            <form string="Classe de part">
+                <sheet>
+
+                    <!-- IDENTITÉ -->
+                    <group>
+                        <group>
+                            <field name="fund_id"/>
+                            <field name="name"/>
+                            <field name="sequence"/>
+                            <field name="is_default"/>
+                        </group>
+
+                        <group>
+                            <field name="minimum_subscription"/>
+                            <field name="minimum_additional_subscription"/>
+                            <field name="minimum_redemption"/>
+                            <field name="is_accumulating"/>
+                        </group>
+                    </group>
+
+                    <!-- FRAIS -->
+                    <group string="Frais applicables à la classe de part">
+                        <group>
+                            <field name="management_fee_rate"/>
+                            <field name="subscription_fee_rate"/>
+                            <field name="redemption_fee_rate"/>
+                            <field name="performance_fee_rate"/>
+                        </group>
+
+                        <group>
+                            <field name="retro_redemption_rate"/>
+                            <field name="retro_subscription_rate"/>
+                            <field name="entry_load"/>
+                            <field name="exit_load"/>
+                        </group>
+                    </group>
+
+                    <!-- INFO MÉTIER -->
+                    <group>
+                        <div class="o_form_label text-info">
+                            Les frais sont définis au niveau de la classe de part.
+                            Ils sont automatiquement appliqués lors des souscriptions,
+                            rachats et du calcul des frais de gestion, conformément
+                            aux pratiques OPCVM et aux exigences du régulateur.
+                        </div>
+                    </group>
+
+                </sheet>
+                <chatter>
+
+                </chatter>
+
+            </form>
+        </field>
+    </record>
+
+
+</odoo>

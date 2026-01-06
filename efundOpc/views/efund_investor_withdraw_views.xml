@@ -3,9 +3,9 @@
     <!-- =============================== -->
     <!-- LIST VIEW : DEPOTS ESPECES      -->
     <!-- =============================== -->
-    <record id="view_efund_cash_withdraw_list" model="ir.ui.view">
-        <field name="name">efund.cash.withdraw.list</field>
-        <field name="model">efund.fund.cash.withdraw</field>
+    <record id="view_efund_investor_withdraw_list" model="ir.ui.view">
+        <field name="name">efund.investor.withdraw.list</field>
+        <field name="model">efund.investor.withdraw</field>
         <field name="arch" type="xml">
             <list string="Retrait espèces"
                   decoration-info="state == 'received'"
@@ -28,9 +28,9 @@
     <!-- =============================== -->
     <!-- FORM VIEW : DEPOT ESPECES       -->
     <!-- =============================== -->
-    <record id="view_efund_cash_withdraw_form" model="ir.ui.view">
-        <field name="name">efund.cash.withdraw.form</field>
-        <field name="model">efund.fund.cash.withdraw</field>
+    <record id="view_efund_investor_withdraw_form" model="ir.ui.view">
+        <field name="name">efund.investor.withdraw.form</field>
+        <field name="model">efund.investor.withdraw</field>
         <field name="arch" type="xml">
             <form string="Retrait espèces">
 

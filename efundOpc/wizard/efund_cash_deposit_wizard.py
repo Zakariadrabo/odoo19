@@ -7,11 +7,11 @@ _logger = logging.getLogger(__name__)
 
 
 class EfundCashDepositWizard(models.TransientModel):
-    _name = "efund.cash.deposit.wizard"
+    _name = "efund.investor.deposit.wizard"
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = "Wizard Dépôt sur compte espèces"
 
-    cash_account_id = fields.Many2one('efund.account.cash', required=True, readonly=True)
+    cash_account_id = fields.Many2one('efund.investor.cash', required=True, readonly=True)
     fund_id = fields.Many2one(related='cash_account_id.fund_id',store=True,string="Fonds",index=True)
     investor_id = fields.Many2one(related='cash_account_id.investor_id',store=True, string="Investisseur",index=True)
     amount = fields.Monetary(required=True)
@@ -50,7 +50,7 @@ class EfundCashDepositWizard(models.TransientModel):
 
         if self.move_type == 'deposit':
             # Création de l’ORDRE de deposit
-            self.env['efund.fund.cash.deposit'].create({
+            self.env['efund.investor.deposit'].create({
                 'fund_id': self.fund_id.id,
                 'investor_id': self.investor_id.id,
                 'cash_account_id': self.cash_account_id.id,
@@ -63,7 +63,7 @@ class EfundCashDepositWizard(models.TransientModel):
             })
         else:
             # Création de l’ORDRE de deposit
-            self.env['efund.fund.cash.withdraw'].create({
+            self.env['efund.investor.withdraw'].create({
                 'fund_id': self.fund_id.id,
                 'investor_id': self.investor_id.id,
                 'cash_account_id': self.cash_account_id.id,
@@ -77,7 +77,7 @@ class EfundCashDepositWizard(models.TransientModel):
 
         """
         # Création du mouvement
-        self.env['efund.account.cash.move'].create({
+        self.env['efund.investor.cash.move'].create({
             'cash_account_id': self.cash_account_id.id,
             'move_type': 'deposit',
             'amount': self.amount,
@@ -105,7 +105,6 @@ class EfundCashDepositWizard(models.TransientModel):
             raise UserError(_("Veuillez sélectionner un compte espèces."))
 
         # 1) Mettre à jour le solde du compte espèces
-        _lo
         self.cash_account_id.sudo().write({
             'balance': (self.cash_account_id.balance or 0.0) + self.amount,
         })

@@ -52,7 +52,7 @@
          2. FONDS
     ========================== -->
     <menuitem id="menu_fund_root"
-              name="Fonds"
+              name="Produits"
               parent="menu_fund_management_root"
               sequence="20"/>
 
@@ -99,12 +99,12 @@
          3. CLIENTS / PORTEURS
     ========================== -->
     <menuitem id="menu_clients_root"
-              name="Clients / Porteurs"
+              name="Clients"
               parent="menu_fund_management_root"
               sequence="30"/>
 
     <menuitem id="menu_investors"
-              name="Porteurs de parts"
+              name="Clients"
               parent="menu_clients_root"
               action="action_fund_investor_list"
               sequence="31"/>
@@ -131,23 +131,24 @@
     <menuitem id="menu_deposit"
               name="Déposit souscription"
               parent="menu_operations_root"
-              action="action_fund_deposit"
+              action="action_investor_deposit"
               sequence="41"/>
 
     <menuitem id="menu_subscriptions"
               name="Souscriptions"
               parent="menu_operations_root"
-              action="action_fund_subscription_list"
+              action="action_investor_subscription"
               sequence="42"/>
+
     <menuitem id="menu_redemptions"
               name="Rachats"
               parent="menu_operations_root"
-              action="action_fund_redemption_list"
+              action="action_investor_redemption"
               sequence="43"/>
     <menuitem id="menu_withdraw"
               name="Retrait Rachat"
               parent="menu_operations_root"
-              action="action_fund_cash_withdraw"
+              action="action_investor_withdraw"
               sequence="44"/>
 
     <menuitem id="menu_arbitrages"

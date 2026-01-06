@@ -108,8 +108,8 @@ class FundInvestor(models.Model):
         """Créer les comptes espèces et titres après validation"""
         self.ensure_one()
 
-        Cash = self.env['efund.account.cash']
-        Part = self.env['efund.account.part']
+        Cash = self.env['efund.investor.cash']
+        Part = self.env['efund.investor.part']
 
         # Sécurité : éviter les doublons
         if Cash.search([

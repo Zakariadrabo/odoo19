@@ -6,13 +6,13 @@ from odoo.exceptions import UserError
 _logger = logging.getLogger(__name__)
 
 class FundRedemptionWizard(models.TransientModel):
-    _name = 'efund.fund.redemption.wizard'
+    _name = 'efund.investor.redemption.wizard'
     _description = 'Wizard de rachat'
 
-    part_account_id = fields.Many2one('efund.account.part',required=True,readonly=True)
+    part_account_id = fields.Many2one('efund.investor.part',required=True,readonly=True)
     balance = fields.Float(string="Solde", related="cash_account_id.balance", readonly=True)
-    cash_account_id = fields.Many2one('efund.account.cash',required=True,readonly=True)
-    total_parts_available = fields.Float(string="Nombre de parts", related="part_account_id.total_parts", readonly=True)
+    cash_account_id = fields.Many2one('efund.investor.cash',required=True,readonly=True)
+    total_parts_available = fields.Float(string="Nombre total de parts", related="part_account_id.total_parts", readonly=True)
     fund_id = fields.Many2one(related='part_account_id.fund_id',store=True)
     investor_id = fields.Many2one(related='part_account_id.investor_id',store=True)
     company_id = fields.Many2one(related='fund_id.company_id',store=True)
@@ -97,7 +97,7 @@ class FundRedemptionWizard(models.TransientModel):
             raise UserError(_("Nombre de parts insuffisant."))
 
         # Création de l’ORDRE de rachat
-        self.env['efund.fund.redemption'].create({
+        self.env['efund.investor.redemption'].create({
             'fund_id': self.fund_id.id,
             'investor_id': self.investor_id.id,
             'cash_account_id': self.cash_account_id.id,

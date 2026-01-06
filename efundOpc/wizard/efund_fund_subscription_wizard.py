@@ -8,13 +8,13 @@ _logger = logging.getLogger(__name__)
 
 
 class FundSubscriptionWizard(models.TransientModel):
-    _name = 'efund.fund.subscription.wizard'
+    _name = 'efund.investor.subscription.wizard'
     _description = 'Wizard de souscription'
 
-    cash_account_id = fields.Many2one('efund.account.cash',required=True,readonly=True)
+    cash_account_id = fields.Many2one('efund.investor.cash',required=True,readonly=True)
     balance = fields.Float(string="Solde",related="cash_account_id.balance",readonly=True)
-    part_account_id = fields.Many2one('efund.account.part',required=True,readonly=True)
-    total_parts = fields.Float(string="Nombre de parts",related="part_account_id.total_parts",readonly=True)
+    part_account_id = fields.Many2one('efund.investor.part',required=True,readonly=True)
+    total_parts = fields.Float(string="Nombre total de parts",related="part_account_id.total_parts",readonly=True)
     fund_id = fields.Many2one(related='part_account_id.fund_id',store=True)
     subscription_fee_rate = fields.Float(string=" % Frais de souscription",related="fund_id.subscription_fee_rate",readonly=True)
     subscription_fee_amount = fields.Monetary(string="Montant frais de souscription",compute="_compute_subscription_fee_amount",readonly=True)
@@ -87,7 +87,7 @@ class FundSubscriptionWizard(models.TransientModel):
             raise UserError(_("Solde espèces insuffisant."))
 
         # Création de l’ORDRE de souscription
-        self.env['efund.fund.subscription'].create({
+        self.env['efund.investor.subscription'].create({
             'fund_id': self.fund_id.id,
             'investor_id': self.investor_id.id,
             'cash_account_id': self.cash_account_id.id,

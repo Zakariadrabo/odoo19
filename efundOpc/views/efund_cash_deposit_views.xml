@@ -5,7 +5,7 @@
     <!-- =============================== -->
     <record id="view_efund_cash_deposit_list" model="ir.ui.view">
         <field name="name">efund.cash.deposit.list</field>
-        <field name="model">efund.fund.cash.deposit</field>
+        <field name="model">efund.investor.deposit</field>
         <field name="arch" type="xml">
             <list string="Dépôts espèces"
                   decoration-info="state == 'received'"
@@ -30,7 +30,7 @@
     <!-- =============================== -->
     <record id="view_efund_cash_deposit_form" model="ir.ui.view">
         <field name="name">efund.cash.deposit.form</field>
-        <field name="model">efund.fund.cash.deposit</field>
+        <field name="model">efund.investor.deposit</field>
         <field name="arch" type="xml">
             <form string="Dépôt espèces">
 

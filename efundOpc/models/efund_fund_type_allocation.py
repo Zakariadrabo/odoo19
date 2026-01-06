@@ -3,6 +3,7 @@ from odoo.exceptions import ValidationError
 
 class EfundFundTypeAllocation(models.Model):
     _name = 'efund.fund.type.allocation'
+    _description = 'Allocation des types de fonds'
 
     fund_type_id = fields.Many2one('efund.fund.type', required=True)
     asset_class_id = fields.Many2one('efund.asset.class', required=True)

@@ -49,12 +49,8 @@ class FundTransaction(models.Model):
     units = fields.Float(string="Nombre de parts", digits=(16, 6))
     amount = fields.Monetary(string="Montant total", currency_field='currency_id')
     is_initial_capital = fields.Boolean(string="Initial capital", default=False)
-    share_class_id = fields.Many2one(
-        'efund.fund.class',
-        string='Share Class',
-        required=True,
-        domain="[('fund_id', '=', fund_id), ('state', '=', 'active')]")
-
+    share_class_id = fields.Many2one('efund.fund.share.class',string='Share Class')
+    # ',required=True domain="[('fund_id', '=', fund_id), ('state', '=', 'active')]" -->
     # --- Suivi opérationnel ---
     status = fields.Selection([
         ('draft', 'Brouillon'),
