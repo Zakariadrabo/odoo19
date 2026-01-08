@@ -63,7 +63,9 @@
         'wizard/efund_confirm_wizard_views.xml',
         'views/efund_fund_type_views.xml',
         'views/efund_asset_class_views.xml',
-
+        'views/efund_investor_pep.xml',
+        'reports/efund_investor_report.xml',
+        'reports/efund_investor_report_template.xml',
     ],
 
     'installable': True,

@@ -156,8 +156,11 @@ class FundInvestor(models.Model):
 
     @api.depends('nom', 'prenom')
     def _compute_full_name(self):
-        for rec in self:
-            rec.full_name = f"{rec.prenom} {rec.nom}" if rec.prenom or rec.nom else ""
+        for record in self:
+            if record.nom and record.prenom:
+                record.full_name = f"{record.nom} {record.prenom}"
+            else:
+                record.full_name = record.nom or record.prenom or ''
 
     @api.constrains('email')
     def _check_email_format(self):
@@ -166,12 +169,6 @@ class FundInvestor(models.Model):
             if record.email and not email_regex.match(record.email):
                 raise ValidationError(
                     "L'adresse e-mail '%s' n'est pas valide. Veuillez utiliser un format comme 'utilisateur@domaine.com'." % record.email)
-
-
-    @api.onchange('nom', 'prenom')
-    def _onchange_nom_prenom(self):
-        for rec in self:
-            rec.full_name = f"{rec.prenom} {rec.nom}" if rec.prenom or rec.nom else ""
 
     @api.onchange(
         'identical_address',
@@ -517,5 +514,13 @@ class FundInvestor(models.Model):
             }
         }
 
+    def action_report_investor(self):
+        self.ensure_one()
+        if self.status != 'kyc_approved':
+            raise UserError(
+                _("L'impression du profil investisseur n'est autorisée qu'après validation complète du KYC."))
+
+        action = self.env.ref('efundOpc.action_report_investor')
+        return action.report_action(self, config=False)
 
 

@@ -14,4 +14,4 @@ from . import confirmable_mixin, res_company, forme_juridique, statut_operationn
     efund_mandate_investor, efund_investor_withdraw, efund_fund_instrument_fee, efund_fund_type, efund_asset_class, \
     efund_fund_type_allocation, efund_management_fee_accrual, efund_fund_allocation_snapshot, \
     efund_fund_allocation_snapshot_line, efund_fund_portfolio, efund_fund_cash, efund_fund_cash_move, \
-    efund_fund_portfolio_move,efund_fund_portfolio_line,efund_asset_trading_service,efund_cash_reconciliation_service
+    efund_fund_portfolio_move,efund_fund_portfolio_line,efund_asset_trading_service,efund_cash_reconciliation_service, efund_investor_pep

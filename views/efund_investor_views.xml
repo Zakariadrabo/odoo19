@@ -11,6 +11,13 @@
                     <!-- ========================= -->
                     <!-- DRAFT → KYC PENDING -->
                     <!-- ========================= -->
+                    <header>
+                        <button name="action_report_investor"
+                                type="object"
+                                string="Imprimer"
+                                class="btn-primary"
+                                invisible="status != 'kyc_approved'"/>
+                    </header>
                     <button name="action_submit_kyc"
                             type="object"
                             string="Soumettre KYC"

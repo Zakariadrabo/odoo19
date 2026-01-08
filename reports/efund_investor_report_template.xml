@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_investor" t-name="efundOpc.report_investor">
+        <t t-call="web.external_layout">
+            <main>
+                <div class="container">
+                    <t t-foreach="docs" t-as="o">
+                        <div class="page" style="padding: 20px; font-family: sans-serif;">
+
+                            <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                                <h2 style="color: #2c3e50;">FICHE INVESTISSEUR</h2>
+                                <p style="color: #7f8c8d;">Référence : <span t-out="o.name or o.id"/></p>
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <h4 style="color: #3498db;">Informations d'Identité</h4>
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <tr>
+                                        <td style="width: 40%; padding: 8px; font-weight: bold;">Nom / Raison sociale :</td>
+                                        <td style="padding: 8px;">
+                                            <span t-if="o.investor_type == 'company'" t-field="o.company_name"/>
+                                            <span t-else="" t-field="o.full_name"/>
+                                        </td>
+                                    </tr>
+                                    <tr style="background-color: #f9f9f9;">
+                                        <td style="padding: 8px; font-weight: bold;">Type :</td>
+                                        <td style="padding: 8px;"><span t-field="o.investor_type"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; font-weight: bold;">Email :</td>
+                                        <td style="padding: 8px;"><span t-field="o.email"/></td>
+                                    </tr>
+                                    <tr style="background-color: #f9f9f9;">
+                                        <td style="padding: 8px; font-weight: bold;">Téléphone :</td>
+                                        <td style="padding: 8px;"><span t-field="o.phone"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <h4 style="color: #3498db; border-left: 4px solid #2ecc71; padding-left: 10px;">Conformité KYC</h4>
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <tr>
+                                        <td style="width: 40%; padding: 8px; font-weight: bold;">Statut :</td>
+                                        <td style="padding: 8px;"><span t-field="o.compliance_status"/></td>
+                                    </tr>
+                                    <tr style="background-color: #f9f9f9;">
+                                        <td style="padding: 8px; font-weight: bold;">Score :</td>
+                                        <td style="padding: 8px;"><span t-field="o.compliance_score"/> %</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <div t-if="o.cash_account_ids" style="margin-top: 20px;">
+                                <h4 style="color: #3498db;">Comptes Espèces</h4>
+                                <table class="table table-sm" style="width: 100%;">
+                                    <thead>
+                                        <tr style="background-color: #eee;">
+                                            <th>N° Compte</th>
+                                            <th class="text-end">Solde</th>
+                                            <th>Statut</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="o.cash_account_ids" t-as="cash">
+                                            <tr>
+                                                <td><span t-field="cash.account_number"/></td>
+                                                <td class="text-end"><span t-field="cash.balance"/></td>
+                                                <td><span t-field="cash.state"/></td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </main>
+        </t>
+    </template>
+</odoo>

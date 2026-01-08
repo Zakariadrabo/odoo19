@@ -118,6 +118,11 @@
               parent="menu_clients_root"
               action="action_fund_aml_alerte"
               sequence="33"/>
+     <menuitem id="menu_pep"
+              name="PEP"
+              parent="menu_clients_root"
+              action="action_investor_pep"
+              sequence="34"/>
 
 
     <!-- =========================
