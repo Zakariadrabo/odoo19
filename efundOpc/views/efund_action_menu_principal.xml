@@ -349,6 +349,12 @@
         <field name="name">Tableau de bord</field>
         <field name="tag">fund_dashboard</field>
     </record>
+    <!-- Action pour accéder aux logs -->
+    <record id="action_reconciliation_log" model="ir.actions.act_window">
+        <field name="name">Logs de Réconciliation</field>
+        <field name="res_model">efund.operation.reconciliation.log</field>
+        <field name="view_mode">list,form</field>
+    </record>
 
 
     <!-- =========================

@@ -1,9 +1,10 @@
-# fichier : efund_cash_reconciliation_service.py
-
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
-from datetime import datetime
+from contextlib import contextmanager
+import json
 import logging
+import traceback
+from datetime import datetime
 
 _logger = logging.getLogger(__name__)
 
@@ -12,682 +13,304 @@ class EfundCashReconciliationService(models.Model):
     _name = 'efund.cash.reconciliation.service'
     _description = 'Service de Réconciliation Cash Investisseur/Fonds'
 
+    @api.model
+    @contextmanager
+    def reconciliation_logging(self, operation_type, source_record=None, deposit_id=None,withdraw_id=None,subscription_id=None,redemption_id=None):
+        """
+        Context manager pour logger les opérations de réconciliation
+
+        Usage:
+        with self.reconciliation_logging('deposit', deposit_record) as log:
+            # Votre code de réconciliation
+            log.add_info("Message d'info")
+            log.add_warning("Message d'avertissement")
+            log.add_created_record('efund.account.cash.move', move_id)
+        """
+        # Créer le log
+        log_record = self.env['efund.operation.reconciliation.log'].create({
+            'operation_type': operation_type,
+            'state': 'pending',
+            'start_date': fields.Datetime.now(),
+            'user_id': self.env.user.id,
+            'deposit_id': deposit_id,
+            'withdraw_id': withdraw_id,
+            'subscription_id': subscription_id,
+            'redemption_id': redemption_id,
+        })
+
+        # Lier au record source si fourni
+        if source_record:
+            model_field = f"{source_record._name.replace('.', '_')}_id"
+            if hasattr(log_record, model_field):
+                log_record.write({model_field: source_record.id})
+
+        # Initialiser les structures de données
+        log_data = {
+            'info': [],
+            'warnings': [],
+            'errors': [],
+            'created': {},
+            'updated': {},
+            'deleted': {},
+        }
+
+        class ReconciliationLogger:
+            def __init__(self, log_record, log_data):
+                self.log_record = log_record  # L'enregistrement réel dans la BD
+                self.log_data = log_data
+
+            def add_info(self, message, data=None):
+                log_data['info'].append({
+                    'timestamp': fields.Datetime.now(),
+                    'message': message,
+                    'data': data,
+                })
+                _logger.info(f"[Reconciliation {log_record.id}] {message}")
+
+            def add_warning(self, message, data=None):
+                log_data['warnings'].append({
+                    'timestamp': fields.Datetime.now(),
+                    'message': message,
+                    'data': data,
+                })
+                _logger.warning(f"[Reconciliation {log_record.id}] {message}")
+
+            def add_error(self, message, data=None):
+                log_data['errors'].append({
+                    'timestamp': fields.Datetime.now(),
+                    'message': message,
+                    'data': data,
+                })
+                _logger.error(f"[Reconciliation {log_record.id}] {message}")
+
+            def add_created_record(self, model, record_id, details=None):
+                if model not in log_data['created']:
+                    log_data['created'][model] = []
+                log_data['created'][model].append({
+                    'id': record_id,
+                    'timestamp': fields.Datetime.now(),
+                    'details': details,
+                })
+
+            def add_updated_record(self, model, record_id, changes=None):
+                if model not in log_data['updated']:
+                    log_data['updated'][model] = []
+                log_data['updated'][model].append({
+                    'id': record_id,
+                    'timestamp': fields.Datetime.now(),
+                    'changes': changes,
+                })
+
+            def add_deleted_record(self, model, record_id, details=None):
+                if model not in log_data['deleted']:
+                    log_data['deleted'][model] = []
+                log_data['deleted'][model].append({
+                    'id': record_id,
+                    'timestamp': fields.Datetime.now(),
+                    'details': details,
+                })
+
+        logger = ReconciliationLogger(log_record, log_data)
+
+        try:
+            yield logger
+
+            # Succès
+            log_record.write({
+                'state': 'success',
+                'end_date': fields.Datetime.now(),
+                'info_messages': json.dumps(log_data['info'], default=str, indent=2),
+                'warning_messages': json.dumps(log_data['warnings'], default=str, indent=2),
+                'error_messages': json.dumps(log_data['errors'], default=str, indent=2),
+                'created_records': json.dumps(log_data['created'], default=str, indent=2),
+                'updated_records': json.dumps(log_data['updated'], default=str, indent=2),
+                'deleted_records': json.dumps(log_data['deleted'], default=str, indent=2),
+                'records_created': sum(len(ids) for ids in log_data['created'].values()),
+                'records_updated': sum(len(ids) for ids in log_data['updated'].values()),
+                'records_deleted': sum(len(ids) for ids in log_data['deleted'].values()),
+            })
+
+        except Exception as e:
+            # Échec
+            error_traceback = traceback.format_exc()
+            logger.add_error(f"Erreur: {str(e)}")
+
+            log_record.write({
+                'state': 'failed',
+                'end_date': fields.Datetime.now(),
+                'error_messages': json.dumps(log_data['errors'], default=str, indent=2),
+                'traceback': error_traceback,
+                'info_messages': json.dumps(log_data['info'], default=str, indent=2),
+                'warning_messages': json.dumps(log_data['warnings'], default=str, indent=2),
+            })
+
+            raise
+
     # Ce modèle sert de conteneur pour les méthodes de service
     # Il n'a pas de vue ou d'enregistrements, seulement des méthodes statiques
 
     @api.model
-    def reconcile_investor_deposit(self, investor_cash_move_id):
+    def reconcile_investor_deposit_with_logging(self, deposit_data, user_id=None):
         """
-        Réconcilier un dépôt d'investisseur avec le cash du fonds
-
-        Args:
-            investor_cash_move_id (int): ID du mouvement cash investisseur
-
-        Returns:
-            dict: Résultat de l'opération
+        Réconcilier un dépôt avec logging complet
         """
-        try:
-            investor_move = self.env['efund.investor.cash.move'].browse(investor_cash_move_id)
+        # Démarrer le logging
+        with self.reconciliation_logging('deposit', deposit_data,deposit_data.id) as logger:
+            logger.add_info(f"Début réconciliation dépôt: {deposit_data.name}")
 
-            if not investor_move:
-                raise UserError(_("Mouvement investisseur introuvable"))
-
-            if investor_move.move_type != 'deposit':
-                raise UserError(_("Seuls les dépôts peuvent être réconciliés avec cette méthode"))
-
-            # Trouver le compte cash du fonds
+            # 1. Vérifier si le compte cash du fonds existe
             fund_cash = self.env['efund.fund.cash'].search([
-                ('fund_id', '=', investor_move.fund_id.id)
+                ('fund_id', '=', deposit_data.fund_id.id)
             ], limit=1)
 
             if not fund_cash:
                 # Créer automatiquement le compte cash du fonds s'il n'existe pas
+                logger.add_info("Création du compte cash du fonds (inexistant)")
                 fund_cash = self.env['efund.fund.cash'].create({
-                    'name': f"Trésorerie - {investor_move.fund_id.name}",
-                    'fund_id': investor_move.fund_id.id,
+                    'name': f"Trésorerie - {deposit_data.fund_id.name}",
+                    'fund_id': deposit_data.fund_id.id,
+                    'company_id': deposit_data.fund_id.company_id.id,
+                })
+                logger.add_created_record('efund.fund.cash', fund_cash.id, {
+                    'name': fund_cash.name,
+                    'fund': deposit_data.fund_id.name,
                 })
 
-            # Créer le mouvement de cash du fonds
-            fund_move = self.env['efund.fund.cash.move'].create({
+            # 2. Créer le mouvement cash investisseur
+            investor_move_vals = {
+                'cash_account_id': deposit_data.cash_account_id.id,
+                'move_type': 'deposit',
+                'amount': deposit_data.amount,
+            }
+            investor_move = self.env['efund.investor.cash.move'].create(investor_move_vals)
+            logger.add_created_record('efund.investor.cash.move', investor_move.id, {
+                'reference': investor_move.name or str(investor_move.id),
+                'amount': deposit_data.amount,
+                'investor': deposit_data.investor_id.name,
+            })
+
+            # 3. Créer le mouvement cash fonds
+            fund_move_vals = {
                 'name': self.env['ir.sequence'].next_by_code('efund.fund.cash.move'),
                 'fund_cash_id': fund_cash.id,
-                'date': investor_move.date.date() if investor_move.date else fields.Date.today(),
-                'amount': investor_move.amount,
+                'amount': deposit_data.amount,
                 'move_type': 'deposit_in',
                 'liquidity_type': 'liquid',
                 'state': 'posted',
                 'investor_cash_move_id': investor_move.id,
-                'partner_id': investor_move.investor_id.partner_id.id if investor_move.investor_id.partner_id else False,
-                'fund_id': investor_move.fund_id.id,
+                'investor_id': deposit_data.investor_id.id if deposit_data.investor_id else False,
+                'fund_id': deposit_data.fund_id.id,
+            }
+
+            fund_move = self.env['efund.fund.cash.move'].create(fund_move_vals)
+            logger.add_created_record('efund.fund.cash.move', fund_move.id, {
+                'reference': fund_move.name,
+                'amount': deposit_data.amount,
+                'fund': deposit_data.fund_id.name,
             })
 
-            # Mettre à jour la référence croisée
-            investor_move.write({
-                'fund_cash_move_id': fund_move.id,
-                'state': 'reconciled' if hasattr(investor_move, 'state') else False,
+            # 4. Mettre à jour la référence croisée
+            investor_move.write({'fund_cash_move_id': fund_move.id})
+            logger.add_updated_record('efund.investor.cash.move', investor_move.id, {
+                'field': 'fund_cash_move_id',
+                'old_value': None,
+                'new_value': fund_move.id,
             })
 
-            _logger.info(f"Dépôt réconcilié: Investisseur {investor_move.id} -> Fonds {fund_move.id}")
+            # 5. Mettre à jour les balances (via compute fields)
+            # Les champs compute se mettront à jour automatiquement
+
+            logger.add_info(f"Réconciliation terminée avec succès. Montant: {deposit_data.amount}")
 
             return {
                 'success': True,
-                'message': _("Dépôt réconcilié avec succès"),
-                'investor_move_id': investor_move.id,
-                'fund_move_id': fund_move.id,
-                'amount': investor_move.amount,
+                #'log_id': logger.get_log_id(),  # ID du log créé
+                'investor_cash_move_id': investor_move.id,
+                'fund_cash_move_id': fund_move.id,
+                'investor_move_ref': investor_move.name or str(investor_move.id),
+                'fund_move_ref': fund_move.name,
             }
 
-        except Exception as e:
-            _logger.error(f"Erreur réconciliation dépôt: {str(e)}")
-            raise UserError(_(f"Erreur lors de la réconciliation: {str(e)}"))
-
     @api.model
-    def reconcile_investor_withdrawal(self, investor_cash_move_id):
-        """
-        Réconcilier un retrait d'investisseur avec le cash du fonds
+    def reconcile_investor_withdrawal_with_logging(self, withdrawal_data, user_id=None):
+        with self.reconciliation_logging('withdrawal', withdrawal_data,None,withdrawal_data.id) as logger:
+            logger.add_info(f"Début réconciliation de retrait: {withdrawal_data.name}")
 
-        Args:
-            investor_cash_move_id (int): ID du mouvement cash investisseur
-
-        Returns:
-            dict: Résultat de l'opération
-        """
-        try:
-            investor_move = self.env['efund.investor.cash.move'].browse(investor_cash_move_id)
-
-            if not investor_move:
-                raise UserError(_("Mouvement investisseur introuvable"))
-
-            if investor_move.move_type != 'withdraw':
-                raise UserError(_("Seuls les retraits peuvent être réconciliés avec cette méthode"))
+            # 1- Vérifier le solde de l'investisseur
+            investor_cash_account = withdrawal_data.cash_account_id
+            if investor_cash_account.balance < withdrawal_data.amount:
+                raise UserError(_(
+                    "Solde insuffisant pour ce retrait. "
+                    f"Solde disponible: {investor_cash_account.balance}, "
+                    f"Montant demandé: {withdrawal_data.amount}"
+                ))
 
             # Vérifier la liquidité du fonds
             fund_cash = self.env['efund.fund.cash'].search([
-                ('fund_id', '=', investor_move.fund_id.id)
+                ('fund_id', '=', investor_cash_account.fund_id.id)
             ], limit=1)
 
             if not fund_cash:
                 raise UserError(_("Aucun compte de trésorerie trouvé pour ce fonds"))
 
-            # Vérifier si le fonds a suffisamment de liquidité
-            if fund_cash.available_balance < investor_move.amount:
-                raise UserError(_("Fonds insuffisants dans la trésorerie du fonds pour ce retrait"))
+            if fund_cash.balance < withdrawal_data.amount:
+                logger.add_warning("Liquidité insuffisante dans le fonds, vente d'actifs nécessaire")
 
-            # Créer le mouvement de cash du fonds
+            # 2. Créer le mouvement cash investisseur
+            investor_move = self.env['efund.investor.cash.move'].create({
+                'cash_account_id': investor_cash_account.id,
+                'move_type': 'withdraw',
+                'amount': withdrawal_data.amount,
+            })
+            logger.add_created_record('efund.investor.cash.move', investor_move.id, {
+                'reference': investor_move.name or str(investor_move.id),
+                'amount': withdrawal_data.amount,
+                'investor': withdrawal_data.investor_id.name,
+                'type': 'withdraw',
+            })
+
+
+            # 3. Créer le mouvement cash fonds
             fund_move = self.env['efund.fund.cash.move'].create({
                 'name': self.env['ir.sequence'].next_by_code('efund.fund.cash.move'),
                 'fund_cash_id': fund_cash.id,
-                'date': investor_move.date.date() if investor_move.date else fields.Date.today(),
-                'amount': investor_move.amount,
+                'date':  fields.Date.today(),
+                'amount': withdrawal_data.amount,
                 'move_type': 'withdraw_out',
                 'liquidity_type': 'liquid',
                 'state': 'posted',
                 'investor_cash_move_id': investor_move.id,
-                'partner_id': investor_move.investor_id.partner_id.id if investor_move.investor_id.partner_id else False,
-                'fund_id': investor_move.fund_id.id,
+                'investor_id': withdrawal_data.investor_id.id if withdrawal_data.investor_id else False,
+                'fund_id': investor_cash_account.fund_id.id,
+            })
+            _logger.info(f"********* fund_move (fund cash move) = {fund_move}")
+            logger.add_created_record('efund.fund.cash.move', fund_move.id, {
+                'reference': fund_move.name,
+                'amount': withdrawal_data.amount,
+                'fund': withdrawal_data.fund_id.name,
             })
 
-            # Mettre à jour la référence croisée
-            investor_move.write({
+            # 4. Mettre à jour la référence croisée
+            investor_move.write({'fund_cash_move_id': fund_move.id})
+            logger.add_updated_record('efund.investor.cash.move', investor_move.id, {
+                'field': 'fund_cash_move_id',
+                'old_value': None,
+                'new_value': fund_move.id,
+            })
+
+            # 5. Mettre à jour l'état du retrait
+            withdrawal_data.write({
+                'investor_cash_move_id': investor_move.id,
                 'fund_cash_move_id': fund_move.id,
-                'state': 'reconciled' if hasattr(investor_move, 'state') else False,
             })
-
-            _logger.info(f"Retrait réconcilié: Investisseur {investor_move.id} -> Fonds {fund_move.id}")
 
             return {
                 'success': True,
-                'message': _("Retrait réconcilié avec succès"),
-                'investor_move_id': investor_move.id,
-                'fund_move_id': fund_move.id,
-                'amount': investor_move.amount,
+                #'log_id': log_record.id,
+                'investor_cash_move_id': investor_move.id,
+                'fund_cash_move_id': fund_move.id,
+                'investor_move_ref': investor_move.name or str(investor_move.id),
+                'fund_move_ref': fund_move.name,
+                'amount': withdrawal_data.amount,
             }
 
-        except Exception as e:
-            _logger.error(f"Erreur réconciliation retrait: {str(e)}")
-            raise UserError(_(f"Erreur lors de la réconciliation: {str(e)}"))
-
-    @api.model
-    def reconcile_subscription(self, subscription_order_id):
-        """
-        Réconcilier une souscription avec le cash du fonds et le portefeuille
-
-        Args:
-            subscription_order_id (int): ID de l'ordre de souscription
-
-        Returns:
-            dict: Résultat de l'opération
-        """
-        try:
-            subscription = self.env['efund.subscription.order'].browse(subscription_order_id)
-
-            if not subscription:
-                raise UserError(_("Ordre de souscription introuvable"))
-
-            if subscription.state != 'confirmed':
-                raise UserError(_("L'ordre de souscription doit être confirmé"))
-
-            # Trouver le compte cash du fonds
-            fund_cash = self.env['efund.fund.cash'].search([
-                ('fund_id', '=', subscription.fund_id.id)
-            ], limit=1)
-
-            if not fund_cash:
-                raise UserError(_("Aucun compte de trésorerie trouvé pour ce fonds"))
-
-            # 1. Créer le mouvement de cash du fonds (entrée de cash)
-            fund_cash_move = self.env['efund.fund.cash.move'].create({
-                'name': self.env['ir.sequence'].next_by_code('efund.fund.cash.move'),
-                'fund_cash_id': fund_cash.id,
-                'date': subscription.subscription_date,
-                'amount': subscription.net_amount,
-                'move_type': 'subscription_in',
-                'liquidity_type': 'liquid',
-                'state': 'posted',
-                'subscription_id': subscription.id,
-                'partner_id': subscription.investor_id.partner_id.id if subscription.investor_id.partner_id else False,
-                'fund_id': subscription.fund_id.id,
-            })
-
-            # 2. Créer le mouvement de cash investisseur (sortie de cash)
-            investor_cash_move = self.env['efund.investor.cash.move'].create({
-                'cash_account_id': subscription.cash_account_id.id,
-                'move_type': 'subscription_net',
-                'amount': subscription.net_amount,
-                'date': subscription.subscription_date,
-                'fund_id': subscription.fund_id.id,
-                'investor_id': subscription.investor_id.id,
-            })
-
-            # 3. Créer le mouvement de parts investisseur
-            investor_part_move = self.env['efund.investor.part.move'].create({
-                'part_account_id': subscription.part_account_id.id,
-                'move_type': 'subscription',
-                'parts': subscription.parts_allocated,
-                'date': subscription.subscription_date,
-                'fund_id': subscription.fund_id.id,
-                'investor_id': subscription.investor_id.id,
-            })
-
-            # 4. Mettre à jour le portefeuille du fonds (si investissement immédiat)
-            if subscription.investment_strategy == 'immediate':
-                self._allocate_to_portfolio(subscription.fund_id.id, subscription.net_amount)
-
-            # 5. Mettre à jour l'ordre de souscription
-            subscription.write({
-                'state': 'executed',
-                'execution_date': fields.Date.today(),
-                'fund_cash_move_id': fund_cash_move.id,
-                'investor_cash_move_id': investor_cash_move.id,
-                'investor_part_move_id': investor_part_move.id,
-            })
-
-            _logger.info(f"Souscription réconciliée: Ordre {subscription.id}, Montant: {subscription.net_amount}")
-
-            return {
-                'success': True,
-                'message': _("Souscription réconciliée avec succès"),
-                'subscription_id': subscription.id,
-                'fund_cash_move_id': fund_cash_move.id,
-                'investor_cash_move_id': investor_cash_move.id,
-                'investor_part_move_id': investor_part_move.id,
-            }
-
-        except Exception as e:
-            _logger.error(f"Erreur réconciliation souscription: {str(e)}")
-            raise UserError(_(f"Erreur lors de la réconciliation de la souscription: {str(e)}"))
-
-    @api.model
-    def reconcile_redemption(self, redemption_order_id):
-        """
-        Réconcilier un rachat avec le cash du fonds et le portefeuille
-
-        Args:
-            redemption_order_id (int): ID de l'ordre de rachat
-
-        Returns:
-            dict: Résultat de l'opération
-        """
-        try:
-            redemption = self.env['efund.redemption.order'].browse(redemption_order_id)
-
-            if not redemption:
-                raise UserError(_("Ordre de rachat introuvable"))
-
-            if redemption.state != 'confirmed':
-                raise UserError(_("L'ordre de rachat doit être confirmé"))
-
-            # Vérifier la liquidité du fonds
-            fund_cash = self.env['efund.fund.cash'].search([
-                ('fund_id', '=', redemption.fund_id.id)
-            ], limit=1)
-
-            if not fund_cash:
-                raise UserError(_("Aucun compte de trésorerie trouvé pour ce fonds"))
-
-            # Vérifier si le fonds a suffisamment de liquidité
-            if fund_cash.available_balance < redemption.net_amount:
-                # Si pas assez de liquidité, vendre des actifs du portefeuille
-                self._liquidate_assets_for_redemption(redemption.fund_id.id, redemption.net_amount)
-
-            # 1. Créer le mouvement de cash du fonds (sortie de cash)
-            fund_cash_move = self.env['efund.fund.cash.move'].create({
-                'name': self.env['ir.sequence'].next_by_code('efund.fund.cash.move'),
-                'fund_cash_id': fund_cash.id,
-                'date': redemption.redemption_date,
-                'amount': redemption.net_amount,
-                'move_type': 'redemption_out',
-                'liquidity_type': 'liquid',
-                'state': 'posted',
-                'redemption_id': redemption.id,
-                'partner_id': redemption.investor_id.partner_id.id if redemption.investor_id.partner_id else False,
-                'fund_id': redemption.fund_id.id,
-            })
-
-            # 2. Créer le mouvement de cash investisseur (entrée de cash)
-            investor_cash_move = self.env['efund.investor.cash.move'].create({
-                'cash_account_id': redemption.cash_account_id.id,
-                'move_type': 'redemption_net',
-                'amount': redemption.net_amount,
-                'date': redemption.redemption_date,
-                'fund_id': redemption.fund_id.id,
-                'investor_id': redemption.investor_id.id,
-            })
-
-            # 3. Créer le mouvement de parts investisseur
-            investor_part_move = self.env['efund.investor.part.move'].create({
-                'part_account_id': redemption.part_account_id.id,
-                'move_type': 'redemption',
-                'parts': redemption.parts_redeemed,
-                'date': redemption.redemption_date,
-                'fund_id': redemption.fund_id.id,
-                'investor_id': redemption.investor_id.id,
-            })
-
-            # 4. Mettre à jour l'ordre de rachat
-            redemption.write({
-                'state': 'executed',
-                'execution_date': fields.Date.today(),
-                'fund_cash_move_id': fund_cash_move.id,
-                'investor_cash_move_id': investor_cash_move.id,
-                'investor_part_move_id': investor_part_move.id,
-            })
-
-            _logger.info(f"Rachat réconcilié: Ordre {redemption.id}, Montant: {redemption.net_amount}")
-
-            return {
-                'success': True,
-                'message': _("Rachat réconcilié avec succès"),
-                'redemption_id': redemption.id,
-                'fund_cash_move_id': fund_cash_move.id,
-                'investor_cash_move_id': investor_cash_move.id,
-                'investor_part_move_id': investor_part_move.id,
-            }
-
-        except Exception as e:
-            _logger.error(f"Erreur réconciliation rachat: {str(e)}")
-            raise UserError(_(f"Erreur lors de la réconciliation du rachat: {str(e)}"))
-
-    @api.model
-    def _allocate_to_portfolio(self, fund_id, amount):
-        """
-        Allouer des fonds au portefeuille d'actifs
-
-        Args:
-            fund_id (int): ID du fonds
-            amount (float): Montant à allouer
-        """
-        try:
-            # Récupérer le portefeuille du fonds
-            portfolio = self.env['efund.fund.portfolio'].search([
-                ('fund_id', '=', fund_id)
-            ], limit=1)
-
-            if not portfolio:
-                # Créer le portefeuille s'il n'existe pas
-                portfolio = self.env['efund.fund.portfolio'].create({
-                    'name': f"Portefeuille - {self.env['efund.fund'].browse(fund_id).name}",
-                    'fund_id': fund_id,
-                })
-
-            # Pour l'instant, on alloue en cash
-            # Dans une implémentation réelle, on utiliserait une stratégie d'investissement
-            cash_line = portfolio.asset_line_ids.filtered(
-                lambda l: l.asset_type == 'cash'
-            )
-
-            if cash_line:
-                # Mettre à jour la ligne cash existante
-                cash_line.write({
-                    'quantity': cash_line.quantity + amount,
-                    'current_price': 1.0,  # Le cash vaut toujours 1
-                    'current_value': cash_line.current_value + amount,
-                })
-            else:
-                # Créer une nouvelle ligne cash
-                self.env['efund.fund.portfolio.line'].create({
-                    'portfolio_id': portfolio.id,
-                    'asset_type': 'cash',
-                    'asset_name': 'Trésorerie',
-                    'quantity': amount,
-                    'average_cost': 1.0,
-                    'current_price': 1.0,
-                })
-
-            _logger.info(f"Allocation portefeuille: Fonds {fund_id}, Montant: {amount}")
-
-        except Exception as e:
-            _logger.error(f"Erreur allocation portefeuille: {str(e)}")
-            raise
-
-    @api.model
-    def _liquidate_assets_for_redemption(self, fund_id, amount_needed):
-        """
-        Liquider des actifs pour faire face à un rachat
-
-        Args:
-            fund_id (int): ID du fonds
-            amount_needed (float): Montant nécessaire
-        """
-        try:
-            # Récupérer le portefeuille du fonds
-            portfolio = self.env['efund.fund.portfolio'].search([
-                ('fund_id', '=', fund_id)
-            ], limit=1)
-
-            if not portfolio:
-                raise UserError(_("Aucun portefeuille trouvé pour ce fonds"))
-
-            # Stratégie de liquidation simple: vendre d'abord le cash, puis les actifs les plus liquides
-            total_liquidated = 0
-
-            # 1. Vérifier le cash disponible dans le portefeuille
-            cash_line = portfolio.asset_line_ids.filtered(
-                lambda l: l.asset_type == 'cash'
-            )
-
-            if cash_line and cash_line.current_value > 0:
-                cash_available = min(cash_line.current_value, amount_needed)
-                if cash_available > 0:
-                    # Réduire le cash
-                    cash_line.write({
-                        'quantity': cash_line.quantity - cash_available,
-                        'current_value': cash_line.current_value - cash_available,
-                    })
-                    total_liquidated += cash_available
-
-            # 2. Si besoin, liquider d'autres actifs (simplifié)
-            if total_liquidated < amount_needed:
-                # Dans une implémentation réelle, on aurait une logique plus sophistiquée
-                # pour choisir quels actifs vendre en priorité
-                _logger.warning(
-                    f"Liquidation nécessaire au-delà du cash disponible: {amount_needed - total_liquidated}")
-                # Pour l'exemple, on suppose qu'on peut toujours liquider
-                total_liquidated = amount_needed
-
-            # Créer un mouvement de désinvestissement
-            fund_cash = self.env['efund.fund.cash'].search([
-                ('fund_id', '=', fund_id)
-            ], limit=1)
-
-            if fund_cash:
-                self.env['efund.fund.cash.move'].create({
-                    'name': self.env['ir.sequence'].next_by_code('efund.fund.cash.move'),
-                    'fund_cash_id': fund_cash.id,
-                    'date': fields.Date.today(),
-                    'amount': total_liquidated,
-                    'move_type': 'divestment_in',
-                    'liquidity_type': 'liquid',
-                    'state': 'posted',
-                    'fund_id': fund_id,
-                })
-
-            _logger.info(f"Liquidation pour rachat: Fonds {fund_id}, Montant liquidé: {total_liquidated}")
-
-            return total_liquidated
-
-        except Exception as e:
-            _logger.error(f"Erreur liquidation actifs: {str(e)}")
-            raise UserError(_(f"Erreur lors de la liquidation des actifs: {str(e)}"))
-
-    @api.model
-    def get_fund_liquidity_status(self, fund_id):
-        """
-        Obtenir le statut de liquidité d'un fonds
-
-        Args:
-            fund_id (int): ID du fonds
-
-        Returns:
-            dict: Statut de liquidité
-        """
-        try:
-            fund_cash = self.env['efund.fund.cash'].search([
-                ('fund_id', '=', fund_id)
-            ], limit=1)
-
-            if not fund_cash:
-                return {
-                    'available_balance': 0.0,
-                    'current_balance': 0.0,
-                    'liquidity_ratio': 0.0,
-                    'status': 'no_cash_account',
-                }
-
-            # Calculer le ratio de liquidité (cash disponible / total actifs)
-            portfolio = self.env['efund.fund.portfolio'].search([
-                ('fund_id', '=', fund_id)
-            ], limit=1)
-
-            total_assets = portfolio.total_value if portfolio else 0.0
-            liquidity_ratio = (fund_cash.available_balance / total_assets * 100) if total_assets > 0 else 0.0
-
-            # Déterminer le statut
-            if liquidity_ratio >= 10:
-                status = 'high_liquidity'
-            elif liquidity_ratio >= 5:
-                status = 'medium_liquidity'
-            elif liquidity_ratio >= 2:
-                status = 'low_liquidity'
-            else:
-                status = 'critical_liquidity'
-
-            return {
-                'available_balance': fund_cash.available_balance,
-                'current_balance': fund_cash.current_balance,
-                'liquidity_ratio': liquidity_ratio,
-                'status': status,
-                'status_label': self._get_liquidity_status_label(status),
-            }
-
-        except Exception as e:
-            _logger.error(f"Erreur statut liquidité: {str(e)}")
-            return {
-                'error': str(e),
-                'status': 'error',
-            }
-
-    @api.model
-    def _get_liquidity_status_label(self, status):
-        """
-        Obtenir le libellé du statut de liquidité
-
-        Args:
-            status (str): Code du statut
-
-        Returns:
-            str: Libellé traduit
-        """
-        status_labels = {
-            'high_liquidity': _("Haute Liquidité"),
-            'medium_liquidity': _("Liquidité Moyenne"),
-            'low_liquidity': _("Faible Liquidité"),
-            'critical_liquidity': _("Liquidité Critique"),
-            'no_cash_account': _("Pas de Compte Cash"),
-            'error': _("Erreur"),
-        }
-        return status_labels.get(status, _("Inconnu"))
-
-    @api.model
-    def reconcile_daily_operations(self, fund_id=None, date=None):
-        """
-        Réconcilier toutes les opérations d'une journée
-
-        Args:
-            fund_id (int, optional): ID du fonds (si None, tous les fonds)
-            date (date, optional): Date à réconcilier (si None, aujourd'hui)
-
-        Returns:
-            dict: Résumé des réconciliations
-        """
-        try:
-            if date is None:
-                date = fields.Date.today()
-
-            funds_domain = [('fund_id', '!=', False)]
-            if fund_id:
-                funds_domain.append(('fund_id', '=', fund_id))
-
-            # Récupérer les mouvements investisseurs non réconciliés
-            unreconciled_moves = self.env['efund.investor.cash.move'].search([
-                ('date', '>=', date),
-                ('date', '<', date + ' 1 day'),
-                ('fund_cash_move_id', '=', False),
-                ('move_type', 'in', ['deposit', 'withdraw']),
-            ])
-
-            results = {
-                'date': date,
-                'total_moves': len(unreconciled_moves),
-                'successful': 0,
-                'failed': 0,
-                'details': [],
-            }
-
-            for move in unreconciled_moves:
-                try:
-                    if move.move_type == 'deposit':
-                        result = self.reconcile_investor_deposit(move.id)
-                    elif move.move_type == 'withdraw':
-                        result = self.reconcile_investor_withdrawal(move.id)
-                    else:
-                        continue
-
-                    results['successful'] += 1
-                    results['details'].append({
-                        'move_id': move.id,
-                        'type': move.move_type,
-                        'amount': move.amount,
-                        'status': 'success',
-                        'message': result.get('message', ''),
-                    })
-
-                except Exception as e:
-                    results['failed'] += 1
-                    results['details'].append({
-                        'move_id': move.id,
-                        'type': move.move_type,
-                        'amount': move.amount,
-                        'status': 'failed',
-                        'message': str(e),
-                    })
-
-            _logger.info(f"Réconciliation quotidienne: {results['successful']} succès, {results['failed']} échecs")
-
-            return results
-
-        except Exception as e:
-            _logger.error(f"Erreur réconciliation quotidienne: {str(e)}")
-            raise
-
-    @api.model
-    def generate_reconciliation_report(self, start_date, end_date, fund_id=None):
-        """
-        Générer un rapport de réconciliation
-
-        Args:
-            start_date (date): Date de début
-            end_date (date): Date de fin
-            fund_id (int, optional): ID du fonds
-
-        Returns:
-            dict: Rapport de réconciliation
-        """
-        try:
-            domain = [
-                ('date', '>=', start_date),
-                ('date', '<=', end_date),
-            ]
-
-            if fund_id:
-                domain.append(('fund_id', '=', fund_id))
-
-            # Mouvements investisseurs
-            investor_moves = self.env['efund.investor.cash.move'].search(domain)
-
-            # Mouvements fonds
-            fund_moves = self.env['efund.fund.cash.move'].search(domain)
-
-            # Calculer les totaux par type
-            investor_totals = {}
-            fund_totals = {}
-
-            for move_type in ['deposit', 'withdraw', 'subscription_net', 'redemption_net']:
-                moves = investor_moves.filtered(lambda m: m.move_type == move_type)
-                investor_totals[move_type] = sum(moves.mapped('amount'))
-
-            for move_type in ['deposit_in', 'withdraw_out', 'subscription_in', 'redemption_out']:
-                moves = fund_moves.filtered(lambda m: m.move_type == move_type)
-                fund_totals[move_type] = sum(moves.mapped('amount'))
-
-            # Vérifier les correspondances
-            matched_count = 0
-            unmatched_count = 0
-
-            for investor_move in investor_moves.filtered(lambda m: m.move_type in ['deposit', 'withdraw']):
-                if investor_move.fund_cash_move_id:
-                    matched_count += 1
-                else:
-                    unmatched_count += 1
-
-            report = {
-                'period': f"{start_date} - {end_date}",
-                'investor_moves_count': len(investor_moves),
-                'fund_moves_count': len(fund_moves),
-                'matched_count': matched_count,
-                'unmatched_count': unmatched_count,
-                'match_rate': (matched_count / (matched_count + unmatched_count) * 100) if (
-                                                                                                   matched_count + unmatched_count) > 0 else 0,
-                'investor_totals': investor_totals,
-                'fund_totals': fund_totals,
-                'reconciliation_status': 'balanced' if abs(
-                    investor_totals.get('deposit', 0) - fund_totals.get('deposit_in', 0) +
-                    investor_totals.get('withdraw', 0) - fund_totals.get('withdraw_out', 0)
-                ) < 0.01 else 'unbalanced',
-            }
-
-            return report
-
-        except Exception as e:
-            _logger.error(f"Erreur génération rapport: {str(e)}")
-            raise
-
-    """
-    # Exemples d'utilisation
-
-        # 1. Réconcilier un dépôt
-        service = env['efund.cash.reconciliation.service']
-        result = service.reconcile_investor_deposit(investor_cash_move_id)
-        
-        # 2. Réconcilier une souscription
-        result = service.reconcile_subscription(subscription_order_id)
-        
-        # 3. Obtenir le statut de liquidité
-        liquidity_status = service.get_fund_liquidity_status(fund_id)
-        
-        # 4. Réconcilier les opérations quotidiennes
-        report = service.reconcile_daily_operations(fund_id, date)
-        
-        # 5. Générer un rapport
-        report = service.generate_reconciliation_report(start_date, end_date, fund_id)
-    """

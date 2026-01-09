@@ -10,8 +10,10 @@ from . import confirmable_mixin, res_company, forme_juridique, statut_operationn
     efund_fund_instrument_price, efund_config_import_price, menu_visibility, efund_bourse_order, efund_depositaire, \
     efund_operation_base, efund_bourse_order_execution_line, efund_fund_instrument_event, efund_position_adjustment, \
     efund_fund_investor, efund_investor_part_move, efund_investor_cash_move, efund_investor_deposit, \
-    efund_investor_redemption, efund_investor_subscription, efund_mandate, efund_mandate_coupon, efund_mandate_termination, \
+    efund_investor_redemption, efund_investor_subscription, efund_mandate, efund_mandate_coupon, \
+    efund_mandate_termination, efund_operation_reconciliation_log, \
     efund_mandate_investor, efund_investor_withdraw, efund_fund_instrument_fee, efund_fund_type, efund_asset_class, \
     efund_fund_type_allocation, efund_management_fee_accrual, efund_fund_allocation_snapshot, \
     efund_fund_allocation_snapshot_line, efund_fund_portfolio, efund_fund_cash, efund_fund_cash_move, \
-    efund_fund_portfolio_move,efund_fund_portfolio_line,efund_asset_trading_service,efund_cash_reconciliation_service
+    efund_fund_portfolio_move, efund_fund_portfolio_line, efund_asset_trading_service, \
+    efund_cash_reconciliation_service, json_widget,efund_investor_represented,efund_investor_intervention_mode,efund_investor_compagny_represented

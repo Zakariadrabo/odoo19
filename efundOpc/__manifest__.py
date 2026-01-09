@@ -57,12 +57,16 @@
         'wizard/efund_fund_subscription_wizard_views.xml',
         'views/efund_mandate_views.xml',
         'wizard/efund_mandate_termination_wizard_views.xml',
-        'views/efund_cash_deposit_views.xml',
+        'views/efund_investor_deposit_views.xml',
         'views/efund_investor_redemption_views.xml',
         'views/efund_investor_withdraw_views.xml',
         'wizard/efund_confirm_wizard_views.xml',
         'views/efund_fund_type_views.xml',
         'views/efund_asset_class_views.xml',
+        'views/efund_reconciliation_log_views.xml',
+
+
+        'data/sequence.xml',
 
     ],
 

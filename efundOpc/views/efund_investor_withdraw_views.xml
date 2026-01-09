@@ -36,17 +36,17 @@
 
                 <!-- HEADER -->
                 <header>
-                    <button name="action_cancel_subscription"
+                    <button name="action_cancel_withdraw"
+                            type="object"
+                            string="Annuler"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_submit_withdraw"
                             type="object"
                             string="Soumettre"
                             class="btn-primary"
                             invisible="state != 'draft'"/>
-                    <button name="action_submit_subscription"
-                            type="object"
-                            string="Soumettre"
-                            class="btn-primary"
-                            invisible="state != 'draft'"/>
-                    <button name="action_validate_subscription"
+                    <button name="action_validate_withdraw"
                             type="object"
                             string="Valider"
                             class="btn-primary"

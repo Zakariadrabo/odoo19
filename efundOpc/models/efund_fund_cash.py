@@ -24,9 +24,9 @@ class EfundFundCash(models.Model):
     def _compute_balance(self):
         for acc in self:
             moves = self.env['efund.fund.cash.move'].search([
-                ('cash_account_id', '=', acc.id)
+                ('fund_cash_id', '=', acc.id)
             ])
             acc.balance = sum(
-                m.amount if m.direction == 'in' else -m.amount
+                m.amount if '_in' in m.move_type else -m.amount
                 for m in moves
             )

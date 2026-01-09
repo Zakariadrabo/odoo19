@@ -58,6 +58,14 @@
                     <!-- ========================= -->
                     <!-- Smart Button -->
                     <!-- ========================= -->
+                    <div class="oe_title">
+                        <div class="oe_avatar">
+                            <field name="image_1920"
+                                   widget="image"
+                                   class="oe_avatar"
+                                   options="{'preview_image': 'image_1920'}"/>
+                        </div>
+                    </div>
                     <div class="oe_button_box" name="button_box">
                         <!-- Votre Smart Button 1 -->
                         <button class="oe_stat_button" name="action_open_deposit" type="object"
@@ -151,6 +159,24 @@
                     <!-- ========================== -->
 
                     <notebook>
+                        <page string="Relations">
+                            <group>
+                                <group>
+                                    <field name="entry_relation_date" options="{'numeric': true}"/>
+                                    <field name="business_object_relation"/>
+                                    <field name="origine"/>
+                                    <field name="other_origine" required="origine == 'other'"
+                                           invisible="origine != 'other'"/>
+                                </group>
+                                <group>
+                                    <field name="intervention_mode_ids">
+                                        <list>
+                                            <field name="code"/>
+                                        </list>
+                                    </field>
+                                </group>
+                            </group>
+                        </page>
                         <page string="Informations Bancaires">
                             <group>
                                 <group>
@@ -176,15 +202,41 @@
                                 <group>
                                     <field name="montant_mois"/>
                                     <field name="periodicite"/>
-                                    <field name="origine"/>
                                     <field name="activite"/>
+                                    <field name="other_activite" required="activite == 'other'"
+                                           invisible="activite != 'other'"/>
                                     <field name="objectif"/>
+                                    <field name="other_objectif" required="objectif == 'other'"
+                                           invisible="objectif != 'other'"/>
                                 </group>
                             </group>
+                        </page>
+                        <page string="Personnes représentées">
+                            <field name="represented_person_ids">
+                                <list editable="bottom">
+                                    <field name="full_name"/>
+                                    <field name="relationship"/>
+                                    <field name="birthdate" options="{'numeric': true}"/>
+                                </list>
+                            </field>
                         </page>
                         <page string="PM - Information KYC" invisible="investor_type != 'company'">
                             <group>
                                 <field name="activity_sector"/>
+                                <field name="social_object"/>
+                                <field name="is_beneficiaire_effectif" />
+                                <field name="beneficiaire_effectif" required="is_beneficiaire_effectif"
+                                           invisible="not is_beneficiaire_effectif" />
+                            </group>
+                            <group>
+                                <field name="represented_company_ids">
+                                <list editable="bottom">
+                                    <field name="full_name"/>
+                                    <field name="fonction"/>
+                                    <field name="birthdate" options="{'numeric': true}"/>
+                                    <field name="power" />
+                                </list>
+                            </field>
                             </group>
                         </page>
                         <!-- ========================== -->

@@ -60,6 +60,10 @@ class FundInvestor(models.Model):
     company_direction_address = fields.Char(string="Adresse Direction")
     company_direction_town = fields.Char(string="Ville Direction")
     company_direction_country_id = fields.Many2one("res.country", string="Pays Direction")
+    social_object = fields.Char(string="Social")
+    is_beneficiaire_effectif = fields.Boolean(string="Bénéficiaire", default=False)
+    beneficiaire_effectif = fields.Char(string="Bénéficiaire effectif")
+
 
     #infos commune
     name_bank = fields.Char(string="Nom de la banque")
@@ -67,6 +71,9 @@ class FundInvestor(models.Model):
     account_number = fields.Char(string="Numéro de compte")
     iban = fields.Char(string="IBAN")
     swift_bic = fields.Char(string="SWIFT/BIC")
+    entry_relation_date = fields.Date(string="Date d'entrée en relation")
+    business_object_relation = fields.Char(string="Nature de la relation d'affaire")
+
 
 
 
@@ -88,6 +95,11 @@ class FundInvestor(models.Model):
     document_ids = fields.One2many('efund.kyc.document', 'investor_id', string="KYC Documents")
     kyc_check_ids = fields.One2many('efund.kyc.check', 'investor_id', string="KYC Checks")
     aml_alert_ids = fields.One2many('efund.aml.alert', 'investor_id', string="AML Alerts")
+    represented_person_ids = fields.One2many('efund.investor.represented','investor_id',string="Personnes représentées")
+    intervention_mode_ids = fields.One2many('efund.investor.intervention.mode','investor_id', string="Investisseur")
+    represented_company_ids = fields.One2many('efund.investor.company.represented', 'investor_id',
+                                            string="Réprésentant de la société")
+
     active = fields.Boolean(default=True)
 
     fund_investor_ids = fields.One2many('efund.fund.investor','investor_id',string="Fonds")
@@ -129,8 +141,11 @@ class FundInvestor(models.Model):
     periodicite = fields.Selection([('Monthly','Mensuel'),('Quarterly','Trimestriel'),('Semi-Annual','Semestriel'),('Annual','Annuel')])
 
     origine = fields.Selection([('salary','Salaire'),('investment','Investissement'),('legacy','Héritage'),('savings','Epargne'),('other','Autre')], string="Origine des fonds")
+    other_origine = fields.Char(string="Autre origine")
     activite = fields.Selection([('employee','Salarié'),('liberal','Profession libérale'),('business','Entrepreneur'),('other','Autre')], string="Activité principale")
-    objectif = fields.Selection([('investissement','Investissement'),('savings','Epargne'),('transactions','Transactions'),('autre','Autre')], string="Objectif financier"  )
+    other_activite = fields.Char(string="Autre activité")
+    objectif = fields.Selection([('investissement','Investissement'),('savings','Epargne'),('transactions','Transactions'),('other','Autre')], string="Objectif financier")
+    other_objectif = fields.Char(string="Autre objectif")
 
     pep = fields.Selection([('Yes','Oui'),('No','Non')], string="PEP (info)")
     violation = fields.Selection([('Yes','Oui'),('No','Non')], string="Antécédents")
@@ -153,6 +168,16 @@ class FundInvestor(models.Model):
     deposit_count = fields.Integer(compute='_compute_deposit_count', string="Déposit")
     redemption_count = fields.Integer(compute='_compute_redemption_count', string="Rachat")
     withdraw_count = fields.Integer(compute='_compute_withdraw_count', string="Retrait Cash")
+
+    # image
+    image = fields.Binary(string="Photo / Logo",
+        help="Photo pour une personne physique, logo pour une personne morale",
+        attachment=True,store=True)
+    image_1920 = fields.Image(
+        string="Photo / Logo",
+        max_width=1920,
+        max_height=1920
+    )
 
     @api.depends('nom', 'prenom')
     def _compute_full_name(self):

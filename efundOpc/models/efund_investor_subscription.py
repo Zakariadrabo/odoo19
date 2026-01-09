@@ -5,74 +5,177 @@ from math import floor
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+from odoo.tools import float_round, float_is_zero
+
 _logger = logging.getLogger(__name__)
+
 
 class FundSubscription(models.Model):
     _name = 'efund.investor.subscription'
     _inherit = ['efund.operation.base', 'mail.thread', 'mail.activity.mixin', 'efund.confirmable.mixin']
     _description = 'Opération de souscription à un fond'
 
+    name = fields.Char(string="Référence", required=True,
+                       default=lambda self: self.env['ir.sequence'].next_by_code('efund.investor.subscription'))
+
     is_initial = fields.Boolean(string='Initial Subscription', default=False)
     currency_id = fields.Many2one(related='cash_account_id.fund_id.currency_id')
     date_operation = fields.Datetime(string="Date de l'opération", default=fields.Datetime.now)
     date_valeur = fields.Datetime(string="Date de valeur")
-    amount = fields.Monetary(string="montant", currency_field="currency_id")
-    parts = fields.Float(string="Nombre de parts")
+    gross_amount = fields.Monetary(string="montant", currency_field="currency_id")
+    shares = fields.Float(string="Nombre de parts")
     allow_fractional_parts = fields.Boolean(string="Parts fractionnées",
                                             related='cash_account_id.fund_id.allow_fractional_parts',
                                             help="Si décoché, les souscriptions sont arrondies à l'entier inférieur.")
-    unit_value = fields.Monetary(string="VL appliquée", readonly=True, currency_field="currency_id")
-    cash_used = fields.Monetary(string="Montant utilisé", readonly=True, currency_field="currency_id")
-    cash_refund = fields.Monetary(string="Montant restitué", readonly=True, currency_field="currency_id")
-    subscription_fee_rate = fields.Float(string="Taux frais de souscription (%)", related='share_class_id.subscription_fee_rate', readonly=True)
-    subscription_fee_amount = fields.Monetary(string="Frais de souscription",compute='_compute_subscription_fee_amount',store=True)
+    nav = fields.Monetary(string="VL appliquée", readonly=True, compute="_compute_nav_value", store=True)
+    net_amount = fields.Monetary(string="Montant utilisé", compute='_compute_subscription', store=True)
+    amount_remaining = fields.Monetary(string="Montant restitué", compute='_compute_subscription', readonly=True,
+                                       store=True)
+    subscription_fee_rate = fields.Float(string="Taux frais de souscription (%)", compute="_compute_nav_value",
+                                         readonly=True, store=True)
+    subscription_fee_amount = fields.Monetary(string="Frais de souscription", compute='_compute_subscription',
+                                              store=True)
+    buy_choice = fields.Selection([('amount', 'Montant'), ('share', 'Part')], string="Choix d'achat", default='amount')
 
-
-    #-----------------------------------------------------------------
+    # -----------------------------------------------------------------
     # RELATIONS
-    #-----------------------------------------------------------------
+    # -----------------------------------------------------------------
     cash_account_id = fields.Many2one('efund.investor.cash', required=True, readonly=True)
     part_account_id = fields.Many2one('efund.investor.part', required=True, readonly=True)
     balance = fields.Float(string="Solde", related="cash_account_id.balance", readonly=True)
     fund_id = fields.Many2one(related='cash_account_id.fund_id', store=True)
-    total_parts = fields.Float(string="Nombre total de parts", related="part_account_id.total_parts", readonly=True)
-    investor_id = fields.Many2one(related='cash_account_id.investor_id',store=True)
-    share_class_id = fields.Many2one('efund.fund.share.class', string="Classe de part", #required=True,
+    total_shares = fields.Float(string="Total de parts", related="part_account_id.total_parts", readonly=True)
+    investor_id = fields.Many2one(related='cash_account_id.investor_id', store=True)
+    share_class_id = fields.Many2one('efund.fund.share.class', string="Classe de part",  # required=True,
                                      domain="[('fund_id', '=', fund_id)]")
 
     # -----------------------------------------------------------------
     # LES METHODES
     # -----------------------------------------------------------------
-    @api.depends('amount', 'subscription_fee_rate', 'unit_value', 'cash_used', 'parts','share_class_id')
+    @api.onchange('gross_amount', 'shares')
+    def _onchange_gross_amount(self):
+        for sub in self:
+            sub.net_amount = 0
+            sub.subscription_fee_amount = 0
+            if sub.buy_choice == 'amount':
+                result = self.calculate_shares_with_fees(sub.nav, sub.allow_fractional_parts, sub.gross_amount,
+                                                         sub.subscription_fee_rate)
+            else:
+                result = self.calculate_amount_from_shares(sub.nav, sub.allow_fractional_parts, sub.shares,
+                                                           sub.subscription_fee_rate)
+
+            # affectation des valeurs
+            sub.net_amount = result.get('net_amount')
+            sub.subscription_fee_amount = result.get('fees_amount')
+            sub.amount_remaining = result.get('amount_remaining')
+            sub.gross_amount = result.get('gross_amount')
+            sub.shares = result.get('shares')
+
+    @api.depends('fund_id')
+    def _compute_nav_value(self):
+        for sub in self:
+            share_class = self.env['efund.fund.share.class'].search([
+                ('fund_id', '=', sub.fund_id.id),
+                ('is_default', '=', True)
+            ])
+            if share_class:
+                sub.nav = share_class.current_nav
+                sub.subscription_fee_rate = share_class.subscription_fee_rate
+            else:
+                raise UserError("Besoin d'avoir la classe de parts par défaut pour le fonds")
+
+    @api.model
+    def calculate_shares_with_fees(self, nav, allow_fractional_shares, gross_amount, fee_percent):
+        # 1. Calcul des frais et du montant net
+        # Formule : Montant Net = Montant Brut / (1 + Frais%)
+        # Ou plus commun : Frais = Brut * (Frais% / 100)
+        fees_amount = gross_amount * (fee_percent / 100.0)
+        net_amount_to_invest = gross_amount - fees_amount
+
+        # 2. Calcul théorique des parts sur la base du net
+        raw_shares = net_amount_to_invest / nav
+
+        # 3. Arrondi selon les règles du fonds
+        if allow_fractional_shares:
+            shares = float_round(raw_shares, precision_digits=6)
+        else:
+            shares = int(raw_shares)
+
+        # 4. Calcul des montants réels
+        # On recalcule le montant réellement converti en parts
+        actual_amount_invested = shares * nav
+
+        # Le amount_remaining est ce qui reste du montant NET après achat des parts
+        amount_remaining = net_amount_to_invest - actual_amount_invested
+
+        # Sécurité flottants
+        if float_is_zero(amount_remaining, precision_rounding=0.01):
+            amount_remaining = 0.0
+
+        return {
+            'gross_amount': gross_amount,
+            'fees_amount': fees_amount,
+            'net_amount': net_amount_to_invest,
+            'shares': shares,
+            'amount_used': actual_amount_invested,  # Montant converti en parts
+            'amount_remaining': amount_remaining  # amount_remaining dû aux arrondis de parts
+        }
+
+    @api.model
+    def calculate_amount_from_shares(self, nav, allow_fractional_shares, shares_to_buy, fee_percent):
+
+        if nav <= 0:
+            return {'error': "La valeur liquidative (NAV) doit être positive."}
+
+        # 1. Validation du nombre de parts (entier vs décimal)
+        if not allow_fractional_shares:
+            # Si le fonds n'autorise pas les virgules, on s'assure que l'entrée est entière
+            shares_to_buy = int(shares_to_buy)
+
+        # 2. Calcul du montant net (Investissement pur)
+        net_amount = shares_to_buy * nav
+
+        # 3. Calcul du montant brut (avec frais)
+        # Formule : Net = Brut * (1 - %frais) => Brut = Net / (1 - %frais)
+        if fee_percent >= 100:
+            return {'error': "Les frais ne peuvent pas être égaux ou supérieurs à 100%."}
+
+        gross_amount = net_amount / (1 - (fee_percent / 100.0))
+        # 4. Calcul des frais en valeur monétaire
+        fees_amount = gross_amount - net_amount
+        amount_remaining = gross_amount - net_amount - fees_amount
+
+        return {
+            'shares': shares_to_buy,
+            'net_amount': float_round(net_amount, precision_digits=4),
+            'fees_amount': float_round(fees_amount, precision_digits=4),
+            'gross_amount': float_round(gross_amount, precision_digits=4),
+            'amount_remaining': float_round(amount_remaining, precision_digits=4),
+        }
+
+    # @api.depends('amount', 'subscription_fee_rate', 'unit_value', 'cash_used', 'parts','share_class_id')
     def _compute_subscription_fee_amount(self):
         for sub in self:
-
-            prix_unitaire_ttc = sub.unit_value * (1 + sub.share_class_id.subscription_fee_rate / 100)
-
+            prix_unitaire_ttc = sub.nav * (1 + sub.share_class_id.subscription_fee_rate / 100)
             if sub.allow_fractional_parts:
                 # On calcule avec des décimales (souvent 4 pour les OPCVM)
-                sub.parts = round(sub.amount / prix_unitaire_ttc, 4)
+                sub.shares = round(sub.amount / prix_unitaire_ttc, 4)
             else:
                 # On force l'entier inférieur
-                sub.parts = math.floor(sub.amount / prix_unitaire_ttc)
+                sub.shares = math.floor(sub.amount / prix_unitaire_ttc)
 
-            montant_reel = sub.parts * prix_unitaire_ttc
-            cash_refund = sub.amount - montant_reel
+            montant_reel = sub.shares * prix_unitaire_ttc
+            amount_remaining = sub.amount - montant_reel
 
-            sub.cash_used = sub.parts * sub.unit_value
-            sub.subscription_fee_amount = sub.parts * sub.unit_value * sub.share_class_id.subscription_fee_rate / 100
-            sub.cash_refund = cash_refund
+            sub.net_amount = sub.shares * sub.unit_value
+            sub.subscription_fee_amount = sub.shares * sub.nav * sub.share_class_id.subscription_fee_rate / 100
+            sub.amount_remaining = amount_remaining
 
-    @api.onchange('parts')
+    @api.onchange('shares')
     def _onchange_parts(self):
         a_des_decimales = self.parts % 1 != 0
         if a_des_decimales and not self.allow_fractional_parts:
             raise UserError(_("Ce fonds n'accepte que des nombres de parts entières."))
-
-        self.cash_used = self.parts * self.unit_value
-        self.subscription_fee_amount = self.parts * self.unit_value * self.share_class_id.subscription_fee_rate / 100
-        self.amount = self.cash_used + self.subscription_fee_amount
-        self.cash_refund = 0
 
     def action_account(self):
         for rec in self:
@@ -93,32 +196,42 @@ class FundSubscription(models.Model):
                 raise UserError(_("Aucune VL valide disponible."))
 
             # Solde disponible suffisant
-            if self.cash_account_id.balance < self.amount:
+            if self.cash_account_id.balance < self.gross_amount:
                 raise UserError(_("Solde espèces insuffisant."))
 
-            # 🔢 Calcul théorique
-            theoretical_parts = rec.amount / vl
-
-            if fund.allow_fractional_parts:
-                parts = theoretical_parts
-                cash_used = rec.amount
-                cash_refund = 0.0
+            if rec.buy_choice == 'amount':
+                result = self.calculate_shares_with_fees(
+                    rec.nav,
+                    rec.allow_fractional_parts,
+                    rec.gross_amount,
+                    rec.subscription_fee_rate
+                )
             else:
-                parts = floor(theoretical_parts)
-                cash_used = parts * vl
-                cash_refund = rec.amount - cash_used
+                result = self.calculate_amount_from_shares(
+                    rec.nav,
+                    rec.allow_fractional_parts,
+                    rec.shares,
+                    rec.subscription_fee_rate
+                )
 
-            if parts <= 0:
+            # Utiliser les valeurs recalculées
+            net_amount = result.get('net_amount', 0.0)
+            subscription_fee_amount = result.get('fees_amount', 0.0)
+            amount_remaining = result.get('amount_remaining', 0.0)
+            gross_amount = result.get('gross_amount', rec.gross_amount)
+            shares = result.get('shares', 0.0)
+
+            if not rec.allow_fractional_parts and shares <= 0:
                 raise UserError(
                     _("Le montant est insuffisant pour souscrire au moins une part.")
                 )
 
-            # 🧾 Mise à jour de l’ordre
+            # 🧾 Mise à jour
             rec.write({
-                'unit_value': vl,
-                'parts': parts,
-                'cash_used': cash_used,
-                'cash_refund': cash_refund,
+                'nav': rec.nav,
+                'shares': shares,
+                'net_amount': net_amount,
+                'amount_remaining': amount_remaining,
                 'date_valeur': fields.Datetime.now(),
                 'state': 'accounted',
             })
@@ -129,7 +242,7 @@ class FundSubscription(models.Model):
             self.env['efund.investor.cash.move'].create({
                 'cash_account_id': rec.cash_account_id.id,
                 'move_type': 'subscription_net',
-                'amount': cash_used,
+                'amount': net_amount,
             })
             # Enregistrement des frais de souscription
             self.env['efund.investor.cash.move'].create({
@@ -142,15 +255,15 @@ class FundSubscription(models.Model):
             self.env['efund.investor.part.move'].create({
                 'part_account_id': rec.part_account_id.id,
                 'move_type': 'subscription',
-                'parts': parts,
+                'parts': shares,
             })
 
             # 3️⃣ Remboursement du reliquat (si nécessaire)
-            if cash_refund > 0:
+            if amount_remaining > 0:
                 self.env['efund.investor.cash.move'].create({
                     'cash_account_id': rec.cash_account_id.id,
                     'move_type': 'refund',
-                    'amount': cash_refund,
+                    'amount': amount_remaining,
                 })
 
             # 🧠 Traçabilité
@@ -161,58 +274,92 @@ class FundSubscription(models.Model):
                     "Parts créées : %s<br/>"
                     "Montant utilisé : %s<br/>"
                     "Montant restitué : %s"
-                ) % (vl, parts, cash_used, cash_refund)
+                ) % (vl, shares, net_amount, amount_remaining)
             )
 
     def action_validate_subscription(self):
         for rec in self:
             if rec.state != 'submitted':
                 raise UserError(_("La souscription doit être soumise avant la validation."))
+            # Solde disponible suffisant
+            if rec.cash_account_id.balance < rec.gross_amount:
+                raise UserError(_("Solde espèces insuffisant."))
 
-            rec.write({ 'state': 'validated',})
+            if rec.buy_choice == 'amount':
+                result = rec.calculate_shares_with_fees(
+                    rec.nav,
+                    rec.allow_fractional_parts,
+                    rec.gross_amount,
+                    rec.subscription_fee_rate
+                )
+            else:
+                result = rec.calculate_amount_from_shares(
+                    rec.nav,
+                    rec.allow_fractional_parts,
+                    rec.shares,
+                    rec.subscription_fee_rate
+                )
+
+                # Utiliser les valeurs recalculées
+            net_amount = result.get('net_amount', 0.0)
+            subscription_fee_amount = result.get('fees_amount', 0.0)
+            amount_remaining = result.get('amount_remaining', 0.0)
+            gross_amount = result.get('gross_amount', rec.gross_amount)
+            shares = result.get('shares', 0.0)
+
+            rec.write({
+                'nav': rec.nav,
+                'shares': shares,
+                'net_amount': net_amount,
+                'amount_remaining': amount_remaining,
+                'subscription_fee_amount': subscription_fee_amount,
+                'gross_amount': gross_amount,
+                'state': 'validated',
+            })
+
 
     def action_cancel_subscription(self):
         for rec in self:
             if rec.state == 'accounted':
                 raise UserError(_("La souscription ne peut plus être annulée."))
 
-            rec.write({ 'state': 'cancelled',})
 
     def action_submit_subscription(self):
         for rec in self:
             if rec.state != 'draft':
                 raise UserError(_("La souscription doit être en brouillon avant sa soumission."))
+            # Solde disponible suffisant
+            if rec.cash_account_id.balance < rec.gross_amount:
+                raise UserError(_("Solde espèces insuffisant."))
 
-            fund = rec.cash_account_id.fund_id
-
-            # 🔒 Récupération de la VL validée (Juste pour les test et recuperer dans le modèle VL
-            vl = fund.current_vl
-            if not vl or vl <= 0:
-                raise UserError(_("Aucune VL valide disponible."))
-
-            # 🔢 Calcul théorique
-            theoretical_parts = rec.amount / vl
-
-            if fund.allow_fractional_parts:
-                parts = theoretical_parts
-                cash_used = rec.amount
-                cash_refund = 0.0
+            if rec.buy_choice == 'amount':
+                result = rec.calculate_shares_with_fees(
+                    rec.nav,
+                    rec.allow_fractional_parts,
+                    rec.gross_amount,
+                    rec.subscription_fee_rate
+                )
             else:
-                parts = floor(theoretical_parts)
-                cash_used = parts * vl
-                cash_refund = rec.amount - cash_used
-
-            if parts <= 0:
-                raise UserError(
-                    _("Le montant est insuffisant pour souscrire au moins une part.")
+                result = rec.calculate_amount_from_shares(
+                    rec.nav,
+                    rec.allow_fractional_parts,
+                    rec.shares,
+                    rec.subscription_fee_rate
                 )
 
-            # 🧾 Mise à jour de l’ordre
+                # Utiliser les valeurs recalculées
+            net_amount = result.get('net_amount', 0.0)
+            subscription_fee_amount = result.get('fees_amount', 0.0)
+            amount_remaining = result.get('amount_remaining', 0.0)
+            gross_amount = result.get('gross_amount', rec.gross_amount)
+            shares = result.get('shares', 0.0)
+
             rec.write({
-                'unit_value': vl,
-                'parts': parts,
-                'cash_used': cash_used,
-                'cash_refund': cash_refund,
+                'nav': rec.nav,
+                'shares': shares,
+                'net_amount': net_amount,
+                'amount_remaining': amount_remaining,
+                'subscription_fee_amount': subscription_fee_amount,
+                'gross_amount': gross_amount,
                 'state': 'submitted',
             })
-
