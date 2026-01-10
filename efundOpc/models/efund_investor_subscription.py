@@ -272,7 +272,11 @@ class FundSubscription(models.Model):
                 ('fund_id', '=', rec.fund_id.id)
             ], limit=1)
             if not fund_cash:
-                raise UserError(_("Le fond n'a pas de compte de caisse."))
+                fund_cash = self.env['efund.fund.cash'].create({
+                    'name': f"Trésorerie - {rec.fund_id.name}",
+                    'fund_id': rec.fund_id.id,
+                    'company_id': rec.fund_id.company_id.id,
+                })
 
             fund_move = self.env['efund.fund.cash.move'].create({
                 'name': self.env['ir.sequence'].next_by_code('efund.fund.cash.move'),
