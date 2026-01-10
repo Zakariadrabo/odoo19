@@ -66,8 +66,9 @@ class EfundAccountPart(models.Model):
             moves = self.env['efund.investor.part.move'].search([
                 ('part_account_id', '=', acc.id)
             ])
+
             acc.total_parts = sum(
-                m.parts if m.move_type in ('subscription','refund') else -m.parts
+                m.shares if m.move_type in ('subscription','deposit') else -m.shares
                 for m in moves
             )
 

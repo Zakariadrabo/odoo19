@@ -4,7 +4,9 @@ from email.policy import default
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+
 _logger = logging.getLogger(__name__)
+
 
 class EfundInvestorDeposit(models.Model):
     _name = 'efund.investor.deposit'
@@ -12,7 +14,8 @@ class EfundInvestorDeposit(models.Model):
     _inherit = ['efund.operation.base', 'mail.thread', 'mail.activity.mixin', 'efund.confirmable.mixin']
     _order = "create_date desc"
 
-
+    name = fields.Char(string="Référence", required=True,
+                       default=lambda self: self.env['ir.sequence'].next_by_code('efund.investor.deposit'))
     cash_account_id = fields.Many2one('efund.investor.cash', required=True)
     currency_id = fields.Many2one(related='cash_account_id.fund_id.currency_id')
 
@@ -25,51 +28,48 @@ class EfundInvestorDeposit(models.Model):
     reference_payment = fields.Char(string="Référence paiement / justificatif", )
     note = fields.Text(string="Note interne")
 
+
     # RELATION DE RECONCILIATION
     investor_cash_move_id = fields.Many2one('efund.investor.cash.move', string="Cash Investisseur", readonly=True)
     fund_cash_move_id = fields.Many2one('efund.fund.cash.move', string="Cash Fonds", readonly=True)
     reconciliation_log_ids = fields.One2many('efund.operation.reconciliation.log', 'deposit_id')
 
-
     def write(self, vals):
         # Empêcher l'écriture si verrouillé
-        locked_records = self.filtered(lambda r: r.state in ('accounted','reconciled'))
-        if locked_records:
+        if self.state in ('reconciled'):
             raise UserError(
-                "Ce dépôt est verrouillé et ne peut pas être modifié. "
-                "Déverrouillez-le d'abord."
+                "Un document comptabilisé 1 ne peut pas être supprimé."
             )
         return super().write(vals)
 
     def unlink(self):
-        for rec in self:
-            if rec.state in ('accounted','reconciled'):
-                raise UserError(
-                    "Un document comptabilisé ne peut pas être supprimé."
-                )
-        return super().unlink()
+        if self.state in ('reconciled'):
+            raise UserError(
+                "Un document comptabilisé 2 ne peut pas être supprimé."
+            )
 
+        return super().unlink()
 
     def action_validate_deposit(self):
         for rec in self:
             if rec.state != 'submitted':
                 raise UserError(_("Le deposit doit être soumis avant la validation."))
 
-            rec.write({ 'state': 'validated',})
+            rec.write({'state': 'validated', })
 
     def action_submit_deposit(self):
         for rec in self:
             if rec.state != 'draft':
                 raise UserError(_("Le deposit doit être en brouillon avant sa soumission."))
 
-            rec.write({ 'state': 'submitted',})
+            rec.write({'state': 'submitted', })
 
     def action_cancel_deposit(self):
         for rec in self:
             if rec.state == 'accounted':
                 raise UserError(_("La souscription ne peut plus être annulée."))
 
-            rec.write({ 'state': 'cancelled',})
+            rec.write({'state': 'cancelled', })
 
     def action_account(self):
         for rec in self:
@@ -78,42 +78,39 @@ class EfundInvestorDeposit(models.Model):
 
             rec.write({'state': 'accounted', })
 
-            #---------------------------------------------
+            # ---------------------------------------------
             # Création dans le compte cash du fond et réconciliation
             # Réconciliation avec le compte casch du fond
-            #---------------------------------------------
+            # ---------------------------------------------
             rec.message_post(
                 body=_("Déposit comptabilisé. Lancement de la réconciliation..."),
-                subject="comptabilisation du dépositt",
+                subject="comptabilisation du déposit",
                 message_type="comment",
                 subtype_xmlid="mail.mt_comment"
             )
 
-            service = self.env['efund.cash.reconciliation.service']
-            result =service.reconcile_investor_deposit_with_logging(deposit_data=rec, user_id=self.env.user.id)
+            investor_cash_move = self.env['efund.investor.cash.move'].create({
+                'name': self.env['ir.sequence'].next_by_code('efund.investor.cash.move'),
+                'cash_account_id': rec.cash_account_id.id,
+                'move_type': 'deposit',
+                'amount': rec.amount,
+            })
+            rec.message_post(
+                body=_("Crédit du compte cash investisseur au montant de %s.") % (rec.amount),
+                subject="comptabilisation du déposit",
+                message_type="comment",
+                subtype_xmlid="mail.mt_comment"
+            )
 
             rec.write({
-                'investor_cash_move_id': result['investor_cash_move_id'],
-                'fund_cash_move_id': result['fund_cash_move_id'],
+                'investor_cash_move_id': investor_cash_move.id,
                 'state': 'reconciled',
             })
 
             # Post du résultat sur le chatter
             rec.message_post(
-                body=_(
-                    "Réconciliation terminée avec succès.<br/>"
-                    "• Mouvement investisseur: <a href=# data-oe-model='efund.account.cash.move' "
-                    "data-oe-id='%s'>%s</a><br/>"
-                    "• Mouvement fonds: <a href=# data-oe-model='efund.fund.cash.move' "
-                    "data-oe-id='%s'>%s</a>"
-                ) % (
-                         result['investor_cash_move_id'],
-                         result['investor_move_ref'],
-                         result['fund_cash_move_id'],
-                         result['fund_move_ref']
-                     ),
+                body=_("Réconciliation terminée avec succès."),
                 subject="Réconciliation réussie",
                 message_type="comment",
                 subtype_xmlid="mail.mt_comment"
             )
-

@@ -16,4 +16,5 @@ from . import confirmable_mixin, res_company, forme_juridique, statut_operationn
     efund_fund_type_allocation, efund_management_fee_accrual, efund_fund_allocation_snapshot, \
     efund_fund_allocation_snapshot_line, efund_fund_portfolio, efund_fund_cash, efund_fund_cash_move, \
     efund_fund_portfolio_move, efund_fund_portfolio_line, efund_asset_trading_service, \
-    efund_cash_reconciliation_service, json_widget,efund_investor_represented,efund_investor_intervention_mode,efund_investor_compagny_represented
+    efund_cash_reconciliation_service, json_widget, efund_investor_represented, efund_investor_intervention_mode, \
+    efund_investor_compagny_represented, efund_investor_operation_fee

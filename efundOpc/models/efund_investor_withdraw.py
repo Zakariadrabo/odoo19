@@ -15,6 +15,7 @@ class EfundInvestorWithdraw(models.Model):
                        default=lambda self: self.env['ir.sequence'].next_by_code('efund.investor.withdraw'))
     cash_account_id = fields.Many2one('efund.investor.cash', required=True)
     currency_id = fields.Many2one(related='cash_account_id.fund_id.currency_id')
+    balance = fields.Float(string="Solde", related="cash_account_id.balance", readonly=True)
 
     date_operation = fields.Datetime(string="Date de l'opération", default=fields.Datetime.now)
     date_valeur = fields.Datetime(string="Date de valeur")
@@ -69,28 +70,29 @@ class EfundInvestorWithdraw(models.Model):
                 subtype_xmlid="mail.mt_comment"
             )
 
-            service = self.env['efund.cash.reconciliation.service']
-            result = service.reconcile_investor_withdrawal_with_logging(withdrawal_data=rec, user_id=self.env.user.id)
+            investor_cash_move = self.env['efund.investor.cash.move'].create({
+                'name': self.env['ir.sequence'].next_by_code('efund.investor.cash.move'),
+                'cash_account_id': rec.cash_account_id.id,
+                'move_type': 'withdraw',
+                'amount': rec.amount,
+            })
+            rec.message_post(
+                body=_("Crédit du compte cash investisseur au montant de %s.") % (rec.amount),
+                subject="comptabilisation du Retrait",
+                message_type="comment",
+                subtype_xmlid="mail.mt_comment"
+            )
 
             rec.write({
+                'investor_cash_move_id': investor_cash_move.id,
                 'state': 'reconciled',
             })
 
             # Post du résultat sur le chatter
             rec.message_post(
-                body=_(
-                    "Réconciliation terminée avec succès.<br/>"
-                    "• Mouvement investisseur: <a href=# data-oe-model='efund.account.cash.move' "
-                    "data-oe-id='%s'>%s</a><br/>"
-                    "• Mouvement fonds: <a href=# data-oe-model='efund.fund.cash.move' "
-                    "data-oe-id='%s'>%s</a>"
-                ) % (
-                         result['investor_cash_move_id'],
-                         result['investor_move_ref'],
-                         result['fund_cash_move_id'],
-                         result['fund_move_ref']
-                     ),
+                body=_("Réconciliation terminée avec succès."),
                 subject="Réconciliation réussie",
                 message_type="comment",
                 subtype_xmlid="mail.mt_comment"
             )
+

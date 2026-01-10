@@ -13,9 +13,8 @@
                 <field name="fund_id"/>
                 <field name="investor_id"/>
                 <field name="share_class_id"/>
-                <field name="redemption_type"/>
                 <field name="parts_to_redeem"/>
-                <field name="amount"/>
+                <field name="gross_amount"/>
                 <field name="state"/>
 
             </list>
@@ -58,7 +57,7 @@
 
                      <group>
                         <div class="o_form_label text-warning">
-                            Vous êtes dans le processus de validation de rachat.
+                            Vous êtes sur le point de saisir une demande de rachat.
                         </div>
                     </group>
 
@@ -66,8 +65,6 @@
                         <group>
                             <field name="investor_id" readonly="1"/>
                             <field name="fund_id" readonly="1"/>
-                            <field name="share_class_id"
-                               domain="[('fund_id','=',fund_id)]"/>
                         </group>
                         <group>
                             <field name="part_account_id" readonly="1"/>
@@ -80,23 +77,19 @@
                     </group>
                     <group string="Détails du rachat" col="3">
                         <group>
-                            <field name="redemption_type"/>
-                            <field name="parts_to_redeem" readonly="redemption_type == 'total'" required="redemption_type == 'partial'"/>
-                            <field name="cash_refund" />
+                            <field name="buy_choice"/>
+                            <field name="parts_to_redeem" readonly="buy_choice == 'amount'" required="buy_choice == 'amount'"/>
+                            <field name="desired_amount" readonly="buy_choice == 'share'" required="buy_choice == 'share'"/>
                         </group>
                         <group>
-                            <field name="estimated_amount" readonly="1"/>
-                            <field name="estimated_nav"  readonly="1" />
-                            <!-- A afficher la date de la VL
-                            <field name="date_operation" readonly="1" options="{'numeric': true}"/>
-                            -->
+                            <field name="net_amount" readonly="1"/>
+                            <field name="nav"  readonly="1" />
                             <field name="date_operation" readonly="1" options="{'numeric': true}"/>
                         </group>
                         <group>
-                            <field name="amount" readonly="1" />
+                            <field name="gross_amount" readonly="1" />
                             <field name="redemption_fee_rate"  readonly="1" />
                             <field name="redemption_fee_amount" readonly="1"/>
-                            <field name="date_valeur" widget="datetime" />
                         </group>
                     </group>
                 </sheet>

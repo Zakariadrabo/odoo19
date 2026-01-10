@@ -48,6 +48,10 @@ class FundSubscription(models.Model):
     investor_id = fields.Many2one(related='cash_account_id.investor_id', store=True)
     share_class_id = fields.Many2one('efund.fund.share.class', string="Classe de part",  # required=True,
                                      domain="[('fund_id', '=', fund_id)]")
+    investor_cash_move_id = fields.Many2one('efund.investor.cash.move', string="Cash Investisseur", readonly=True)
+    fund_cash_move_id = fields.Many2one('efund.fund.cash.move', string="Cash Fond", readonly=True)
+    operation_fee_move_id = fields.Many2one('efund.investor.operation.fee', string="Frais souscription", readonly=True)
+
 
     # -----------------------------------------------------------------
     # LES METHODES
@@ -179,21 +183,14 @@ class FundSubscription(models.Model):
 
     def action_account(self):
         for rec in self:
-            if rec.date_valeur < rec.date_operation:
-                raise UserError(_("La date de l'opération ne peut pas être supérieure à la date de valeur"))
+            # Déclare varaible
+            fee_id = 0
+            # A revoir pour la date valeur
+            #if rec.date_valeur < rec.date_operation:
+            #    raise UserError(_("La date de l'opération ne peut pas être supérieure à la date de valeur"))
 
             if rec.state != 'validated':
                 raise UserError(_("La souscription doit être validée avant exécution."))
-
-            fund = rec.cash_account_id.fund_id
-
-            # 🔒 Récupération de la VL validée (Juste pour les test et recuperer dans le modèle VL
-            vl = fund.current_vl
-            if vl != self.unit_value:
-                raise UserError(_("La valeur de la VL a changé avant la comptabilisation."))
-
-            if not vl or vl <= 0:
-                raise UserError(_("Aucune VL valide disponible."))
 
             # Solde disponible suffisant
             if self.cash_account_id.balance < self.gross_amount:
@@ -236,46 +233,125 @@ class FundSubscription(models.Model):
                 'state': 'accounted',
             })
 
-            # 💸 MOUVEMENTS COMPTABLES
-            # 1️⃣ Sortie espèces (montant utilisé)
-            # Enregistrement du montant investi
-            self.env['efund.investor.cash.move'].create({
+            rec.message_post(
+                body=_("Comptabilisation de la souscription. Lancement de la réconciliation..."),
+                subject="comptabilisation de la souscription",
+                message_type="comment",
+                subtype_xmlid="mail.mt_comment"
+            )
+            # 1- Débit du compte investisseur pour le montant investi
+            investor_cash_move = self.env['efund.investor.cash.move'].create({
                 'cash_account_id': rec.cash_account_id.id,
                 'move_type': 'subscription_net',
                 'amount': net_amount,
             })
-            # Enregistrement des frais de souscription
-            self.env['efund.investor.cash.move'].create({
-                'cash_account_id': rec.cash_account_id.id,
-                'move_type': 'subscription_fee',
-                'amount': self.subscription_fee_amount,
-            })
+            rec.message_post(
+                body=_("Débit du compte investisseur au montant de %s pour la souscription") % (rec.net_amount),
+                subject="comptabilisation de la souscription",
+                message_type="comment",
+                subtype_xmlid="mail.mt_comment"
+            )
 
-            # 2️⃣ Entrée parts
+            # 2- Débit du compte investisseur pour les frais montant investi
+            if rec.subscription_fee_amount > 0:
+                # Enregistrement des frais de souscription
+                self.env['efund.investor.cash.move'].create({
+                    'cash_account_id': rec.cash_account_id.id,
+                    'move_type': 'subscription_fee',
+                    'amount': self.subscription_fee_amount,
+                })
+                rec.message_post(
+                    body=_("Débit du compte investisseur des frais de souscription au montant de %s francs") % (rec.subscription_fee_amount),
+                    subject="comptabilisation de la souscription",
+                    message_type="comment",
+                    subtype_xmlid="mail.mt_comment"
+                )
+
+            # 3- Crédit du compte du fond pour le montant investi
+            fund_cash = self.env['efund.fund.cash'].search([
+                ('fund_id', '=', rec.fund_id.id)
+            ], limit=1)
+            if not fund_cash:
+                raise UserError(_("Le fond n'a pas de compte de caisse."))
+
+            fund_move = self.env['efund.fund.cash.move'].create({
+                'name': self.env['ir.sequence'].next_by_code('efund.fund.cash.move'),
+                'fund_cash_id': fund_cash.id,
+                'amount': rec.net_amount,
+                'move_type': 'subscription_in',
+                'liquidity_type': 'liquid',
+                'state': 'posted',
+                'investor_cash_move_id': investor_cash_move.id,
+                'investor_id': rec.investor_id.id,
+                'fund_id': rec.fund_id.id,
+            })
+            rec.message_post(
+                body=_("Crédit du compte du fond au montant de %s francs") % (rec.net_amount),
+                subject="comptabilisation de la souscription",
+                message_type="comment",
+                subtype_xmlid="mail.mt_comment"
+            )
+
+            # 4- Crédit du compte frais pour le montant investi
+            if rec.subscription_fee_amount > 0:
+                # Enregistrement des frais de souscription
+                operation_fee_move = self.env['efund.investor.operation.fee'].create({
+                    'name': self.env['ir.sequence'].next_by_code('efund.investor.operation.fee'),
+                    'fee_type': 'subscription',
+                    'fund_id': rec.fund_id.id,
+                    'investor_cash_move_id': investor_cash_move.id,
+                    'investor_id': rec.investor_id.id,
+                    'subscription_id': rec.id,
+                    'gross_amount': rec.gross_amount,
+                    'base_amount': rec.net_amount,
+                    'fee_rate': rec.subscription_fee_rate,
+                    'fee_amount': rec.subscription_fee_amount,
+                })
+                rec.message_post(
+                    body=_("Crédit du compte des frais au montant de %s francs")% (rec.subscription_fee_amount),
+                    subject="comptabilisation de la souscription",
+                    message_type="comment",
+                    subtype_xmlid="mail.mt_comment"
+                )
+                fee_id = operation_fee_move.id
+
+            # 5- Crédit du compte titre de l'investisseur
             self.env['efund.investor.part.move'].create({
                 'part_account_id': rec.part_account_id.id,
                 'move_type': 'subscription',
-                'parts': shares,
+                'shares': shares,
             })
+            rec.message_post(
+                body=_("Crédit du compte titre de l'investisseur au montant de %s part(s).") % (rec.shares),
+                subject="comptabilisation de la souscription",
+                message_type="comment",
+                subtype_xmlid="mail.mt_comment"
+            )
 
-            # 3️⃣ Remboursement du reliquat (si nécessaire)
-            if amount_remaining > 0:
-                self.env['efund.investor.cash.move'].create({
-                    'cash_account_id': rec.cash_account_id.id,
-                    'move_type': 'refund',
-                    'amount': amount_remaining,
+            # Fin de la réconciliation
+            if rec.subscription_fee_amount > 0:
+                rec.write({
+                    'investor_cash_move_id': investor_cash_move.id,
+                    'fund_cash_move_id': fund_move.id,
+                    'operation_fee_move_id': fee_id,
+                    'state': 'reconciled',
+                })
+            else:
+                rec.write({
+                    'investor_cash_move_id': investor_cash_move.id,
+                    'fund_cash_move_id': fund_move.id,
+                    'state': 'reconciled',
                 })
 
-            # 🧠 Traçabilité
+
+            # Post du résultat sur le chatter
             rec.message_post(
-                body=_(
-                    "Souscription exécutée.<br/>"
-                    "VL : %s<br/>"
-                    "Parts créées : %s<br/>"
-                    "Montant utilisé : %s<br/>"
-                    "Montant restitué : %s"
-                ) % (vl, shares, net_amount, amount_remaining)
+                body=_("Réconciliation terminée avec succès."),
+                subject="Réconciliation réussie",
+                message_type="comment",
+                subtype_xmlid="mail.mt_comment"
             )
+
 
     def action_validate_subscription(self):
         for rec in self:
@@ -300,7 +376,7 @@ class FundSubscription(models.Model):
                     rec.subscription_fee_rate
                 )
 
-                # Utiliser les valeurs recalculées
+            # Utiliser les valeurs recalculées
             net_amount = result.get('net_amount', 0.0)
             subscription_fee_amount = result.get('fees_amount', 0.0)
             amount_remaining = result.get('amount_remaining', 0.0)

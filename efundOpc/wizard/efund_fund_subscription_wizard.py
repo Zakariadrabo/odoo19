@@ -26,11 +26,11 @@ class FundSubscriptionWizard(models.TransientModel):
     gross_amount = fields.Monetary(string="Montant à souscrire", required=True)
     nav = fields.Float(string="VL appliquée", compute="_compute_nav_value", readonly=True, store=True)
     amount_remaining = fields.Monetary(string="Montant restant")
-    subscription_fee_rate = fields.Float(string="Taux Frais de souscription", compute="_compute_nav_value",
-                                         readonly=True, store=True)
+    subscription_fee_rate = fields.Float(string="Taux Frais de souscription", compute="_compute_nav_value",readonly=True, store=True)
     subscription_fee_amount = fields.Monetary(string="Frais de souscription", store=True)
     net_amount = fields.Monetary(string="Montant net", store=True)
     parts = fields.Float(string="Nombre de parts", store=True)
+    share_class_id = fields.Many2one('efund.fund.share.class', string="Classe de part",  compute="_compute_nav_value", store=True)
 
     @api.onchange('gross_amount', 'parts')
     def _onchange_gross_amount(self):
@@ -50,8 +50,6 @@ class FundSubscriptionWizard(models.TransientModel):
             sub.amount_remaining = result.get('amount_remaining')
             sub.gross_amount = result.get('gross_amount')
             sub.parts = result.get('shares')
-            _logger.info(
-                f"********* parts: {sub.parts}, net_amount: {sub.net_amount}, subscription_fee_amount: {sub.subscription_fee_amount}, amount_remaining: {sub.amount_remaining}, gross_amount: {sub.gross_amount}")
 
     @api.depends('fund_id')
     def _compute_nav_value(self):
@@ -63,6 +61,7 @@ class FundSubscriptionWizard(models.TransientModel):
             if share_class:
                 sub.nav = share_class.current_nav
                 sub.subscription_fee_rate = share_class.subscription_fee_rate
+                sub.share_class_id = share_class.id
             else:
                 raise UserError("Besoin d'avoir la classe de parts par défaut pour le fonds")
 
@@ -186,17 +185,9 @@ class FundSubscriptionWizard(models.TransientModel):
                 'gross_amount': gross_amount,
                 'amount_remaining': amount_remaining,
                 'subscription_fee_amount': subscription_fee_amount,
+                'share_class_id': sub.share_class_id.id,
                 'net_amount': net_amount,
                 'shares': parts,
                 'nav': sub.nav,
                 'state': 'draft',
             })
-        """
-        
-            'gross_amount': sub.gross_amount,
-            'amount_remaining': sub.amount_remaining,
-            'subscription_fee_amount': sub.subscription_fee_amount,
-            'net_amount': sub.net_amount,
-            'shares': sub.parts,
-            'nav': sub.nav,
-        """

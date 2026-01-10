@@ -26,6 +26,15 @@
         <field name="company_id" eval="False"/>
     </record>
 
+    <!-- Sequence for investor share movements -->
+    <record id="seq_efund_investor_cash_move" model="ir.sequence">
+        <field name="name">Mouvement espèces investisseurs</field>
+        <field name="code">efund.investor.part.move</field>
+        <field name="prefix">IPM/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
      <!-- Sequence for deposite -->
     <record id="seq_efund_investor_deposit" model="ir.sequence">
         <field name="name">Sequence pour le déposit</field>
@@ -34,7 +43,7 @@
         <field name="padding">5</field>
         <field name="company_id" eval="False"/>
     </record>
-    <!-- Sequence for deposite -->
+    <!-- Sequence for withdraw -->
     <record id="seq_efund_investor_withdraw" model="ir.sequence">
         <field name="name">Sequence pour le retrait</field>
         <field name="code">efund.investor.withdraw</field>
@@ -42,7 +51,7 @@
         <field name="padding">5</field>
         <field name="company_id" eval="False"/>
     </record>
-    <!-- Sequence for deposite -->
+    <!-- Sequence for subscription -->
     <record id="seq_efund_investor_subscription" model="ir.sequence">
         <field name="name">Sequence pour la souscription</field>
         <field name="code">efund.investor.subscription</field>
@@ -50,7 +59,7 @@
         <field name="padding">5</field>
         <field name="company_id" eval="False"/>
     </record>
-    <!-- Sequence for deposite -->
+    <!-- Sequence for redemption -->
     <record id="seq_efund_investor_redemption" model="ir.sequence">
         <field name="name">Sequence pour la retrait</field>
         <field name="code">efund.investor.redemption</field>
@@ -58,6 +67,16 @@
         <field name="padding">5</field>
         <field name="company_id" eval="False"/>
     </record>
+
+    <!-- Sequence for investor fee -->
+    <record id="seq_efund_investor_operation_fee" model="ir.sequence">
+        <field name="name">Sequence pour les frais investisseurs</field>
+        <field name="code">efund.investor.operation.fee</field>
+        <field name="prefix">FEE/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
      <!-- Sequence for fund log reconciliation -->
     <record id="seq_efund_opration_reconciliation_log" model="ir.sequence">
         <field name="name">Séquence Log de Réconciliation</field>
