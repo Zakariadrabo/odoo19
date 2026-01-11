@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ===================================================== -->
+    <!--      ÉTAT DU PORTEFEUILLE CLIENT OPCVM (FINAL)       -->
+    <!-- ===================================================== -->
+
+    <template id="report_investor_portfolio">
+        <t t-call="web.external_layout">
+            <main>
+
+                <t t-foreach="docs" t-as="o">
+
+                    <!-- ========================= -->
+                    <!-- DONNÉES MÉTIER -->
+                    <!-- ========================= -->
+                    <t t-set="data"
+                       t-value="o._get_portfolio_statement_data()"/>
+
+                    <!-- ========================= -->
+                    <!-- IDENTIFICATION CLIENT -->
+                    <!-- ========================= -->
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <p>
+                                <strong>N° Client :</strong><br/>
+                                <span t-esc="o.id"/>
+                            </p>
+
+                            <p>
+                                <strong>Nom Client :</strong><br/>
+                                <span t-esc="o.full_name or o.name"/>
+                            </p>
+
+                            <p>
+                                <strong>Adresse :</strong><br/>
+                                <span t-esc="o.address or o.company_address or '-'"/>
+                            </p>
+                        </div>
+
+                        <div class="col-6 text-end">
+                            <p>
+                                <span t-esc="o.company_id.city or ''"/>,
+                                le <span t-esc="data['valuation_date_str']"/>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- ========================= -->
+                    <!-- TITRE -->
+                    <!-- ========================= -->
+                    <h3 class="text-center mb-4">
+                        État du portefeuille
+                    </h3>
+
+                    <!-- ========================= -->
+                    <!-- TEXTE RÉGLEMENTAIRE -->
+                    <!-- ========================= -->
+                    <p class="mb-4">
+                        Nous avons le plaisir de vous adresser votre portefeuille OPCVM
+                        valorisé au
+                        <strong>
+                            <span t-esc="data['valuation_date_str']"/>
+                        </strong>.
+                    </p>
+
+                    <!-- ========================= -->
+                    <!-- TABLEAU PORTEFEUILLE -->
+                    <!-- ========================= -->
+                    <table class="table table-sm table-bordered">
+                        <thead class="text-center">
+                            <tr>
+                                <th>FCP</th>
+                                <th class="text-end">Qté</th>
+                                <th class="text-end">CMP</th>
+                                <th class="text-end">VL</th>
+                                <th class="text-end">Coût d'acquisition</th>
+                                <th class="text-end">Valorisation</th>
+                                <th class="text-end">Gain / Perte</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <t t-foreach="data['lines']" t-as="l">
+                                <tr>
+                                    <td t-esc="l['fund']"/>
+                                    <td class="text-end" t-esc="l['qty']"/>
+                                    <td class="text-end" t-esc="l['cmp']"/>
+                                    <td class="text-end" t-esc="l['nav']"/>
+                                    <td class="text-end" t-esc="l['cost']"/>
+                                    <td class="text-end" t-esc="l['value']"/>
+                                    <td class="text-end"
+                                        t-att-class="l['gain'] &lt; 0 and 'text-danger' or 'text-success'">
+                                        <span t-esc="l['gain']"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+
+                        <tfoot>
+                            <tr>
+                                <th colspan="4" class="text-end">TOTAL</th>
+                                <th class="text-end">
+                                    <span t-esc="data['total_cost']"/>
+                                </th>
+                                <th class="text-end">
+                                    <span t-esc="data['total_value']"/>
+                                </th>
+                                <th class="text-end">
+                                    <span t-esc="data['total_gain']"/>
+                                </th>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <!-- ========================= -->
+                    <!-- DATE D’ÉDITION -->
+                    <!-- ========================= -->
+                    <p class="mt-4">
+                        Édité le
+                        <strong>
+                            <span t-esc="data['edition_date_str']"/>
+                        </strong>
+                    </p>
+
+                    <!-- ========================= -->
+                    <!-- MENTION LÉGALE -->
+                    <!-- ========================= -->
+                    <p class="mt-3" style="font-size: 11px;">
+                        Sauf avis contraire de votre part dans un délai d’un mois,
+                        nous admettrons que vous avez reconnu ce relevé exact.
+                    </p>
+
+                </t>
+
+            </main>
+        </t>
+    </template>
+
+</odoo>

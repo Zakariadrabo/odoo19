@@ -24,14 +24,17 @@
                         </group>
                         <group>
                             <field name="part_account_id" readonly="1"/>
-                            <field name="total_parts" readonly="1"/>
+                            <field name="total_shares" readonly="1"/>
+                            <field name="nav"/>
                         </group>
                     </group>
 
                     <group string="Détails de la souscription" col="3">
                         <group>
-                            <field name="amount"/>
-                            <field name="unit_value"/>
+                            <field name="buy_choice"/>
+                            <field name="gross_amount" readonly="buy_choice != 'amount'" required="1"/>
+                            <field name="parts" readonly="buy_choice != 'share'" required="1"/>
+
                         </group>
                         <group>
                             <field name="subscription_fee_rate"/>
@@ -39,8 +42,7 @@
                         </group>
                         <group>
                             <field name="net_amount"/>
-                            <field name="parts"/>
-                            <field name="reliquat"/>
+                            <field name="amount_remaining"/>
                         </group>
 
 

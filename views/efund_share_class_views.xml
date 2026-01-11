@@ -30,6 +30,7 @@
                             <field name="name"/>
                             <field name="sequence"/>
                             <field name="is_default"/>
+                            <field name="current_nav"/>
                         </group>
 
                         <group>

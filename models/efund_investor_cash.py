@@ -14,13 +14,7 @@ class EfundAccountCash(models.Model):
     investor_id = fields.Many2one('efund.investor', string="Investisseur", ondelete='cascade')
     balance = fields.Float(string="Solde disponible", compute='_compute_balance',store=False)
     date_opened = fields.Date(string="Date d’ouverture", default=fields.Date.today)
-    state = fields.Selection([
-        ('draft', 'Non Activé'),
-        ('active', 'Activé'),
-        ('suspended', 'Désactivé'),
-    ], string="Status", default='draft', )
-
-
+    state = fields.Selection([('draft', 'Non Activé'),('active', 'Activé'),('suspended', 'Désactivé'),], string="Status", default='draft', )
 
     _account_number_fund_uniq = models.Constraint(
             'unique(account_number, fund_id)',

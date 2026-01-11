@@ -4,6 +4,7 @@ import re
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 from datetime import date
+from odoo.tools import format_date
 import json, logging
 
 _logger = logging.getLogger(__name__)
@@ -60,6 +61,10 @@ class FundInvestor(models.Model):
     company_direction_address = fields.Char(string="Adresse Direction")
     company_direction_town = fields.Char(string="Ville Direction")
     company_direction_country_id = fields.Many2one("res.country", string="Pays Direction")
+    social_object = fields.Char(string="Social")
+    is_beneficiaire_effectif = fields.Boolean(string="Bénéficiaire", default=False)
+    beneficiaire_effectif = fields.Char(string="Bénéficiaire effectif")
+
 
     #infos commune
     name_bank = fields.Char(string="Nom de la banque")
@@ -67,6 +72,9 @@ class FundInvestor(models.Model):
     account_number = fields.Char(string="Numéro de compte")
     iban = fields.Char(string="IBAN")
     swift_bic = fields.Char(string="SWIFT/BIC")
+    entry_relation_date = fields.Date(string="Date d'entrée en relation")
+    business_object_relation = fields.Char(string="Nature de la relation d'affaire")
+
 
 
 
@@ -88,6 +96,11 @@ class FundInvestor(models.Model):
     document_ids = fields.One2many('efund.kyc.document', 'investor_id', string="KYC Documents")
     kyc_check_ids = fields.One2many('efund.kyc.check', 'investor_id', string="KYC Checks")
     aml_alert_ids = fields.One2many('efund.aml.alert', 'investor_id', string="AML Alerts")
+    represented_person_ids = fields.One2many('efund.investor.represented','investor_id',string="Personnes représentées")
+    intervention_mode_ids = fields.One2many('efund.investor.intervention.mode','investor_id', string="Investisseur")
+    represented_company_ids = fields.One2many('efund.investor.company.represented', 'investor_id',
+                                            string="Réprésentant de la société")
+
     active = fields.Boolean(default=True)
 
     fund_investor_ids = fields.One2many('efund.fund.investor','investor_id',string="Fonds")
@@ -129,8 +142,11 @@ class FundInvestor(models.Model):
     periodicite = fields.Selection([('Monthly','Mensuel'),('Quarterly','Trimestriel'),('Semi-Annual','Semestriel'),('Annual','Annuel')])
 
     origine = fields.Selection([('salary','Salaire'),('investment','Investissement'),('legacy','Héritage'),('savings','Epargne'),('other','Autre')], string="Origine des fonds")
+    other_origine = fields.Char(string="Autre origine")
     activite = fields.Selection([('employee','Salarié'),('liberal','Profession libérale'),('business','Entrepreneur'),('other','Autre')], string="Activité principale")
-    objectif = fields.Selection([('investissement','Investissement'),('savings','Epargne'),('transactions','Transactions'),('autre','Autre')], string="Objectif financier"  )
+    other_activite = fields.Char(string="Autre activité")
+    objectif = fields.Selection([('investissement','Investissement'),('savings','Epargne'),('transactions','Transactions'),('other','Autre')], string="Objectif financier")
+    other_objectif = fields.Char(string="Autre objectif")
 
     pep = fields.Selection([('Yes','Oui'),('No','Non')], string="PEP (info)")
     violation = fields.Selection([('Yes','Oui'),('No','Non')], string="Antécédents")
@@ -154,13 +170,20 @@ class FundInvestor(models.Model):
     redemption_count = fields.Integer(compute='_compute_redemption_count', string="Rachat")
     withdraw_count = fields.Integer(compute='_compute_withdraw_count', string="Retrait Cash")
 
+    # image
+    image = fields.Binary(string="Photo / Logo",
+        help="Photo pour une personne physique, logo pour une personne morale",
+        attachment=True,store=True)
+    image_1920 = fields.Image(
+        string="Photo / Logo",
+        max_width=1920,
+        max_height=1920
+    )
+
     @api.depends('nom', 'prenom')
     def _compute_full_name(self):
-        for record in self:
-            if record.nom and record.prenom:
-                record.full_name = f"{record.nom} {record.prenom}"
-            else:
-                record.full_name = record.nom or record.prenom or ''
+        for rec in self:
+            rec.full_name = f"{rec.prenom} {rec.nom}" if rec.prenom or rec.nom else ""
 
     @api.constrains('email')
     def _check_email_format(self):
@@ -169,6 +192,12 @@ class FundInvestor(models.Model):
             if record.email and not email_regex.match(record.email):
                 raise ValidationError(
                     "L'adresse e-mail '%s' n'est pas valide. Veuillez utiliser un format comme 'utilisateur@domaine.com'." % record.email)
+
+
+    @api.onchange('nom', 'prenom')
+    def _onchange_nom_prenom(self):
+        for rec in self:
+            rec.full_name = f"{rec.prenom} {rec.nom}" if rec.prenom or rec.nom else ""
 
     @api.onchange(
         'identical_address',
@@ -514,13 +543,65 @@ class FundInvestor(models.Model):
             }
         }
 
-    def action_report_investor(self):
+    def _get_portfolio_statement_data(self, valuation_date=None):
         self.ensure_one()
-        if self.status != 'kyc_approved':
-            raise UserError(
-                _("L'impression du profil investisseur n'est autorisée qu'après validation complète du KYC."))
+        valuation_date = valuation_date or fields.Date.today()
+        lines = []
+        total_cost = 0.0
+        total_value = 0.0
+        fund_links = self.fund_investor_ids.filtered(lambda f: f.state == 'validated')
+        for link in fund_links:
+            fund = link.fund_id
+            part_account = self.account_part_ids.filtered(lambda p: p.fund_id == fund and p.state == 'active' )
+            if not part_account:
+                continue
 
-        action = self.env.ref('efundOpc.action_report_investor')
-        return action.report_action(self, config=False)
+            part_account = part_account[0]
+
+            qty = part_account.total_parts or 0.0
+            cmp = part_account.cmp or 0.0
+            nav = fund.current_vl or 0.0
+
+            cost = qty * cmp
+            value = qty * nav
+            gain = value - cost
+
+            lines.append({
+                'fund': fund.name,
+                'qty': qty,
+                'cmp': cmp,
+                'nav': nav,
+                'cost': cost,
+                'value': value,
+                'gain': gain,
+            })
+
+            total_cost += cost
+            total_value += value
+
+        return {
+            'valuation_date': valuation_date,
+            'valuation_date_str': format_date(self.env, valuation_date),
+            'edition_date_str': format_date(self.env, fields.Date.today()),
+            'lines': lines,
+            'total_cost': total_cost,
+            'total_value': total_value,
+            'total_gain': total_value - total_cost,
+        }
+
+    def action_print_portfolio_statement(self):
+        self.ensure_one()
+
+        if self.status != 'kyc_approved':
+            raise UserError("Client non validé KYC.")
+
+        if not self.fund_investor_ids.filtered(lambda f: f.state == 'validated'):
+            raise UserError("Aucun fonds validé.")
+
+        return self.env.ref(
+            'efundOpc.action_report_investor_portfolio'
+        ).report_action(self)
+
+
 
 

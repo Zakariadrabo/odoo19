@@ -1,0 +1,92 @@
+<odoo>
+    <record id="view_reconciliation_log_list" model="ir.ui.view">
+        <field name="name">efund.operation.reconciliation.log.list</field>
+        <field name="model">efund.operation.reconciliation.log</field>
+        <field name="arch" type="xml">
+            <list string="Logs de Réconciliation">
+                <field name="reference"/>
+                <field name="operation_type"/>
+                <field name="state" widget="badge" decoration-success="state=='success'" decoration-danger="state=='failed'" decoration-warning="state=='warning'"/>
+                <field name="user_id" widget="many2one_avatar"/>
+                <field name="start_date"/>
+                <field name="duration_seconds"/>
+                <field name="records_created"/>
+                <field name="records_updated"/>
+                <field name="records_deleted"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_reconciliation_log_form" model="ir.ui.view">
+        <field name="name">efund.operation.reconciliation.log.form</field>
+        <field name="model">efund.operation.reconciliation.log</field>
+        <field name="arch" type="xml">
+            <form string="Log de Réconciliation">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="pending,success,failed,warning"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_related_records" type="object" class="oe_stat_button" icon="fa-external-link">
+                            <div class="o_stat_info">
+                                <field name="records_created" widget="statinfo" string="Créés"/>
+                            </div>
+                        </button>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="reference"/>
+                            <field name="operation_type"/>
+                            <field name="user_id"/>
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                            <field name="duration_seconds"/>
+                        </group>
+                        <group>
+                            <field name="deposit_id" widget="many2one" options="{'no_create': True}"/>
+                            <field name="subscription_id" widget="many2one" options="{'no_create': True}"/>
+                            <field name="redemption_id" widget="many2one" options="{'no_create': True}"/>
+                            <field name="withdraw_id" widget="many2one" options="{'no_create': True}"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Détails">
+                            <group>
+                                <field name="records_created"/>
+                                <field name="records_updated"/>
+                                <field name="records_deleted"/>
+                            </group>
+                        </page>
+                        <page string="Messages" invisible ="info_messages == False and warning_messages == False and error_messages == False">
+                            <group string="Informations" invisible ="info_messages == False">
+                                <field name="info_messages" widget="json_widget" nolabel="1"/>
+                            </group>
+                            <group string="Avertissements"  invisible ="warning_messages == False">
+                                <field name="warning_messages" widget="json_widget" nolabel="1"/>
+                            </group>
+                            <group string="Erreurs" invisible ="error_messages == False">
+                                <field name="error_messages" widget="json_widget" nolabel="1"/>
+                            </group>
+                        </page>
+                        <page string="Enregistrements" invisible ="created_records == False and updated_records == False and deleted_records == False">
+                            <group string="Créés" invisible ="created_records == False">
+                                <field name="created_records" widget="json_widget" nolabel="1"/>
+                            </group>
+                            <group string="Modifiés" invisible ="updated_records == False">
+                                <field name="updated_records" widget="json_widget" nolabel="1"/>
+                            </group>
+                            <group string="Supprimés" invisible ="deleted_records == False">
+                                <field name="deleted_records" widget="json_widget" nolabel="1"/>
+                            </group>
+                        </page>
+                        <page string="Debug" invisible ="traceback == False">
+                            <field name="traceback" widget="text" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

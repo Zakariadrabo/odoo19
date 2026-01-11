@@ -9,11 +9,11 @@
                 <field name="fund_id"/>
                 <field name="share_class_id"/>
                 <field name="date_operation"/>
-                <field name="unit_value"/>
-                <field name="amount"/>
-                <field name="cash_used"/>
-                <field name="parts"/>
-                <field name="cash_refund"/>
+                <field name="nav"/>
+                <field name="gross_amount"/>
+                <field name="net_amount"/>
+                <field name="shares"/>
+                <field name="amount_remaining"/>
                 <field name="date_valeur"/>
                 <field name="state"/>
             </list>
@@ -60,7 +60,6 @@
                         <group>
                             <field name="investor_id" readonly="1"/>
                             <field name="fund_id" readonly="1"/>
-                            <field name="share_class_id" domain="[('fund_id','=',fund_id)]"/>
                             <field name="allow_fractional_parts" readonly="1"/>
                         </group>
                         <group>
@@ -69,28 +68,26 @@
                         </group>
                         <group>
                             <field name="part_account_id" readonly="1"/>
-                            <field name="total_parts" readonly="1"/>
+                            <field name="total_shares" readonly="1"/>
+                            <field name="nav"/>
                         </group>
                     </group>
 
                     <group string="Détails de la souscription" col="3">
                         <group>
-                            <field name="amount"/>
-                            <field name="unit_value"/>
-                            <field name="date_operation" options="{'numeric': true}"/>
+                            <field name="buy_choice"/>
+                            <field name="gross_amount" readonly="buy_choice != 'amount'" required="1"/>
+                            <field name="shares" readonly="buy_choice != 'share'" required="1"/>
+
                         </group>
                         <group>
                             <field name="subscription_fee_rate"/>
                             <field name="subscription_fee_amount"/>
                         </group>
                         <group>
-                            <field name="cash_used"/>
-                            <field name="parts"/>
-                            <field name="cash_refund"/>
-                            <field name="date_valeur" readonly="state !='validated'" required="state =='validated'" options="{'numeric': true}"/>
+                            <field name="net_amount"/>
+                            <field name="amount_remaining"/>
                         </group>
-
-
                     </group>
                 </sheet>
                 <chatter>

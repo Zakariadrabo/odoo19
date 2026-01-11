@@ -21,6 +21,10 @@ class EfundAccountPart(models.Model):
         ('suspended', 'Désactivé'),
     ], string="Status", default='draft', )
 
+
+    #Add test
+    cmp = fields.Float(string="Coût Moyen Pondéré",digits=(16, 6),tracking=True,help="Coût moyen pondéré des parts détenues")
+
     _account_number_fund_uniq = models.Constraint(
         'unique(account_number, fund_id)',
         'Numéro de compte titres déjà utilisé pour ce fonds'
@@ -66,8 +70,9 @@ class EfundAccountPart(models.Model):
             moves = self.env['efund.investor.part.move'].search([
                 ('part_account_id', '=', acc.id)
             ])
+
             acc.total_parts = sum(
-                m.parts if m.move_type in ('subscription','refund') else -m.parts
+                m.shares if m.move_type in ('subscription','deposit') else -m.shares
                 for m in moves
             )
 

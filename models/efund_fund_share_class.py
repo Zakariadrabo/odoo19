@@ -38,7 +38,7 @@ class FundClass(models.Model):
     # === Calculs et Statistiques ===
     total_shares = fields.Float(string='Total Shares Outstanding',digits=(16, 2),compute='_compute_share_statistics',store=True,help="Nombre total de parts en circulation")
     total_net_assets = fields.Float(string='Total Net Assets',compute='_compute_share_statistics',store=True,help="Actifs nets attribués à cette classe")
-    current_nav = fields.Float(string='Current NAV per Share',compute='_compute_current_nav',help="Dernière valeur liquidative disponible")
+    current_nav = fields.Float(string='Valeur Liquidative',compute='_compute_current_nav',help="Dernière valeur liquidative disponible")
 
 
     # === Computed Methods ===
@@ -58,7 +58,7 @@ class FundClass(models.Model):
             if share_class.total_shares > 0:
                 share_class.current_nav = share_class.total_net_assets / share_class.total_shares
             else:
-                share_class.current_nav = 0.0
+                share_class.current_nav = 11000 # A changer après le calcul de la VL
 
     # === Constraints ===
     @api.constrains('management_fee_rate', 'subscription_fee_rate', 'redemption_fee_rate', 'performance_fee_rate')

@@ -28,17 +28,17 @@
                     </group>
                     <group string="Détails du rachat" col="3">
                         <group>
-                            <field name="redemption_type"/>
-                            <field name="parts_to_redeem" readonly="redemption_type == 'total'" required="redemption_type == 'partial'"/>
-                            <field name="cash_refund" />
+                            <field name="buy_choice"/>
+                            <field name="parts_to_redeem" readonly="buy_choice == 'amount'" required="buy_choice == 'amount'"/>
+                            <field name="desired_amount" readonly="buy_choice == 'share'" required="buy_choice == 'share'"/>
                         </group>
                         <group>
-                            <field name="estimated_amount" readonly="1"/>
-                            <field name="estimated_nav"  readonly="1" />
+                            <field name="net_amount" readonly="1"/>
+                            <field name="nav"  readonly="1" />
                             <field name="date_operation" readonly="1" options="{'numeric': true}"/>
                         </group>
                         <group>
-                            <field name="amount" readonly="1" />
+                            <field name="gross_amount" readonly="1" />
                             <field name="redemption_fee_rate"  readonly="1" />
                             <field name="redemption_fee_amount" readonly="1"/>
                         </group>

@@ -118,11 +118,6 @@
               parent="menu_clients_root"
               action="action_fund_aml_alerte"
               sequence="33"/>
-     <menuitem id="menu_pep"
-              name="PEP"
-              parent="menu_clients_root"
-              action="action_investor_pep"
-              sequence="34"/>
 
 
     <!-- =========================
@@ -286,6 +281,11 @@
               name="Indicateurs de risque"
               parent="menu_reporting_root"
               sequence="84"/>
+     <menuitem id="menu_dashboard"
+              name="Logs de Réconciliation"
+              parent="menu_reporting_root"
+               action="action_reconciliation_log"
+              sequence="85"/>
 
 
     <!-- =========================
