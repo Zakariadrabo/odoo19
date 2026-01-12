@@ -11,4 +11,15 @@
         <field name="binding_type">report</field>
         <field name="print_report_name">'KYC - %s' % (object.full_name or object.partner_id.name)</field>
     </record>
+
+    <record id="action_efund_investor_portfolio_report" model="ir.actions.report">
+        <field name="name">Portefeuille Investisseur</field>
+        <field name="model">efund.investor.portfolio.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">efundOpc.efund_investor_portfolio_report</field>
+        <field name="report_file">efundOpc.efund_investor_portfolio_report</field>
+        <field name="print_report_name">'Portefeuille investisseur - %s' % (object.investor_id.name or object.investor_id.partner_id.name)</field>
+    </record>
+
+
 </odoo>

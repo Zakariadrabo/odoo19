@@ -28,7 +28,7 @@
         'views/efund_action_menu_parametre.xml',
         'views/efund_views_kyc_document.xml',
         'views/efund_aml_alert_views.xml',
-        'views/efund_views_instrument.xml',
+        'views/efund_fund_instrument_views.xml',
         'wizard/efund_bon_amortization_wizard.xml',
         'wizard/efund_fund_import_price_wizard_views.xml',
         'views/efund_position_views.xml',
@@ -64,7 +64,10 @@
         'views/efund_fund_type_views.xml',
         'views/efund_asset_class_views.xml',
         'views/efund_reconciliation_log_views.xml',
-
+        'wizard/efund_investor_portfolio_report_views.xml',
+        'reports/efund_investor_portfolio_report.xml',
+        'views/efund_fund_prudential_limit_views.xml',
+        'views/efund_fund_prudential_ratio_views.xml',
 
         'data/sequence.xml',
 

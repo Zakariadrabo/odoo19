@@ -207,8 +207,8 @@
               action="action_efund_instrument_issuer"
               sequence="57"/>
 
-    <menuitem id="menu_SGI"
-              name="SGI"
+    <menuitem id="menu_societe_bourse"
+              name="Société de Bourse"
               parent="menu_portfolio_root"
               action="action_efund_depositaire"
               sequence="58"/>
@@ -281,10 +281,11 @@
               name="Indicateurs de risque"
               parent="menu_reporting_root"
               sequence="84"/>
-     <menuitem id="menu_dashboard"
-              name="Logs de Réconciliation"
+
+    <menuitem id="menu_ratio"
+              name="Ratios Prudentielles"
               parent="menu_reporting_root"
-               action="action_reconciliation_log"
+              action="action_fund_ratio"
               sequence="85"/>
 
 
@@ -298,10 +299,10 @@
             sequence="90"
     />
     <menuitem id="menu_efund_fund_instrument_price_import"
-          name="Import des cours"
-          parent="menu_gestion_fonds_configuration"
-          action="action_efund_fund_instrument_price_import"
-          sequence="91"/>
+              name="Import des cours"
+              parent="menu_gestion_fonds_configuration"
+              action="action_efund_fund_instrument_price_import"
+              sequence="91"/>
 
     <menuitem id="menu_gestion_fonds"
               name="Instruments financiers"

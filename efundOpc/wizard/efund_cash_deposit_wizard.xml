@@ -35,7 +35,7 @@
                 </sheet>
                 <footer>
                     <button string="Annuler" class="btn-secondary" special="cancel"/>
-                    <button string="Confirmer le dépôt"
+                    <button string="Confirmer"
                             name="action_confirm"
                             type="object"
                             class="btn-primary"/>

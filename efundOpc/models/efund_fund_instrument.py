@@ -1,6 +1,5 @@
 import logging
 from datetime import date
-from email.policy import default
 
 from dateutil.relativedelta import relativedelta
 from odoo import models, fields, api, _
@@ -22,178 +21,68 @@ class FundInstrument(models.Model):
     isin = fields.Char(string="Code ISIN", index=True)
     ticker = fields.Char(string="Ticker / Mnémo")
 
-    instrument_type = fields.Selection([('equity', 'Action / Equity'),('bond', 'Obligation'),('tcn', 'TCN / Titre de Créance Négociable'),
-        ('right', 'Droit / Warrant / Option'),('mmf', 'Monétaire / Cash'),('other', 'Autre'),
-    ], default='other', required=True, string="Type d’instrument")
-    currency_id = fields.Many2one('res.currency', string="Devise", required=True)
-    state = fields.Selection([('draft', 'Brouillon'),('pending', 'Vérification'),('approved', 'Approuvé'),('archived', 'Archivé')
-    ], default='draft')
-    is_listed = fields.Boolean(string='Est Coté',default=True,tracking=True,help="Indique si l'instrument est coté")
+    instrument_type = fields.Selection([('equity', 'Action'),
+                                        ('bond', 'Obligation / Créance'),
+                                        ('money_market', 'Marché monétaire'),
+                                        ('opcvm', 'Part OPCVM'),
+                                        ], default='bond', required=True, string="Type d’instrument")
+
+    currency_id = fields.Many2one('res.currency', string="Devise")
+    state = fields.Selection([('draft', 'Brouillon'), ('pending', 'Vérification'), ('approved', 'Approuvé'), ('archived', 'Archivé') ], default='draft')
+    is_listed = fields.Boolean(string='Est Coté', default=False, tracking=True, help="Indique si l'instrument est coté")
     listing_date = fields.Date(string='Date 1ère Cotation', tracking=True, help="Indique la date de la 1ère cotation")
     last_validated_price = fields.Float(compute='_compute_last_validated_price', string="Dernier cours validé",digits=(16, 4))
     last_price_date = fields.Date(compute='_compute_last_validated_price', string="Date dernier cours")
-    sector = fields.Selection([('agriculture', 'Agriculture'),('industrie', 'Industrie'),], string="Secteur d'activités")
-
-    #--------------------------------------------------------
-    #  RELATIONS
-    #--------------------------------------------------------
-    price_ids = fields.One2many('efund.fund.instrument.price', 'instrument_id', string="Prix")
-    issuer_id = fields.Many2one("efund.instrument.issuer",string="Émetteur",help="Institution ou entreprise qui émet l'instrument financier.")
+    sector = fields.Selection([('agriculture', 'Agriculture'), ('industrie', 'Industrie'), ],string="Secteur d'activités")
+    state_issuer = fields.Boolean(string="Émis ou garanti par un État CEMAC")
+    issuer_id = fields.Many2one("efund.instrument.issuer", string="Émetteur", help="Institution ou entreprise qui émet l'instrument financier.")
     market = fields.Selection([('brvm', 'BRVM'), ('bvmac', 'BVMAC'), ('other', 'Autre marché'), ],string="Marché Principal", default='bvmac')
-    custodian = fields.Selection([('dcbr', 'DC/BR'), ('bceao', 'BCEAO'), ('autre', 'Autre'), ], default='dcbr',string="Dépositaire", )
-    asset_class_id = fields.Many2one('efund.asset.class',string="Classe d'actif",required=True)
 
-    market_price_source = fields.Selection([('brvm_api', 'BRVM – API officielle'),('manual', 'Saisie manuelle'),('datasource', 'Autre data provider'),
-    ], string="Source du Prix")
+    # --------------------------------------------------------
+    #  RELATIONS
+    # --------------------------------------------------------
+    price_ids = fields.One2many('efund.fund.instrument.price', 'instrument_id', string="Prix")
+    custodian = fields.Selection([('dcbr', 'DC/BR'), ('bceao', 'BCEAO'), ('autre', 'Autre'), ], default='dcbr', string="Dépositaire", )
+    asset_class_id = fields.Many2one('efund.asset.class', string="Classe d'actif", domain="[('state', '=', 'validated')]", required=True)
+    market_price_source = fields.Selection([('brvm_api', 'BRVM – API officielle'), ('manual', 'Saisie manuelle'), ('datasource', 'Autre data provider'),], string="Source du Prix")
     import_config_id = fields.Many2one('efund.fund.instrument.price.import', string="Configuration d'import")
-
-
+    custodian_id = fields.Many2one('efund.depositaire', string="Dépositaire")
 
     # ----------------------------------------------------
     # CARACTÉRISTIQUES SPÉCIFIQUES PAR TYPE
     # ----------------------------------------------------
-
     # --- ACTIONS ---
-    equity_dividend_yield = fields.Float(string="Dividend Yield (%)")
-
+    equity_dividend_yield = fields.Float(string="Dividende")
 
     # --- OBLIGATIONS ---
-    bond_type = fields.Selection([
-        ('fixed_rate', 'Taux Fixe'),
-        ('floating_rate', 'Floating Rate Note (FRN)'),
-        ('zero_coupon', 'Zero Coupon Bond'),
-        ('convertible', 'Convertible Bond'),
-        ('perpetual', 'Perpetual Bond'),
-        ('inflation_linked', 'Inflation-Linked Bond'),
-    ], string='Type Obligation',
-        # required=True,
-        default='fixed_rate')
-    bond_issuer_rating = fields.Selection([
-        ('aaa', 'AAA'),
-        ('aa', 'AA'),
-        ('a', 'A'),
-        ('bbb', 'BBB'),
-        ('bb', 'BB'),
-        ('b', 'B'),
-        ('ccc', 'CCC'),
-        ('cc', 'CC'),
-        ('c', 'C'),
-        ('d', 'D (Default)'),
-    ], string='Credit Rating', tracking=True)
-    rating_agency = fields.Char(string='Rating Agency')
-    bond_amortization_ids = fields.One2many(
-        'efund.bond.amortization',
-        'instrument_id',
-        string="Bond Amortization Schedule"
-    )
-    coupon_ids = fields.One2many(
-        'efund.bond.coupon',
-        'instrument_id',
-        string="Bond Coupon Payment Schedule"
-    )
-    # 1. Montant d'émission
-    issue_amount = fields.Monetary(
-        string='Issue Amount',
-        currency_field='currency_id',
-        # required=True,
-        tracking=True,
-        help="Montant total émis par l'émetteur"
-    )
-
-    # 2. Valeur nominale
-    face_value = fields.Monetary(
-        string='Face Value (Nominal)',
-        currency_field='currency_id',
-        # required=True,
-        default=100.0,
-        tracking=True,
-        help="Valeur nominale de chaque obligation (généralement 100)"
-    )
-
-    # 3. Taux d'intérêt
-    coupon_rate = fields.Float(
-        string='Coupon Rate (%)',
-        digits=(16, 4),
-        # required=True,
-        tracking=True,
-        help="Taux d'intérêt nominal annuel"
-    )
-
-    interest_rate_type = fields.Selection([
-        ('fixed', 'Fixed'),
-        ('floating', 'Floating'),
-        ('variable', 'Variable'),
-    ], string='Interest Rate Type', default='fixed'
-        # , required=True
-    )
-
-    # 4. Périodicité
-    coupon_frequency = fields.Selection([
-        ('annual', 'Annuel'),
-        ('semi_annual', 'Semestriel'),
-        ('quarterly', 'Trimestriel'),
-        ('monthly', 'Mensuel'),
-        ('at_maturity', 'A Maturité'),
-    ], string='Coupon Frequency', default='annual',
-        # required=True
-    )
-
-    # 5. Dates clés
-    issue_date = fields.Date(
-        string='Date émission',
-        # required=True,
-        tracking=True,
-        help="Date d'émission initiale"
-    )
-
-    value_date = fields.Date(
-        string='Value Date (Date de Jouissance)',
-        # required=True,
-        tracking=True,
-        help="Date à partir de laquelle les intérêts commencent à courir"
-    )
-
-    first_coupon_date = fields.Date(
-        string='First Coupon Date',
-        # required=True,
-        tracking=True,
-        compute='_compute_coupon_dates',
-        store=True
-    )
-
-    maturity_date = fields.Date(
-        string='Maturity Date',
-        # required=True,
-        tracking=True,
-        help="Date de remboursement final"
-    )
-
-    # Calcul du prochain coupon
-    coupon_calculation_date = fields.Date(
-        string='Last Calculation Date',
-        default=fields.Date.today,
-        help="Date du dernier calcul des coupons"
-    )
-    next_coupon_date = fields.Date(
-        string='Next Coupon Date',
-        compute='_compute_coupon_schedule',
-        store=True,
-        help="Date du prochain paiement de coupon"
-    )
-
-    days_to_next_coupon = fields.Integer(
-        string='Days to Next Coupon',
-        compute='_compute_days_to_next_coupon',
-        help="Nombre de jours jusqu'au prochain coupon",
-        store=False
-    )
+    bond_type = fields.Selection([('ota', 'OTA (Obligation du Trésor et assimilés)'), ('bta', 'BTA (Obligation du Trésor et assimilés)'), ('op', 'Obligation privée')
+    ], string='Type Obligation',default='ota')
+    bond_issuer_rating = fields.Selection([('aaa', 'AAA'),('aa', 'AA'),('a', 'A'),('bbb', 'BBB'),('bb', 'BB'),
+        ('b', 'B'),('ccc', 'CCC'), ('cc', 'CC'),('c', 'C'),('d', 'D (Default)'),], string='Notation', tracking=True)
+    rating_agency = fields.Char(string='Agence Notation')
+    bond_amortization_ids = fields.One2many('efund.bond.amortization','instrument_id',string="calendrier des amortissements")
+    coupon_ids = fields.One2many('efund.bond.coupon','instrument_id',string="Calendrier des coupons")
+    issue_amount = fields.Monetary(string='Montant Emission',currency_field='currency_id',tracking=True,help="Montant total émis par l'émetteur")
+    face_value = fields.Monetary(string='Valeur nominale',currency_field='currency_id',tracking=True,help="Valeur nominale de chaque obligation (généralement 100)",default=100.0)
+    coupon_rate = fields.Float(string='Taux du Coupon (%)',digits=(16, 4),tracking=True,help="Taux d'intérêt nominal annuel")
+    coupon_frequency = fields.Selection([('annual', 'Annuel'),('semi_annual', 'Semestriel'),('quarterly', 'Trimestriel'),
+        ('monthly', 'Mensuel'),('at_maturity', 'A Maturité'),], string='Fréquence des Coupons', default='annual',)
+    issue_date = fields.Date(string='Date émission',tracking=True,help="Date d'émission initiale")
+    value_date = fields.Date(string='Date de Jouissance',tracking=True,help="Date à partir de laquelle les intérêts commencent à courir")
+    first_coupon_date = fields.Date(string='Date 1er Coupon',tracking=True,compute='_compute_coupon_dates',store=True)
+    maturity_date = fields.Date(string='Date de Maturité',tracking=True,help="Date de remboursement final")
+    coupon_calculation_date = fields.Date(string='Date dernier calcul des coupons',default=fields.Date.today,help="Date du dernier calcul des coupons")
+    next_coupon_date = fields.Date(string='Date prochain Coupon',compute='_compute_coupon_schedule',store=True,help="Date du prochain paiement de coupon")
+    days_to_next_coupon = fields.Integer(string='Jours jusqu\'au prochain Coupon',compute='_compute_days_to_next_coupon',help="Nombre de jours jusqu'au prochain coupon",store=False)
     maturity_years = fields.Float(compute="_compute_maturity_years", store=True)
-
-    accrued_interest = fields.Monetary(
-        string='Accrued Interest',
-        currency_field='currency_id',
-        compute='_compute_accrued_interest'
-    )
+    accrued_interest = fields.Monetary(string='Intérêts courus',currency_field='currency_id',compute='_compute_accrued_interest')
+    #amortization_type = fields.Selection([('infine', 'in fine'), ('annuite', 'Annuités constantes')], string='Remboursement', default='infine', )
+    technical_trick = fields.Selection([('exact365', 'Exact/Exact'),('exact360', 'Exact/Exact'),], string='Base de calcul')
+    amortization_type = fields.Selection([('in_fine', "In Fine (Bullet)"),('constant_annuity', "Annuités Constantes"),
+        ('constant_principal', "Amortissement Constant"),('american', "Américain (Balloon)"),('custom_schedule', "Échéancier Personnalisé"),
+    ], string="Type d'Amortissement", default="in_fine")
+    grace_period = fields.Integer(string="Période de grâce (années)", default=0)
+    balloon_percentage = fields.Float(string="Pourcentage Balloon", default=100.0)
 
     # --- TCN ---
     tcn_maturity_date = fields.Date(string="Échéance TCN")
@@ -212,34 +101,10 @@ class FundInstrument(models.Model):
     # ----------------------------------------------------
     # ÉVÉNEMENTS
     # ----------------------------------------------------
-    event_ids = fields.One2many(
-        'efund.fund.instrument.event',
-        'instrument_id',
-        string="Événements",
-        help="Événements sur cet instrument"
-    )
-
-    instrument_fee_ids = fields.One2many(
-        'efund.fund.instrument.fee',
-        'instrument_id',
-        string="Frais",
-        help="Frais sur cet instrument"
-    )
-
-    upcoming_event_count = fields.Integer(
-        string="Événements à venir",
-        compute='_compute_upcoming_event_count',
-        store=False
-    )
-
-    recent_event_ids = fields.One2many(
-        'efund.fund.instrument.event',
-        'instrument_id',
-        string="Événements récents",
-        domain=[('event_date', '>=', fields.Date.today())]
-    )
-
-
+    event_ids = fields.One2many('efund.fund.instrument.event','instrument_id',string="Événements",help="Événements sur cet instrument")
+    instrument_fee_ids = fields.One2many('efund.fund.instrument.fee','instrument_id',string="Frais",help="Frais sur cet instrument")
+    upcoming_event_count = fields.Integer(string="Événements à venir",compute='_compute_upcoming_event_count',store=False)
+    recent_event_ids = fields.One2many('efund.fund.instrument.event','instrument_id',string="Événements récents",domain=[('event_date', '>=', fields.Date.today())])
 
     def _compute_upcoming_event_count(self):
         for instrument in self:
@@ -411,11 +276,13 @@ class FundInstrument(models.Model):
     # ----------------------------------------------------
     # CONTRAINTES
     # ----------------------------------------------------
+    """
     @api.constrains('isin')
     def _check_isin_format(self):
         for record in self:
             if record.isin and len(record.isin) not in (12,):
                 raise ValidationError(_("Le code ISIN doit contenir 12 caractères."))
+    """
 
     @api.constrains('coupon_rate', 'maturity_date')
     def _check_bond_fields(self):
@@ -487,12 +354,9 @@ class FundInstrument(models.Model):
 
         # Supprimer l'ancien calendrier si existant
         self.coupon_ids.unlink()
-        _logger.info(f"****** je suis dans le coupon de calcul ")
 
         # Générer les nouvelles dates de coupon
         coupon_dates = self._generate_all_coupon_dates()
-
-        _logger.info(f"****** affiche le calendrier des coupons: {coupon_dates} ")
 
         # Créer les enregistrements de coupon
         coupons = []
@@ -506,7 +370,6 @@ class FundInstrument(models.Model):
             coupons.append(coupon_vals)
 
         # Créer en masse pour la performance
-        _logger.info(f"****** affiche les coupons : {coupons} ")
         if coupons:
             self.env['efund.bond.coupon'].create(coupons)
 
@@ -529,7 +392,6 @@ class FundInstrument(models.Model):
 
         # Générer automatiquement si vide
         if not self.coupon_ids:
-            _logger.info(f"****** coupon_ids n'est pas vide : {self.coupon_ids}")
             self.action_generate_coupon_schedule()
 
         return {
@@ -683,4 +545,3 @@ class FundInstrument(models.Model):
             if order.state != 'pending':
                 continue
             order.state = 'approved'
-

@@ -1,40 +1,92 @@
 import logging
-
-from odoo import models, fields, api
-from datetime import timedelta
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 from dateutil.relativedelta import relativedelta
+import math
+
 _logger = logging.getLogger(__name__)
+
+
+class BondAmortizationWizardLine(models.TransientModel):
+    """Lignes pour échéancier personnalisé"""
+    _name = "efund.bond.amortization.wizard.line"
+    _description = "Ligne d'échéancier personnalisé"
+    _order = "period_number"
+
+    wizard_id = fields.Many2one('efund.bond.amortization.wizard', required=True)
+    period_number = fields.Integer(string="Période", required=True)
+    fixed_principal_amount = fields.Float(string="Montant Principal Fixe")
+    percentage_principal = fields.Float(string="Pourcentage du Principal (%)")
+
+    @api.onchange('fixed_principal_amount')
+    def _onchange_fixed_principal_amount(self):
+        if self.fixed_principal_amount:
+            self.percentage_principal = 0.0
+
+    @api.onchange('percentage_principal')
+    def _onchange_percentage_principal(self):
+        if self.percentage_principal:
+            self.fixed_principal_amount = 0.0
+
 
 class BondAmortizationWizard(models.TransientModel):
     _name = "efund.bond.amortization.wizard"
     _description = "Generate Bond Amortization Schedule"
 
     instrument_id = fields.Many2one('efund.fund.instrument', required=True)
-    currency_id = fields.Many2one('res.currency', string="Devise", required=True)
-    nominal_amount = fields.Monetary(required=True)
-    coupon_rate = fields.Float(string="Annual Coupon Rate (%)", required=True)
-    maturity_years = fields.Integer(required=True)
+    currency_id = fields.Many2one(related='instrument_id.currency_id', string="Devise")
+    nominal_amount = fields.Monetary(required=True, string="Montant nominal")
+    coupon_rate = fields.Float(string="Taux coupon (%)", required=True)
+    maturity_years = fields.Integer(required=True, string="maturité en Années ")
+
+    # Ajout du type d'amortissement
+    amortization_type = fields.Selection([
+        ('in_fine', "In Fine (Bullet)"),
+        ('constant_annuity', "Annuités Constantes"),
+        ('constant_principal', "Amortissement Constant"),
+        ('american', "Américain (Balloon)"),
+        ('custom_schedule', "Échéancier Personnalisé"),
+    ], string="Type d'Amortissement", default="in_fine", required=True)
+
     frequency = fields.Selection([
         ('annual', "Annual"),
         ('semiannual', "Semi-Annual"),
         ('quarterly', "Quarterly"),
-    ], default="annual")
+        ('monthly', "Monthly"),
+    ], default="annual", string="Fréquence des paiements")
 
-    start_date = fields.Date(required=True)
+    start_date = fields.Date(required=True, string="Date de début")
+
+    # Champs conditionnels pour certains types d'amortissement
+    balloon_percentage = fields.Float(
+        string="Pourcentage Balloon",
+        help="Pourcentage du principal remboursé à l'échéance finale",
+        default=100.0
+    )
+
+    grace_period = fields.Integer(
+        string="Période de grâce (années)",
+        help="Période sans remboursement de principal",
+        default=0
+    )
+    """
+    # Pour l'amortissement personnalisé
+    custom_schedule_line_ids = fields.One2many(
+        'efund.bond.amortization.wizard.line',
+        'wizard_id',
+        string="Échéancier Personnalisé"
+    )
+    """
 
     @api.model
     def default_get(self, fields_list):
         vals = super().default_get(fields_list)
         active_id = self.env.context.get('active_id')
-        _logger.info(f"************ valeur Active_id : {active_id}")
 
         if active_id:
             try:
-                active_id = int(active_id)  # Conversion explicite en entier
-                inst = self.env['efund.fund.instrument'].browse(active_id)
-
+                inst = self.env['efund.fund.instrument'].browse(int(active_id))
                 if inst:
-                    _logger.info(f"instancie de bond {active_id} : {inst}")
                     vals.update({
                         'instrument_id': inst.id,
                         'currency_id': inst.currency_id.id,
@@ -43,118 +95,204 @@ class BondAmortizationWizard(models.TransientModel):
                         'maturity_years': inst.maturity_years,
                         'frequency': inst.coupon_frequency,
                         'start_date': inst.issue_date,
+                        'amortization_type': inst.amortization_type or 'in_fine',
+                        'grace_period': inst.grace_period or 0,
+                        'balloon_percentage': inst.balloon_percentage or 100.0,
                     })
-                else:
-                    # Gérer le cas où l'instrument n'est pas trouvé
-                    # Vous pouvez logger un avertissement ou lever une exception
-                    self.env.logger.warning("Instrument avec l'ID %s non trouvé.", active_id)
-                    # Ou, si c'est une erreur critique :
-                    # raise UserError("Instrument avec l'ID %s non trouvé." % active_id)
-
-            except ValueError:
-                # Gérer le cas où active_id n'est pas un entier valide
-                self.env.logger.warning("active_id n'est pas un entier valide: %s", active_id)
-                # Ou, si c'est une erreur critique :
-                # raise UserError("L'active_id n'est pas un entier valide: %s" % active_id)
             except Exception as e:
-                # Gérer d'autres exceptions possibles (par exemple, si browse() échoue)
-                self.env.logger.exception("Erreur lors de la récupération de l'instrument avec l'ID %s: %s", active_id,
-                                          e)
-                # Ou, si c'est une erreur critique :
-                # raise UserError("Erreur lors de la récupération de l'instrument: %s" % e)
-        else:
-            # Gérer le cas où active_id est absent du contexte
-            # Cela peut être normal dans certains cas, donc un avertissement peut suffire
-            self.env.logger.warning("active_id est absent du contexte.")
+                _logger.error(f"Erreur dans default_get: {e}")
 
         return vals
 
-    def action_generate_schedule(self):
-        instrument = self.instrument_id
+    @api.onchange('amortization_type')
+    def _onchange_amortization_type(self):
+        """Ajuster les champs visibles selon le type d'amortissement"""
+        if self.amortization_type == 'american':
+            self.balloon_percentage = 100.0
+        elif self.amortization_type == 'in_fine':
+            self.balloon_percentage = 100.0
+            self.grace_period = self.maturity_years
 
-        # Remove previous lines
-        instrument.bond_amortization_ids.unlink()
+    def _calculate_constant_annuity_schedule(self, principal, period_rate, total_periods):
+        """Calcul pour annuités constantes"""
+        if period_rate == 0:
+            annuity = principal / total_periods
+        else:
+            annuity = principal * period_rate / (1 - (1 + period_rate) ** -total_periods)
 
-        # Frequency mapping
-        freq_map = {
-            'annual': 1,
-            'semi_annual': 2,
-            'quarterly': 4,
-            'monthly': 12,
-        }
-
-        # Note: Utilisez les mêmes clés que dans votre modèle efund.fund.instrument
-        frequency_key = self.frequency
-        # Si nécessaire, convertissez les clés
-        if frequency_key == 'semiannual':
-            frequency_key = 'semi_annual'  # Correspond à la sélection du modèle
-
-        periods_per_year = freq_map.get(frequency_key, 1)
-        total_periods = int(self.maturity_years * periods_per_year)
-        period_interest_rate = (self.coupon_rate / 100) / periods_per_year
-
-        principal = self.nominal_amount
-        payment_per_period = principal * period_interest_rate  # Coupon only (bullet bond)
-
-        _logger.info(
-            f"**********nombre de période : {total_periods} : taux: {period_interest_rate} : paiement par periode : {payment_per_period}")
+        schedule = []
+        remaining_principal = principal
 
         for period in range(1, total_periods + 1):
-            # Correction du calcul de la date
-            if frequency_key == 'annual':
-                due_date = self.start_date + relativedelta(years=period)
-            elif frequency_key == 'semi_annual':
-                due_date = self.start_date + relativedelta(months=6 * period)
-            elif frequency_key == 'quarterly':
-                due_date = self.start_date + relativedelta(months=3 * period)
-            elif frequency_key == 'monthly':
-                due_date = self.start_date + relativedelta(months=period)
-            else:
-                due_date = self.start_date + relativedelta(years=period)
+            interest = remaining_principal * period_rate
+            principal_repayment = annuity - interest
+            closing_principal = remaining_principal - principal_repayment
 
-            _logger.info(f"***** Période {period} : Date échéance: {due_date}")
+            # Ajustement pour la dernière période
+            if period == total_periods:
+                principal_repayment = remaining_principal
+                closing_principal = 0
+                annuity = interest + principal_repayment
 
-            # Last period → repay principal
-            principal_repayment = principal if period == total_periods else 0
-
-            closing_principal = principal - principal_repayment
-
-            self.env["efund.bond.amortization"].create({
-                'instrument_id': instrument.id,
-                'installment_number': period,
-                'due_date': due_date,
-                'opening_principal': principal,
-                'coupon_amount': payment_per_period,
+            schedule.append({
+                'period': period,
+                'interest': interest,
                 'principal_repayment': principal_repayment,
+                'total_payment': interest + principal_repayment,
+                'opening_principal': remaining_principal,
                 'closing_principal': closing_principal,
             })
 
-            principal = closing_principal
+            remaining_principal = closing_principal
 
-        # Retourner une action pour fermer le wizard et afficher un message
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': 'Tableau généré',
-                'message': f"Le tableau d'amortissement a été généré avec {total_periods} périodes.",
-                'type': 'success',
-                'sticky': False,
-                'next': {
-                    'type': 'ir.actions.act_window_close'
-                }
-            }
-        }
+        return schedule
 
-    """
+    def _calculate_constant_principal_schedule(self, principal, period_rate, total_periods):
+        """Calcul pour amortissement constant du principal"""
+        principal_repayment_per_period = principal / total_periods
+        schedule = []
+        remaining_principal = principal
+
+        for period in range(1, total_periods + 1):
+            interest = remaining_principal * period_rate
+            closing_principal = remaining_principal - principal_repayment_per_period
+
+            schedule.append({
+                'period': period,
+                'interest': interest,
+                'principal_repayment': principal_repayment_per_period,
+                'total_payment': interest + principal_repayment_per_period,
+                'opening_principal': remaining_principal,
+                'closing_principal': closing_principal,
+            })
+
+            remaining_principal = closing_principal
+
+        return schedule
+
+    def _calculate_in_fine_schedule(self, principal, period_rate, total_periods, grace_periods=0):
+        """Calcul pour amortissement in fine (bullet)"""
+        schedule = []
+        remaining_principal = principal
+
+        for period in range(1, total_periods + 1):
+            interest = remaining_principal * period_rate
+
+            # Déterminer le remboursement du principal
+            if period <= grace_periods:
+                principal_repayment = 0
+            elif period == total_periods:
+                principal_repayment = remaining_principal
+            else:
+                principal_repayment = 0
+
+            closing_principal = remaining_principal - principal_repayment
+
+            schedule.append({
+                'period': period,
+                'interest': interest,
+                'principal_repayment': principal_repayment,
+                'total_payment': interest + principal_repayment,
+                'opening_principal': remaining_principal,
+                'closing_principal': closing_principal,
+            })
+
+            remaining_principal = closing_principal
+
+        return schedule
+
+    def _calculate_american_schedule(self, principal, period_rate, total_periods, balloon_percentage):
+        """Calcul pour amortissement américain (balloon)"""
+        schedule = []
+        remaining_principal = principal
+        final_balloon = principal * (balloon_percentage / 100.0)
+
+        for period in range(1, total_periods + 1):
+            interest = remaining_principal * period_rate
+
+            if period == total_periods:
+                principal_repayment = final_balloon
+            else:
+                principal_repayment = 0
+
+            closing_principal = remaining_principal - principal_repayment
+
+            schedule.append({
+                'period': period,
+                'interest': interest,
+                'principal_repayment': principal_repayment,
+                'total_payment': interest + principal_repayment,
+                'opening_principal': remaining_principal,
+                'closing_principal': closing_principal,
+            })
+
+            remaining_principal = closing_principal
+
+        return schedule
+
+    def _calculate_custom_schedule(self, principal, period_rate, total_periods):
+        """Calcul basé sur l'échéancier personnalisé"""
+        if not self.custom_schedule_line_ids:
+            raise UserError(_("Veuillez définir l'échéancier personnalisé"))
+
+        schedule = []
+        remaining_principal = principal
+
+        # Trier les lignes par période
+        sorted_lines = self.custom_schedule_line_ids.sorted(key=lambda r: r.period_number)
+
+        for line in sorted_lines:
+            if line.period_number > total_periods:
+                continue
+
+            interest = remaining_principal * period_rate
+
+            if line.fixed_principal_amount > 0:
+                principal_repayment = line.fixed_principal_amount
+            elif line.percentage_principal > 0:
+                principal_repayment = principal * (line.percentage_principal / 100.0)
+            else:
+                principal_repayment = 0
+
+            # Limiter le remboursement au principal restant
+            principal_repayment = min(principal_repayment, remaining_principal)
+            closing_principal = remaining_principal - principal_repayment
+
+            schedule.append({
+                'period': line.period_number,
+                'interest': interest,
+                'principal_repayment': principal_repayment,
+                'total_payment': interest + principal_repayment,
+                'opening_principal': remaining_principal,
+                'closing_principal': closing_principal,
+            })
+
+            remaining_principal = closing_principal
+
+        return schedule
+
+    def _get_due_date(self, start_date, period, frequency_key, periods_per_year):
+        """Calcul de la date d'échéance selon la fréquence"""
+        if frequency_key == 'annual':
+            return start_date + relativedelta(years=period)
+        elif frequency_key == 'semiannual':
+            return start_date + relativedelta(months=6 * period)
+        elif frequency_key == 'quarterly':
+            return start_date + relativedelta(months=3 * period)
+        elif frequency_key == 'monthly':
+            return start_date + relativedelta(months=period)
+        else:
+            return start_date + relativedelta(years=period)
 
     def action_generate_schedule(self):
+        """Génère le tableau d'amortissement selon le type sélectionné"""
+        self.ensure_one()
         instrument = self.instrument_id
 
-        # Remove previous lines
+        # Nettoyer les anciennes lignes
         instrument.bond_amortization_ids.unlink()
 
-        # Frequency mapping
+        # Mapping des fréquences
         freq_map = {
             'annual': 1,
             'semiannual': 2,
@@ -162,34 +300,99 @@ class BondAmortizationWizard(models.TransientModel):
             'monthly': 12,
         }
 
-        periods_per_year = freq_map[self.frequency]
-        total_periods = self.maturity_years * periods_per_year
-        period_interest_rate = (self.coupon_rate / 100) / periods_per_year
+        frequency_key = self.frequency
+        periods_per_year = freq_map.get(frequency_key, 1)
+        total_periods = int(self.maturity_years * periods_per_year)
 
+        # Calculer le nombre de périodes de grâce
+        grace_periods = int(self.grace_period * periods_per_year)
+
+        period_interest_rate = (self.coupon_rate / 100.0) / periods_per_year
         principal = self.nominal_amount
-        payment_per_period = principal * period_interest_rate  # Coupon only (bullet bond)
 
-        _logger.info(f"**********nombre de période : {total_periods} : taux: {period_interest_rate} : periode par an : {payment_per_period}")
+        # Sélectionner la méthode de calcul selon le type d'amortissement
+        if self.amortization_type == 'constant_annuity':
+            schedule_data = self._calculate_constant_annuity_schedule(
+                principal, period_interest_rate, total_periods
+            )
+        elif self.amortization_type == 'constant_principal':
+            schedule_data = self._calculate_constant_principal_schedule(
+                principal, period_interest_rate, total_periods
+            )
+        elif self.amortization_type == 'in_fine':
+            schedule_data = self._calculate_in_fine_schedule(
+                principal, period_interest_rate, total_periods, grace_periods
+            )
+        elif self.amortization_type == 'american':
+            schedule_data = self._calculate_american_schedule(
+                principal, period_interest_rate, total_periods, self.balloon_percentage
+            )
+        elif self.amortization_type == 'custom_schedule':
+            schedule_data = self._calculate_custom_schedule(
+                principal, period_interest_rate, total_periods
+            )
+        else:
+            raise UserError(_("Type d'amortissement non supporté"))
 
-        for period in range(1, total_periods + 1):
-            due_date = self.start_date + relativedelta(months=12 * period / periods_per_year)
-            _logger.info(f"***** je suis rentré dans le for:  {period} : {period_interest_rate}")
+        # Créer les lignes d'amortissement
+        amortization_lines = []
+        for data in schedule_data:
+            due_date = self._get_due_date(
+                self.start_date,
+                data['period'],
+                frequency_key,
+                periods_per_year
+            )
 
-            # Last period → repay principal
-            principal_repayment = principal if period == total_periods else 0
-
-            closing_principal = principal - principal_repayment
-
-            self.env["efund.bond.amortization"].create({
+            line_vals = {
                 'instrument_id': instrument.id,
-                'installment_number': period,
+                'installment_number': data['period'],
                 'due_date': due_date,
-                'opening_principal': principal,
-                'coupon_amount': payment_per_period,
-                'principal_repayment': principal_repayment,
-                'closing_principal': closing_principal,
-            })
-            _logger.info(f"********** j'ecris dans la table amortissement")
+                'opening_principal': data['opening_principal'],
+                'coupon_amount': data['interest'],
+                'principal_repayment': data['principal_repayment'],
+                'closing_principal': data['closing_principal'],
+                'total_payment': data['total_payment'],
+                'amortization_type': self.amortization_type,
+            }
 
-            principal = closing_principal
-        """
+            amortization_lines.append(line_vals)
+
+        # Créer toutes les lignes en une seule opération
+        self.env["efund.bond.amortization"].create(amortization_lines)
+
+        # Message de succès avec résumé
+        total_interest = sum(line['coupon_amount'] for line in amortization_lines)
+        total_principal = sum(line['principal_repayment'] for line in amortization_lines)
+
+        message = _("""
+        Tableau d'amortissement généré avec succès !
+
+        Récapitulatif :
+        • Nombre de périodes : %(periods)d
+        • Type d'amortissement : %(amort_type)s
+        • Intérêts totaux : %(interest).2f %(currency)s
+        • Principal total : %(principal).2f %(currency)s
+        • Montant total : %(total).2f %(currency)s
+        """) % {
+            'periods': total_periods,
+            'amort_type': dict(self._fields['amortization_type'].selection).get(self.amortization_type),
+            'interest': total_interest,
+            'principal': total_principal,
+            'total': total_interest + total_principal,
+            'currency': self.currency_id.symbol,
+        }
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Tableau généré'),
+                'message': message,
+                'type': 'success',
+                'sticky': True,
+                'next': {
+                    'type': 'ir.actions.act_window_close'
+                }
+            }
+        }

@@ -47,6 +47,12 @@
                             class="btn-secondary"
                             icon="fa-archive"
                             invisible="status not in ['kyc_approved', 'kyc_rejected']"/>
+                    <button name="%(action_investor_portfolio_report_wizard)d"
+                            string="État du portefeuille"
+                            type="action"
+                            class="oe_highlight"
+                            icon="fa-file-pdf"/>
+
                     <field name="status" widget="statusbar"/>
                 </header>
 
@@ -224,19 +230,19 @@
                             <group>
                                 <field name="activity_sector"/>
                                 <field name="social_object"/>
-                                <field name="is_beneficiaire_effectif" />
+                                <field name="is_beneficiaire_effectif"/>
                                 <field name="beneficiaire_effectif" required="is_beneficiaire_effectif"
-                                           invisible="not is_beneficiaire_effectif" />
+                                       invisible="not is_beneficiaire_effectif"/>
                             </group>
                             <group>
                                 <field name="represented_company_ids">
-                                <list editable="bottom">
-                                    <field name="full_name"/>
-                                    <field name="fonction"/>
-                                    <field name="birthdate" options="{'numeric': true}"/>
-                                    <field name="power" />
-                                </list>
-                            </field>
+                                    <list editable="bottom">
+                                        <field name="full_name"/>
+                                        <field name="fonction"/>
+                                        <field name="birthdate" options="{'numeric': true}"/>
+                                        <field name="power"/>
+                                    </list>
+                                </field>
                             </group>
                         </page>
                         <!-- ========================== -->
