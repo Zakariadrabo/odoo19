@@ -69,6 +69,7 @@
         'views/efund_fund_prudential_limit_views.xml',
         'views/efund_fund_prudential_ratio_views.xml',
 
+
         'data/sequence.xml',
 
     ],

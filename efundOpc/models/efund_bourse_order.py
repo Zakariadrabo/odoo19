@@ -10,89 +10,21 @@ class EfundBourseOrder(models.Model):
     # ---------------------------------------------------------------------
     # IDENTIFICATION
     # ---------------------------------------------------------------------
-    name = fields.Char(
-        string="Référence",
-        default=lambda self: _('ORD/%s') % fields.Date.today(),
-        readonly=True
-    )
-
-    order_date = fields.Date(
-        string="Date Ordre",
-        default=fields.Date.context_today,
-        required=True
-    )
-
-    fund_id = fields.Many2one(
-        'efund.fund',
-        string="Fonds (OPCVM)",
-        required=True,
-        index=True,
-        domain=lambda self: [('company_id', '=', self.env.company.id)]
-    )
-    fund_name = fields.Char(
-        related='fund_id.name',
-        string="Fonds",
-        store=True
-    )
-    company_id = fields.Many2one(
-        'res.company',
-        string="Société",
-        required=True,
-        readonly=True,
-        default=lambda self: self.env.company
-    )
-
-    execution_line_ids = fields.One2many(
-        'efund.bourse.order.execution.line',
-        'order_id',
-        string="Historique d’exécution"
-    )
-
-    # ---------------------------------------------------------------------
-    # STATUT
-    # ---------------------------------------------------------------------
-    state = fields.Selection([
-        ('draft', 'Brouillon'),
-        ('validated', 'Validé'),
-        ('sent', 'Envoyé à la SGI'),
-        ('partially_executed', 'Partiellement exécuté'),
-        ('executed', 'Exécuté'),
-        ('cancelled', 'Annuler')
-    ], default='draft', string="Statut")
-
-    # ---------------------------------------------------------------------
-    # TYPE D’ORDRE
-    # ---------------------------------------------------------------------
+    name = fields.Char(string="Référence",default=lambda self: _('ORD/%s') % fields.Date.today(),readonly=True)
+    order_date = fields.Date(string="Date Ordre",default=fields.Date.context_today,required=True)
+    fund_id = fields.Many2one('efund.fund',string="Fonds (OPCVM)",required=True,index=True,domain=lambda self: [('company_id', '=', self.env.company.id)]   )
+    fund_name = fields.Char(related='fund_id.name',string="Fonds",store=True)
+    company_id = fields.Many2one('res.company',string="Société",required=True,readonly=True,default=lambda self: self.env.company)
+    execution_line_ids = fields.One2many('efund.bourse.order.execution.line','order_id',string="Historique d’exécution")
+    state = fields.Selection([('draft', 'Brouillon'),('validated', 'Validé'),('sent', 'Envoyé à la SGI'),
+        ('partially_executed', 'Partiellement exécuté'),('executed', 'Exécuté'),('cancelled', 'Annuler')], default='draft', string="Statut")
     is_subscription = fields.Boolean(string="Souscription")
     is_buy = fields.Boolean(string="Achat")
     is_sell = fields.Boolean(string="Vente")
-
-    order_type = fields.Selection([
-        ('market', 'Au marché'),
-        ('limit', 'À cours limité'),
-        ('threshold', 'À seuil'),
-    ], string="Type d’ordre", required=True)
-
-    # ---------------------------------------------------------------------
-    # INSTRUMENT FINANCIER
-    # ---------------------------------------------------------------------
-    instrument_id = fields.Many2one(
-        'efund.fund.instrument',
-        string="Instrument Financier",
-        required=True
-    )
-    depositaire_sgi = fields.Many2one(
-        'efund.depositaire',
-        string="Dépositaire du fond",
-        required=True
-    )
-
-    symbol = fields.Char(
-        related='instrument_id.ticker',
-        string="Symbole",
-        readonly=True
-    )
-
+    order_type = fields.Selection([('market', 'Au marché'),('limit', 'À cours limité'),('threshold', 'À seuil'),], string="Type d’ordre", required=True)
+    instrument_id = fields.Many2one('efund.fund.instrument',string="Instrument Financier",required=True)
+    depositaire_sgi = fields.Many2one('efund.depositaire',string="Dépositaire du fond",required=True)
+    symbol = fields.Char(related='instrument_id.ticker',string="Symbole",readonly=True)
     market_place = fields.Selection(
         related='instrument_id.market',
         string="Place",
@@ -252,7 +184,7 @@ class EfundBourseOrder(models.Model):
 
     def action_send(self):
         for order in self:
-            if order.state != 'draft':
+            if order.state != 'validated':
                 continue
             order.state = 'sent'
 

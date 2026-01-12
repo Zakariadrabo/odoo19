@@ -128,6 +128,21 @@
                                 </list>
                             </field>
                         </page>
+                        <page string="Simulation amortissement décote" invisible="instrument_type != 'bond'">
+                            <group>
+                                <field name="valuation_date"/>
+                                <button string="Simuler" type="object" name="simulate" class="btn-primary"/>
+                            </group>
+
+                            <separator string="Résultat de la simulation"/>
+
+                            <group>
+                                <field name="actuarial_value" readonly="1"/>
+                                <field name="linear_value" readonly="1"/>
+                            </group>
+
+
+                        </page>
 
                         <!-- =========================== -->
                         <!-- TAB: Informations générales -->
@@ -160,7 +175,6 @@
                                 <field name="equity_dividend_yield"/>
                             </group>
                         </page>
-
 
 
                         <page string="Calculs" invisible="instrument_type != 'equity'">
