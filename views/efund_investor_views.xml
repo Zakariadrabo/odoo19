@@ -11,11 +11,6 @@
                     <!-- ========================= -->
                     <!-- DRAFT → KYC PENDING -->
                     <!-- ========================= -->
-
-                    <button name="action_print_portfolio_statement"
-                            type="object"
-                            string="Imprimer portefeuille"
-                            class="btn-primary"/>
                     <button name="action_submit_kyc"
                             type="object"
                             string="Soumettre KYC"
@@ -52,6 +47,12 @@
                             class="btn-secondary"
                             icon="fa-archive"
                             invisible="status not in ['kyc_approved', 'kyc_rejected']"/>
+                    <button name="%(action_investor_portfolio_report_wizard)d"
+                            string="État du portefeuille"
+                            type="action"
+                            class="oe_highlight"
+                            icon="fa-file-pdf"/>
+
                     <field name="status" widget="statusbar"/>
                 </header>
 
@@ -128,18 +129,24 @@
                             <field name="nom" required="investor_type  == 'individual'"/>
                             <field name="prenom" required="investor_type  == 'individual'"/>
                             <field name="sex" required="investor_type  == 'individual'"/>
+                            <field name="surnom" required="investor_type  == 'individual'"/>
                             <field name="birthdate" required="investor_type  == 'individual'"
                                    options="{'numeric': true}"/>
                             <field name="birthplace" required="investor_type  == 'individual'"/>
                             <field name="birth_country_id" required="investor_type  == 'individual'"/>
                             <field name="nationality"/>
+
                         </group>
                         <group>
-                            <field name="minor"/>
+                            <field name="autre_nationalite" required="investor_type  == 'individual'"/>
+                            <field name="nbre_enfant" required="investor_type  == 'individual'"/>
+                            <field name="minor" required="investor_type  == 'individual'"/>
                             <field name="phone" widget="phone"/>
                             <field name="email" widget="email"/>
                             <field name="address" required="investor_type  == 'company'"/>
+                            <field name="correspondence_address"/>
                             <field name="country_id" required="investor_type  == 'company'"/>
+
                         </group>
                     </group>
 
@@ -172,6 +179,9 @@
                                     <field name="origine"/>
                                     <field name="other_origine" required="origine == 'other'"
                                            invisible="origine != 'other'"/>
+                                    <field name="fund_origin_country_id"/>
+                                    <field name="fund_destination_country_id"/>
+
                                 </group>
                                 <group>
                                     <field name="intervention_mode_ids">
@@ -182,16 +192,19 @@
                                 </group>
                             </group>
                         </page>
-                        <page string="Informations Bancaires">
+                        <page string="Finances">
                             <group>
-                                <group>
+                                <group string="Informations Bancaires">
                                     <field name="name_bank"/>
                                     <field name="bank_address"/>
                                     <field name="account_number"/>
-                                </group>
-                                <group>
                                     <field name="iban"/>
+                                </group>
+                                <group string="Connaissance Financière">
                                     <field name="swift_bic"/>
+                                    <field name="market_knowledge"/>
+                                    <field name="activity_knowledge"/>
+                                    <field name="risk_tolerance"/>
                                 </group>
                             </group>
                         </page>
@@ -216,6 +229,38 @@
                                 </group>
                             </group>
                         </page>
+
+                        <page string="Mandataires">
+                            <field name="representative_ids">
+                                <list>
+                                    <field name="full_name"/>
+                                    <field name="power_type"/>
+                                    <field name="relationship"/>
+                                    <field name="phone"/>
+                                    <field name="document_type"/>
+                                    <field name="id_number"/>
+                                    <field name="issued_date"/>
+                                    <field name="expiry_date"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Heritiers">
+                            <field name="heir_ids">
+                                <list>
+                                    <field name="full_name_heir"/>
+                                    <field name="birthdate"/>
+                                    <field name="birthplace"/>
+                                    <field name="birth_country_id"/>
+                                    <field name="sex"/>
+                                    <field name="relationship"/>
+                                    <field name="email"/>
+                                    <field name="phone"/>
+
+                                </list>
+                            </field>
+                        </page>
+
                         <page string="Personnes représentées">
                             <field name="represented_person_ids">
                                 <list editable="bottom">
@@ -343,6 +388,19 @@
                                 </group>
                             </group>
                         </page>
+
+                         <page string="Urgences">
+                                <group string="Personne à Prévenir en Cas d'Urgence">
+                                    <field name="full_name_urgence"/>
+                                    <field name="relationship_urgence"/>
+                                    <field name="country_urgence"/>
+                                    <field name="email_urgence"/>
+                                    <field name="phone_urgence"/>
+                                </group>
+
+
+                        </page>
+
 
                     </notebook>
                 </sheet>

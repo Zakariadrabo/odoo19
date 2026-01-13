@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- FORM VIEW -->
+    <record id="view_efund_investor_representative_form" model="ir.ui.view">
+        <field name="name">efund.investor.representative.form</field>
+        <field name="model">efund.investor.representative</field>
+        <field name="arch" type="xml">
+            <form string="Mandataire / Représentant légal">
+                <sheet>
+                    <group col="4">
+                        <field name="power_type"/>
+                        <field name="full_name"/>
+                        <field name="relationship"/>
+                        <field name="phone"/>
+                    </group>
+                       <group string="Pièce d’identité" col="4">
+                        <field name="document_type"/>
+                        <field name="id_number"/>
+                        <field name="issued_date"/>
+                        <field name="expiry_date"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

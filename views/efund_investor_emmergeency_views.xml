@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<record id="view_efund_investor_emergency_contact_form" model="ir.ui.view">
+    <field name="name">efund.investor.emergency.contact.form</field>
+    <field name="model">efund.investor.emergency.contact</field>
+    <field name="arch" type="xml">
+        <form string="Contact d’urgence">
+            <sheet>
+                <group col="4">
+                    <field name="full_name"/>
+                    <field name="relationship"/>
+                    <field name="phone"/>
+                    <field name="email"/>
+                    <field name="country_id"/>
+                </group>
+            </sheet>
+        </form>
+    </field>
+</record>
+</odoo>

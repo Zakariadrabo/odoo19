@@ -11,19 +11,15 @@ class EfundAccountPart(models.Model):
     account_number = fields.Char(string="Numéro compte", required=True, copy=False)
     investor_id = fields.Many2one('efund.investor', string="Investisseur", ondelete='cascade')
     fund_id = fields.Many2one('efund.fund', string="Fonds", required=True, ondelete='cascade')
+    currency_id = fields.Many2one(related='fund_id.currency_id', store=True)
     company_id = fields.Many2one('res.company', related='fund_id.company_id', store=True, index=True, readonly=True)
     date_opened = fields.Date(string="Date d’ouverture")
     total_parts = fields.Float(compute='_compute_total_parts', store=False)
+    total_invested_amount = fields.Monetary(string="Montant total investi", compute='_compute_cmp', store=False)
+    cmp = fields.Monetary(string="Coût moyen pondéré (CMP)", compute='_compute_cmp', store=False)
     total_value = fields.Float(string="Valeur totale (FCFA)", store=False)
-    state = fields.Selection([
-        ('draft', 'Non Activé'),
-        ('active', 'Activé'),
-        ('suspended', 'Désactivé'),
-    ], string="Status", default='draft', )
-
-
-    #Add test
-    cmp = fields.Float(string="Coût Moyen Pondéré",digits=(16, 6),tracking=True,help="Coût moyen pondéré des parts détenues")
+    state = fields.Selection([('draft', 'Non Activé'), ('active', 'Activé'), ('suspended', 'Désactivé'), ],
+                             string="Status", default='draft', )
 
     _account_number_fund_uniq = models.Constraint(
         'unique(account_number, fund_id)',
@@ -33,6 +29,44 @@ class EfundAccountPart(models.Model):
         'unique(investor_id, fund_id)',
         'Un investisseur ne peut avoir qu’un compte titres par fonds'
     )
+
+    def get_fund_portfolio_data(self):
+        """
+        Retourne les données du portefeuille POUR CE FONDS
+        """
+        self.ensure_one()
+
+        # Compte cash associé à ce fonds
+        cash_account = self.env['efund.investor.cash'].search([
+            ('investor_id', '=', self.investor_id.id),
+            ('fund_id', '=', self.fund_id.id),
+        ], limit=1)
+
+        cash_balance = cash_account.balance if cash_account else 0.0
+
+        # VL courante
+        share_class = self.env['efund.fund.share.class'].search([
+            ('fund_id', '=', self.fund_id.id),
+            ('is_default', '=', True)
+        ], limit=1)
+
+        nav = share_class.current_nav if share_class else 0.0
+
+        acquisition_cost = self.total_parts * self.cmp
+        valuation = self.total_parts * nav
+        gain = valuation - acquisition_cost
+
+        return {
+            'fund_name': self.fund_id.name,
+            'parts': self.total_parts,
+            'cmp': self.cmp,
+            'nav': nav,
+            'acquisition_cost': acquisition_cost,
+            'cash_balance': cash_balance,
+            'valuation': valuation,
+            'gain': gain,
+            'currency': self.fund_id.currency_id.symbol,
+        }
 
     def action_redeem_parts(self):
         self.ensure_one()
@@ -47,7 +81,7 @@ class EfundAccountPart(models.Model):
             raise UserError(_("Investisseur non conforme KYC."))
 
         cash_account = self.env['efund.investor.cash'].search([('investor_id', '=', self.investor_id.id),
-                                                              ('fund_id', '=', self.fund_id.id), ])
+                                                               ('fund_id', '=', self.fund_id.id), ])
         if not cash_account:
             raise UserError(_("Aucun compte cash n’est associé à cet investisseur."))
 
@@ -68,13 +102,33 @@ class EfundAccountPart(models.Model):
     def _compute_total_parts(self):
         for acc in self:
             moves = self.env['efund.investor.part.move'].search([
-                ('part_account_id', '=', acc.id)
+                ('part_account_id', '=', acc.id),
+                ('state', '=', 'posted')
             ])
 
             acc.total_parts = sum(
-                m.shares if m.move_type in ('subscription','deposit') else -m.shares
+                m.shares if m.move_type == 'subscription' else -m.shares
                 for m in moves
+                if m.move_type in ('subscription', 'redemption')
             )
+
+    def _compute_cmp(self):
+        for acc in self:
+            # 1️⃣ Total des parts (on réutilise le calcul existant)
+            total_parts = acc.total_parts
+
+            # 2️⃣ Montant total NET investi (hors frais)
+            cash_moves = self.env['efund.investor.cash.move'].search([
+                ('investor_id', '=', acc.investor_id.id),
+                ('fund_id', '=', acc.fund_id.id),
+                ('move_type', '=', 'subscription_net'),
+                ('state', 'in', ('accounted', 'reconciled')),
+            ])
+            total_invested = sum(m.amount for m in cash_moves)
+            acc.total_invested_amount = total_invested
+
+            # 3️⃣ CMP
+            acc.cmp = total_parts and (total_invested / total_parts) or 0.0
 
     def action_open_subscription_wizard(self):
         self.ensure_one()
@@ -83,7 +137,7 @@ class EfundAccountPart(models.Model):
             raise UserError(_("Aucun compte titre n’est associé à cet investisseur."))
 
         cash_account = self.env['efund.investor.cash'].search([('investor_id', '=', self.investor_id.id),
-            ('fund_id', '=', self.fund_id.id),])
+                                                               ('fund_id', '=', self.fund_id.id), ])
         if not cash_account:
             raise UserError(_("Aucun compte cash n’est associé à cet investisseur."))
 
@@ -118,4 +172,3 @@ class EfundAccountPart(models.Model):
                 "company_id": self.company_id.id,
             }
         }
-

@@ -11,7 +11,7 @@ class EfundAccountPartMove(models.Model):
     company_id = fields.Many2one(related='fund_id.company_id', store=True)
     currency_id = fields.Many2one(related='fund_id.currency_id', store=True)
     investor_id = fields.Many2one(related='part_account_id.investor_id',store=True)
-    move_type = fields.Selection([('subscription','Souscription'),('redemption','Rachat'),('deposit','Déposit'),('withdraw', 'Retrait')], required=True)
+    move_type = fields.Selection([('subscription','Souscription'),('redemption','Rachat')], required=True)
     shares = fields.Float(required=True)
     date_move = fields.Datetime(default=fields.Datetime.now)
     value_date = fields.Datetime(string="Date comptable")
@@ -26,6 +26,3 @@ class EfundAccountPartMove(models.Model):
     # Informations complémentaires
     journal_id = fields.Many2one('account.journal', string="Journal Comptable")
     account_move_id = fields.Many2one('account.move', string="Écriture Comptable")
-
-
-

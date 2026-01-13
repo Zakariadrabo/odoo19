@@ -349,10 +349,10 @@
         <field name="name">Tableau de bord</field>
         <field name="tag">fund_dashboard</field>
     </record>
-    <!-- Action pour accéder aux logs -->
-    <record id="action_reconciliation_log" model="ir.actions.act_window">
-        <field name="name">Logs de Réconciliation</field>
-        <field name="res_model">efund.operation.reconciliation.log</field>
+
+    <record id="action_fund_ratio" model="ir.actions.act_window">
+        <field name="name">Ratios Prudentielles</field>
+        <field name="res_model">efund.fund.prudential.ratio</field>
         <field name="view_mode">list,form</field>
     </record>
 
@@ -394,6 +394,15 @@
     <record id="action_generate_bond_amortization" model="ir.actions.act_window">
         <field name="name">Générer Tableau d'Amortissement</field>
         <field name="res_model">efund.bond.amortization.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+
+    <record id="action_investor_portfolio_report_wizard"
+            model="ir.actions.act_window">
+        <field name="name">État du portefeuille</field>
+        <field name="res_model">efund.investor.portfolio.report.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
     </record>

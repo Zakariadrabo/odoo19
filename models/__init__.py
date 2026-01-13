@@ -6,7 +6,7 @@ from . import confirmable_mixin, res_company, forme_juridique, statut_operationn
     efund_fund_arbitrage, efund_fund_valuation, efund_fund_valuation_fee, efund_fund_valuation_line, \
     efund_fund_valuation_log, efund_fund_report_regulatory, res_partner, efund_investor_cash, efund_investor_part, \
     efund_initial_valuation_wizard, efund_initial_valuation_investor_line, efund_investor_position, \
-    efund_compliance_policy, efund_instrument_issuer, efund_instrument_bond_amortization, efund_instrument_bond, \
+    efund_compliance_policy, efund_fund_instrument_issuer, efund_frund_instrument_bond_amortization, efund_fund_instrument_bond, \
     efund_fund_instrument_price, efund_config_import_price, menu_visibility, efund_bourse_order, efund_depositaire, \
     efund_operation_base, efund_bourse_order_execution_line, efund_fund_instrument_event, efund_position_adjustment, \
     efund_fund_investor, efund_investor_part_move, efund_investor_cash_move, efund_investor_deposit, \
@@ -17,4 +17,5 @@ from . import confirmable_mixin, res_company, forme_juridique, statut_operationn
     efund_fund_allocation_snapshot_line, efund_fund_portfolio, efund_fund_cash, efund_fund_cash_move, \
     efund_fund_portfolio_move, efund_fund_portfolio_line, efund_asset_trading_service, \
     efund_cash_reconciliation_service, json_widget, efund_investor_represented, efund_investor_intervention_mode, \
-    efund_investor_compagny_represented, efund_investor_operation_fee
+    efund_investor_compagny_represented, efund_investor_operation_fee, efund_fund_prudential_engine, \
+    efund_fund_prudential_ratio, efund_fund_prudential_result, efund_fund_prudential_limit, efund_investor_representative, efund_investor_heir

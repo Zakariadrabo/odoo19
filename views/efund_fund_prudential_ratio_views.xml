@@ -1,0 +1,71 @@
+<odoo>
+    <record id="view_efund_fund_prudential_ratio_list" model="ir.ui.view">
+        <field name="name">efund.fund.prudential.ratio.list</field>
+        <field name="model">efund.fund.prudential.ratio</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="calculation_method"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_efund_fund_prudential_ratio_form"
+            model="ir.ui.view">
+        <field name="name">efund.fund.prudential.ratio.form</field>
+        <field name="model">efund.fund.prudential.ratio</field>
+        <field name="arch" type="xml">
+
+            <form string="Ratio prudentiel">
+                <sheet>
+
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                        </group>
+                        <group>
+                            <field name="calculation_method"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <field name="description"/>
+                    </group>
+
+                    <notebook>
+
+                        <!-- ONGLET LIMITES -->
+                        <page string="Limites prudentielles">
+                            <field name="limit_ids" context="{'default_ratio_id': id}" mode="list,form">
+                                <list editable="bottom">
+                                    <field name="fund_type"/>
+                                    <field name="min_value"/>
+                                    <field name="max_value"/>
+                                </list>
+                                <form>
+                                    <group>
+                                        <group>
+                                            <field name="fund_type"/>
+                                            <field name="ratio_id" readonly="1"/>
+                                        </group>
+                                        <group>
+                                            <field name="min_value"/>
+                                            <field name="max_value"/>
+                                        </group>
+                                    </group>
+                                </form>
+
+                            </field>
+                        </page>
+
+                    </notebook>
+
+                </sheet>
+            </form>
+
+        </field>
+    </record>
+
+</odoo>

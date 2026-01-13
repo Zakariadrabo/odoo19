@@ -1,0 +1,34 @@
+<odoo>
+
+    <record id="view_efund_fund_prudential_limit_list" model="ir.ui.view">
+        <field name="name">efund.fund.prudential.limit.list</field>
+        <field name="model">efund.fund.prudential.limit</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="fund_type"/>
+                <field name="min_value"/>
+                <field name="max_value"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_efund_fund_prudential_limit_form" model="ir.ui.view">
+        <field name="name">efund.fund.prudential.limit.form</field>
+        <field name="model">efund.fund.prudential.limit</field>
+        <field name="arch" type="xml">
+            <form string="Limite prudentielle">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="fund_type"/>
+                            <field name="ratio_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="min_value"/>
+                            <field name="max_value"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

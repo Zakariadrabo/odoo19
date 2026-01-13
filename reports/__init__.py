@@ -1,1 +1,1 @@
-from . import efund_kyc_report
+from . import  efund_investor_portfolio_report

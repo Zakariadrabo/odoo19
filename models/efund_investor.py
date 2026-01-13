@@ -4,7 +4,6 @@ import re
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 from datetime import date
-from odoo.tools import format_date
 import json, logging
 
 _logger = logging.getLogger(__name__)
@@ -74,9 +73,6 @@ class FundInvestor(models.Model):
     swift_bic = fields.Char(string="SWIFT/BIC")
     entry_relation_date = fields.Date(string="Date d'entrée en relation")
     business_object_relation = fields.Char(string="Nature de la relation d'affaire")
-
-
-
 
 
     # lifecycle / compliance
@@ -155,6 +151,8 @@ class FundInvestor(models.Model):
     account_part_ids = fields.One2many('efund.investor.part', 'investor_id', string='Comptes Parts / Actions')
     account_cash_ids = fields.One2many('efund.investor.cash', 'investor_id', string='Comptes Espèces')
 
+
+
     # computed helper: available cash (sum of active cash accounts balances)
     available_cash = fields.Monetary(
         string='Available Cash (sum)',
@@ -179,6 +177,41 @@ class FundInvestor(models.Model):
         max_width=1920,
         max_height=1920
     )
+
+
+    #Ajout Rachide
+    # --- Identité complémentaire ---
+    surnom = fields.Char(string="Nom de jeune fille")
+    autre_nationalite = fields.Many2one("res.country", string="Autres Nationalité")
+    nbre_enfant = fields.Integer(string="Nombre d’enfants")
+
+    # --- Contact & résidence ---
+    correspondence_address = fields.Text(string="Adresse de correspondance (si différente)")
+
+    # --- Flux financiers ---
+    fund_destination_country_id = fields.Many2one("res.country", string="Pays de destination principale des fonds")
+
+    # --- Connaissance financière ---
+    market_knowledge = fields.Integer(string="Connaissance du marché", help="Note de 1 (faible) à 7 (élevée)")
+    activity_knowledge = fields.Integer(string="Connaissance de l’activité", help="Note de 1 (faible) à 7 (élevée)")
+    risk_tolerance = fields.Integer(string="Niveau de risque acceptable", help="Note de 1 (faible) à 7 (élevée)")
+
+    #urgence
+    full_name_urgence = fields.Char(string="Nom et prénoms", required=True)
+    relationship_urgence = fields.Char(string="Lien avec le client")
+    country_urgence = fields.Many2one("res.country", string="Pays de résidence")
+    email_urgence = fields.Char(string="Adresse Email")
+    phone_urgence = fields.Char(string="Numéro de Téléphone")
+
+    #Relation d’affaires avec la Société
+    business_relation_type = fields.Selection([("subscription", "Souscription OPCVM"),("mandate", "Gestion sous mandat"),("advisory", "Conseil en investissement"),("other", "Autre"),],string="Type de relation d’affaires")
+    business_relation_other = fields.Char(string="Autre type de relation",help="À renseigner si le type de relation est 'Autre'")
+    fund_origin_country_id = fields.Many2one("res.country",string="Pays d’origine habituelle des fonds")
+
+    # realtion avec les modèles
+    representative_ids = fields.One2many('efund.investor.representative', 'investor_id', string="Mandataires")
+    heir_ids = fields.One2many('efund.investor.heir','investor_id',string="Héritiers / Ayants droit")
+
 
     @api.depends('nom', 'prenom')
     def _compute_full_name(self):
@@ -542,66 +575,6 @@ class FundInvestor(models.Model):
                 'search_default_investor_id': self.id,
             }
         }
-
-    def _get_portfolio_statement_data(self, valuation_date=None):
-        self.ensure_one()
-        valuation_date = valuation_date or fields.Date.today()
-        lines = []
-        total_cost = 0.0
-        total_value = 0.0
-        fund_links = self.fund_investor_ids.filtered(lambda f: f.state == 'validated')
-        for link in fund_links:
-            fund = link.fund_id
-            part_account = self.account_part_ids.filtered(lambda p: p.fund_id == fund and p.state == 'active' )
-            if not part_account:
-                continue
-
-            part_account = part_account[0]
-
-            qty = part_account.total_parts or 0.0
-            cmp = part_account.cmp or 0.0
-            nav = fund.current_vl or 0.0
-
-            cost = qty * cmp
-            value = qty * nav
-            gain = value - cost
-
-            lines.append({
-                'fund': fund.name,
-                'qty': qty,
-                'cmp': cmp,
-                'nav': nav,
-                'cost': cost,
-                'value': value,
-                'gain': gain,
-            })
-
-            total_cost += cost
-            total_value += value
-
-        return {
-            'valuation_date': valuation_date,
-            'valuation_date_str': format_date(self.env, valuation_date),
-            'edition_date_str': format_date(self.env, fields.Date.today()),
-            'lines': lines,
-            'total_cost': total_cost,
-            'total_value': total_value,
-            'total_gain': total_value - total_cost,
-        }
-
-    def action_print_portfolio_statement(self):
-        self.ensure_one()
-
-        if self.status != 'kyc_approved':
-            raise UserError("Client non validé KYC.")
-
-        if not self.fund_investor_ids.filtered(lambda f: f.state == 'validated'):
-            raise UserError("Aucun fonds validé.")
-
-        return self.env.ref(
-            'efundOpc.action_report_investor_portfolio'
-        ).report_action(self)
-
 
 
 
