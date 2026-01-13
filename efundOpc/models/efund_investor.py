@@ -247,7 +247,7 @@ class FundInvestor(models.Model):
     def _prepare_partner_vals(self, vals):
         """Convertit les champs EfundInvestor → res.partner proprement."""
         return {
-            "name": vals.get("full_name") or _("New Investor"),
+            "name": vals.get("nom") +' ' + vals.get("prenom") if vals.get("investor_type")  == 'individual' else vals.get("company_name"),
             "email": vals.get("email"),
             "phone": vals.get("phone"),
             "street": vals.get("address"),
