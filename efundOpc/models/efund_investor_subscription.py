@@ -18,11 +18,11 @@ class FundSubscription(models.Model):
     name = fields.Char(string="Référence", required=True,
                        default=lambda self: self.env['ir.sequence'].next_by_code('efund.investor.subscription'))
 
-    is_initial = fields.Boolean(string='Initial Subscription', default=False)
+    is_initial = fields.Boolean(string='Souscription Initiale', default=False)
     currency_id = fields.Many2one(related='cash_account_id.fund_id.currency_id')
     date_operation = fields.Datetime(string="Date de l'opération", default=fields.Datetime.now)
     date_valeur = fields.Datetime(string="Date de valeur")
-    gross_amount = fields.Monetary(string="montant", currency_field="currency_id")
+    gross_amount = fields.Monetary(string="Montant", currency_field="currency_id")
     shares = fields.Float(string="Nombre de parts")
     allow_fractional_parts = fields.Boolean(string="Parts fractionnées",
                                             related='cash_account_id.fund_id.allow_fractional_parts',
@@ -40,12 +40,12 @@ class FundSubscription(models.Model):
     # -----------------------------------------------------------------
     # RELATIONS
     # -----------------------------------------------------------------
-    cash_account_id = fields.Many2one('efund.investor.cash', required=True, readonly=True)
-    part_account_id = fields.Many2one('efund.investor.part', required=True, readonly=True)
+    cash_account_id = fields.Many2one('efund.investor.cash', string="Compte Espèces", required=True, readonly=True)
+    part_account_id = fields.Many2one('efund.investor.part', string="Compte Titre", required=True, readonly=True)
     balance = fields.Float(string="Solde", related="cash_account_id.balance", readonly=True)
-    fund_id = fields.Many2one(related='cash_account_id.fund_id', store=True)
+    fund_id = fields.Many2one(related='cash_account_id.fund_id', string="Fonds", store=True)
     total_shares = fields.Float(string="Total de parts", related="part_account_id.total_parts", readonly=True)
-    investor_id = fields.Many2one(related='cash_account_id.investor_id', store=True)
+    investor_id = fields.Many2one(related='cash_account_id.investor_id', string="Investisseur", store=True)
     share_class_id = fields.Many2one('efund.fund.share.class', string="Classe de part",  # required=True,
                                      domain="[('fund_id', '=', fund_id)]")
     investor_cash_move_id = fields.Many2one('efund.investor.cash.move', string="Cash Investisseur", readonly=True)

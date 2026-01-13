@@ -99,6 +99,9 @@
                                 <field name="investment_horizon"/>
                             </group>
                         </page>
+                        <page string="les charges du fond">
+
+                        </page>
 
                         <page string="Paramètre comptable">
                             <group>
@@ -118,6 +121,7 @@
                                 </group>
                             </group>
                         </page>
+                        <!--
 
                         <page string="Parts">
                             <group string="Parts">
@@ -126,6 +130,7 @@
                                     <field name="current_units"/>
                             </group>
                         </page>
+                        -->
 
                         <page string="Catégorie de parts">
                             <field name="share_class_ids" create="true" edit="true">
@@ -138,6 +143,7 @@
                                     <field name="minimum_subscription"/>
                                     <field name="minimum_additional_subscription"/>
                                     <field name="minimum_redemption"/>
+                                    <field name="current_nav"/>
                                     <field name="is_default"/>
                                 </list>
                             </field>
@@ -157,7 +163,7 @@
                                     <field name="next_nav_date"/>
                             </group>
                         </page>
-                        <!-- MODIFICATION DE efund_views_fund.xml -->
+                        <!-- MODIFICATION DE efund_fund_views.xml -->
                         <!-- Ajouter cet onglet dans le notebook existant -->
                         <page string="Portfolio / Positions">
                                 <button name="action_open_position_wizard"

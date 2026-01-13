@@ -31,16 +31,23 @@ class FundInvestor(models.Model):
     full_name = fields.Char(string="Nom complet", compute="_compute_full_name", store=True)
     nom = fields.Char(string="Nom", store=True)
     prenom = fields.Char(string="Prénom", store=True)
+    nom_jeune_fille = fields.Char(string="Nom de Jeune", store=True)
     birthdate = fields.Date(string="Date de naissance")
     birthplace = fields.Char(string="Lieu de naissance")
     birth_country_id = fields.Many2one("res.country", string="Pays de naissance")
     sex = fields.Selection([('male', 'Homme'), ('female', 'Femme')], string="Sexe")
-    country_id = fields.Many2one("res.country", string="Pays")
-    address = fields.Char(string="Adresse pays")
+    country_id = fields.Many2one("res.country", string="Pays de résidence habituelle")
+    address_place = fields.Char(string="Ville / Codepostal")
+    address = fields.Char(string="Adresse de résidence principale")
     marital_status = fields.Selection(
         [('single', 'Célibataire'), ('married', 'Marié(e)'), ('divorced', 'Divorcé(e)'), ('widowed', 'Veuf/veuve')], string="Statut matrimonial")
     email = fields.Char(string="Adresse Email")
-    phone = fields.Char(string="Numéro de Téléphone")
+    mobility_phone = fields.Char(string="Téléphone (mobile)")
+    place_phone = fields.Char(string="Téléphone (domicile)")
+    contact_adress = fields.Char(string="Adresse de correspondance (si différent)")
+    other_nationnality = fields.Char(string="Autres Nationnalité")
+    employer = fields.Char(string="Employeur")
+    employer_address = fields.Char(string="Adresse de l'employeur")
 
     #Personne Morale
     # Identité Juridique
@@ -73,6 +80,11 @@ class FundInvestor(models.Model):
     swift_bic = fields.Char(string="SWIFT/BIC")
     entry_relation_date = fields.Date(string="Date d'entrée en relation")
     business_object_relation = fields.Char(string="Nature de la relation d'affaire")
+    fund_country_origin = fields.Many2one("res.country", string="Pays d'origine des fonds")
+    fund_country_destination = fields.Many2one("res.country", string="Pays de destination des fonds")
+    market_knowledge = fields.Selection([('1','1'),('2','2'),('3','3'),('4','4'),('5','5'),('6','6'),('7','7'),],string='Connaissance du marché', widget='Priority')
+    activity_knowledge = fields.Selection([('1','1'),('2','2'),('3','3'),('4','4'),('5','5'),('6','6'),('7','7'),],string='Connaissance de l\'activité', widget='Priority')
+    risk_level_acceptable = fields.Selection([('1','1'),('2','2'),('3','3'),('4','4'),('5','5'),('6','6'),('7','7'),],string='Niveau de risque acceptable', widget='Priority')
 
 
 
@@ -96,6 +108,9 @@ class FundInvestor(models.Model):
     kyc_check_ids = fields.One2many('efund.kyc.check', 'investor_id', string="KYC Checks")
     aml_alert_ids = fields.One2many('efund.aml.alert', 'investor_id', string="AML Alerts")
     represented_person_ids = fields.One2many('efund.investor.represented','investor_id',string="Personnes représentées")
+
+    heirs_person_ids = fields.One2many('efund.investor.heirs', 'investor_id',
+                                             string="Héritiés et personne à contacter")
     intervention_mode_ids = fields.One2many('efund.investor.intervention.mode','investor_id', string="Investisseur")
     represented_company_ids = fields.One2many('efund.investor.company.represented', 'investor_id',
                                             string="Réprésentant de la société")
@@ -118,7 +133,7 @@ class FundInvestor(models.Model):
 
     # Personal info (allow using form to create partner data)
     minor = fields.Boolean(string="Mineur ?")
-    nationality = fields.Many2one("res.country", string="Nationalité")
+    nationality = fields.Many2one("res.country", string="Nationalité principale")
     tranche = fields.Selection([("<55","Jusqu'à 55ans"),("56T74","56-74"),(">75",">75")])
     language_id = fields.Many2one("res.lang",string="Langue")
 
@@ -138,11 +153,11 @@ class FundInvestor(models.Model):
     estimation = fields.Selection([('M5','<5M'),('E5','5-50M'),('P5','>50M')], string="Patrimoine")
     revenu = fields.Selection([('M5','<5M'),('E5','5-10M'),('P5','>10M')], string="Revenu annuel")
     montant_mois = fields.Integer(string="Montant estimé transactions / mois")
-    periodicite = fields.Selection([('Monthly','Mensuel'),('Quarterly','Trimestriel'),('Semi-Annual','Semestriel'),('Annual','Annuel')])
+    periodicite = fields.Selection([('Monthly','Mensuel'),('Quarterly','Trimestriel'),('Semi-Annual','Semestriel'),('Annual','Annuel')], string="Fréquence des souscriptions")
 
-    origine = fields.Selection([('salary','Salaire'),('investment','Investissement'),('legacy','Héritage'),('savings','Epargne'),('other','Autre')], string="Origine des fonds")
+    origine = fields.Selection([('salary','Salaire'),('investment','Revenus d\'activités'),('estate','Revenus immobiliers'),('legacy','Héritage / Donation'),('savings','Epargne'),('other','Autre')], string="Origine des fonds")
     other_origine = fields.Char(string="Autre origine")
-    activite = fields.Selection([('employee','Salarié'),('liberal','Profession libérale'),('business','Entrepreneur'),('other','Autre')], string="Activité principale")
+    activite = fields.Selection([('employee','Salarié'),('liberal','Profession libérale'),('business','Entrepreneur'),('etudiant','Etudiant'),('retraite','Rétraité'),('sans_emploi','Sans emploi'),('other','Autre')], string="Situation professionnelle")
     other_activite = fields.Char(string="Autre activité")
     objectif = fields.Selection([('investissement','Investissement'),('savings','Epargne'),('transactions','Transactions'),('other','Autre')], string="Objectif financier")
     other_objectif = fields.Char(string="Autre objectif")

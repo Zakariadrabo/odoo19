@@ -12,14 +12,14 @@ class FundSubscriptionWizard(models.TransientModel):
     _name = 'efund.investor.subscription.wizard'
     _description = 'Wizard de souscription'
 
-    cash_account_id = fields.Many2one('efund.investor.cash', required=True, readonly=True)
+    cash_account_id = fields.Many2one('efund.investor.cash',string="Compte Espèces", required=True, readonly=True)
     balance = fields.Float(string="Solde", related="cash_account_id.balance", readonly=True)
-    part_account_id = fields.Many2one('efund.investor.part', required=True, readonly=True)
+    part_account_id = fields.Many2one('efund.investor.part', string="Compte Titre", required=True, readonly=True)
     total_shares = fields.Float(string="Nombre total de parts", related="part_account_id.total_parts", readonly=True)
-    fund_id = fields.Many2one(related='part_account_id.fund_id', store=True)
+    fund_id = fields.Many2one(related='part_account_id.fund_id', string="Fonds", store=True)
     allow_fractional_parts = fields.Boolean(string="Parts fractionnées",
                                             related='cash_account_id.fund_id.allow_fractional_parts', )
-    investor_id = fields.Many2one(related='part_account_id.investor_id', store=True)
+    investor_id = fields.Many2one(related='part_account_id.investor_id', string="Investisseur", store=True)
     company_id = fields.Many2one(related='fund_id.company_id', store=True)
     currency_id = fields.Many2one(related='company_id.currency_id', store=True)
     buy_choice = fields.Selection([('amount', 'Montant'), ('share', 'Part')], string="Choix d'achat", default='amount')

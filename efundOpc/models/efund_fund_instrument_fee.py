@@ -13,10 +13,8 @@ class EfundInstrumentFee(models.Model):
     instrument_id = fields.Many2one('efund.fund.instrument')
 
     fee_type = fields.Selection([
-        ('brvm', 'Commission BRVM'),
-        ('dcbc', 'Commission DC/BR'),
         ('brokerage', 'Commission de courtage'),
-        ('tob', 'TOB'),
+        ('tob', 'Taxe sur les Oérations de Bourse'),
     ], string='Type de frais')
 
     rate = fields.Float(string="Taux de frais (%)")

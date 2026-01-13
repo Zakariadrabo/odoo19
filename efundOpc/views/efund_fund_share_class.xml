@@ -1,0 +1,214 @@
+<odoo>
+    <record id="view_efund_fund_share_class_form" model="ir.ui.view">
+        <field name="name">efund.fund.share.class.form</field>
+        <field name="model">efund.fund.share.class</field>
+        <field name="arch" type="xml">
+            <form string="Classe de Parts">
+                <header>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,validate,suspended,closed"
+                           options="{'clickable': true}"/>
+                    <button name="action_activate" type="object" string="Valider"
+                            invisible="state != 'draft'"
+                            class="btn-primary"/>
+                    <button name="action_suspend" type="object" string="Suspendre"
+                            invisible="state != 'validate'"
+                            class="btn-secondary"/>
+                    <button name="action_close" type="object" string="Fermer"
+                            invisible="state   in ('closed', 'suspended')"
+                            class="btn-warning"/>
+                    <button name="action_reopen" type="object" string="Rouvrir"
+                            invisible="state !=  'closed'"
+                            class="btn-secondary"/>
+                    <button name="action_view_nav_history" type="object" string="Historique NAV"
+                            class="btn-link"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_nav_history" type="object"
+                                class="oe_stat_button" icon="fa-line-chart">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">NAV</span>
+                                <field name="current_nav" widget="monetary"
+                                       options="{'currency_field': 'currency_id'}"
+                                       class="o_stat_value"/>
+                            </div>
+                        </button>
+                        <button type="object" class="oe_stat_button" icon="fa-pie-chart">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Parts</span>
+                                <field name="total_shares" widget="float" class="o_stat_value"/>
+                            </div>
+                        </button>
+                        <button type="object" class="oe_stat_button" icon="fa-money">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Actifs Nets</span>
+                                <field name="total_net_assets" widget="monetary"
+                                       options="{'currency_field': 'currency_id'}" class="o_stat_value"/>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <label for="name" class="o_form_label oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="Nom de la classe de parts"/>
+                        </h1>
+                        <div class="o_row">
+                            <field name="fund_id" class="oe_inline" widget="many2one"
+                                   options="{'no_create': True, 'no_create_edit': True}"/>
+                            <field name="is_default" class="oe_inline ml-4"/>
+                            <field name="sequence" class="oe_inline ml-4" invisible="sequence == 10"/>
+                        </div>
+                    </div>
+
+                    <notebook>
+                        <!-- Onglet 1: Caractéristiques Générales -->
+                        <page string="Caractéristiques">
+                            <group string="Informations Générales">
+                                <group>
+                                    <field name="name"/>
+                                    <field name="is_accumulating" readonly="state not in ('draft')"/>
+                                    <field name="minimum_duration" readonly="state not in ('draft')"
+                                           help="Durée minimale de détention avant rachat (en mois)"/>
+                                </group>
+                                <group>
+                                    <field name="launch_date" widget="date" readonly="state not in ('draft')"/>
+                                    <field name="closure_date" widget="date" readonly="state != 'closed'"/>
+                                    <field name="is_default" readonly="state not in ('draft')"/>
+                                </group>
+                            </group>
+
+                            <group string="Montants Minimums">
+                                <group>
+                                    <field name="minimum_subscription" widget="monetary" options="{'currency_field': 'currency_id'}" readonly="state not in ('draft', 'validate')"/>
+                                    <field name="minimum_additional_subscription" widget="monetary" options="{'currency_field': 'currency_id'}" readonly="state not in ('draft', 'validate')"/>
+                                </group>
+                                <group>
+                                    <field name="minimum_redemption" widget="monetary" options="{'currency_field': 'currency_id'}" readonly="state not in ('draft', 'validate')"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- Onglet 2: Frais -->
+                        <page string="Frais et Rétrocessions">
+                            <group string="Frais Principaux" col="4">
+                                <field name="management_fee_rate" widget="percentage"
+                                       readonly="state not in ('draft', 'validate')" options="{'digits': [6,4]}"/>
+                                <field name="subscription_fee_rate" widget="percentage"
+                                       readonly="state not in ('draft', 'validate')" options="{'digits': [6,4]}"/>
+                                <field name="redemption_fee_rate" widget="percentage"
+                                       readonly="state not in ('draft', 'validate')" options="{'digits': [6,4]}"/>
+                                <field name="performance_fee_rate" widget="percentage"
+                                       readonly="state not in ('draft', 'validate')" options="{'digits': [6,4]}"/>
+                            </group>
+
+                            <group string="Frais d'Entrée/Sortie" col="4">
+                                <field name="entry_load" widget="percentage"
+                                       readonly="state not in ('draft', 'validate')" options="{'digits': [16,4]}"/>
+                                <field name="exit_load" widget="percentage"
+                                       readonly="state not in ('draft', 'validate')" options="{'digits': [16,4]}"/>
+                            </group>
+
+                            <group string="Rétrocessions" col="4">
+                                <field name="retro_subscription_rate" widget="percentage"
+                                       readonly="state not in ('draft', 'validate')" options="{'digits': [16,4]}"/>
+                                <field name="retro_redemption_rate" widget="percentage"
+                                       readonly="state not in ('draft', 'validate')" options="{'digits': [16,4]}"/>
+                            </group>
+
+                            <!-- Résumé des frais -->
+                            <group string="Résumé des Frais" col="2">
+                                <div class="alert alert-info" role="alert">
+                                    <strong>Total frais maximum pour l'investisseur:</strong>
+                                    <span class="float-right">
+                                        <field name="subscription_fee_rate" widget="percentage" nolabel="1"/>
+                                        <span>(souscription) +</span>
+                                        <field name="management_fee_rate" widget="percentage" nolabel="1"/>
+                                        <span>(gestion annuelle) +</span>
+                                        <field name="redemption_fee_rate" widget="percentage" nolabel="1"/>
+                                        <span>(rachat) +</span>
+                                        <field name="performance_fee_rate" widget="percentage" nolabel="1"/>
+                                        <span>(performance)</span>
+                                    </span>
+                                </div>
+                            </group>
+                        </page>
+
+                        <!-- Onglet 3: Statistiques -->
+                        <page string="Statistiques">
+                            <group string="Indicateurs de Performance">
+                                <group>
+                                    <field name="total_shares" widget="float" readonly="1"/>
+                                    <field name="total_net_assets" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}" readonly="1"/>
+                                    <field name="current_nav" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}" readonly="1"/>
+                                </group>
+                                <group>
+                                    <!-- Espace pour d'autres indicateurs -->
+                                    <div class="o_form_label text-info">
+                                        Ratio de Dépenses Total (TER)
+                                    </div>
+                                    <div>
+                                        <field name="management_fee_rate" widget="percentage"
+                                               options="{'digits': [6,4]}" readonly="1"/>
+                                        <span>(estimé)</span>
+                                    </div>
+                                </group>
+                            </group>
+
+                            <!-- Graphique de l'évolution de la NAV -->
+                            <div class="oe_chart">
+                                <field name="id" invisible="1"/>
+                                <!-- Ce champ serait utilisé pour un graphique intégré -->
+                            </div>
+                        </page>
+
+                        <!-- Onglet 4: Historique -->
+                        <page string="Historique et Activités">
+                            <field name="message_ids" widget="mail_thread"/>
+                            <field name="activity_ids" widget="kanban_activity"/>
+                        </page>
+
+                    </notebook>
+                </sheet>
+
+                <!-- Sidebar pour les actions -->
+                <chatter>
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="kanban_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </chatter>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vue list pour liste -->
+    <record id="view_efund_fund_share_class_list" model="ir.ui.view">
+        <field name="name">efund.fund.share.class.list</field>
+        <field name="model">efund.fund.share.class</field>
+        <field name="arch" type="xml">
+            <list string="Classes de Parts" decoration-danger="state == 'suspended'"
+                  decoration-warning="state == 'closed'" decoration-info="state == 'draft'">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="fund_id" widget="many2one"/>
+                <field name="is_accumulating" invisible="1"/>
+                <field name="is_default" invisible="1"/>
+                <field name="current_nav" widget="monetary"
+                       options="{'currency_field': 'currency_id'}"/>
+                <field name="total_shares" widget="float"/>
+                <field name="total_net_assets" widget="monetary"
+                       options="{'currency_field': 'currency_id'}"/>
+                <field name="management_fee_rate" widget="percentage"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'validate'"/>
+                <field name="launch_date"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vue Search -->
+
+</odoo>

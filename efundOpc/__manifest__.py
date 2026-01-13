@@ -42,7 +42,7 @@
         'views/efund_fund_investor_views.xml',
         'views/efund_investor_views.xml',
         'views/efund_views_parametre.xml',
-        'views/efund_views_fund.xml',
+        'views/efund_fund_views.xml',
         'views/view_efund_initial_valuation_investor_line_form.xml',
         'views/fund_initial_valuation_wizard_views.xml',
         'views/efund_share_class_views.xml',
@@ -68,6 +68,7 @@
         'reports/efund_investor_portfolio_report.xml',
         'views/efund_fund_prudential_limit_views.xml',
         'views/efund_fund_prudential_ratio_views.xml',
+        'views/efund_fund_share_class.xml',
 
 
         'data/sequence.xml',

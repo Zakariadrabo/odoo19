@@ -7,7 +7,7 @@ class EfundAccountCash(models.Model):
     _description = 'Compte Espèces Client'
 
     name = fields.Char(string="Libellé", required=True, copy=False)
-    account_number=fields.Char(string="Numéro compte", required=True, copy=False)
+    account_number=fields.Char(string="N° Compte Espèces", required=True, copy=False)
     fund_id = fields.Many2one('efund.fund',string="Fonds",index=True,required=False)
     mandate_id = fields.Many2one('efund.mandate', string="Mandat", index=True)
     company_id = fields.Many2one('res.company', related='fund_id.company_id', store=True, index=True, readonly=True)

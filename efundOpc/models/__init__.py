@@ -18,4 +18,4 @@ from . import confirmable_mixin, res_company, forme_juridique, statut_operationn
     efund_fund_portfolio_move, efund_fund_portfolio_line, efund_asset_trading_service, \
     efund_cash_reconciliation_service, json_widget, efund_investor_represented, efund_investor_intervention_mode, \
     efund_investor_compagny_represented, efund_investor_operation_fee, efund_fund_prudential_engine, \
-    efund_fund_prudential_ratio, efund_fund_prudential_result, efund_fund_prudential_limit
+    efund_fund_prudential_ratio, efund_fund_prudential_result, efund_fund_prudential_limit,efund_investor_heirs

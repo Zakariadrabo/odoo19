@@ -11,7 +11,7 @@
                 <field name="depositaire_sgi"/>
                 <field name="instrument_id"/>
                 <field name="quantity"/>
-                <field name="executed_quantity" />
+                <field name="executed_quantity"/>
                 <field name="average_execution_price"/>
                 <field name="gross_amount"/>
                 <field name="state" widget="badge"/>
@@ -62,7 +62,8 @@
                         <group string="Conditions">
                             <field name="quantity"/>
                             <field name="order_type"/>
-                            <field name="price_limit" required="order_type in ['limit', 'threshold']" invisible="order_type == 'market'"/>
+                            <field name="price_limit" required="order_type in ['limit', 'threshold']"
+                                   invisible="order_type == 'market'"/>
                             <field name="expiry_date"/>
                         </group>
                     </group>
@@ -75,13 +76,20 @@
                             <field name="commission_total" readonly="1"/>
                         </group>
 
-                        <group string="Signataires">
-                            <field name="signatory_ids" widget="many2many_tags"/>
-                        </group>
                     </group>
-                    <group string="Commentaires">
-                        <field name="comment"/>
-                    </group>
+                    <notebook>
+                        <page string="Exécutions">
+                            <field name="execution_line_ids" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="execution_date"/>
+                                    <field name="quantity"/>
+                                    <field name="price"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+
+
                 </sheet>
             </form>
         </field>

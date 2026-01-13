@@ -25,17 +25,8 @@ class EfundBourseOrder(models.Model):
     instrument_id = fields.Many2one('efund.fund.instrument',string="Instrument Financier",required=True)
     depositaire_sgi = fields.Many2one('efund.depositaire',string="Dépositaire du fond",required=True)
     symbol = fields.Char(related='instrument_id.ticker',string="Symbole",readonly=True)
-    market_place = fields.Selection(
-        related='instrument_id.market',
-        string="Place",
-        readonly=True
-    )
-
-    depository = fields.Selection(
-        related='instrument_id.custodian',
-        string="Dépositaire",
-        readonly=True
-    )
+    market_place = fields.Selection(related='instrument_id.market',string="Place",readonly=True)
+    depository = fields.Selection(related='instrument_id.custodian',string="Dépositaire",readonly=True)
 
     # ---------------------------------------------------------------------
     # CONDITIONS FINANCIÈRES
@@ -46,54 +37,33 @@ class EfundBourseOrder(models.Model):
     execution_price = fields.Float(string="Cours executed")
     average_execution_price = fields.Float(string="Cours moyen exécuté", store=True)
     execution_date = fields.Date(string="Date d'exécution", readonly=True)
-    execution_type = fields.Selection(
-        [('partial', 'Exécuté partiellement'), ('executed', 'Exécuté totalement')],
-        string="Type d'exécution",
-        readonly=True
-    )
-
-    allow_loss = fields.Boolean(
-        string="P ? (Vente à perte autorisée)",
-        help="Valable uniquement pour les ordres d'achat"
-    )
-
+    execution_type = fields.Selection([('partial', 'Exécuté partiellement'), ('executed', 'Exécuté totalement')],string="Type d'exécution",readonly=True)
+    allow_loss = fields.Boolean(string="P ? (Vente à perte autorisée)",help="Valable uniquement pour les ordres d'achat")
     expiry_date = fields.Date(string="Date limite")
 
     # ---------------------------------------------------------------------
     # PRÉNOTATION (CALCULÉE)
     # ---------------------------------------------------------------------
-    gross_amount = fields.Monetary(
-        string="Montant brut",
-        compute="_compute_prenotation",
-        currency_field="currency_id"
-    )
-
-    commission_sgi = fields.Monetary(
-        string="Commission SGI",
-        compute="_compute_prenotation",
-        currency_field="currency_id"
-    )
-
-    commission_total = fields.Monetary(
-        string="Total commissions",
-        compute="_compute_prenotation",
-        currency_field="currency_id"
-    )
-
-    currency_id = fields.Many2one(
-        related='company_id.currency_id',
-        readonly=True
-    )
+    gross_amount = fields.Monetary(string="Montant brut",compute="_compute_prenotation",currency_field="currency_id")
+    commission_sgi = fields.Monetary(string="Commission SGI",compute="_compute_prenotation",currency_field="currency_id")
+    commission_total = fields.Monetary(string="Total commissions",compute="_compute_prenotation",currency_field="currency_id")
+    currency_id = fields.Many2one(related='company_id.currency_id',readonly=True)
 
     # ---------------------------------------------------------------------
     # SIGNATAIRES
     # ---------------------------------------------------------------------
-    signatory_ids = fields.Many2many(
-        'res.partner',
-        string="Signataires"
-    )
+    signatory_ids = fields.Many2many('res.partner',string="Signataires")
 
-    comment = fields.Text(string="Commentaires")
+    # ---------------------------------------------------------------------
+    # Données exécution
+    # ---------------------------------------------------------------------
+
+    total_broker_commission = fields.Monetary(string="Total commission du broker", store=True)
+    total_tob_commission = fields.Monetary(string="Total Taxe",  store=True)
+    total_interest = fields.Monetary(string="Total intérêts courus",  store=True)
+    total_amount = fields.Monetary(string="Total montant",  store=True)
+
+
 
     # ----------------------------------------------------
     # Contraintes
@@ -228,6 +198,10 @@ class EfundBourseOrder(models.Model):
             'quantity': qty,
             'price': price,
             'reference': execution_vals.get('reference'),
+            'total_broker_commission': execution_vals.get('total_broker_commission'),
+            'total_tob_commission' : execution_vals.get('total_tob_commission'),
+            'total_interest' : execution_vals.get('total_interest'),
+            'total_amount' : execution_vals.get('total_amount'),
         })
 
         # 2️⃣ Recalcul quantités et prix moyen

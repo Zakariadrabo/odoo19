@@ -77,8 +77,8 @@ class FundInstrument(models.Model):
 
     # --- OBLIGATIONS ---
     bond_type = fields.Selection(
-        [('ota', 'OTA (Obligation du Trésor et assimilés)'), ('bta', 'BTA (Obligation du Trésor et assimilés)'),
-         ('op', 'Obligation privée')
+        [('ota', 'OTA (Obligations du Trésor Assimilables)'), ('bta', 'BTA (Bons du Trésor Assimilables)'),
+         ('op', 'Obligation Privée')
          ], string='Type Obligation', default='ota')
     bond_issuer_rating = fields.Selection([('aaa', 'AAA'), ('aa', 'AA'), ('a', 'A'), ('bbb', 'BBB'), ('bb', 'BB'),
                                            ('b', 'B'), ('ccc', 'CCC'), ('cc', 'CC'), ('c', 'C'),
