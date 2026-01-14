@@ -316,13 +316,13 @@ class FundInvestor(models.Model):
             raise UserError(_("Cet investisseur possède déjà des comptes."))
 
         country = (self.country_id.code or "XX").upper()
-        inv_type = "IND"
+        inv_type = "PP"
         # if partner is a company
         if self.partner_id and self.partner_id.company_type == "company":
-            inv_type = "COR"
+            inv_type = "PM"
         inv_id_fmt = str(self.id).zfill(4)
         seq_part = str(len(self.account_part_ids) + 1).zfill(3)
-        account_part_number = f"PT-{country}-{inv_type}-{inv_id_fmt}-{seq_part}"
+        account_part_number = f"CT-{inv_type}-{inv_id_fmt}-{seq_part}"
         part = self.env['efund.investor.part'].create({
             'name': f"Compte Titre - {self.full_name or self.name or 'Investor'}",
             'investor_id': self.id,
@@ -366,6 +366,7 @@ class FundInvestor(models.Model):
                 "default_cash_account_id": self.account_cash_ids[0].id,
                 "default_currency_id": self.company_id.currency_id.id,
                 "default_date_operation": fields.Date.context_today(self),
+
             }
         }
 

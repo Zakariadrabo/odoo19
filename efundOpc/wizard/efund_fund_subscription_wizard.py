@@ -13,7 +13,7 @@ class FundSubscriptionWizard(models.TransientModel):
     _description = 'Wizard de souscription'
 
     cash_account_id = fields.Many2one('efund.investor.cash',string="Compte Espèces", required=True, readonly=True)
-    balance = fields.Float(string="Solde", related="cash_account_id.balance", readonly=True)
+
     part_account_id = fields.Many2one('efund.investor.part', string="Compte Titre", required=True, readonly=True)
     total_shares = fields.Float(string="Nombre total de parts", related="part_account_id.total_parts", readonly=True)
     fund_id = fields.Many2one(related='part_account_id.fund_id', string="Fonds", store=True)
@@ -22,6 +22,7 @@ class FundSubscriptionWizard(models.TransientModel):
     investor_id = fields.Many2one(related='part_account_id.investor_id', string="Investisseur", store=True)
     company_id = fields.Many2one(related='fund_id.company_id', store=True)
     currency_id = fields.Many2one(related='company_id.currency_id', store=True)
+    balance = fields.Float(string="Solde", related="cash_account_id.balance", readonly=True)
     buy_choice = fields.Selection([('amount', 'Montant'), ('share', 'Part')], string="Choix d'achat", default='amount')
     gross_amount = fields.Monetary(string="Montant à souscrire", required=True)
     nav = fields.Float(string="VL appliquée", compute="_compute_nav_value", readonly=True, store=True)
@@ -31,18 +32,28 @@ class FundSubscriptionWizard(models.TransientModel):
     net_amount = fields.Monetary(string="Montant net", store=True)
     parts = fields.Float(string="Nombre de parts", store=True)
     share_class_id = fields.Many2one('efund.fund.share.class', string="Classe de part",  compute="_compute_nav_value", store=True)
+    is_subscription_fee = fields.Boolean(string="Appliquer Frais de souscription", default=True)
 
-    @api.onchange('gross_amount', 'parts')
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+
+        cash_account_id = res.get('cash_account_id')
+        if cash_account_id:
+            account = self.env['efund.investor.cash'].browse(cash_account_id)
+            res['gross_amount'] = account.balance
+
+        return res
+
+    @api.onchange('gross_amount', 'parts','is_subscription_fee')
     def _onchange_gross_amount(self):
         for sub in self:
             if sub.buy_choice == 'amount':
-                # nav, allow_fractional_shares, gross_amount, fee_percent
-                result = self.calculate_shares_with_fees(sub.nav, sub.allow_fractional_parts, sub.gross_amount,
-                                                         sub.subscription_fee_rate)
+                result = self.calculate_shares(sub.nav, sub.allow_fractional_parts, sub.gross_amount,
+                                                         sub.subscription_fee_rate,sub.is_subscription_fee)
             else:
-                # calculate_amount_from_shares nav, allow_fractional_shares, shares_to_buy, fee_percent
-                result = self.calculate_amount_from_shares(sub.nav, sub.allow_fractional_parts, sub.parts,
-                                                           sub.subscription_fee_rate)
+                result = self.calculate_amount(sub.nav, sub.allow_fractional_parts, sub.parts,
+                                                           sub.subscription_fee_rate, sub.is_subscription_fee)
 
             # affectation des valeurs
             sub.net_amount = result.get('net_amount')
@@ -65,27 +76,43 @@ class FundSubscriptionWizard(models.TransientModel):
             else:
                 raise UserError("Besoin d'avoir la classe de parts par défaut pour le fonds")
 
-    def calculate_shares_with_fees(self, nav, allow_fractional_shares, gross_amount, fee_percent):
-        # 1. Calcul des frais et du montant net
-        # Formule : Montant Net = Montant Brut / (1 + Frais%)
-        # Ou plus commun : Frais = Brut * (Frais% / 100)
-        fees_amount = gross_amount * (fee_percent / 100.0)
+    def calculate_shares(self,nav,allow_fractional_shares,gross_amount,fee_percent,apply_subscription_fees):
+        """
+        Calcule le nombre de parts à partir d'un montant de souscription.
+
+        :param nav: Valeur liquidative
+        :param allow_fractional_shares: bool - parts fractionnaires autorisées
+        :param gross_amount: Montant brut souscrit
+        :param fee_percent: Pourcentage de frais de souscription
+        :param apply_subscription_fees: bool - appliquer ou non les frais
+        """
+
+        # 1️⃣ Calcul des frais
+        if apply_subscription_fees and fee_percent:
+            fees_amount = gross_amount * (fee_percent / 100.0)
+        else:
+            fees_amount = 0.0
+
+        # 2️⃣ Montant net à investir
         net_amount_to_invest = gross_amount - fees_amount
 
-        # 2. Calcul théorique des parts sur la base du net
-        raw_shares = net_amount_to_invest / nav
+        # Sécurité
+        if net_amount_to_invest < 0:
+            net_amount_to_invest = 0.0
 
-        # 3. Arrondi selon les règles du fonds
+        # 3️⃣ Calcul théorique des parts
+        raw_shares = net_amount_to_invest / nav if nav else 0.0
+
+        # 4️⃣ Application des règles du fonds
         if allow_fractional_shares:
             shares = float_round(raw_shares, precision_digits=6)
         else:
-            shares = int(raw_shares)
+            shares = int(raw_shares)  # troncature volontaire
 
-        # 4. Calcul des montants réels
-        # On recalcule le montant réellement converti en parts
+        # 5️⃣ Montant réellement investi
         actual_amount_invested = shares * nav
 
-        # Le amount_remaining est ce qui reste du montant NET après achat des parts
+        # 6️⃣ Reliquat (sur le montant NET)
         amount_remaining = net_amount_to_invest - actual_amount_invested
 
         # Sécurité flottants
@@ -97,32 +124,42 @@ class FundSubscriptionWizard(models.TransientModel):
             'fees_amount': fees_amount,
             'net_amount': net_amount_to_invest,
             'shares': shares,
-            'amount_used': actual_amount_invested,  # Montant converti en parts
-            'amount_remaining': amount_remaining  # amount_remaining dû aux arrondis de parts
+            'amount_used': actual_amount_invested,
+            'amount_remaining': amount_remaining,
+            'fees_applied': apply_subscription_fees,
         }
+    def calculate_amount(self,nav,allow_fractional_shares,shares_to_buy,fee_percent,apply_subscription_fees):
+        """
+        Calcule les montants (brut, net, frais) à partir d'un nombre de parts.
+        """
 
-    def calculate_amount_from_shares(self, nav, allow_fractional_shares, shares_to_buy, fee_percent):
-
+        # 1️⃣ Sécurité NAV
         if nav <= 0:
             return {'error': "La valeur liquidative (NAV) doit être positive."}
 
-        # 1. Validation du nombre de parts (entier vs décimal)
+        # 2️⃣ Validation du nombre de parts
         if not allow_fractional_shares:
-            # Si le fonds n'autorise pas les virgules, on s'assure que l'entrée est entière
             shares_to_buy = int(shares_to_buy)
 
-        # 2. Calcul du montant net (Investissement pur)
+        # 3️⃣ Montant net (investissement pur)
         net_amount = shares_to_buy * nav
 
-        # 3. Calcul du montant brut (avec frais)
-        # Formule : Net = Brut * (1 - %frais) => Brut = Net / (1 - %frais)
-        if fee_percent >= 100:
-            return {'error': "Les frais ne peuvent pas être égaux ou supérieurs à 100%."}
+        # 4️⃣ Calcul des frais et du montant brut
+        if apply_subscription_fees and fee_percent:
+            if fee_percent >= 100:
+                return {'error': "Les frais ne peuvent pas être égaux ou supérieurs à 100%."}
 
-        gross_amount = net_amount / (1 - (fee_percent / 100.0))
-        # 4. Calcul des frais en valeur monétaire
-        fees_amount = gross_amount - net_amount
+            gross_amount = net_amount / (1 - (fee_percent / 100.0))
+            fees_amount = gross_amount - net_amount
+        else:
+            gross_amount = net_amount
+            fees_amount = 0.0
+
+        # 5️⃣ Reliquat (par construction = 0 ici)
         amount_remaining = gross_amount - net_amount - fees_amount
+
+        if float_is_zero(amount_remaining, precision_rounding=0.01):
+            amount_remaining = 0.0
 
         return {
             'shares': shares_to_buy,
@@ -130,25 +167,30 @@ class FundSubscriptionWizard(models.TransientModel):
             'fees_amount': float_round(fees_amount, precision_digits=4),
             'gross_amount': float_round(gross_amount, precision_digits=4),
             'amount_remaining': float_round(amount_remaining, precision_digits=4),
+            'fees_applied': apply_subscription_fees,
         }
+
 
     def action_confirm(self):
         self.ensure_one()
         for sub in self:
             # RECALCULER les valeurs avant création
             if sub.buy_choice == 'amount':
-                result = self.calculate_shares_with_fees(
+                #result = self.calculate_shares_with_fees(
+                result = self.calculate_shares(
                     sub.nav,
                     sub.allow_fractional_parts,
                     sub.gross_amount,
-                    sub.subscription_fee_rate
-                )
+                    sub.subscription_fee_rate,
+                    sub.is_subscription_fee)
             else:
-                result = self.calculate_amount_from_shares(
+                #result = self.calculate_amount_from_shares(
+                result=self.calculate_amount(
                     sub.nav,
                     sub.allow_fractional_parts,
                     sub.parts,
-                    sub.subscription_fee_rate
+                    sub.subscription_fee_rate,
+                    sub.is_subscription_fee
                 )
 
             # Utiliser les valeurs recalculées
@@ -189,5 +231,6 @@ class FundSubscriptionWizard(models.TransientModel):
                 'net_amount': net_amount,
                 'shares': parts,
                 'nav': sub.nav,
+                'is_subscription_fee': sub.is_subscription_fee,
                 'state': 'draft',
             })

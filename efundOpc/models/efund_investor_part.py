@@ -108,7 +108,6 @@ class EfundAccountPart(models.Model):
                 ('state', '=', 'reconciled')
             ])
 
-            _logger.info(f"******************Moves: {moves}")
             acc.total_parts = sum(
                 m.shares if m.move_type == 'subscription' else -m.shares
                 for m in moves if m.move_type in ('subscription', 'redemption')

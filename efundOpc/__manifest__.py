@@ -18,7 +18,7 @@
 """,
     'author': 'eSecureX',
     'website': 'https://www.esecurex.com',
-    'depends': ['base', 'account', 'contacts'],
+    'depends': ['base', 'account', 'contacts','web'],
     'data': [
         'security/ir.model.access.csv',
         'security/efund_security.xml',
