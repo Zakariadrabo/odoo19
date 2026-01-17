@@ -11,7 +11,7 @@ class EfundFundCash(models.Model):
     fund_id = fields.Many2one('efund.fund', string="Fonds", required=True, index=True, ondelete='cascade')
     company_id = fields.Many2one('res.company', related='fund_id.company_id', store=True)
     bank_id = fields.Many2one('res.bank', string="Banque / Dépositaire")
-    account_number = fields.Char(string="Numéro de compte")
+    account_number = fields.Char(string="N° Compte espèce")
     currency_id = fields.Many2one(related='fund_id.currency_id', store=True, readonly=True)
     balance = fields.Monetary(string="Solde", compute='_compute_balance', currency_field='currency_id')
     state = fields.Selection([('active', 'Actif'), ('inactive', 'Inactif')], default='active')

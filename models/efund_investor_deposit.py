@@ -16,13 +16,13 @@ class EfundInvestorDeposit(models.Model):
 
     name = fields.Char(string="Référence", required=True,
                        default=lambda self: self.env['ir.sequence'].next_by_code('efund.investor.deposit'))
-    cash_account_id = fields.Many2one('efund.investor.cash', required=True)
+    cash_account_id = fields.Many2one('efund.investor.cash',string="Compte Espèces", required=True)
     currency_id = fields.Many2one(related='cash_account_id.fund_id.currency_id')
 
     date_operation = fields.Datetime(string="Date de l'opération", default=fields.Datetime.now)
     date_valeur = fields.Datetime(string="Date de valeur")
 
-    amount = fields.Monetary(string="montant", currency_field="currency_id", required=True)
+    amount = fields.Monetary(string="Montant", currency_field="currency_id", required=True)
     payment_mode = fields.Selection([('bank', 'Bank Transfer'), ('cheque', 'Cheque'), ('cash', 'Cash')],
                                     string='Mode de paiement')
     reference_payment = fields.Char(string="Référence paiement / justificatif", )

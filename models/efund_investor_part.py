@@ -1,6 +1,8 @@
+import logging
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
-
+_logger = logging.getLogger(__name__)
 
 class EfundAccountPart(models.Model):
     _name = 'efund.investor.part'
@@ -8,7 +10,7 @@ class EfundAccountPart(models.Model):
     _description = 'Compte Parts / Actions'
 
     name = fields.Char(string="Libellé", required=True, copy=False)
-    account_number = fields.Char(string="Numéro compte", required=True, copy=False)
+    account_number = fields.Char(string="N° Compte Titre", required=True, copy=False)
     investor_id = fields.Many2one('efund.investor', string="Investisseur", ondelete='cascade')
     fund_id = fields.Many2one('efund.fund', string="Fonds", required=True, ondelete='cascade')
     currency_id = fields.Many2one(related='fund_id.currency_id', store=True)
@@ -103,13 +105,12 @@ class EfundAccountPart(models.Model):
         for acc in self:
             moves = self.env['efund.investor.part.move'].search([
                 ('part_account_id', '=', acc.id),
-                ('state', '=', 'posted')
+                ('state', '=', 'reconciled')
             ])
 
             acc.total_parts = sum(
                 m.shares if m.move_type == 'subscription' else -m.shares
-                for m in moves
-                if m.move_type in ('subscription', 'redemption')
+                for m in moves if m.move_type in ('subscription', 'redemption')
             )
 
     def _compute_cmp(self):

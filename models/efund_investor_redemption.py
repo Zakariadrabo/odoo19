@@ -34,9 +34,9 @@ class FundRedemption(models.Model):
     # -----------------------------------------------------------------
     # RELATIONS
     # -----------------------------------------------------------------
-    part_account_id = fields.Many2one('efund.investor.part', required=True, readonly=True)
-    cash_account_id = fields.Many2one('efund.investor.cash', required=True, readonly=True)
-    fund_id = fields.Many2one(related='part_account_id.fund_id', store=True)
+    part_account_id = fields.Many2one('efund.investor.part', string="Compte Titre", required=True, readonly=True)
+    cash_account_id = fields.Many2one('efund.investor.cash', string="Compte Espèces", required=True, readonly=True)
+    fund_id = fields.Many2one(related='part_account_id.fund_id', string="Fonds", store=True)
     share_class_id = fields.Many2one('efund.fund.share.class', string="Classe de part",
                                      domain="[('fund_id', '=', fund_id)]")
     investor_id = fields.Many2one(related='part_account_id.investor_id', store=True)

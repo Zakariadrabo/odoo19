@@ -11,10 +11,10 @@ class EfundCashDepositWizard(models.TransientModel):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = "Wizard Dépôt sur compte espèces"
 
-    cash_account_id = fields.Many2one('efund.investor.cash', required=True, readonly=True)
+    cash_account_id = fields.Many2one('efund.investor.cash', string="Compte Espèces", required=True, readonly=True)
     fund_id = fields.Many2one(related='cash_account_id.fund_id',store=True,string="Fonds",index=True)
     investor_id = fields.Many2one(related='cash_account_id.investor_id',store=True, string="Investisseur",index=True)
-    amount = fields.Monetary(required=True)
+    amount = fields.Monetary(required=True, string="Montant", )
     currency_id = fields.Many2one(related='cash_account_id.company_id.currency_id',string="Devise",readonly=True)
     date_operation = fields.Date(string="Date de l'opération",required=True,default=fields.Date.context_today,)
     payment_mode = fields.Selection([('bank', 'Virement bancaire'),('cheque', 'Chèque'),('cash', 'Espèces'),],

@@ -14,9 +14,19 @@
                 </group>
 
                 <group string="Détails d'exécution">
-                    <field name="executed_quantity"/>
-                    <field name="execution_price"/>
-                    <field name="execution_date"/>
+                    <field name="executed_quantity" required="1"/>
+                    <field name="execution_price" required="1"/>
+                    <field name="execution_date" required="1"/>
+                </group>
+                <group string="Resumés">
+                    <div class="o_form_label text-info">
+                        <field name="formulas_accured_interest" readonly="1"/>
+                    </div>
+                    <field name="free_tax_amount"/>
+                    <field name="total_interest"/>
+                    <field name="total_broker_commission"/>
+                    <field name="total_tob_commission"/>
+                    <field name="total_amount"/>
                 </group>
 
                 <footer>

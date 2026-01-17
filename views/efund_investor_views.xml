@@ -103,52 +103,50 @@
                         <field name="company_name" invisible="investor_type != 'company'" required="1"/>
                     </group>
 
-                    <group string="Identité" invisible="investor_type != 'company'">
-                        <group>
-                            <field name="company_short_name" required="investor_type  == 'company'"/>
+                    <group string="Personnes morales" invisible="investor_type != 'company'">
+                        <group invisible="investor_type != 'company'">
                             <field name="legal_form" required="investor_type  == 'company'"/>
+                            <field name="registration_country_id" required="investor_type  == 'company'"/>
                             <field name="license_number" required="investor_type  == 'company'"/>
                             <field name="creation_date" required="investor_type  == 'company'"
                                    options="{'numeric': true}"/>
+                            <field name="company_duration_years" required="investor_type  == 'company'"/>
                         </group>
-                        <group>
+                        <group invisible="investor_type != 'company'">
                             <field name="company_address" required="investor_type  == 'company'"/>
-                            <field name="company_town" required="investor_type  == 'company'"/>
-                            <field name="company_country_id" required="investor_type  == 'company'"/>
-                            <field name="identical_address"/>
-                            <field name="company_direction_address" invisible="identical_address"
-                                   required="not identical_address"/>
-                            <field name="company_direction_town" invisible="identical_address"
-                                   required="not identical_address"/>
-                            <field name="company_direction_country_id" invisible="identical_address"
-                                   required="not identical_address"/>
+                            <field name="company_zip" required="investor_type  == 'company'"/>
+                            <field name="phone" required="investor_type  == 'company'"/>
+                            <field name="email" required="investor_type  == 'company'"/>
+                            <field name="website" required="investor_type  == 'company'"/>
+                            <field name="activite_sector" required="investor_type  == 'company'"/>
                         </group>
                     </group>
-                    <group string="Identité" invisible="investor_type != 'individual'">
-                        <group>
+
+                    <group string="Personnes physiques" invisible="investor_type != 'individual'">
+                        <group invisible="investor_type != 'individual'">
                             <field name="nom" required="investor_type  == 'individual'"/>
                             <field name="prenom" required="investor_type  == 'individual'"/>
+                            <field name="nom_jeune_fille"/>
                             <field name="sex" required="investor_type  == 'individual'"/>
-                            <field name="surnom" required="investor_type  == 'individual'"/>
                             <field name="birthdate" required="investor_type  == 'individual'"
                                    options="{'numeric': true}"/>
                             <field name="birthplace" required="investor_type  == 'individual'"/>
                             <field name="birth_country_id" required="investor_type  == 'individual'"/>
                             <field name="nationality"/>
-
+                            <field name="other_nationnality"/>
+                            <field name="marital_status"/>
                         </group>
-                        <group>
-                            <field name="autre_nationalite" required="investor_type  == 'individual'"/>
-                            <field name="nbre_enfant" required="investor_type  == 'individual'"/>
-                            <field name="minor" required="investor_type  == 'individual'"/>
-                            <field name="phone" widget="phone"/>
-                            <field name="email" widget="email"/>
+                        <group invisible="investor_type != 'individual'">
                             <field name="address" required="investor_type  == 'company'"/>
-                            <field name="correspondence_address"/>
+                            <field name="address_place" required="investor_type  == 'company'"/>
                             <field name="country_id" required="investor_type  == 'company'"/>
-
+                            <field name="mobility_phone" widget="phone"/>
+                            <field name="place_phone" widget="phone"/>
+                            <field name="email" widget="email"/>
+                            <field name="contact_adress"/>
                         </group>
                     </group>
+
 
                     <!-- ========================= -->
                     <!-- CONFORMITÉ (SYNTHÈSE) -->
@@ -171,20 +169,24 @@
                     <!-- ========================== -->
 
                     <notebook>
-                        <page string="Relations">
+                        <page string="Relations" >
                             <group>
                                 <group>
-                                    <field name="entry_relation_date" options="{'numeric': true}"/>
-                                    <field name="business_object_relation"/>
-                                    <field name="origine"/>
-                                    <field name="other_origine" required="origine == 'other'"
-                                           invisible="origine != 'other'"/>
-                                    <field name="fund_origin_country_id"/>
-                                    <field name="fund_destination_country_id"/>
-
+                                    <field name="entry_relation_date" options="{'numeric': true}" invisible="investor_type != 'individual'"/>
+                                    <field name="business_object_relation" invisible="investor_type != 'individual'"/>
+                                    <field name="fund_country_origin" invisible="investor_type != 'individual'"/>
+                                    <field name="fund_country_destination" invisible="investor_type != 'individual'"/>
+                                    <field name="business_relation_type" invisible="investor_type != 'company'"/>
+                                    <field name="fund_origin_country" invisible="investor_type != 'company'"/>
+                                    <field name="fund_country_destination" invisible="investor_type != 'company'"/>
                                 </group>
                                 <group>
-                                    <field name="intervention_mode_ids">
+                                    <field name="market_knowledge"/>
+                                    <field name="activity_knowledge"/>
+                                    <field name="risk_level_acceptable"/>
+                                </group>
+                                <group>
+                                    <field name="intervention_mode_ids" invisible="investor_type != 'individual'">
                                         <list>
                                             <field name="code"/>
                                         </list>
@@ -192,81 +194,95 @@
                                 </group>
                             </group>
                         </page>
-                        <page string="Finances">
+                        <page string="PM · Informations financières" invisible="investor_type != 'company'">
                             <group>
-                                <group string="Informations Bancaires">
+                                <field name="annual_turnover_range"/>
+                                <field name="expected_operations_volume"/>
+                                <field name="funds_origin_pm"/>
+                                <field name="funds_origin_pm_other" invisible="funds_origin_pm !='other'"/>
+                                <field name="main_revenue_sources"/>
+                            </group>
+                        </page>
+
+                        <page string="Informations Bancaires">
+                            <group>
+                                <group>
                                     <field name="name_bank"/>
                                     <field name="bank_address"/>
                                     <field name="account_number"/>
-                                    <field name="iban"/>
                                 </group>
-                                <group string="Connaissance Financière">
+                                <group>
+                                    <field name="iban"/>
                                     <field name="swift_bic"/>
-                                    <field name="market_knowledge"/>
-                                    <field name="activity_knowledge"/>
-                                    <field name="risk_tolerance"/>
                                 </group>
                             </group>
                         </page>
                         <page string="PP - Information KYC" invisible="investor_type != 'individual'">
                             <group>
                                 <group>
-                                    <field name="profession"/>
-                                    <field name="function"/>
-                                    <field name="marital_status"/>
-                                    <field name="estimation"/>
-                                    <field name="revenu"/>
-                                </group>
-                                <group>
-                                    <field name="montant_mois"/>
-                                    <field name="periodicite"/>
                                     <field name="activite"/>
                                     <field name="other_activite" required="activite == 'other'"
                                            invisible="activite != 'other'"/>
+                                    <field name="profession"/>
+                                    <field name="function"/>
+                                    <field name="employer"/>
+                                    <field name="employer_address"/>
+                                </group>
+                                <group>
+                                    <field name="revenu"/>
+                                    <field name="origine"/>
+                                    <field name="other_origine" required="origine == 'other'"
+                                           invisible="origine != 'other'"/>
                                     <field name="objectif"/>
                                     <field name="other_objectif" required="objectif == 'other'"
                                            invisible="objectif != 'other'"/>
+                                    <field name="periodicite"/>
                                 </group>
                             </group>
                         </page>
-
-                        <page string="Mandataires">
-                            <field name="representative_ids">
+                        <page string="Représentant Légal" invisible="investor_type != 'company'">
+                            <field name="legal_representative_ids">
                                 <list>
                                     <field name="full_name"/>
-                                    <field name="power_type"/>
-                                    <field name="relationship"/>
+                                    <field name="birth_date"/>
+                                    <field name="function"/>
+                                    <field name="nationality_id"/>
+                                    <field name="marital_status"/>
                                     <field name="phone"/>
-                                    <field name="document_type"/>
-                                    <field name="id_number"/>
-                                    <field name="issued_date"/>
-                                    <field name="expiry_date"/>
-                                </list>
-                            </field>
-                        </page>
-
-                        <page string="Heritiers">
-                            <field name="heir_ids">
-                                <list>
-                                    <field name="full_name_heir"/>
-                                    <field name="birthdate"/>
-                                    <field name="birthplace"/>
-                                    <field name="birth_country_id"/>
-                                    <field name="sex"/>
-                                    <field name="relationship"/>
+                                    <field name="address"/>
                                     <field name="email"/>
-                                    <field name="phone"/>
 
                                 </list>
                             </field>
                         </page>
-
                         <page string="Personnes représentées">
                             <field name="represented_person_ids">
                                 <list editable="bottom">
-                                    <field name="full_name"/>
                                     <field name="relationship"/>
-                                    <field name="birthdate" options="{'numeric': true}"/>
+                                    <field name="full_name"/>
+                                    <field name="lien_client"/>
+                                    <field name="address"/>
+                                    <field name="phone"/>
+                                    <field name="document_type"/>
+                                    <field name="document_number"/>
+                                    <field name="document_date_delivered" options="{'numeric': true}"/>
+                                    <field name="document_date_expiry" options="{'numeric': true}"/>
+                                    <field name="document_deliverd_place"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Héritiers et personne à contacter" invisible="investor_type != 'individual'">
+                            <field name="heirs_person_ids">
+                                <list editable="bottom">
+                                    <field name="type_person"/>
+                                    <field name="full_name"/>
+                                    <field name="lien_client"/>
+                                    <field name="phone"/>
+                                    <field name="email"/>
+                                    <field name="birthday_place"/>
+                                    <field name="birthday_date"/>
+                                    <field name="address"/>
+                                    <field name="address_country"/>
                                 </list>
                             </field>
                         </page>
@@ -387,18 +403,6 @@
                                     </field>
                                 </group>
                             </group>
-                        </page>
-
-                         <page string="Urgences">
-                                <group string="Personne à Prévenir en Cas d'Urgence">
-                                    <field name="full_name_urgence"/>
-                                    <field name="relationship_urgence"/>
-                                    <field name="country_urgence"/>
-                                    <field name="email_urgence"/>
-                                    <field name="phone_urgence"/>
-                                </group>
-
-
                         </page>
 
 

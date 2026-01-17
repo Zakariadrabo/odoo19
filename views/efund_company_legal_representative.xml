@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<record id="view_efund_company_legal_representative_form" model="ir.ui.view">
+    <field name="name">efund.comapny.legal.representative.form</field>
+    <field name="model">efund.company.legal.representative</field>
+    <field name="arch" type="xml">
+        <form string="Répresentant Légal">
+            <sheet>
+                <group col="4">
+                    <field name="full_name"/>
+                    <field name="birth_date"/>
+                    <field name="function"/>
+                    <field name="nationality_id"/>
+                    <field name="marital_status"/>
+                    <field name="phone"/>
+                    <field name="address"/>
+                    <field name="email"/>
+                </group>
+            </sheet>
+        </form>
+    </field>
+</record>
+</odoo>

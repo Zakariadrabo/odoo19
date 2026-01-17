@@ -29,6 +29,7 @@ class FundClass(models.Model):
     minimum_additional_subscription = fields.Float(string='Montant minimum pour les souscriptions supplémentaires',help="Montant minimum pour les souscriptions supplémentaires")
     minimum_redemption = fields.Float(string='Montant minimum de rachat',help="Montant minimum de rachat")
     is_default = fields.Boolean(string="Classe par défaut",default=False)
+    minimum_duration = fields.Integer(string="Durée minimun pour rachat (mois)")
 
     # === Statuts et Dates ===
     state = fields.Selection([('draft', 'Brouillon'),('validate', 'Validé'),('suspended', 'Suspendu'),('closed', 'Fermer aux nouveau investisseurs'),],string='Status',default='draft',)
@@ -38,7 +39,7 @@ class FundClass(models.Model):
     # === Calculs et Statistiques ===
     total_shares = fields.Float(string='Total Shares Outstanding',digits=(16, 2),compute='_compute_share_statistics',store=True,help="Nombre total de parts en circulation")
     total_net_assets = fields.Float(string='Total Net Assets',compute='_compute_share_statistics',store=True,help="Actifs nets attribués à cette classe")
-    current_nav = fields.Float(string='Valeur Liquidative',compute='_compute_current_nav',help="Dernière valeur liquidative disponible")
+    current_nav = fields.Float(string='Valeur Liquidative',compute='_compute_current_nav',help="Dernière valeur liquidative disponible", store=True)
 
 
     # === Computed Methods ===

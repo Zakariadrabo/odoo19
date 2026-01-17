@@ -31,27 +31,31 @@ class FundInvestor(models.Model):
     full_name = fields.Char(string="Nom complet", compute="_compute_full_name", store=True)
     nom = fields.Char(string="Nom", store=True)
     prenom = fields.Char(string="Prénom", store=True)
+    nom_jeune_fille = fields.Char(string="Nom de Jeune", store=True)
     birthdate = fields.Date(string="Date de naissance")
     birthplace = fields.Char(string="Lieu de naissance")
     birth_country_id = fields.Many2one("res.country", string="Pays de naissance")
     sex = fields.Selection([('male', 'Homme'), ('female', 'Femme')], string="Sexe")
-    country_id = fields.Many2one("res.country", string="Pays")
-    address = fields.Char(string="Adresse pays")
+    country_id = fields.Many2one("res.country", string="Pays de résidence habituelle")
+    address_place = fields.Char(string="Ville / Codepostal")
+    address = fields.Char(string="Adresse de résidence principale")
     marital_status = fields.Selection(
         [('single', 'Célibataire'), ('married', 'Marié(e)'), ('divorced', 'Divorcé(e)'), ('widowed', 'Veuf/veuve')], string="Statut matrimonial")
     email = fields.Char(string="Adresse Email")
-    phone = fields.Char(string="Numéro de Téléphone")
+    mobility_phone = fields.Char(string="Téléphone (mobile)")
+    place_phone = fields.Char(string="Téléphone (domicile)")
+    contact_adress = fields.Char(string="Adresse de correspondance (si différent)")
+    other_nationnality = fields.Char(string="Autres Nationnalité")
+    employer = fields.Char(string="Employeur")
+    employer_address = fields.Char(string="Adresse de l'employeur")
 
     #Personne Morale
     # Identité Juridique
-    company_name = fields.Char(string="Raison sociale")
-    company_short_name = fields.Char(string="Sigle")
-    legal_form = fields.Selection([('sa', 'Société Anonyme (SA)'),('sas', 'Société par Actions Simplifiée (SAS)'),
-        ('sarl', 'Société à Responsabilité Limitée (SARL)'),('snc', 'Société en Nom Collectif (SNC)'),
-        ('scs', 'Société en Commandite Simple (SCS)'),('gie', "Groupement d'Intérêt Économique (GIE)"),
-        ('sep', 'Société en Participation (SEP)'),('coop', 'Société Coopérative'),
+    company_name = fields.Char(string="Dénomination sociale")
+    legal_form = fields.Selection([('sa', 'Société Anonyme (SA)'),  ('sarl', 'Société à Responsabilité Limitée (SARL)'),
+        ('sas', 'Société par Actions Simplifiée (SAS)'),('gie', "Groupement d'Intérêt Économique (GIE)"),('assoc', 'Association'),
         ('other', 'Autre')], string="Forme Juridique", default='sa', help="Forme juridique selon le droit OHADA")
-    license_number = fields.Char(string="N° Immatriculation")
+    license_number = fields.Char(string="Numéro RCCM / Identifiant unique ")
     creation_date = fields.Date(string="Date de création")
     company_address = fields.Char(string="Adresse siège social")
     company_town = fields.Char(string="Ville siège social")
@@ -64,7 +68,6 @@ class FundInvestor(models.Model):
     is_beneficiaire_effectif = fields.Boolean(string="Bénéficiaire", default=False)
     beneficiaire_effectif = fields.Char(string="Bénéficiaire effectif")
 
-
     #infos commune
     name_bank = fields.Char(string="Nom de la banque")
     bank_address = fields.Char(string="Adresse de la banque")
@@ -73,7 +76,11 @@ class FundInvestor(models.Model):
     swift_bic = fields.Char(string="SWIFT/BIC")
     entry_relation_date = fields.Date(string="Date d'entrée en relation")
     business_object_relation = fields.Char(string="Nature de la relation d'affaire")
-
+    fund_country_origin = fields.Many2one("res.country", string="Pays d'origine des fonds")
+    fund_country_destination = fields.Many2one("res.country", string="Pays de destination des fonds")
+    market_knowledge = fields.Selection([('1','1'),('2','2'),('3','3'),('4','4'),('5','5'),('6','6'),('7','7'),],string='Connaissance du marché', widget='Priority')
+    activity_knowledge = fields.Selection([('1','1'),('2','2'),('3','3'),('4','4'),('5','5'),('6','6'),('7','7'),],string='Connaissance de l\'activité', widget='Priority')
+    risk_level_acceptable = fields.Selection([('1','1'),('2','2'),('3','3'),('4','4'),('5','5'),('6','6'),('7','7'),],string='Niveau de risque acceptable', widget='Priority')
 
     # lifecycle / compliance
     status = fields.Selection([('draft', 'Brouillon'),('kyc_pending', 'KYC en attente'),('kyc_approved', 'KYC approuvé'),
@@ -93,15 +100,12 @@ class FundInvestor(models.Model):
     kyc_check_ids = fields.One2many('efund.kyc.check', 'investor_id', string="KYC Checks")
     aml_alert_ids = fields.One2many('efund.aml.alert', 'investor_id', string="AML Alerts")
     represented_person_ids = fields.One2many('efund.investor.represented','investor_id',string="Personnes représentées")
+    heirs_person_ids = fields.One2many('efund.investor.heirs', 'investor_id',string="Héritiés et personne à contacter")
     intervention_mode_ids = fields.One2many('efund.investor.intervention.mode','investor_id', string="Investisseur")
-    represented_company_ids = fields.One2many('efund.investor.company.represented', 'investor_id',
-                                            string="Réprésentant de la société")
-
+    represented_company_ids = fields.One2many('efund.investor.company.represented', 'investor_id',string="Réprésentant Légal  de la société")
     active = fields.Boolean(default=True)
-
     fund_investor_ids = fields.One2many('efund.fund.investor','investor_id',string="Fonds")
     mandate_investor_ids = fields.One2many('efund.mandate.investor','investor_id',string="Mandats")
-
     cash_account_ids = fields.One2many('efund.investor.cash','investor_id',string="Comptes espèces")
     part_account_ids = fields.One2many('efund.investor.part','investor_id',string="Comptes titres")
 
@@ -115,7 +119,7 @@ class FundInvestor(models.Model):
 
     # Personal info (allow using form to create partner data)
     minor = fields.Boolean(string="Mineur ?")
-    nationality = fields.Many2one("res.country", string="Nationalité")
+    nationality = fields.Many2one("res.country", string="Nationalité principale")
     tranche = fields.Selection([("<55","Jusqu'à 55ans"),("56T74","56-74"),(">75",">75")])
     language_id = fields.Many2one("res.lang",string="Langue")
 
@@ -135,11 +139,11 @@ class FundInvestor(models.Model):
     estimation = fields.Selection([('M5','<5M'),('E5','5-50M'),('P5','>50M')], string="Patrimoine")
     revenu = fields.Selection([('M5','<5M'),('E5','5-10M'),('P5','>10M')], string="Revenu annuel")
     montant_mois = fields.Integer(string="Montant estimé transactions / mois")
-    periodicite = fields.Selection([('Monthly','Mensuel'),('Quarterly','Trimestriel'),('Semi-Annual','Semestriel'),('Annual','Annuel')])
+    periodicite = fields.Selection([('Monthly','Mensuel'),('Quarterly','Trimestriel'),('Semi-Annual','Semestriel'),('Annual','Annuel')], string="Fréquence des souscriptions")
 
-    origine = fields.Selection([('salary','Salaire'),('investment','Investissement'),('legacy','Héritage'),('savings','Epargne'),('other','Autre')], string="Origine des fonds")
+    origine = fields.Selection([('salary','Salaire'),('investment','Revenus d\'activités'),('estate','Revenus immobiliers'),('legacy','Héritage / Donation'),('savings','Epargne'),('other','Autre')], string="Origine des fonds")
     other_origine = fields.Char(string="Autre origine")
-    activite = fields.Selection([('employee','Salarié'),('liberal','Profession libérale'),('business','Entrepreneur'),('other','Autre')], string="Activité principale")
+    activite = fields.Selection([('employee','Salarié'),('liberal','Profession libérale'),('business','Entrepreneur'),('etudiant','Etudiant'),('retraite','Rétraité'),('sans_emploi','Sans emploi'),('other','Autre')], string="Situation professionnelle")
     other_activite = fields.Char(string="Autre activité")
     objectif = fields.Selection([('investissement','Investissement'),('savings','Epargne'),('transactions','Transactions'),('other','Autre')], string="Objectif financier")
     other_objectif = fields.Char(string="Autre objectif")
@@ -151,15 +155,8 @@ class FundInvestor(models.Model):
     account_part_ids = fields.One2many('efund.investor.part', 'investor_id', string='Comptes Parts / Actions')
     account_cash_ids = fields.One2many('efund.investor.cash', 'investor_id', string='Comptes Espèces')
 
-
-
     # computed helper: available cash (sum of active cash accounts balances)
-    available_cash = fields.Monetary(
-        string='Available Cash (sum)',
-        currency_field='company_currency_id',
-        compute='_compute_available_cash',
-        store=True
-    )
+    available_cash = fields.Monetary(string='Available Cash (sum)',currency_field='company_currency_id',compute='_compute_available_cash',store=True)
     company_currency_id = fields.Many2one('res.currency', related='company_id.currency_id', store=True, readonly=True)
 
     ## Objet de smart bouton
@@ -178,40 +175,36 @@ class FundInvestor(models.Model):
         max_height=1920
     )
 
+    #Rachide
+    # --- Informations générales PM ---
+    registration_country_id = fields.Many2one("res.country",string="Pays d’immatriculation")
+    company_duration_years = fields.Integer(string="Durée de la société (ans)")
+    company_zip = fields.Char(string="Code postal")
+    website = fields.Char(string="Site internet")
+    phone = fields.Char(string="Numéro de Téléphone")
+    activite_sector = fields.Selection(
+        [ ('finance', 'Services Financiers'),('tech', 'Nouvelles Technologies & IA'),('green', 'Transition Écologique'),
+        ('industry', 'Industrie & Transport'),('agri', 'Agro-industrie'),('public', 'Services Publics'),
+          ('other', 'Autre')],string="Secteur d'activité")
+    main_activity_countries = fields.Many2many("res.country","efund_company_activity_country_rel","investor_id","country_id",string="Pays principal d’activité")
 
-    #Ajout Rachide
-    # --- Identité complémentaire ---
-    surnom = fields.Char(string="Nom de jeune fille")
-    autre_nationalite = fields.Many2one("res.country", string="Autres Nationalité")
-    nbre_enfant = fields.Integer(string="Nombre d’enfants")
+    # --- Informations financières PM ---
+    annual_turnover_range = fields.Selection([("lt_100", "< 100 M FCFA"),("100_500", "100 – 500 M FCFA"),("500_2b", "500 M – 2 Mds FCFA"),("gt_2b", "> 2 Mds FCFA"),],string="Chiffre d’affaires annuel estimé")
+    main_revenue_sources = fields.Char(string="Principales sources de revenus")
+    funds_origin_pm = fields.Selection([ ("operating", "Revenus d’exploitation"),  ("capital", "Capital"),   ("loan", "Emprunts"),  ("other", "Autre"), ], string="Origine principale des fonds investis" )
+    funds_origin_pm_other = fields.Char(string="Autre origine des fonds" )
+    expected_operations_volume = fields.Selection([("lt_100", "< 100 M FCFA"),("100_500", "100 – 500 M FCFA"),("500_2b", "500 M – 2 Mds FCFA"),("gt_2b", "> 2 Mds FCFA"),],string="Volume prévisionnel des opérations (annuel)")
 
-    # --- Contact & résidence ---
-    correspondence_address = fields.Text(string="Adresse de correspondance (si différente)")
+    # --- Connaissance financière PM ---
+    market_knowledge_pm = fields.Integer(tring="Connaissance du marché (PM)")
+    activity_knowledge_pm = fields.Integer(string="Connaissance de l’activité (PM)")
+    risk_tolerance_pm = fields.Integer(string="Niveau de risque acceptable (PM)")
+    business_relation_type = fields.Selection([('souscription_opcvm', 'Souscription OPCVM'),('gestion_mandat', 'Gestion sous mandat'),
+        ('conseil_invest', 'Conseil en investissement'),('autre', 'Autre')], string="Type de relation envisagée", default='souscription_opcvm')
+    business_relation_type_autre = fields.Char(string="Préciser (Autre)",help="Saisir le type de relation si 'Autre' est sélectionné")
+    fund_origin_country= fields.Many2one("res.country", string="Pays d’origine habituelle des fonds ")
 
-    # --- Flux financiers ---
-    fund_destination_country_id = fields.Many2one("res.country", string="Pays de destination principale des fonds")
-
-    # --- Connaissance financière ---
-    market_knowledge = fields.Integer(string="Connaissance du marché", help="Note de 1 (faible) à 7 (élevée)")
-    activity_knowledge = fields.Integer(string="Connaissance de l’activité", help="Note de 1 (faible) à 7 (élevée)")
-    risk_tolerance = fields.Integer(string="Niveau de risque acceptable", help="Note de 1 (faible) à 7 (élevée)")
-
-    #urgence
-    full_name_urgence = fields.Char(string="Nom et prénoms", required=True)
-    relationship_urgence = fields.Char(string="Lien avec le client")
-    country_urgence = fields.Many2one("res.country", string="Pays de résidence")
-    email_urgence = fields.Char(string="Adresse Email")
-    phone_urgence = fields.Char(string="Numéro de Téléphone")
-
-    #Relation d’affaires avec la Société
-    business_relation_type = fields.Selection([("subscription", "Souscription OPCVM"),("mandate", "Gestion sous mandat"),("advisory", "Conseil en investissement"),("other", "Autre"),],string="Type de relation d’affaires")
-    business_relation_other = fields.Char(string="Autre type de relation",help="À renseigner si le type de relation est 'Autre'")
-    fund_origin_country_id = fields.Many2one("res.country",string="Pays d’origine habituelle des fonds")
-
-    # realtion avec les modèles
-    representative_ids = fields.One2many('efund.investor.representative', 'investor_id', string="Mandataires")
-    heir_ids = fields.One2many('efund.investor.heir','investor_id',string="Héritiers / Ayants droit")
-
+    legal_representative_ids = fields.One2many("efund.company.legal.representative","investor_id",string="Représentant légal")
 
     @api.depends('nom', 'prenom')
     def _compute_full_name(self):
@@ -266,7 +259,7 @@ class FundInvestor(models.Model):
     def _prepare_partner_vals(self, vals):
         """Convertit les champs EfundInvestor → res.partner proprement."""
         return {
-            "name": vals.get("full_name") or _("New Investor"),
+            "name": vals.get("nom") +' ' + vals.get("prenom") if vals.get("investor_type")  == 'individual' else vals.get("company_name"),
             "email": vals.get("email"),
             "phone": vals.get("phone"),
             "street": vals.get("address"),
@@ -335,13 +328,13 @@ class FundInvestor(models.Model):
             raise UserError(_("Cet investisseur possède déjà des comptes."))
 
         country = (self.country_id.code or "XX").upper()
-        inv_type = "IND"
+        inv_type = "PP"
         # if partner is a company
         if self.partner_id and self.partner_id.company_type == "company":
-            inv_type = "COR"
+            inv_type = "PM"
         inv_id_fmt = str(self.id).zfill(4)
         seq_part = str(len(self.account_part_ids) + 1).zfill(3)
-        account_part_number = f"PT-{country}-{inv_type}-{inv_id_fmt}-{seq_part}"
+        account_part_number = f"CT-{inv_type}-{inv_id_fmt}-{seq_part}"
         part = self.env['efund.investor.part'].create({
             'name': f"Compte Titre - {self.full_name or self.name or 'Investor'}",
             'investor_id': self.id,
@@ -385,6 +378,7 @@ class FundInvestor(models.Model):
                 "default_cash_account_id": self.account_cash_ids[0].id,
                 "default_currency_id": self.company_id.currency_id.id,
                 "default_date_operation": fields.Date.context_today(self),
+
             }
         }
 

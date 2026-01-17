@@ -31,6 +31,7 @@
 
                     <group string="Détails de la souscription" col="3">
                         <group>
+                            <field name="is_subscription_fee"/>
                             <field name="buy_choice"/>
                             <field name="gross_amount" readonly="buy_choice != 'amount'" required="1"/>
                             <field name="parts" readonly="buy_choice != 'share'" required="1"/>

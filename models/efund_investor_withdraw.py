@@ -13,7 +13,7 @@ class EfundInvestorWithdraw(models.Model):
 
     name = fields.Char(string="Référence", required=True,
                        default=lambda self: self.env['ir.sequence'].next_by_code('efund.investor.withdraw'))
-    cash_account_id = fields.Many2one('efund.investor.cash', required=True)
+    cash_account_id = fields.Many2one('efund.investor.cash', string="Compte Espèces", required=True)
     currency_id = fields.Many2one(related='cash_account_id.fund_id.currency_id')
     balance = fields.Float(string="Solde", related="cash_account_id.balance", readonly=True)
 
