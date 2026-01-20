@@ -1,0 +1,122 @@
+<odoo>
+    <record id="view_fund_expense_list" model="ir.ui.view">
+        <field name="name">efund.fund.expense.list</field>
+        <field name="model">efund.fund.expense</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="state == 'archived'"
+                  decoration-info="state == 'draft'"
+                  decoration-success="state == 'validated'">
+
+                <field name="name"/>
+                <field name="expense_type"/>
+                <field name="frequency"/>
+                <field name="calculation_method"/>
+                <field name="amount" invisible=" calculation_method != 'fixed'"/>
+                <field name="rate" invisible=" calculation_method == 'fixed'"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="state"/>
+
+            </list>
+        </field>
+    </record>
+    <record id="view_fund_expense_form" model="ir.ui.view">
+        <field name="name">efund.fund.expense.form</field>
+        <field name="model">efund.fund.expense</field>
+        <field name="arch" type="xml">
+
+            <form string="Charge du Fonds">
+                <!-- ===================== -->
+                <!-- HEADER : ACTIONS -->
+                <!-- ===================== -->
+                <header>
+                    <button name="action_validate"
+                            type="object"
+                            string="Valider"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+
+                    <button name="action_archive"
+                            type="object"
+                            string="Archiver"
+                            class="btn-secondary"
+                            invisible="state != 'validated'"/>
+
+                    <button name="action_reactivate"
+                            type="object"
+                            string="Réactiver"
+                            invisible="state != 'archived'"/>
+                    <field name="state"
+                           widget="statusbar"
+                           statusbar_visible="draft,validated,archived"/>
+                </header>
+
+                <sheet>
+
+                    <!-- ===================== -->
+                    <!-- BLOC IDENTITÉ -->
+                    <!-- ===================== -->
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="expense_type"/>
+                            <field name="partner_id"/>
+                        </group>
+                    </group>
+
+                    <!-- ===================== -->
+                    <!-- BLOC PARTENAIRE -->
+                    <!-- ===================== -->
+                    <notebook>
+
+                        <!-- ===================== -->
+                        <!-- ONGLET CALCUL -->
+                        <!-- ===================== -->
+                        <page string="Méthode de calcul">
+                            <group>
+                                <group>
+                                    <field name="frequency"/>
+                                    <field name="calculation_method"/>
+                                </group>
+
+                                <group invisible=" calculation_method != 'fixed'">
+                                    <field name="amount"/>
+                                    <button name="action_show_amount_details"
+                                            type="object"
+                                            string="Détails"
+                                            class="oe_link"/>
+                                </group>
+                                <group invisible=" calculation_method == 'fixed'">
+                                    <field name="rate"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- ===================== -->
+                        <!-- ONGLET PÉRIODE -->
+                        <!-- ===================== -->
+                        <page string="Période d’application">
+                            <group>
+                                <group>
+                                    <field name="start_date"/>
+                                </group>
+                                <group>
+                                    <field name="end_date"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- ===================== -->
+                        <!-- ONGLET PLANIFICATION -->
+
+
+
+                    </notebook>
+
+                </sheet>
+            </form>
+
+        </field>
+    </record>
+
+</odoo>

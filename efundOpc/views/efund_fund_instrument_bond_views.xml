@@ -1,0 +1,45 @@
+<!-- views/instrument_bond_views.xml -->
+<odoo>
+    <record id="view_bond_form" model="ir.ui.view">
+        <field name="name">efund.fund.instrument.bond.form</field>
+        <field name="model">efund.fund.instrument.bond</field>
+        <field name="arch" type="xml">
+            <form string="Caractéristiques Obligation">
+                <group string="Paramètres de l'Émission">
+                    <group>
+                        <field name="bond_type" string="Type d'obligation"/>
+                        <field name="issue_amount" string="Montant Émission"/>
+                        <field name="face_value" string="Valeur nominale"/>
+                        <field name="coupon_rate" string="Taux du coupon (%)" digits="(16,4)"/>
+                    </group>
+                    <group>
+                        <field name="coupon_frequency" string="Fréquence des coupons"/>
+                        <field name="issue_date" string="Date émission"/>
+                        <field name="value_date" string="Date de jouissance"/>
+                        <field name="maturity_date" string="Date de maturité"/>
+                    </group>
+                </group>
+
+                <group string="Conditions Financières">
+                    <group>
+                        <field name="purchase_price" string="Prix d'acquisition"/>
+                        <field name="yield_rate" string="Rendement actuariel (%)" digits="(16,8)"/>
+                        <field name="valuation_method" string="Méthode de valorisation"/>
+                        <field name="technical_trick" string="Base de calcul"/>
+                    </group>
+                    <group>
+                        <field name="amortization_type" string="Type d'amortissement"/>
+                        <field name="grace_period" string="Période de grâce (années)"/>
+
+                    </group>
+                </group>
+
+                <group string="Notation et Risque">
+                    <field name="bond_issuer_rating" string="Notation de l'émetteur"/>
+                    <field name="rating_agency" string="Agence de notation"/>
+                    <field name="state_issuer" string="Émis par État CEMAC"/>
+                </group>
+            </form>
+        </field>
+    </record>
+</odoo>

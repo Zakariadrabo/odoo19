@@ -13,7 +13,7 @@ class FundInstrumentPrice(models.Model):
     instrument_id = fields.Many2one('efund.fund.instrument', string="Instrument", required=True, index=True)
     date = fields.Date(string="Date du cours", required=True, default=fields.Date.today, index=True)
     price = fields.Float(string="Cours", digits=(16, 4), required=True)
-    currency_id = fields.Many2one('res.currency', string="Devise du cours", required=True)
+    currency_id = fields.Many2one(related="instrument_id.currency_id", string="Devise du cours")
     is_validated = fields.Boolean(string="Validé", default=False)
     validated_date = fields.Date(string="Date de validation")
     validated_by = fields.Many2one('res.users', string="Validé par")

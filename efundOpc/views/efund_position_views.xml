@@ -58,7 +58,6 @@
                         <group string="Informations de cours">
                             <field name="last_price" readonly="1"/>
                             <field name="last_price_date" readonly="1"/>
-                            <field name="instrument_currency_id" readonly="1"/>
                         </group>
                     </group>
 

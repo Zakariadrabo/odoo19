@@ -45,6 +45,7 @@
                     <field name="state" widget="statusbar"/>
                 </header>
                 <sheet>
+
                     <group col="3">
                         <group string="Informations générales">
                             <field name="instrument_type"/>
@@ -61,10 +62,12 @@
                         <group string="Données de l'obligation" invisible="instrument_type != 'bond'">
                             <field name="issue_amount" required="instrument_type == 'bond'"/>
                             <field name="face_value" required="instrument_type == 'bond'"/>
+                            <field name="purchase_price" required="instrument_type == 'bond'"/>
                             <field name="coupon_rate" required="instrument_type == 'bond'"/>
                             <field name="issue_date" required="1" options="{'numeric': true}"/>
                             <field name="value_date" required="1" options="{'numeric': true}"/>
                             <field name="maturity_date" required="1" options="{'numeric': true}"/>
+                            <field name="remaining_date" readonly="1" />
                         </group>
                         <group string="Données du coupon" invisible="instrument_type != 'bond'">
                             <field name="coupon_frequency" required="instrument_type == 'bond'"/>
@@ -73,6 +76,7 @@
                             <field name="first_coupon_date" readonly="1" options="{'numeric': true}"/>
                             <field name="next_coupon_date" readonly="1" options="{'numeric': true}"/>
                             <field name="days_to_next_coupon" readonly="1" options="{'numeric': true}"/>
+                            <field name="days_to_next_coupon_string" readonly="1"/>
                             <field name="grace_period"/>
                         </group>
                     </group>
@@ -150,9 +154,12 @@
                         <page string="Commission et Taxes">
                             <field name="instrument_fee_ids">
                                 <list editable="bottom">
-                                    <field name="fee_type"/>
+                                    <field name="name"/>
+                                    <field name="fee_category"/>
+                                    <field name="calculation_method"/>
                                     <field name="rate"/>
-                                    <field name="is_mandatory"/>
+                                    <field name="amount"/>
+                                    <field name="capitalizable"/>
                                 </list>
                             </field>
                         </page>
@@ -228,6 +235,12 @@
                                     <field name="quantity"/>
                                     <field name="market_value"/>
                                     <field name="avg_cost"/>
+                                    <field name="unrealized_pl"/>
+                                    <field name="unrealized_pl_percent"/>
+                                    <field name="last_price"/>
+                                    <field name="last_price_date"/>
+                                    <field name="valuation_date"/>
+
 
                                 </list>
                             </field>
@@ -242,11 +255,7 @@
                                     string="Importer cours"
                                     class="oe_highlight"
                                     icon="fa-download"/>
-                            <button name="action_open_price_import_wizard"
-                                    type="object"
-                                    string="Importer depuis fichier/API"
-                                    class="btn-primary"
-                                    icon="fa-upload"/>
+
 
                             <field name="price_ids">
                                 <list string="Historique des cours" editable="bottom">

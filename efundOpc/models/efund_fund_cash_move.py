@@ -14,14 +14,14 @@ class EfundFundCashMove(models.Model):
     currency_id = fields.Many2one(related='fund_cash_id.currency_id', store=True)
     move_type = fields.Selection([('subscription_in', 'Entrée Souscription'),('redemption_out', 'Sortie Rachat'),
         ('deposit_in', 'Dépôt Investisseur'),('withdraw_out', 'Retrait Investisseur'),('investment_out', 'Investissement Actif'),
-        ('divestment_in', 'Désinvestissement'),('fee_out', 'Frais de Gestion'),('dividend_in', 'Dividendes Reçus'),
+        ('divestment_in', 'Désinvestissement'),('fee_out', 'Frais de Gestion'),('broker_fee_out', 'Frais de Courtage'),('tax_fee_out', 'Taxes'),('dividend_in', 'Dividendes Reçus'),
         ('coupon_in', 'Coupons Reçus'),('interest_in', 'Intérêts'),('transfer_in', 'Virement Entrant'),
         ('transfer_out', 'Virement Sortant'),('other', 'Autre Opération'),], string="Type de Mouvement", required=True)
     amount = fields.Monetary(required=True,currency_field='currency_id')
     date = fields.Datetime(string="Date de valeur", required=True, default=fields.Datetime.now)
     value_date = fields.Datetime(string="Date comptable")
     reference = fields.Char(string="Référence opération")
-    state = fields.Selection([('draft', 'Brouillon'),('pending', 'En Attente'),('posted', 'Validé'),('cancelled', 'Annulé'),
+    state = fields.Selection([('draft', 'Brouillon'),('pending', 'En Attente'),('posted', 'Validé'),('cancelled', 'Annulé'),('reconciled', 'Réconcilié'),
     ], string="Statut", default='draft')
     note = fields.Text()
 
@@ -36,6 +36,11 @@ class EfundFundCashMove(models.Model):
     investor_cash_move_id = fields.Many2one('efund.investor.cash.move', string="Mouvement Investisseur")
     subscription_id = fields.Many2one('efund.investor.subscription', string="Ordre de Souscription")
     redemption_id = fields.Many2one('efund.investor.redemption', string="Ordre de Rachat")
+
+    # Références aux transactions Portefeuille
+    trade_id = fields.Many2one('efund.bourse.order.execution.line', string="Ordre de Souscription")
+    fee_id = fields.Many2one('efund.fund.instrument.fee', string="Ordre de Rachat")
+    instrument_id = fields.Many2one('efund.fund.instrument',string="Instrument Financier",)
 
     # Informations complémentaires
     investor_id = fields.Many2one('efund.investor', string="Contrepartie", ondelete='cascade')

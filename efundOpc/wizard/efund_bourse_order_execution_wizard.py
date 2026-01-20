@@ -10,6 +10,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
     _name = 'efund.bourse.order.execution.wizard'
     _description = 'Execution of Bourse Order'
 
+
     order_id = fields.Many2one('efund.bourse.order', string="Ordre de bourse", required=True, readonly=True)
     currency_id = fields.Many2one(related='order_id.instrument_id.currency_id', string="Devise")
     executed_quantity = fields.Float(string="Quantité exécutée", required=True)
@@ -19,40 +20,44 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
     remaining_quantity = fields.Float(string="Quantité restante", readonly=True)
     reference = fields.Char(string="Référence SGI / Marché")
 
-    total_broker_commission = fields.Monetary(string="Total commission du broker", store=True)
-    total_tob_commission = fields.Monetary(string="Total Taxe", store=True)
-    total_interest = fields.Monetary(string="Total intérêts courus",  store=True)
-    total_amount = fields.Monetary(string="Total montant", store=True)
-    accrured_interest = fields.Float(string='Interet Couru',compute='_compute_accrured_interest',)
-    formulas_accured_interest = fields.Text(string='Formules Interet Couru', store=True)
-    free_tax_amount = fields.Float(string='Montant HT',  store=True)
+    total_broker_commission = fields.Monetary(string="Total commission du broker",compute='_compute_accrured_interest', )
+    total_tob_commission = fields.Monetary(string="Total Taxe", compute='_compute_accrured_interest',)
+    total_interest = fields.Monetary(string="Total intérêts courus", compute='_compute_accrured_interest', )
+    total_amount = fields.Monetary(string="Total montant",compute='_compute_accrured_interest', )
+    accrured_interest = fields.Float(string='Interet Couru',compute='_compute_accrured_interest', )
+    formulas_accured_interest = fields.Text(string='Formules Interet Couru',compute='_compute_accrured_interest', )
+    free_tax_amount = fields.Float(string='Montant HT', compute='_compute_accrured_interest', )
 
 
     # ----------------------------------------------------
     # Contraintes
     # ----------------------------------------------------
+    @api.onchange('executed_quantity')
+    def _check_executed_quantity(self):
+        if self.remaining_quantity < self.executed_quantity:
+            raise ValidationError(
+                f"La quantité exécutée ne peut pas être supérieure à la quantité restante : {self.remaining_quantity} titres disponibles")
+
+
     @api.onchange('execution_date','execution_price','executed_quantity')
     def _compute_accrured_interest(self):
         for rec in self:
             court_com = 0
             tob_com = 0
-            result = self.env['efund.fund.instrument.fee'].search([
+            result = self.env['efund.fund.instrument.fee.rule'].search([
                 ('instrument_id', '=', rec.order_id.instrument_id.id),
             ])
             if result:
                 for res in result:
-                    if res.fee_type == 'brokerage':
+                    if res.fee_category == 'brokerage':
                         court_com = res.rate
-                    if res.fee_type == 'tob':
+                    if res.fee_category == 'vat':
                         tob_com = res.rate
 
             if court_com:
                 rec.total_broker_commission = (rec.executed_quantity * rec.execution_price * court_com) / 100
             if tob_com:
                 rec.total_tob_commission = (rec.total_broker_commission * tob_com) / 100
-
-            if rec.order_id.instrument_id.accrued_interest:
-                rec.test_value = rec.order_id.instrument_id.accrued_interest
 
             days_elapsed = (rec.order_id.instrument_id.next_coupon_date - rec.execution_date).days
             rec.formulas_accured_interest = f"Interet Couru =  {rec.accrured_interest} : (Taux d'interet ({rec.order_id.instrument_id.coupon_rate}) * Nominale ({rec.order_id.instrument_id.face_value}) * Nombre de jours écoulés {days_elapsed} / 365 sinon 366 si bessextile)"
@@ -62,6 +67,11 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
             rec.total_interest = rec.accrured_interest * rec.executed_quantity
             rec.free_tax_amount = rec.executed_quantity * rec.execution_price
             rec.total_amount = rec.executed_quantity * rec.execution_price + rec.total_interest + rec.total_tob_commission + rec.total_broker_commission
+            #if rec.order_id.order_sens == 'achat':
+             #   _logger.info("********************achat")
+
+           # else:
+              #  rec.total_amount = rec.executed_quantity * rec.execution_price + rec.total_interest - rec.total_tob_commission - rec.total_broker_commission
 
 
     @api.constrains('executed_quantity')

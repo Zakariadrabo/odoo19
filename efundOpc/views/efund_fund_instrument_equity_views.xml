@@ -1,0 +1,29 @@
+<!-- views/instrument_equity_views.xml -->
+<odoo>
+    <record id="view_equity_form" model="ir.ui.view">
+        <field name="name">efund.fund.instrument.equity.form</field>
+        <field name="model">efund.fund.instrument.equity</field>
+        <field name="arch" type="xml">
+            <form string="Caractéristiques Action">
+                <group string="Caractéristiques de l'Action">
+                    <group>
+                        <field name="dividend_yield" string="Dividende Yield (%)"/>
+                        <field name="is_listed" string="Est Coté"/>
+                        <field name="listing_date" string="Date 1ère Cotation"
+                               attrs="{'invisible': [('is_listed', '=', False)]}"/>
+                        <field name="sector" string="Secteur d'activité"/>
+                    </group>
+                    <group>
+                        <field name="market" string="Marché"/>
+                        <field name="state_issuer" string="Émetteur État CEMAC"/>
+                    </group>
+                </group>
+
+                <group string="Droits et Options" attrs="{'invisible': [('right_strike_price', '=', False)]}">
+                    <field name="right_strike_price" string="Prix d'exercice"/>
+                    <field name="right_expiry_date" string="Date d'expiration"/>
+                </group>
+            </form>
+        </field>
+    </record>
+</odoo>

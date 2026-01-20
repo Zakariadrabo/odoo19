@@ -1,6 +1,6 @@
 import calendar
 import logging
-from datetime import date
+from datetime import date, timedelta
 
 from dateutil.relativedelta import relativedelta
 from odoo import models, fields, api, _
@@ -108,7 +108,10 @@ class FundInstrument(models.Model):
                                    help="Date du prochain paiement de coupon")
     days_to_next_coupon = fields.Integer(string='Jours jusqu\'au prochain Coupon',
                                          compute='_compute_days_to_next_coupon',
-                                         help="Nombre de jours jusqu'au prochain coupon", store=False)
+                                         help="Nombre de jours jusqu'au prochain coupon", store=True)
+    days_to_next_coupon_string = fields.Char(string='Date prochain Coupon', compute='_compute_days_to_next_coupon',
+                                     help="Nombre de jours jusqu'au prochain coupon", store=True)
+    remaining_date = fields.Char(string='Jours restants', compute='_compute_days_to_next_coupon', store=True)
     maturity_years = fields.Float(compute="_compute_maturity_years", store=True)
     accrued_interest = fields.Monetary(string='Intérêts courus', currency_field='currency_id',
                                        compute='_compute_accrued_interest')
@@ -128,13 +131,14 @@ class FundInstrument(models.Model):
          ], default='actuarial', string="Méthode de valorisation")
     linear_daily_accretion = fields.Monetary(string="Accrétion journalière", compute='_compute_linear_daily_accretion',
                                              store=True)
-    purchase_price = fields.Monetary(string="Prix d'acquisition", help="Prix réellement payé pour l'obligation")
+    purchase_price = fields.Monetary(string="Prix à Emission", help="Prix réellement payé pour l'obligation")
     yield_rate = fields.Float(string="Rendement actuariel (%)", store=True, digits=(16, 8))
     amortized_value = fields.Monetary(string="Valeur amortie (actuarielle)", compute='_compute_amortized_value',
                                       store=False)
     linear_amortized_value = fields.Monetary(string="Valeur amortie (linéaire)",
                                              compute='_compute_linear_amortized_value', store=False)
     effective_value = fields.Monetary(string="Valeur retenue", compute='_compute_effective_value', store=False)
+
 
     # --- TCN ---
     tcn_maturity_date = fields.Date(string="Échéance TCN")
@@ -155,7 +159,7 @@ class FundInstrument(models.Model):
     # ----------------------------------------------------
     event_ids = fields.One2many('efund.fund.instrument.event', 'instrument_id', string="Événements",
                                 help="Événements sur cet instrument")
-    instrument_fee_ids = fields.One2many('efund.fund.instrument.fee', 'instrument_id', string="Frais",
+    instrument_fee_ids = fields.One2many('efund.fund.instrument.fee.rule', 'instrument_id', string="Frais",
                                          help="Frais sur cet instrument")
     upcoming_event_count = fields.Integer(string="Événements à venir", compute='_compute_upcoming_event_count',
                                           store=False)
@@ -416,14 +420,50 @@ class FundInstrument(models.Model):
             else:
                 rec.maturity_years = 0
 
+    def date_diff_ymd(self, start_date, end_date):
+        """
+        Calcule la différence calendaire exacte entre deux dates
+        en années, mois et jours (bissextile inclus).
+        """
+
+        if end_date < start_date:
+            raise ValueError("end_date doit être postérieure à start_date")
+
+        years = end_date.year - start_date.year
+        months = end_date.month - start_date.month
+        days = end_date.day - start_date.day
+
+        # Ajustement des jours négatifs
+        if days < 0:
+            months -= 1
+            # dernier jour du mois précédent end_date
+            last_day_prev_month = (end_date.replace(day=1) - timedelta(days=1)).day
+            days += last_day_prev_month
+
+        # Ajustement des mois négatifs
+        if months < 0:
+            years -= 1
+            months += 12
+
+        return {
+            'years': years,
+            'months': months,
+            'days': days,
+        }
+
+
     @api.depends('next_coupon_date')
     def _compute_days_to_next_coupon(self):
         today = date.today()
         for rec in self:
             if rec.next_coupon_date:
-                rec.days_to_next_coupon = max(
-                    (rec.next_coupon_date - today).days, 0
-                )
+                rec.days_to_next_coupon = max((rec.next_coupon_date - today).days, 0)
+
+                result = rec.date_diff_ymd(today,rec.next_coupon_date)
+                result1 = rec.date_diff_ymd(today, rec.maturity_date)
+
+                rec.days_to_next_coupon_string = f"{result.get('years')} ans {result.get('months')} mois {result.get('days')} jours"
+                rec.remaining_date = f"{result1.get('years')} ans {result1.get('months')} mois {result1.get('days')} jours"
             else:
                 rec.days_to_next_coupon = 0
 

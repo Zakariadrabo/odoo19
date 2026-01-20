@@ -20,7 +20,9 @@
                         <group>
                             <field name="instrument_id" required="import_type == 'single'"/>
                             <field name="price_date" required="import_type == 'single'"/>
-                            <field name="price" required="import_type == 'single'"/>
+                            <field name="price" required="import_type == 'single'" invisible="instrument_type == 'bond'"/>
+                            <field name="listed_price" invisible="instrument_type != 'bond'" readonly="1"/>
+                            <field name="instrument_type" invisible="1" />
                         </group>
                     </group>
 

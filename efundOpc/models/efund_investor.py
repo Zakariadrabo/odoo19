@@ -41,16 +41,13 @@ class FundInvestor(models.Model):
     address = fields.Char(string="Adresse de résidence principale")
     marital_status = fields.Selection(
         [('single', 'Célibataire'), ('married', 'Marié(e)'), ('divorced', 'Divorcé(e)'), ('widowed', 'Veuf/veuve')], string="Statut matrimonial")
-    email = fields.Char(string="Adresse Email")
-    mobility_phone = fields.Char(string="Téléphone (mobile)")
-    place_phone = fields.Char(string="Téléphone (domicile)")
+
     contact_adress = fields.Char(string="Adresse de correspondance (si différent)")
     other_nationnality = fields.Char(string="Autres Nationnalité")
     employer = fields.Char(string="Employeur")
     employer_address = fields.Char(string="Adresse de l'employeur")
 
     #Personne Morale
-    # Identité Juridique
     company_name = fields.Char(string="Raison sociale")
     company_short_name = fields.Char(string="Sigle")
     legal_form = fields.Selection([('sa', 'Société Anonyme (SA)'),('sas', 'Société par Actions Simplifiée (SAS)'),
@@ -70,6 +67,21 @@ class FundInvestor(models.Model):
     social_object = fields.Char(string="Social")
     is_beneficiaire_effectif = fields.Boolean(string="Bénéficiaire", default=False)
     beneficiaire_effectif = fields.Char(string="Bénéficiaire effectif")
+    registration_country_id = fields.Many2one("res.country", string="Pays d’immatriculation")
+    company_duration_years = fields.Integer(string="Durée de la société (ans)")
+    website = fields.Char(string="Site internet")
+    main_activity_countries = fields.Char(string="Pays principaux activités")
+    annual_turnover_range = fields.Selection(
+        [("lt_100", "< 100 M FCFA"), ("100_500", "100 – 500 M FCFA"), ("500_2b", "500 M – 2 Mds FCFA"),
+         ("gt_2b", "> 2 Mds FCFA"), ], string="Chiffre d’affaires annuel estimé")
+    main_revenue_sources = fields.Char(string="Principales sources de revenus")
+    funds_origin_pm = fields.Selection(
+        [("operating", "Revenus d’exploitation"), ("capital", "Capital"), ("loan", "Emprunts"), ("other", "Autre"), ],
+        string="Origine principale des fonds investis")
+    funds_origin_pm_other = fields.Char(string="Autre origine des fonds")
+    expected_operations_volume = fields.Selection(
+        [("lt_100", "< 100 M FCFA"), ("100_500", "100 – 500 M FCFA"), ("500_2b", "500 M – 2 Mds FCFA"),
+         ("gt_2b", "> 2 Mds FCFA"), ], string="Volume prévisionnel des opérations (annuel)")
 
 
     #infos commune
@@ -85,6 +97,10 @@ class FundInvestor(models.Model):
     market_knowledge = fields.Selection([('1','1'),('2','2'),('3','3'),('4','4'),('5','5'),('6','6'),('7','7'),],string='Connaissance du marché', widget='Priority')
     activity_knowledge = fields.Selection([('1','1'),('2','2'),('3','3'),('4','4'),('5','5'),('6','6'),('7','7'),],string='Connaissance de l\'activité', widget='Priority')
     risk_level_acceptable = fields.Selection([('1','1'),('2','2'),('3','3'),('4','4'),('5','5'),('6','6'),('7','7'),],string='Niveau de risque acceptable', widget='Priority')
+    email = fields.Char(string="Adresse Email")
+    mobility_phone = fields.Char(string="Téléphone (mobile)")
+    place_phone = fields.Char(string="Téléphone (domicile)")
+
 
 
 
@@ -193,6 +209,47 @@ class FundInvestor(models.Model):
         max_width=1920,
         max_height=1920
     )
+
+    # Rachide
+    # --- Informations générales PM ---
+    registration_country_id = fields.Many2one("res.country", string="Pays d’immatriculation")
+    company_duration_years = fields.Integer(string="Durée de la société (ans)")
+    company_zip = fields.Char(string="Code postal")
+    website = fields.Char(string="Site internet")
+    phone = fields.Char(string="Numéro de Téléphone")
+    activite_sector = fields.Selection([('finance', 'Services Financiers'), ('tech', 'Nouvelles Technologies & IA'),
+                                        ('green', 'Transition Écologique'),
+                                        ('industry', 'Industrie & Transport'), ('agri', 'Agro-industrie'),
+                                        ('public', 'Services Publics'),
+                                        ('other', 'Autre')], string="Secteur d'activité")
+    main_activity_countries = fields.Many2many("res.country", "efund_company_activity_country_rel", "investor_id",
+                                               "country_id", string="Pays principal d’activité")
+
+    # --- Informations financières PM ---
+    annual_turnover_range = fields.Selection(
+        [("lt_100", "< 100 M FCFA"), ("100_500", "100 – 500 M FCFA"), ("500_2b", "500 M – 2 Mds FCFA"),
+         ("gt_2b", "> 2 Mds FCFA"), ], string="Chiffre d’affaires annuel estimé")
+    main_revenue_sources = fields.Char(string="Principales sources de revenus")
+    funds_origin_pm = fields.Selection(
+        [("operating", "Revenus d’exploitation"), ("capital", "Capital"), ("loan", "Emprunts"), ("other", "Autre"), ],
+        string="Origine principale des fonds investis")
+    funds_origin_pm_other = fields.Char(string="Autre origine des fonds")
+    expected_operations_volume = fields.Selection(
+        [("lt_100", "< 100 M FCFA"), ("100_500", "100 – 500 M FCFA"), ("500_2b", "500 M – 2 Mds FCFA"),
+         ("gt_2b", "> 2 Mds FCFA"), ], string="Volume prévisionnel des opérations (annuel)")
+
+    # --- Connaissance financière PM ---
+    market_knowledge_pm = fields.Integer(tring="Connaissance du marché (PM)")
+    activity_knowledge_pm = fields.Integer(string="Connaissance de l’activité (PM)")
+    risk_tolerance_pm = fields.Integer(string="Niveau de risque acceptable (PM)")
+    business_relation_type = fields.Selection(
+        [('souscription_opcvm', 'Souscription OPCVM'), ('gestion_mandat', 'Gestion sous mandat'),
+         ('conseil_invest', 'Conseil en investissement'), ('autre', 'Autre')], string="Type de relation envisagée",
+        default='souscription_opcvm')
+    business_relation_type_autre = fields.Char(string="Préciser (Autre)",
+                                               help="Saisir le type de relation si 'Autre' est sélectionné")
+    fund_origin_country = fields.Many2one("res.country", string="Pays d’origine habituelle des fonds ")
+    #legal_representative_ids = fields.One2many("efund.company.legal.representative", "investor_id", string="Représentant légal")
 
     @api.depends('nom', 'prenom')
     def _compute_full_name(self):
@@ -557,6 +614,9 @@ class FundInvestor(models.Model):
                 'search_default_investor_id': self.id,
             }
         }
+
+    def action_print(self):
+        return (self.env.ref('efundOpc.action_report_investor').report_action(self))
 
 
 

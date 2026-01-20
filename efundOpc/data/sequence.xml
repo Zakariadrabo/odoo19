@@ -86,5 +86,30 @@
         <field name="company_id" eval="False"/>
     </record>
 
+     <!-- Sequence for broker order -->
+    <record id="seq_efund_bourse_order" model="ir.sequence">
+        <field name="name">Séquence pour les ordres de courtier</field>
+        <field name="code">efund.bourse.order</field>
+        <field name="prefix">ORD/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <!-- Sequence for broker order -->
+    <record id="seq_efund_bourse_order_execution_line" model="ir.sequence">
+        <field name="name">Séquence pour les transactions</field>
+        <field name="code">efund.bourse.order.execution.line</field>
+        <field name="prefix">TRANS/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="seq_efund_fund_instrument_fee" model="ir.sequence">
+        <field name="name">Séquence pour les frais des instruments</field>
+        <field name="code">efund.fund.instrument.fee</field>
+        <field name="prefix">FEE/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
 
 </odoo>

@@ -1,0 +1,124 @@
+<odoo>
+    <record id="view_efund_bourse_order_execution_line_form" model="ir.ui.view">
+        <field name="name">efund.bourse.order.execution.line.form</field>
+        <field name="model">efund.bourse.order.execution.line</field>
+        <field name="arch" type="xml">
+            <form string="Ligne d'Exécution d'Ordre Boursier">
+                <header>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,confirmed,done,accounted"
+                           class="oe_edit_only"/>
+                    <button name="action_draft" string="Remettre à Brouillon"
+                            type="object" class="oe_stat_button"
+                            invisible="state not in ('confirmed','done')"/>
+                    <button name="action_confirm" string="Confirmer"
+                            type="object" class="oe_stat_button"
+                            invisible="state !='draft'"/>
+                    <button name="action_done" string="Marquer comme Exécuté"
+                            type="object" class="oe_stat_button"
+                            invisible="state !='confirmed'"/>
+                    <button name="action_account" string="Comptabiliser"
+                            type="object" class="oe_stat_button"
+                            invisible="state !='done'"/>
+                    <button name="action_cancel" string="Annuler"
+                            type="object" class="oe_stat_button"
+                            invisible="state not in ('draft','confirmed')"/>
+                </header>
+
+                <!-- Contenu principal organisé en onglets -->
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <!-- Boutons d'action rapides -->
+                    </div>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Référence automatique..." class="oe_inline"/>
+                        </h1>
+                        <div class="oe_subtitle text-muted">
+                            <field name="order_id" widget="many2one"
+                                   options="{'no_create': True, 'no_create_edit': True}"/>
+                        </div>
+                    </div>
+
+                    <!-- Informations générales -->
+                    <group>
+                        <group>
+                            <field name="execution_date" widget="date"/>
+                            <field name="quantity" widget="float_step" step="0.01"/>
+                            <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="broker_id" widget="many2one"
+                                   options="{'no_create': True, 'no_create_edit': True}"/>
+                            <field name="reference" placeholder="Référence SGI..."/>
+                        </group>
+                    </group>
+
+                    <!-- Montants financiers -->
+                    <group string="Montants Financiers">
+                        <group>
+                            <field name="total_amount_ht" widget="monetary" options="{'currency_field': 'currency_id'}"
+                                   readonly="1" string="Montant HT"/>
+                            <field name="total_broker_commission" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"/>
+                            <field name="total_tob_commission" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"/>
+                        </group>
+                        <group>
+                            <field name="total_interest" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            <field name="total_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </group>
+                    </group>
+
+                    <!-- Notes et informations complémentaires -->
+                    <notebook>
+                        <page string="Détails">
+                            <group>
+                                <field name="order_id" widget="many2one" mode="form" string="Ordre Parent"
+                                       options="{'no_create': True, 'no_create_edit': True}"/>
+                                <field name="state" widget="badge" invisible="1"/>
+                            </group>
+                        </page>
+                        <page string="Notes">
+                            <field name="description" placeholder="Ajouter des notes ou commentaires..." nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <!-- Pied de page avec infos système -->
+                <chatter>
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </chatter>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vue liste pour les lignes d'exécution -->
+    <record id="view_efund_bourse_order_execution_line_list" model="ir.ui.view">
+        <field name="name">efund.bourse.order.execution.line.list</field>
+        <field name="model">efund.bourse.order.execution.line</field>
+        <field name="arch" type="xml">
+            <list string="Lignes d'Exécution d'Ordres Boursiers" decoration-success="state=='done'"
+                  decoration-warning="state=='confirmed'" decoration-muted="state=='draft'"
+                  decoration-info="state=='accounted'">
+                <field name="name" string="Réf."/>
+                <field name="execution_date" widget="date"/>
+                <field name="order_id" string="Ordre Parent"/>
+                <field name="quantity" />
+                <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="total_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                 <field name="broker_id" string="Dépositaire"/>
+                <field name="state" widget="badge" decoration-success="state=='done'"
+                       decoration-warning="state=='confirmed'" decoration-muted="state=='draft'"
+                       decoration-info="state=='accounted'"/>
+            </list>
+        </field>
+    </record>
+
+
+
+</odoo>

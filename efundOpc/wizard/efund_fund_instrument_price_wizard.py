@@ -20,9 +20,11 @@ class FundImportPriceWizard(models.TransientModel):
 
     # Pour import unique
     instrument_id = fields.Many2one('efund.fund.instrument', string="Instrument")
+    instrument_type = fields.Selection(related="instrument_id.instrument_type", string="Type")
     price_date = fields.Date(string="Date du cours", default=fields.Date.today)
     price = fields.Float(string="Cours", digits=(16, 4))
-    currency_id = fields.Many2one('res.currency', string="Devise")
+    listed_price = fields.Float(string="Cours listé", compute='_compute_get_price', digits=(16, 4))
+    currency_id = fields.Many2one(related="instrument_id.currency_id", string="Devise")
 
     # Pour import fichier
     import_file = fields.Binary(string="Fichier CSV", required=False)
@@ -30,6 +32,19 @@ class FundImportPriceWizard(models.TransientModel):
 
     # Pour import API
     api_config_id = fields.Many2one('efund.fund.instrument.price.import', string="Configuration API")
+
+    @api.depends('instrument_id', 'price_date')
+    def _compute_get_price(self):
+        for rec in self:
+            #compute_linear_actuariat_value_at_date(self, valuation_date, buyed_price, buyed_date, nominal_price,maturity_date):
+            valuation_date = rec.price_date
+            buyed_price = rec.instrument_id.purchase_price
+            buyed_date = rec.instrument_id.value_date
+            nominal_price = rec.instrument_id.face_value
+            maturity_date = rec.instrument_id.maturity_date
+            result = rec.instrument_id.compute_linear_actuariat_value_at_date(valuation_date, buyed_price, buyed_date, nominal_price,maturity_date)
+            rec.listed_price = result.get('linear_value', 0.0)
+
 
     def action_import(self):
         """Exécuter l'import"""
@@ -45,8 +60,13 @@ class FundImportPriceWizard(models.TransientModel):
         if not self.instrument_id:
             raise UserError(_("Veuillez sélectionner un instrument"))
 
-        if not self.price or self.price <= 0:
-            raise UserError(_("Veuillez entrer un prix valide"))
+        if self.instrument_type != 'bond':
+            if not self.price or self.price <= 0:
+                raise UserError(_("Veuillez entrer un prix valide"))
+        else:
+            if not self.listed_price or self.listed_price <= 0:
+                raise UserError(_("Veuillez entrer un cours valide"))
+
 
         # Vérifier si le cours existe déjà pour cette date
         existing = self.env['efund.fund.instrument.price'].search([
@@ -61,11 +81,10 @@ class FundImportPriceWizard(models.TransientModel):
             })
             message = _("Cours mis à jour")
         else:
-            _logger.info(f"********** je vais créer le cours")
             self.env['efund.fund.instrument.price'].create({
                 'instrument_id': self.instrument_id.id,
                 'date': self.price_date,
-                'price': self.price,
+                'price': self.price if self.instrument_type != 'bond' else self.listed_price,
                 'currency_id': self.currency_id.id or self.instrument_id.currency_id.id,
                 'is_validated': False,
             })

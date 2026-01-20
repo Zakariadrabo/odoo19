@@ -18,16 +18,61 @@
                     <field name="execution_price" required="1"/>
                     <field name="execution_date" required="1"/>
                 </group>
-                <group string="Resumés">
-                    <div class="o_form_label text-info">
+                <div class="row">
+                     <div class="o_form_label text-info">
                         <field name="formulas_accured_interest" readonly="1"/>
                     </div>
-                    <field name="free_tax_amount"/>
-                    <field name="total_interest"/>
-                    <field name="total_broker_commission"/>
-                    <field name="total_tob_commission"/>
-                    <field name="total_amount"/>
-                </group>
+                </div>
+
+                <div class="panel panel-warning">
+                    <div class="panel-heading">
+                        <i class="fa fa-calculator" title="Calculatrice"/>
+                        Résumés
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-4">
+                                <strong>Montant brut:</strong>
+                                <br/>
+                                <field name="free_tax_amount" widget="monetary"
+                                       options="{'currency_field': 'currency_id'}"
+                                       readonly="1"/>
+                            </div>
+                            <div class="col-4">
+                                <strong>Commission de courtage:
+                                </strong>
+                                <br/>
+                                <field name="total_broker_commission" widget="monetary"
+                                       options="{'currency_field': 'currency_id'}"
+                                       readonly="1"/>
+                            </div>
+                            <div class="col-4">
+                                <strong>Taxe TVA :</strong>
+                                <br/>
+                                <field name="total_tob_commission" widget="monetary"
+                                       options="{'currency_field': 'currency_id'}"
+                                       readonly="1"/>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-4">
+                                <strong>Intérêts courus:</strong>
+                                <br/>
+                                <field name="total_interest" widget="monetary"
+                                       options="{'currency_field': 'currency_id'}"
+                                       readonly="1"/>
+                            </div>
+                            <div class="col-4">
+                                <strong>Montant Net:
+                                </strong>
+                                <br/>
+                                <field name="total_amount" widget="monetary"
+                                       options="{'currency_field': 'currency_id'}"
+                                       readonly="1"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <footer>
                     <button name="action_confirm_execution"

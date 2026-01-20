@@ -1,29 +1,33 @@
+import logging
+
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
+_logger = logging.getLogger(__name__)
 
 
 class EfundBourseOrder(models.Model):
     _name = "efund.bourse.order"
     _description = "Ordre de Bourse"
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = "order_date desc"
 
     # ---------------------------------------------------------------------
     # IDENTIFICATION
     # ---------------------------------------------------------------------
-    name = fields.Char(string="Référence",default=lambda self: _('ORD/%s') % fields.Date.today(),readonly=True)
+    name = fields.Char(string="Référence", required=True,
+                       default=lambda self: self.env['ir.sequence'].next_by_code('efund.bourse.order'))
     order_date = fields.Date(string="Date Ordre",default=fields.Date.context_today,required=True)
-    fund_id = fields.Many2one('efund.fund',string="Fonds (OPCVM)",required=True,index=True,domain=lambda self: [('company_id', '=', self.env.company.id)]   )
+    fund_id = fields.Many2one('efund.fund',string="Fonds (OPCVM)",index=True,)
     fund_name = fields.Char(related='fund_id.name',string="Fonds",store=True)
-    company_id = fields.Many2one('res.company',string="Société",required=True,readonly=True,default=lambda self: self.env.company)
+    company_id = fields.Many2one('res.company',)
+    mandat_id = fields.Many2one('efund.mandate',string="Mandat")
     execution_line_ids = fields.One2many('efund.bourse.order.execution.line','order_id',string="Historique d’exécution")
     state = fields.Selection([('draft', 'Brouillon'),('validated', 'Validé'),('sent', 'Envoyé à la SGI'),
         ('partially_executed', 'Partiellement exécuté'),('executed', 'Exécuté'),('cancelled', 'Annuler')], default='draft', string="Statut")
-    is_subscription = fields.Boolean(string="Souscription")
-    is_buy = fields.Boolean(string="Achat")
-    is_sell = fields.Boolean(string="Vente")
+    order_sens = fields.Selection([('buy', 'Achat'),('sell','Vente'),], string="Nature de l'ordre", required=True, default='buy')
     order_type = fields.Selection([('market', 'Au marché'),('limit', 'À cours limité'),('threshold', 'À seuil'),], string="Type d’ordre", required=True)
     instrument_id = fields.Many2one('efund.fund.instrument',string="Instrument Financier",required=True)
-    depositaire_sgi = fields.Many2one('efund.depositaire',string="Dépositaire du fond",required=True)
+    broker_id = fields.Many2one('efund.depositaire',string="Dépositaire du fond",required=True)
     symbol = fields.Char(related='instrument_id.ticker',string="Symbole",readonly=True)
     market_place = fields.Selection(related='instrument_id.market',string="Place",readonly=True)
     depository = fields.Selection(related='instrument_id.custodian',string="Dépositaire",readonly=True)
@@ -32,7 +36,7 @@ class EfundBourseOrder(models.Model):
     # CONDITIONS FINANCIÈRES
     # ---------------------------------------------------------------------
     price_limit = fields.Float(string="Cours limite")
-    quantity = fields.Float(string="Quantité", required=True)
+    quantity = fields.Float(string="Quantité", required=True, store=True)
     executed_quantity = fields.Float(string="Quantité exécutée", compute='_compute_executed_quantity', store=True)
     execution_price = fields.Float(string="Cours executed")
     average_execution_price = fields.Float(string="Cours moyen exécuté", store=True)
@@ -68,6 +72,15 @@ class EfundBourseOrder(models.Model):
     # ----------------------------------------------------
     # Contraintes
     # ----------------------------------------------------
+    @api.onchange('quantity')
+    def _onchange_quantity(self):
+        if self.order_sens == 'sell':
+            position = self.env['efund.fund.position']._get_position_by_instrument(self.instrument_id.id, self.fund_id.id)
+            if self.quantity > position :
+                self.quantity = 0
+                raise ValidationError(f"Vous ne pouvez pas vendre plus que ce que vous avez : {position} titres disponibles")
+
+
     # Ajoutez un onchange pour auto-sélectionner le fond
     @api.depends('company_id')
     def _compute_fund_id(self):
@@ -156,6 +169,10 @@ class EfundBourseOrder(models.Model):
         for order in self:
             if order.state != 'validated':
                 continue
+            position = self.env['efund.fund.position']._get_position_by_instrument(order.instrument_id.id,order.fund_id.id)
+            if order.quantity > position :
+                raise ValidationError(f"Vous ne pouvez pas acheter plus que ce que vous avez : {position} titres disponibles")
+
             order.state = 'sent'
 
     def action_execute(self):
@@ -178,6 +195,7 @@ class EfundBourseOrder(models.Model):
         """
         self.ensure_one()
 
+
         if self.state not in ('sent', 'partially_executed'):
             raise UserError(_("L’ordre ne peut plus être exécuté."))
 
@@ -191,6 +209,14 @@ class EfundBourseOrder(models.Model):
         if qty > remaining:
             raise ValidationError(_("Quantité exécutée supérieure au solde restant."))
 
+        self.message_post(
+            body=_("L'ordre N° : %s vient d'être exécuté avec une quantité de %s au prix de %s francs") % (
+                self.name, qty, price),
+            subject="Exécution de l'ordre",
+            message_type="comment",
+            subtype_xmlid="mail.mt_comment"
+        )
+
         # 1️⃣ Créer ligne d’exécution
         exec_line = self.env['efund.bourse.order.execution.line'].create({
             'order_id': self.id,
@@ -198,11 +224,21 @@ class EfundBourseOrder(models.Model):
             'quantity': qty,
             'price': price,
             'reference': execution_vals.get('reference'),
+            'order_sens': self.order_sens,
             'total_broker_commission': execution_vals.get('total_broker_commission'),
             'total_tob_commission' : execution_vals.get('total_tob_commission'),
             'total_interest' : execution_vals.get('total_interest'),
             'total_amount' : execution_vals.get('total_amount'),
+
         })
+
+        self.message_post(
+            body=_("La transaction N° : %s vient d'être créée avec une quantité de %s au prix de %s francs") % (
+                exec_line.name, qty, price),
+            subject="Exécution de l'ordre",
+            message_type="comment",
+            subtype_xmlid="mail.mt_comment"
+        )
 
         # 2️⃣ Recalcul quantités et prix moyen
         total_qty = sum(self.execution_line_ids.mapped('quantity'))
@@ -221,9 +257,16 @@ class EfundBourseOrder(models.Model):
             if total_qty >= self.quantity
             else 'partially_executed'
         )
+        self.message_post(
+            body=_("Une mise à jour du statut de l'ordre vient d'être effectuée. Nouveau statut : %s.") % (
+                self.state),
+            subject="Exécution de l'ordre",
+            message_type="comment",
+            subtype_xmlid="mail.mt_comment"
+        )
 
         # 4️⃣ Mise à jour position du fonds
-        self._update_fund_position(exec_line)
+        #self._update_fund_position(exec_line)
 
         # 5️⃣ Comptabilité (hook)
         # self._create_accounting_entry(exec_line)
@@ -265,36 +308,7 @@ class EfundBourseOrder(models.Model):
         move.action_post()
         execution_line.account_move_id = move.id
 
-    def _update_fund_position(self, execution_line):
-        """Création / mise à jour position du fonds"""
-        position = self.env['efund.fund.position'].search([
-            ('fund_id', '=', self.fund_id.id),
-            ('instrument_id', '=', self.instrument_id.id),
-        ], limit=1)
 
-        qty = execution_line.quantity
-        price = execution_line.price
-
-        if self.order_type == 'sell':
-            qty = -qty
-
-        if position:
-            new_qty = position.quantity + qty
-            new_cost = (
-                ((position.quantity * position.avg_cost) + (qty * price))
-                / new_qty if new_qty else 0
-            )
-            position.write({
-                'quantity': new_qty,
-                'avg_cost': new_cost,
-            })
-        else:
-            self.env['efund.fund.position'].create({
-                'fund_id': self.fund_id.id,
-                'instrument_id': self.instrument_id.id,
-                'quantity': qty,
-                'avg_cost': price,
-            })
 
     def unlink(self):
         """Empêcher la suppression des ordres exécutés"""

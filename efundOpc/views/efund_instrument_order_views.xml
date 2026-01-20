@@ -1,0 +1,68 @@
+<odoo>
+    <record id="view_efund_investment_order_form" model="ir.ui.view">
+        <field name="name">efund.investment.order.form</field>
+        <field name="model">efund.investment.order</field>
+        <field name="arch" type="xml">
+            <form string="Ordre d'Investissement">
+                <header>
+                    <button name="action_confirm" string="Confirmer l'ordre" type="object"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_cancel" string="Annuler" type="object"
+                            invisible="state in ('executed', 'cancelled')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,executed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Référence Ordre</span>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group name="portfolio_details" string="Identification">
+                            <field name="vehicule_id" options="{'no_create': True}"/>
+                            <field name="instrument_id" options="{'no_create': True}"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                        </group>
+                        <group name="order_params" string="Paramètres de l'ordre">
+                            <field name="direction" widget="radio" options="{'horizontal': true}"/>
+                            <field name="price_type" widget="priority" style="width: 100px;"/>
+                            <field name="quantity"/>
+                            <field name="limit_price" invisible="price_type == 'market'"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Exécutions / Transactions" name="transactions">
+                            <group name="execution_stats">
+                                <group>
+                                    <field name="executed_qty" widget="progressbar"
+                                           options="{'current_value': 'executed_qty', 'max_value': 'quantity', 'editable': false}"/>
+                                </group>
+                                <group>
+                                    <field name="remaining_qty" class="text-danger fw-bold"/>
+                                </group>
+                            </group>
+                            <field name="transaction_ids" readonly="1">
+                                <list>
+                                    <field name="date_transaction"/>
+                                    <field name="quantity"/>
+                                    <field name="price_unit"/>
+                                    <field name="amount_net" sum="Total Net"/>
+                                    <field name="state" widget="badge"
+                                           decoration-info="state == 'draft'"
+                                           decoration-success="state == 'settled'"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+</odoo>

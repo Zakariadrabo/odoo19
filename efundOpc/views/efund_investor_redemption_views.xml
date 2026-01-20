@@ -32,7 +32,7 @@
                             type="object"
                             string="Annuler"
                             class="btn-primary"
-                            invisible="state == 'executed'"/>
+                            invisible="state != 'draft' "/>
                     <button name="action_submit_redemption"
                             type="object"
                             string="Soumettre"
@@ -77,6 +77,7 @@
                     </group>
                     <group string="Détails du rachat" col="3">
                         <group>
+                            <field name="is_redemption_fee"/>
                             <field name="buy_choice"/>
                             <field name="parts_to_redeem" readonly="buy_choice == 'amount'" required="buy_choice == 'amount'"/>
                             <field name="desired_amount" readonly="buy_choice == 'share'" required="buy_choice == 'share'"/>

@@ -46,18 +46,18 @@ class FundRedemption(models.Model):
     investor_cash_move_id = fields.Many2one('efund.investor.cash.move', string="Cash Investisseur", readonly=True)
     fund_cash_move_id = fields.Many2one('efund.fund.cash.move', string="Cash Fond", readonly=True)
     operation_fee_move_id = fields.Many2one('efund.investor.operation.fee', string="Frais souscription", readonly=True)
-
+    is_redemption_fee = fields.Boolean(string="Appliquer Frais", default=True)
     # -----------------------------------------------------------------
     # LES METHODES
     # -----------------------------------------------------------------
-    @api.onchange('desired_amount', 'parts_to_redeem')
+    @api.onchange('desired_amount', 'parts_to_redeem','is_redemption_fee')
     def _onchange_desired_amount_or_part(self):
         for sub in self:
             if sub.buy_choice == 'amount':
-                result = self.calculate_redemption(sub.nav, sub.allow_fractional_parts, sub.redemption_fee_rate,
+                result = self.calculate_redemption_update(sub.nav, sub.allow_fractional_parts, sub.redemption_fee_rate,sub.is_redemption_fee,
                                                    sub.desired_amount, None)
             else:
-                result = self.calculate_redemption(sub.nav, sub.allow_fractional_parts, sub.redemption_fee_rate,
+                result = self.calculate_redemption_update(sub.nav, sub.allow_fractional_parts, sub.redemption_fee_rate,sub.is_redemption_fee,
                                                    None, sub.parts_to_redeem)
 
             # affectation des valeurs
@@ -128,6 +128,83 @@ class FundRedemption(models.Model):
             'net_amount_to_receive': float_round(net_amount_to_pay, precision_digits=currency_precision),
         }
 
+    def calculate_redemption_update(
+            self,
+            nav,
+            allow_fractional_shares,
+            fee_percent,
+            apply_redemption_fee=True,
+            amount_net_target=None,
+            shares_to_redeem=None
+    ):
+        """
+        Calcule un rachat de parts (OPCVM / FCP)
+
+        - Soit à partir d'un montant net à recevoir
+        - Soit à partir d'un nombre de parts à racheter
+        """
+
+        # --- CONTRÔLES DE BASE ---
+        if nav <= 0:
+            return {'error': "La valeur liquidative doit être strictement supérieure à 0."}
+
+        if apply_redemption_fee and fee_percent >= 100:
+            return {'error': "Les frais de rachat ne peuvent pas atteindre 100%."}
+
+        # Taux de frais effectif
+        effective_fee_rate = (fee_percent / 100.0) if apply_redemption_fee else 0.0
+
+        # --- DÉTERMINATION DU NOMBRE DE PARTS ---
+        if amount_net_target is not None:
+            if amount_net_target <= 0:
+                return {'error': "Le montant net doit être supérieur à 0."}
+
+            # Net = Gross * (1 - fee)
+            # Gross = Shares * NAV
+            # => Shares = Net / (NAV * (1 - fee))
+            denominator = nav * (1 - effective_fee_rate)
+
+            if float_is_zero(denominator, precision_rounding=0.0000001):
+                return {'error': "Paramètres invalides pour le calcul du rachat."}
+
+            raw_shares = amount_net_target / denominator
+
+            if allow_fractional_shares:
+                shares = float_round(raw_shares, precision_digits=6)
+            else:
+                # Arrondi supérieur pour garantir AU MOINS le montant net demandé
+                shares = int(raw_shares)
+                if not float_is_zero(raw_shares - shares, precision_rounding=0.000001):
+                    shares += 1
+
+        elif shares_to_redeem is not None:
+            if shares_to_redeem <= 0:
+                return {'error': "Le nombre de parts à racheter doit être supérieur à 0."}
+
+            shares = shares_to_redeem
+            if not allow_fractional_shares:
+                shares = int(shares)
+
+        else:
+            return {'error': "Veuillez préciser soit un montant net cible, soit un nombre de parts à racheter."}
+
+        # --- CALCULS FINANCIERS ---
+        gross_amount = shares * nav
+        fees_amount = gross_amount * effective_fee_rate
+        net_amount_to_receive = gross_amount - fees_amount
+
+        # --- ARRONDIS MONÉTAIRES ---
+        currency_precision = 6
+
+        return {
+            'shares_to_redeem': shares,
+            'gross_amount': float_round(gross_amount, precision_digits=currency_precision),
+            'fees_amount': float_round(fees_amount, precision_digits=currency_precision),
+            'net_amount_to_receive': float_round(net_amount_to_receive, precision_digits=currency_precision),
+            'fee_applied': apply_redemption_fee,
+            'fee_rate_percent': fee_percent if apply_redemption_fee else 0.0,
+        }
+
     def action_account_redemption(self):
         for rec in self:
             if rec.state != 'validated':
@@ -161,10 +238,10 @@ class FundRedemption(models.Model):
                 # RECALCULER les valeurs avant création
                 fee_id = 0
                 if rec.buy_choice == 'amount':
-                    result = self.calculate_redemption(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,
+                    result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
                                                        rec.desired_amount, None)
                 else:
-                    result = self.calculate_redemption(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,
+                    result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
                                                        None, rec.parts_to_redeem)
 
                 shares = result.get('shares_to_redeem')
@@ -195,7 +272,7 @@ class FundRedemption(models.Model):
                     'move_type': 'redemption',
                     'redemption_id': rec.id,
                     'shares': shares,
-                    'state': 'pending',
+                    'state': 'reconciled',
                 })
                 rec.message_post(
                     body=_("Débit du compte du titre de l'investisseur de %s parts.") % (shares),
@@ -216,10 +293,11 @@ class FundRedemption(models.Model):
                     'amount': rec.gross_amount,
                     'move_type': 'redemption_out',
                     'liquidity_type': 'liquid',
-                    'state': 'posted',
+                    'state': 'reconciled',
                     'redemption_id': rec.id,
                     'investor_id': rec.investor_id.id,
                     'fund_id': rec.fund_id.id,
+
                 })
                 rec.message_post(
                     body=_("Débit du compte cash du fond au montant de %s francs") % (rec.gross_amount),
@@ -258,6 +336,7 @@ class FundRedemption(models.Model):
                     'amount': net_amount_to_pay,
                     'fund_cash_move_id': fund_cash_move.id,
                     'redemption_id' : rec.id,
+                    'state': 'reconciled',
                 })
                 rec.message_post(
                     body=_("Crédit du compte investisseur au montant de %s pour le rachat") % (net_amount_to_pay),
@@ -277,6 +356,10 @@ class FundRedemption(models.Model):
                     message_type="comment",
                     subtype_xmlid="mail.mt_comment"
                 )
+
+                rec.write({
+                    'state': 'reconciled',
+                })
 
     def action_validate_redemption(self):
         for rec in self:
@@ -311,10 +394,10 @@ class FundRedemption(models.Model):
             else:
                 # RECALCULER les valeurs avant création
                 if rec.buy_choice == 'amount':
-                    result = self.calculate_redemption(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,
+                    result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
                                                        rec.desired_amount, None)
                 else:
-                    result = self.calculate_redemption(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,
+                    result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
                                                        None, rec.parts_to_redeem)
 
                 shares = result.get('shares_to_redeem')
@@ -334,10 +417,10 @@ class FundRedemption(models.Model):
         for rec in self:
             # RECALCULER les valeurs avant création
             if rec.buy_choice == 'amount':
-                result = self.calculate_redemption(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,
+                result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
                                                    rec.desired_amount, None)
             else:
-                result = self.calculate_redemption(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,
+                result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
                                                    None, rec.parts_to_redeem)
 
             shares = result.get('shares_to_redeem')
@@ -393,10 +476,10 @@ class FundRedemption(models.Model):
             else:
                 # RECALCULER les valeurs avant création
                 if rec.buy_choice == 'amount':
-                    result = self.calculate_redemption(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,
+                    result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
                                                        rec.desired_amount, None)
                 else:
-                    result = self.calculate_redemption(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,
+                    result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
                                                        None, rec.parts_to_redeem)
 
                 shares = result.get('shares_to_redeem')

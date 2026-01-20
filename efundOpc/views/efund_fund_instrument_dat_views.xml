@@ -1,0 +1,27 @@
+<!-- views/instrument_dat_views.xml -->
+<odoo>
+    <record id="view_dat_form" model="ir.ui.view">
+        <field name="name">efund.fund.instrument.dat.form</field>
+        <field name="model">efund.fund.instrument.dat</field>
+        <field name="arch" type="xml">
+            <form string="Caractéristiques DAT">
+                <group string="Paramètres du DAT">
+                    <group>
+                        <field name="dat_principal" string="Montant du DAT" required="1"/>
+                        <field name="dat_interest_rate" string="Taux DAT (%)" digits="(16,4)" required="1"/>
+                        <field name="dat_start_date" string="Date de début" required="1"/>
+                        <field name="dat_maturity_date" string="Date d'échéance" required="1"/>
+                    </group>
+                    <group>
+                        <field name="dat_day_count" string="Base de calcul"/>
+                        <field name="dat_amortized_value" string="Valeur amortie actuelle" readonly="1"/>
+                    </group>
+                </group>
+
+                <group string="Informations Complémentaires">
+                    <field name="custodian" string="Dépositaire"/>
+                </group>
+            </form>
+        </field>
+    </record>
+</odoo>

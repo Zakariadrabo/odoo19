@@ -5,21 +5,18 @@ class FundClass(models.Model):
     _name = "efund.fund.share.class"
     _description = 'Classe de Parts'
     _inherit = ['mail.thread', 'mail.activity.mixin']
-    _order = 'fund_id, sequence, name'
+    _order = ' sequence, name'
 
     # === Fields ===
     name = fields.Char(string='Classe de Parts',required=True,help="Nom de la classe de parts (ex: 'Class A EUR Acc', 'Class I USD Dist')")
     sequence = fields.Integer(string='Sequence',default=10,help="Ordre d'affichage dans les listes")
     # === Relations ===
-    fund_id = fields.Many2one('efund.fund',string='Fonds',required=True,ondelete='cascade')
+    #fund_id = fields.Many2one('efund.fund',string='Fonds',required=True,ondelete='cascade')
+    vehicule_fund_id = fields.Many2one('efund.vehicule.fund', required=True, ondelete='cascade')
 
     # === Frais ===
-    management_fee_rate = fields.Float(string='Frais de gestion (%)',digits=(6, 4),default=1.5,help="Frais de gestion annuels exprimés en pourcentage de l'actif")
-    subscription_fee_rate = fields.Float(string='Frais de souscription (%)',digits=(6, 4),default=0.0,help="Frais de souscription (entrée) en pourcentage")
-    redemption_fee_rate = fields.Float(string='Frais de rachat (%)',digits=(6, 4),default=0.0,help="Frais de rachat (sortie) en pourcentage")
+    management_fee_rate = fields.Float(string='Frais de gestion (%)',digits=(6, 4), help="Frais de gestion annuels exprimés en pourcentage de l'actif")
     performance_fee_rate = fields.Float(string='Frais de performance (%)',digits=(6, 4),default=0.0,help="Frais de performance sur la plus-value")
-    retro_subscription_rate = fields.Float(string="Rétrocession souscription (%)",digits=(16, 4),default=0.0)
-    retro_redemption_rate = fields.Float(string="Rétrocession rachat (%)",digits=(16, 4),default=0.0)
     entry_load = fields.Float(string="Frais d'entrée (%)",digits=(16, 4),default=0.0)
     exit_load = fields.Float(string="Frais de sortie (%)",digits=(16, 4),default=0.0)
 
@@ -43,7 +40,7 @@ class FundClass(models.Model):
 
 
     # === Computed Methods ===
-    @api.depends('fund_id')
+    @api.depends('vehicule_fund_id')
     def _compute_share_statistics(self):
         """Calcule les statistiques de parts en circulation et actifs nets"""
         # Note: Cette méthode serait complétée avec la logique réelle de calcul
@@ -69,10 +66,10 @@ class FundClass(models.Model):
             if share_class.management_fee_rate > 5.0:
                 raise ValidationError(_("Les frais de gestion ne doivent pas dépassés 5%."))
 
-            if share_class.subscription_fee_rate > 10.0:
+            if share_class.entry_load > 10.0:
                 raise ValidationError(_("Les frais de souscription ne doivent pas dépassés 10%."))
 
-            if share_class.redemption_fee_rate > 10.0:
+            if share_class.exit_load > 10.0:
                 raise ValidationError(_("Les frais de rachat ne doivent pas dépassés 10%."))
 
             if share_class.performance_fee_rate > 50.0:
@@ -131,15 +128,15 @@ class FundClass(models.Model):
 
     @api.constrains(
         'management_fee_rate',
-        'subscription_fee_rate',
-        'redemption_fee_rate'
+        'entry_load',
+        'exit_load'
     )
     def _check_fee_rates(self):
         for rec in self:
             for rate in [
                 rec.management_fee_rate,
-                rec.subscription_fee_rate,
-                rec.redemption_fee_rate
+                rec.entry_load,
+                rec.exit_load
             ]:
                 if rate < 0 or rate > 100:
                     raise ValidationError(

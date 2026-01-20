@@ -16,7 +16,7 @@ class EfundAccountPartMove(models.Model):
     date_move = fields.Datetime(default=fields.Datetime.now)
     value_date = fields.Datetime(string="Date comptable")
     state = fields.Selection(
-        [('draft', 'Brouillon'), ('pending', 'En Attente'), ('posted', 'Validé'), ('cancelled', 'Annulé'),
+        [('draft', 'Brouillon'), ('pending', 'En Attente'), ('posted', 'Validé'), ('cancelled', 'Annulé'),('reconciled', 'Réconcilié'),
          ], string="Statut", default='draft')
     # Références aux transactions investisseurs
     investor_cash_move_id = fields.Many2one('efund.investor.cash.move', string="Mouvement Investisseur")

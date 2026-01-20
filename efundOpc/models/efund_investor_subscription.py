@@ -45,8 +45,7 @@ class FundSubscription(models.Model):
     fund_id = fields.Many2one(related='cash_account_id.fund_id', string="Fonds", store=True)
     total_shares = fields.Float(string="Total de parts", related="part_account_id.total_parts", readonly=True)
     investor_id = fields.Many2one(related='cash_account_id.investor_id', string="Investisseur", store=True)
-    share_class_id = fields.Many2one('efund.fund.share.class', string="Classe de part",  # required=True,
-                                     domain="[('fund_id', '=', fund_id)]")
+    share_class_id = fields.Many2one('efund.fund.share.class', string="Classe de part",)
     investor_cash_move_id = fields.Many2one('efund.investor.cash.move', string="Cash Investisseur", readonly=True)
     fund_cash_move_id = fields.Many2one('efund.fund.cash.move', string="Cash Fond", readonly=True)
     operation_fee_move_id = fields.Many2one('efund.investor.operation.fee', string="Frais souscription", readonly=True)
@@ -289,6 +288,7 @@ class FundSubscription(models.Model):
                 'cash_account_id': rec.cash_account_id.id,
                 'move_type': 'subscription',
                 'amount': gross_amount,
+                'state': 'reconciled',
             })
             rec.message_post(
                 body=_("Débit du compte investisseur au montant de %s pour la souscription") % (rec.gross_amount),
@@ -313,7 +313,7 @@ class FundSubscription(models.Model):
                 'amount': rec.net_amount,
                 'move_type': 'subscription_in',
                 'liquidity_type': 'liquid',
-                'state': 'posted',
+                'state': 'reconciled',
                 'investor_cash_move_id': investor_cash_move.id,
                 'investor_id': rec.investor_id.id,
                 'fund_id': rec.fund_id.id,
@@ -354,6 +354,7 @@ class FundSubscription(models.Model):
                 'part_account_id': rec.part_account_id.id,
                 'move_type': 'subscription',
                 'shares': shares,
+                'state': 'reconciled',
             })
             rec.message_post(
                 body=_("Crédit du compte titre de l'investisseur au montant de %s part(s).") % (rec.shares),
@@ -370,6 +371,7 @@ class FundSubscription(models.Model):
                     'move_type': 'refund',
                     'amount': rec.amount_remaining,
                     'subscription_id': rec.id,
+                    'state': 'reconciled',
                 })
                 rec.message_post(
                     body=_("Crédit du compte investisseur du réliquat de la souscription au montant de %s francs") % (

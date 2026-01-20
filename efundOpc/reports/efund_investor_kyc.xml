@@ -1,0 +1,183 @@
+<odoo>
+    <template id="report_investor">
+        <t t-call="web.html_container">
+            <t t-call="web.internal_layout">
+                <t t-foreach="docs" t-as="rec">
+                    <div class="page">
+                        <div class="text-center mb-4">
+                            <h2>FORMULAIRE KYC - CONNAISSANCE CLIENT</h2>
+                            <p class="text-muted">Know Your Customer Form</p>
+                        </div>
+
+                        <!-- Informations Personnelles -->
+                        <div class="mb-4">
+                            <h4 class="bg-primary text-white p-2">Informations Personnelles</h4>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Nom complet :</strong>
+                                    <span t-field="rec.full_name"/>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Civilité :</strong>
+                                    <span t-field="rec.civilite"/>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <strong>Date de naissance :</strong>
+                                    <span t-field="rec.birthdate"/>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Lieu de naissance :</strong>
+                                    <span t-field="rec.birthplace"/>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <strong>Nationalité :</strong>
+                                    <span t-field="rec.nationality"/>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Sexe :</strong>
+                                    <span t-field="rec.sex"/>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <strong>Situation matrimoniale :</strong>
+                                    <span t-field="rec.marital_status"/>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Profession :</strong>
+                                    <span t-field="rec.profession"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Adresse -->
+                        <div class="mb-4">
+                            <h4 class="bg-primary text-white p-2">Adresse</h4>
+                            <div class="row">
+                                <div class="col-12">
+                                    <strong>Adresse :</strong>
+                                    <span t-field="rec.address"/>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <strong>Ville :</strong>
+                                    <span t-field="rec.address_place"/>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Pays :</strong>
+                                    <span t-field="rec.country_id"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informations Financières -->
+                        <div class="mb-4">
+                            <h4 class="bg-primary text-white p-2">Informations Financières</h4>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Estimation patrimoine :</strong>
+                                    <span t-field="rec.estimation"/>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Revenu annuel :</strong>
+                                    <span t-field="rec.revenu"/>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <strong>Montant investi/mois :</strong>
+                                    <span t-field="rec.montant_mois"/>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Périodicité :</strong>
+                                    <span t-field="rec.periodicite"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Origine des Fonds -->
+                        <div class="mb-4">
+                            <h4 class="bg-primary text-white p-2">Origine des Fonds</h4>
+                            <div class="row">
+                                <div class="col-12">
+                                    <strong>Origine :</strong>
+                                    <span t-field="rec.origine"/>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <strong>Activité :</strong>
+                                    <span t-field="rec.activite"/>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Objectif :</strong>
+                                    <span t-field="rec.objectif"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Conformité AML/FACTA -->
+                        <div class="mb-4">
+                            <h4 class="bg-primary text-white p-2">Conformité AML / FACTA</h4>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>PEP (Personne Politiquement Exposée) :</strong>
+                                    <span t-field="rec.pep"/>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Violation :</strong>
+                                    <span t-field="rec.violation"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Scores KYC -->
+                        <div class="mb-4">
+                            <h4 class="bg-primary text-white p-2">Évaluation KYC</h4>
+                            <div class="row">
+                                <div class="col-4">
+                                    <strong>Niveau KYC :</strong>
+                                    <span t-field="rec.kyc_level"/>
+                                </div>
+                                <div class="col-4">
+                                    <strong>Score KYC :</strong>
+                                    <span t-field="rec.kyc_score"/>
+                                </div>
+                                <div class="col-4">
+                                    <strong>Catégorie de risque :</strong>
+                                    <span t-field="rec.risk_category"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-4" t-if="rec.notes">
+                            <h4 class="bg-primary text-white p-2">Notes</h4>
+                            <p t-field="rec.notes"/>
+                        </div>
+
+                        <!-- Signature -->
+                        <div class="row mt-5">
+                            <div class="col-6 text-center">
+                                <p>________</p>
+                                <p><strong>Signature de l'investisseur</strong></p>
+                            </div>
+                            <div class="col-6 text-center">
+                                <p>________</p>
+                                <p><strong>Signature de l'opérateur KYC</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
+
+
+

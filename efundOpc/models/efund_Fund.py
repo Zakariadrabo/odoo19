@@ -41,8 +41,9 @@ class Fund(models.Model):
         string='Status', default='draft')
 
     # Relations
-    share_class_ids = fields.One2many('efund.fund.share.class', 'fund_id', string='Share Classes')
+    #share_class_ids = fields.One2many('efund.fund.share.class', 'fund_id', string='Share Classes')
     currency_id = fields.Many2one(related='company_id.currency_id')
+    expenses_ids = fields.One2many('efund.fund.expense', 'fund_id')
 
     # Comptabilité
     cash_account_id = fields.Many2one('account.account', string='Cash Account',

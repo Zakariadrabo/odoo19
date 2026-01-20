@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vue formulaire principale -->
+    <record id="view_gestion_vehicule_form" model="ir.ui.view">
+        <field name="name">efund.vehicule.form</field>
+        <field name="model">efund.vehicule.fund</field>
+        <field name="arch" type="xml">
+            <form string="OPCVM" class="o_xxl_form_view">
+                <!-- En-tête avec état et actions -->
+                <header>
+                    <!-- Badge d'état -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button name="action_activate" type="object"
+                                    string="Activer"
+                                    class="btn-primary oe_highlight"
+                                    invisible="state != 'draft'"/>
+                            <button name="action_suspend" type="object"
+                                    string="Suspendre"
+                                    class="btn-warning"
+                                    invisible="state != 'active'"/>
+                            <button name="action_liquidate" type="object"
+                                    string="Liquider"
+                                    class="btn-danger"
+                                    invisible="state in  ['draft', 'liquidated'] "/>
+                            <button name="action_reset_to_draft" type="object"
+                                    string="Remettre en brouillon"
+                                    class="btn-secondary"
+                                    invisible="state in ('suspended','liquidated')"/>
+                        </div>
+
+                    </div>
+                    <div class="d-flex">
+
+                        </div>
+                    <field name="state" widget="statusbar"
+                                   statusbar_visible="draft,active,suspended,liquidated"
+                                  />
+                </header>
+
+                <!-- Contenu principal avec onglets -->
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="o_form_label oe_edit_only"/>
+                        <h1 class="mb-0">
+                            <field name="name" placeholder="Nom du véhicule..." class="h2"/>
+                        </h1>
+                    </div>
+
+                    <!-- Première ligne : informations critiques
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="fa-calendar" type="object"
+                                name="action_show_timeline" help="Dates clés">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="created_date" widget="date"/>
+                                </span>
+                                <span class="o_stat_text">Créé le</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-money" type="object"
+                                name="action_show_currency" help="Devise">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="currency_id" widget="many2one_avatar"/>
+                                </span>
+                                <span class="o_stat_text">Devise</span>
+                            </div>
+                        </button>
+                    </div> -->
+
+                    <!-- Onglets principaux -->
+                    <notebook>
+                        <!-- Onglet 1 : Informations Générales -->
+                        <page string="Informations Générales" icon="fa-info-circle">
+                            <group string="Caractéristique du fond">
+                                <group>
+                                    <field name="isin" placeholder="Ex: FR0012345678" class="oe_inline"/>
+                                    <field name="management_company_id"   placeholder="Sélectionner une société de gestion..."/>
+
+                                    <!-- <field name="vehicle_type" widget="radio"  options="{'horizontal': true}"   options="{'no_create': True, 'no_create_edit': True}"  class="oe_inline"/> -->
+                                    <field name="fund_type_id" options="{'horizontal': true}"  class="oe_inline"/>
+                                </group>
+                                <group>
+                                    <field name="nav_frequency"   placeholder="Sélectionner la périodicité de calcul"/>
+                                    <field name="origin_nav"   placeholder="ex. 10 000"/>
+                                    <field name="address"   placeholder="Saisir l'adresse ..."/>
+                                </group>
+                            </group>
+
+                            <group string="Dates / Adresses">
+                                <group>
+                                    <field name="created_date" widget="date"
+                                           options="{'datepicker': {'minDate': false, 'maxDate': false}}"/>
+                                    <field name="start_date" widget="date"
+                                           options="{'datepicker': {'minDate': false, 'maxDate': false}}"
+                                           class="oe_edit_only"/>
+                                </group>
+                                <group>
+                                    <field name="address"   placeholder="Saisir l'adresse ..."/>
+                                    <field name="phone"   placeholder="Saisir le numéro de contact ..."/>
+                                </group>
+
+                            </group>
+
+                            <!-- Carte d'information rapide -->
+                            <div class="alert alert-info mt-3" role="alert">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa fa-lightbulb-o fa-2x me-3"></i>
+                                    <div>
+                                        <strong>Conseil :</strong>
+                                        Le code ISIN est unique et permet d'identifier le véhicule sur les marchés
+                                        financiers.
+                                        Assurez-vous de sa validité avant activation.
+                                    </div>
+                                </div>
+                            </div>
+                        </page>
+
+                        <!-- Onglet 2 : Cadre Réglementaire -->
+                        <page string="Cadre Réglementaire" icon="fa-gavel">
+                            <group string="Agréments et Autorisations">
+                                <group>
+                                    <field name="license_number"
+                                           placeholder="N° d'agrément réglementaire..."
+                                           required="state == 'active'"/>
+                                    <field name="license_date" widget="date"/>
+                                </group>
+                                <group>
+                                    <field name="info_visa_number"
+                                           placeholder="N° de visa de la note d'information..."/>
+                                    <field name="info_visa_date" widget="date"/>
+                                </group>
+                            </group>
+
+                            <group string="Informations Réglementaires">
+                                <field name="regulatory_note" widget="html"
+                                       placeholder="Saisir les informations réglementaires importantes..."/>
+                            </group>
+
+                            <!-- Timeline des événements réglementaires
+                            <div class="oe_chatter mt-3">
+                                <field name="message_ids" widget="mail_thread"/>
+                            </div>
+                            -->
+                        </page>
+                        <!-- Onglet 3 : Classe de part -->
+                        <page string="Catégorie de parts">
+                            <field name="share_class_ids" context="{'default_vehicule_fund_id': id}">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="management_fee_rate"/>
+                                    <field name="entry_load"/>
+                                    <field name="exit_load"/>
+                                    <field name="performance_fee_rate"/>
+                                    <field name="minimum_subscription"/>
+                                    <field name="minimum_additional_subscription"/>
+                                    <field name="minimum_redemption"/>
+                                    <field name="current_nav"/>
+                                    <field name="is_default"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- Onglet 3 : Frais -->
+                        <page string="Acteurs du Fonds">
+                            <group string="Acteurs du Fonds">
+                                    <field name="depositary_id"/>
+                            </group>
+                        </page>
+                        <page string="Charges du fond">
+                            <field name="expenses_ids" create="true" edit="true" context="{'default_vehicule_id': vehicule_id}">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="expense_type"/>
+                                    <field name="partner_id"/>
+                                    <field name="frequency"/>
+                                    <field name="calculation_method"/>
+                                    <field name="amount"/>
+                                    <field name="rate"/>
+                                    <field name="start_date"/>
+                                    <field name="end_date"/>
+                                </list>
+                            </field>
+                        </page>
+
+
+                        <!-- Onglet 3 : Documents -->
+                        <page string="Documents" icon="fa-folder">
+                            <!--
+                            <group string="Documents Associés">
+                                <field name="document_ids" widget="many2many_binary" 
+                                    context="{'default_res_model': 'gestion.vehicle', 'default_res_id': id}"
+                                    options="{'column_headers_visible': false}"/>
+                            </group>
+                            -->
+
+                            <!-- Suggestions de documents -->
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Documents Recommandés</h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item">
+                                            <i class="fa fa-file-pdf-o text-danger me-2"></i>
+                                            Note d'information approuvée
+                                        </li>
+                                        <li class="list-group-item">
+                                            <i class="fa fa-file-text-o text-primary me-2"></i>
+                                            Règlement du fonds/mandat
+                                        </li>
+                                        <li class="list-group-item">
+                                            <i class="fa fa-certificate text-warning me-2"></i>
+                                            Agrément de l'autorité de contrôle
+                                        </li>
+                                        <li class="list-group-item">
+                                            <i class="fa fa-balance-scale text-success me-2"></i>
+                                            Rapport annuel d'activité
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </page>
+
+                        <!-- Onglet 4 : Historique et Activités -->
+                        <page string="Historique" icon="fa-history">
+                            <group string="Activités Récentes">
+                                <field name="activity_ids" widget="list_activity"/>
+                            </group>
+
+                            <!-- Statistiques -->
+                            <div class="row mt-3">
+                                <div class="col-md-3">
+                                    <div class="card text-center">
+                                        <div class="card-body">
+                                            <h3 class="card-title text-primary">
+                                                <i class="fa fa-check-circle"></i>
+                                            </h3>
+                                            <p class="card-text">Actif depuis</p>
+                                            <h4 class="text-muted">
+                                                12
+                                                jours
+                                            </h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card text-center">
+                                        <div class="card-body">
+                                            <h3 class="card-title text-warning">
+                                                <i class="fa fa-exclamation-triangle"></i>
+                                            </h3>
+                                            <p class="card-text">Alertes</p>
+                                            <h4 class="text-muted">0</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card text-center">
+                                        <div class="card-body">
+                                            <h3 class="card-title text-success">
+                                                <i class="fa fa-file-text"></i>
+                                            </h3>
+                                            <p class="card-text">Documents</p>
+                                            <h4 class="text-muted">
+                                                doc_count
+                                            </h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card text-center">
+                                        <div class="card-body">
+                                            <h3 class="card-title text-info">
+                                                <i class="fa fa-users" title="user"></i>
+                                            </h3>
+                                            <p class="card-text">Participants</p>
+                                            <h4 class="text-muted">0</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <!-- Pied de page avec chatter -->
+                <chatter>
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="kanban_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </chatter>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vue liste/arbre -->
+    <record id="view_gestion_vehicle_list" model="ir.ui.view">
+        <field name="name">gestion.vehicule.list</field>
+        <field name="model">efund.vehicule.fund</field>
+        <field name="arch" type="xml">
+            <list string="Véhicules de Gestion" decoration-success="state=='active'"
+                  decoration-warning="state=='suspended'" decoration-danger="state=='liquidated'"
+                  decoration-muted="state=='draft'">
+                <!-- Colonnes principales avec icônes -->
+                <field name="name" string="Nom" widget="handle"/>
+                <field name="vehicle_type" widget="badge"
+                       options="{'success': 'fund', 'info': 'mandate'}"/>
+                <field name="state" widget="badge"
+                       options="{'success': 'active', 'warning': 'suspended', 'danger': 'liquidated', 'secondary': 'draft'}"/>
+                <field name="company_id" widget="many2one_avatar"/>
+                <field name="management_company_id" widget="many2one_avatar"/>
+                <field name="currency_id" widget="many2one_avatar"/>
+                <field name="isin"/>
+                <field name="created_date" widget="date"/>
+                <field name="start_date" widget="date"/>
+
+                <!-- Boutons d'action rapide -->
+                <button name="action_activate" type="object" icon="fa-check"
+                        string="Activer" class="btn-link"
+                        invisible="state != 'draft' "/>
+                <button name="action_suspend" type="object" icon="fa-pause"
+                        string="Suspendre" class="btn-link"
+                        invisible="state != 'active' "/>
+            </list>
+        </field>
+    </record>
+
+
+</odoo>

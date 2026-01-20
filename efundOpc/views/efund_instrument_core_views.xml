@@ -1,0 +1,74 @@
+<odoo>
+    <record id="view_efund_instrument_core_form" model="ir.ui.view">
+        <field name="name">efund.fund.instrument.core.form</field>
+        <field name="model">efund.fund.instrument.core.bond</field>
+        <field name="arch" type="xml">
+            <form string="Instrument Financier">
+                <header>
+
+                    <field name="instrument_type" widget="statusbar" statusbar_visible="equity,bond,dat,opcvm"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Désignation de l'instrument"/>
+                        <h1>
+                            <field name="name" placeholder="ex: Orange CI 6.5% 2023-2030"/>
+                        </h1>
+                        <div class="o_row">
+                            <field name="isin" placeholder="Code ISIN (ex: CI0000000123)" class="oe_inline"/>
+                            <span class="badge rounded-pill text-bg-info" invisible="not is_listed">Coté en bourse
+                            </span>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group name="main_info" string="Informations Générales">
+                            <field name="asset_class_id" options="{'no_create': True}"/>
+                            <field name="issuer_id"/>
+                            <field name="currency_id" options="{'no_create': True}"/>
+                        </group>
+                        <group name="market_info" string="Données de Marché">
+                            <field name="is_listed"/>
+                            <field name="instrument_type" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Caractéristiques Obligataires" invisible="instrument_type != 'bond'">
+                            <div class="alert alert-info text-center" role="alert" style="margin-bottom:10px;">
+                                Données financières de l'obligation
+                            </div>
+                            <group>
+                                <group string="Émission &amp; Valorisation">
+                                    <field name="instrument_type" widget="radio" options="{'horizontal': true}"/>
+                                    <field name="face_value"/>
+                                    <field name="valuation_method"/>
+                                    <field name="coupon_rate" widget="percentage"/>
+                                </group>
+                                <group string="Calendrier">
+                                    <field name="issue_date"/>
+                                    <field name="value_date"/>
+                                    <field name="maturity_date"/>
+                                    <field name="remaining_date_to_maturity" class="text-danger fw-bold"/>
+                                </group>
+                            </group>
+                            <group string="Gestion des Coupons">
+                                <group>
+                                    <field name="coupon_frequency"/>
+                                    <field name="coupon_calculation_date"/>
+                                </group>
+                                <group>
+                                    <field name="remaining_date_to_coupon" class="text-primary"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Historique des prix" name="prices">
+                            <p class="text-muted">Le graphique de performance sera intégré ici.</p>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

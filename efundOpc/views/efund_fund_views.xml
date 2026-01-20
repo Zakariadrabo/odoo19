@@ -54,7 +54,6 @@
                         <group string="Informations financières">
                             <field name="initial_nav"/>
                             <field name="initial_price"/>
-                            <field name="current_vl"/>
                             <field name="allow_fractional_parts" />
                         </group>
 
@@ -64,27 +63,8 @@
                             <field name="info_visa_number"/>
                         </group>
 
-                        <group string="Frais, Taxes et Commissions">
-                            <field name="taf_rate"/>
-                            <field name="subscription_fee_rate"/>
-                            <field name="redemption_fee_rate"/>
-                            <field name="retro_subscription_rate"/>
-                            <field name="retro_redemption_rate"/>
-                        </group>
-
                     </group>
                     <notebook>
-                        <!--<page string="Informations Réglementaires">
-
-                             <group>
-                                 <group string="Agréments">
-                                     <field name="regulateur"/>
-                                     <field name="agrement_date"/>
-                                     <field name="dossier_reglementaire_id"/>
-                                 </group>
-                             </group>
-
-                        </page>
                         <page string="Gestion Opérationnelle">
 
                         </page>
@@ -121,20 +101,10 @@
                                 </group>
                             </group>
                         </page>
-                        <!--
-
-                        <page string="Parts">
-                            <group string="Parts">
-                                    <field name="initial_units"/>
-                                    <field name="opening_units"/>
-                                    <field name="current_units"/>
-                            </group>
-                        </page>
-                        -->
 
                         <page string="Catégorie de parts">
-                            <field name="share_class_ids" create="true" edit="true">
-                                <list editable="bottom">
+                            <field name="share_class_ids">
+                                <list>
                                     <field name="name"/>
                                     <field name="management_fee_rate"/>
                                     <field name="subscription_fee_rate"/>
@@ -153,6 +123,21 @@
                                     <field name="depositary_id"/>
                                     <field name="manager_id"/>
                             </group>
+                        </page>
+                        <page string="Charges du fond">
+                            <field name="expenses_ids" create="true" mode="form" edit="true">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="expense_type"/>
+                                    <field name="partner_id"/>
+                                    <field name="frequency"/>
+                                    <field name="calculation_method"/>
+                                    <field name="amount"/>
+                                    <field name="rate"/>
+                                    <field name="start_date"/>
+                                    <field name="end_date"/>
+                                </list>
+                            </field>
                         </page>
 
                         <page string="Exercice et Calculs">

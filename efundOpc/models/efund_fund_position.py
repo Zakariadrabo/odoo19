@@ -15,126 +15,77 @@ class FundPosition(models.Model):
     _order = "valuation_date desc, instrument_id"
 
     # ========== CHAMPS DE BASE ==========
-    fund_id = fields.Many2one(
-        'efund.fund',
-        string="Fonds",
-        required=True,
-        index=True,
-        ondelete='cascade'
-    )
+    fund_id = fields.Many2one('efund.fund',string="Fonds",index=True,ondelete='cascade')
+    mandat_id = fields.Many2one('efund.mandate', string="Mandat",  index=True, ondelete='cascade')
+    vehicule_id = fields.Many2one('efund.vehicule', required=True, ondelete='cascade')
+    instrument_id = fields.Many2one('efund.fund.instrument',string="Instrument",required=True,index=True,)
+    issuance_price = fields.Monetary(string="Price",store=True,)
 
-    instrument_id = fields.Many2one(
-        'efund.fund.instrument',
-        string="Instrument",
-        required=True,
-        index=True,
-        domain="[('is_active', '=', True)]"
-    )
 
     # ========== INFORMATIONS DE POSITION ==========
-    quantity = fields.Float(
-        string="Quantité",
-        digits=(16, 4),
-        default=0.0,
-        required=True
-    )
-
-    avg_cost = fields.Monetary(
-        string="Coût moyen unitaire",
-        currency_field='currency_id'
-    )
-
-    market_value = fields.Monetary(
-        string="Valeur de marché",
-        currency_field='currency_id',
-        compute='_compute_market_value',
-        store=True,
-    )
-
-    valuation_date = fields.Date(
-        string="Date de valorisation",
-        default=fields.Date.today,
-        required=True,
-        index=True
-    )
+    quantity = fields.Float(string="Quantité",digits=(16, 4),default=0.0,required=True)
+    avg_cost = fields.Monetary(string="Coût moyen unitaire")
+    market_value = fields.Monetary(string="Valeur de marché", compute='_compute_market_value',store=True,)
+    valuation_date = fields.Date(string="Date de valorisation",default=fields.Date.today,required=True,index=True,)
 
     # ========== INFORMATIONS DE COURS ==========
-    last_price = fields.Float(
-        string="Dernier cours",
-        digits=(16, 4),
-        compute='_compute_last_price',
-        store=True,
-    )
-
-    last_price_date = fields.Date(
-        string="Date dernier cours",
-        compute='_compute_last_price',
-        store=True,
-
-    )
-
+    last_price = fields.Float(string="Dernier cours",digits=(16, 4),compute='_compute_last_price',store=True,)
+    last_price_date = fields.Date(string="Date dernier cours",compute='_compute_last_price',store=True, )
 
     # ========== CALCULS DE PERFORMANCE ==========
-    unrealized_pl = fields.Monetary(
-        string="Plus/Moins-value latente",
-        currency_field='currency_id',
-        compute='_compute_performance',
-        store=True,
-    )
-
-    unrealized_pl_percent = fields.Float(
-        string="PL %",
-        digits=(16, 2),
-        compute='_compute_performance',
-        store=True,
-    )
-    decoration_state = fields.Selection(
-        [('normal', 'Normal'),
-         ('success', 'Success'),
-         ('danger', 'Danger')],
-        string="Decoration State",
-        compute='_compute_decoration_state',
-        store=True  # Important pour la performance
-    )
-
-
-
-    # ========== AUTRES INFORMATIONS ==========
-    currency_id = fields.Many2one(
-        'res.currency',
-        string="Devise de valorisation",
-        related='fund_id.currency_id',
-        store=True,
-    )
-
-    instrument_currency_id = fields.Many2one(
-        'res.currency',
-        string="Devise de l'instrument",
-        related='instrument_id.currency_id',
-        store=True,
-    )
-
-    state = fields.Selection([
-        ('active', 'Active'),
-        ('closed', 'Clôturée'),
-        ('suspended', 'Suspendue')
-    ], string="Statut", default='active', required=True)
-
-    notes = fields.Text(string="Notes")
-
-    display_name = fields.Char(
-        string="Nom",
-        compute='_compute_display_name',
+    unrealized_pl = fields.Monetary(string="Plus/Moins-value latente",currency_field='currency_id',compute='_compute_performance',store=True,)
+    unrealized_pl_percent = fields.Float(string="PL %",digits=(16, 2),compute='_compute_performance',store=True,)
+    decoration_state = fields.Selection([('normal', 'Normal'), ('success', 'Success'),('danger', 'Danger')],string="Decoration State",compute='_compute_decoration_state',
         store=True
     )
 
-    adjustment_ids = fields.One2many(
-        'efund.position.adjustment',
-        'position_id',
-        string="Ajustements"
-    )
+    # ========== AUTRES INFORMATIONS ==========
+    currency_id = fields.Many2one(string="Devise de valorisation",related='fund_id.currency_id', )
+    state = fields.Selection([('active', 'Active'), ('closed', 'Clôturée'), ('suspended', 'Suspendue') ], string="Statut", default='active', required=True)
+    notes = fields.Text(string="Notes")
+    display_name = fields.Char(string="Nom",compute='_compute_display_name',store=True)
+    adjustment_ids = fields.One2many('efund.position.adjustment', 'position_id', string="Ajustements")
 
     # les méthodes de dépendances
+
+    def apply_trade(self, trade):
+        self.ensure_one()
+
+        if trade._name != 'efund.bourse.order.execution.line':
+            raise ValidationError("Objet trade invalide.")
+
+        Q_old = self.quantity
+        PRU_old = self.avg_cost or 0.0
+
+        if trade.order_sens == 'buy':
+            cost_old = Q_old * PRU_old
+            cost_buy = (trade.quantity * trade.price) # + trade.total_fees
+
+            Q_new = Q_old + trade.quantity
+            PRU_new = (cost_old + cost_buy) / Q_new if Q_new else 0.0
+
+            self.write({
+                'quantity': Q_new,
+                'avg_cost': PRU_new,
+            })
+
+        elif trade.order_sens == 'sell':
+            if trade.quantity > Q_old:
+                raise ValidationError("Quantité vendue supérieure à la position.")
+
+            cost_sold = trade.quantity * PRU_old
+            proceeds = (trade.quantity * trade.price) #- trade.total_fees
+            realized_pl = proceeds - cost_sold
+
+            Q_new = Q_old - trade.quantity
+
+            self.write({
+                'quantity': Q_new,
+                'avg_cost': PRU_old if Q_new else 0.0,
+                'state': 'closed' if Q_new == 0 else 'active'
+            })
+
+           # trade.write({'realized_pl': realized_pl})
 
     @api.depends('unrealized_pl')
     def _compute_decoration_state(self):
@@ -314,3 +265,53 @@ class FundPosition(models.Model):
         )
 
         return adjustment
+
+
+    def _get_or_create_position(self, instrument_id, valuation_date, issuance_price, fund_id=None, mandat_id=None, ):
+        if bool(fund_id) == bool(mandat_id):
+            raise ValidationError("La position doit être liée soit à un fonds soit à un mandat.")
+
+        # Par défaut on considère que nous avons un fond
+        pos = self.env['efund.fund.position']
+        position = pos.search([
+            ('fund_id', '=', fund_id),
+            ('instrument_id', '=', instrument_id),
+            ('state', '=', 'active')
+        ], limit=1)
+
+        if not position:
+            position = pos.create({
+                'fund_id': fund_id,
+                'instrument_id': instrument_id,
+                'issuance_price': issuance_price,
+                'quantity': 0.0,
+                'avg_cost': 0.0,
+                'valuation_date': valuation_date,
+            })
+
+        if mandat_id:
+            position = pos.search([
+                ('mandat_id', '=', mandat_id),
+                ('instrument_id', '=', instrument_id),
+                ('state', '=', 'active')
+            ], limit=1)
+
+            if not position:
+                position = pos.create({
+                    'mandat_id': mandat_id,
+                    'instrument_id': instrument_id,
+                    'issuance_price': issuance_price,
+                    'quantity': 0.0,
+                    'avg_cost': 0.0,
+                    'valuation_date': valuation_date,
+                })
+
+        return position
+
+    # retourne la position du titre
+    def _get_position_by_instrument(self, instrument_id, fund_id):
+        result = self.search([('instrument_id', '=', instrument_id),('fund_id','=',fund_id)])
+        if len(result) > 0:
+            return result[0].quantity
+        return 0.0
+

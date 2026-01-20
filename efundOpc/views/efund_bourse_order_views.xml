@@ -8,8 +8,9 @@
             <list>
                 <field name="order_date"/>
                 <field name="fund_id"/>
-                <field name="depositaire_sgi"/>
+                <field name="broker_id"/>
                 <field name="instrument_id"/>
+                <field name="order_sens"/>
                 <field name="quantity"/>
                 <field name="executed_quantity"/>
                 <field name="average_execution_price"/>
@@ -42,13 +43,11 @@
                         <group string="Général">
                             <field name="order_date"/>
                             <field name="fund_id"/>
-                            <field name="depositaire_sgi"/>
+                            <field name="broker_id"/>
                         </group>
 
                         <group string="Type d’ordre">
-                            <field name="is_subscription"/>
-                            <field name="is_buy"/>
-                            <field name="is_sell"/>
+                            <field name="order_sens" readonly="state not in ('draft','validated')"/>
                         </group>
                     </group>
                     <group>
@@ -84,13 +83,21 @@
                                     <field name="execution_date"/>
                                     <field name="quantity"/>
                                     <field name="price"/>
+                                    <field name="total_amount_ht"/>
+                                    <field name="total_interest"/>
+                                    <field name="total_broker_commission"/>
+                                    <field name="total_tob_commission"/>
+                                    <field name="total_amount"/>
+
                                 </list>
                             </field>
                         </page>
                     </notebook>
-
-
                 </sheet>
+                <chatter>
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </chatter>
             </form>
         </field>
     </record>

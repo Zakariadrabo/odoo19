@@ -1,0 +1,85 @@
+<!-- views/instrument_creation_wizard_views.xml -->
+<odoo>
+    <record id="view_instrument_creation_wizard_form" model="ir.ui.view">
+        <field name="name">efund.instrument.creation.wizard.form</field>
+        <field name="model">efund.instrument.creation.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Créer un nouvel instrument">
+                <header>
+                    <button name="action_create" string="Créer" type="object"
+                            class="btn-primary" icon="fa-check"/>
+                    <button string="Annuler" special="cancel" class="btn-default"/>
+                </header>
+
+                <sheet>
+                    <group string="Type d'instrument">
+                        <field name="instrument_type" widget="radio" required="1"
+                               class="oe_inline" options="{'horizontal': true}"/>
+                    </group>
+
+                    <!-- Section commune -->
+                    <group string="Informations Générales" attrs="{'invisible': [('instrument_type', '=', False)]}">
+                        <group>
+                            <field name="name" string="Libellé" required="1"/>
+                            <field name="isin" string="Code ISIN"/>
+                            <field name="ticker" string="Ticker/Mnémo"/>
+                        </group>
+                        <group>
+                            <field name="currency_id" string="Devise" required="1"/>
+                            <field name="issuer_id" string="Émetteur"/>
+                            <field name="asset_class_id" string="Classe d'actif"/>
+                        </group>
+                    </group>
+
+                    <!-- Sections dynamiques par type -->
+                    <!-- OBLIGATIONS -->
+                    <group string="Caractéristiques Obligation"
+                           attrs="{'invisible': [('instrument_type', '!=', 'bond')]}">
+                        <group>
+                            <field name="bond_type" string="Type"/>
+                            <field name="face_value" string="Valeur nominale" required="1"/>
+                            <field name="coupon_rate" string="Taux coupon (%)" digits="(16,4)" required="1"/>
+                            <field name="coupon_frequency" string="Fréquence" required="1"/>
+                        </group>
+                        <group>
+                            <field name="issue_date" string="Date émission" required="1"/>
+                            <field name="value_date" string="Date jouissance" required="1"/>
+                            <field name="maturity_date" string="Date maturité" required="1"/>
+                            <field name="amortization_type" string="Type amortissement"/>
+                        </group>
+                    </group>
+
+                    <!-- ACTIONS -->
+                    <group string="Caractéristiques Action"
+                           attrs="{'invisible': [('instrument_type', '!=', 'equity')]}">
+                        <field name="dividend_yield" string="Dividende Yield (%)"/>
+                        <field name="is_listed" string="Est Coté"/>
+                        <field name="listing_date" string="Date 1ère cotation"
+                               attrs="{'invisible': [('is_listed', '=', False)]}"/>
+                        <field name="sector" string="Secteur"/>
+                    </group>
+
+                    <!-- DAT -->
+                    <group string="Caractéristiques DAT"
+                           attrs="{'invisible': [('instrument_type', '!=', 'dat')]}">
+                        <field name="dat_principal" string="Montant DAT" required="1"/>
+                        <field name="dat_interest_rate" string="Taux DAT (%)" digits="(16,4)" required="1"/>
+                        <field name="dat_start_date" string="Date début" required="1"/>
+                        <field name="dat_maturity_date" string="Date échéance" required="1"/>
+                        <field name="dat_day_count" string="Base calcul"/>
+                    </group>
+
+                    <!-- Options avancées -->
+                    <group string="Options Avancées">
+                        <field name="auto_generate_calendar" string="Générer calendrier automatiquement"
+                               attrs="{'invisible': [('instrument_type', '!=', 'bond')]}"/>
+                        <field name="create_initial_price" string="Créer prix initial"/>
+                        <field name="initial_price" string="Prix initial" digits="(16,4)"
+                               attrs="{'invisible': [('create_initial_price', '=', False)]}"/>
+                        <field name="send_notification" string="Envoyer notification" value="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

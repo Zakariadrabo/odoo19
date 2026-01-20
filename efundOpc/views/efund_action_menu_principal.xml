@@ -81,6 +81,35 @@
         </field>
     </record>
 
+    <!-- Véhicule Fond -->
+    <record id="action_efund_vehicule_fund" model="ir.actions.act_window">
+        <field name="name">Fonds</field>
+        <field name="res_model">efund.vehicule.fund</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer un nouveau fonds
+            </p>
+            <p>
+                Avant de créer un fonds, assurez-vous d'avoir une société de gestion configurée.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_efund_vehicule_fund" model="ir.actions.act_window">
+        <field name="name">Fonds</field>
+        <field name="res_model">efund.vehicule.fund</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer un nouveau fonds
+            </p>
+            <p>
+                Avant de créer un fonds, assurez-vous d'avoir une société de gestion configurée.
+            </p>
+        </field>
+    </record>
+
     <!-- Action Mandat -->
     <record id="action_efund_mandat" model="ir.actions.act_window">
         <field name="name">Mandats</field>
@@ -135,12 +164,17 @@
             </p>
         </field>
     </record>
+    <record id="action_efund_fund_expenses" model="ir.actions.act_window">
+        <field name="name">Charge du fonds</field>
+        <field name="res_model">efund.fund.expense</field>
+        <field name="view_mode">list,form</field>
+    </record>
 
     <!-- =========================
          3. CLIENTS / PORTEURS
     ========================== -->
     <record id="action_fund_investor_list" model="ir.actions.act_window">
-        <field name="name">Porteurs de parts</field>
+        <field name="name">Clients</field>
         <field name="res_model">efund.investor</field>
         <field name="view_mode">list,form,kanban</field>
         <field name="help" type="html">
@@ -225,6 +259,62 @@
         </field>
     </record>
 
+     <!-- Obligations -->
+    <record id="action_efund_instrument_core_bond" model="ir.actions.act_window">
+        <field name="name">Instrument</field>
+        <field name="res_model">efund.fund.instrument.core.bond</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="context">{'default_instrument_type': 'bond'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer et gérer votre premier instrument financier.
+            </p>
+        </field>
+    </record>
+    <!-- Action -->
+    <record id="action_efund_instrument_core_equity" model="ir.actions.act_window">
+        <field name="name">Action</field>
+        <field name="res_model">efund.fund.instrument.core.equity</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="context">{'default_instrument_type': 'equity'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer et gérer votre premier instrument financier.
+            </p>
+        </field>
+    </record>
+    <!-- Opcvm -->
+    <record id="action_efund_instrument_core_opcvm" model="ir.actions.act_window">
+        <field name="name">Opcvm</field>
+        <field name="res_model">efund.fund.instrument.core.opcvm</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="context">{'default_instrument_type': 'opcvm'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer et gérer votre premier instrument financier.
+            </p>
+        </field>
+    </record>
+    <!-- DAT -->
+    <record id="action_efund_instrument_core_dat" model="ir.actions.act_window">
+        <field name="name">DAT</field>
+        <field name="res_model">efund.fund.instrument.core.dat</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="context">{'default_instrument_type': 'dat'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer et gérer votre premier instrument financier.
+            </p>
+        </field>
+    </record>
+
+    <!-- Transactions  -->
+    <record id="action_efund_investment_core_transaction" model="ir.actions.act_window">
+        <field name="name">Transactions / Exécutions</field>
+        <field name="res_model">efund.investment.transaction</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
     <!-- Positions -->
     <record id="action_fund_position_list" model="ir.actions.act_window">
         <field name="name">Positions</field>
@@ -240,6 +330,18 @@
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Créez la transaction.
+            </p>
+        </field>
+    </record>
+
+    <!-- order de bourse -->
+    <record id="action_efund_investment_order" model="ir.actions.act_window">
+        <field name="name">Ordres de Bourse</field>
+        <field name="res_model">efund.investment.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créez un ordre de bourse.
             </p>
         </field>
     </record>
@@ -310,6 +412,18 @@
         <field name="name">Classes d’actifs</field>
         <field name="res_model">efund.asset.class</field>
         <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer et gérer votre classe d'actif.
+            </p>
+        </field>
+    </record>
+
+     <!-- Classe d'actif  -->
+    <record id="action_efund_instrument_trasaction" model="ir.actions.act_window">
+        <field name="name">Transaction</field>
+        <field name="res_model">efund.bourse.order.execution.line</field>
+        <field name="view_mode">list,form,kanban,graph,pivot</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Créer et gérer votre classe d'actif.
@@ -405,6 +519,16 @@
         <field name="res_model">efund.investor.portfolio.report.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
+    </record>
+
+    <record id="action_report_investor" model="ir.actions.report">
+        <field name="name">Investor KYC</field>
+        <field name="model">efund.investor</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">efundOpc.report_investor</field>
+        <field name="report_file">efundOpc.report_investor</field>
+        <field name="print_report_name">'Etat KYC Investor - %s' % (object.name)</field>
+
     </record>
 
 

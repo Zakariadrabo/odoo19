@@ -21,9 +21,6 @@ class InvestorPortfolioReport(models.AbstractModel):
         for part in part_accounts:
             lines.append(part.get_fund_portfolio_data())
 
-
-        _logger.info(f"************* données lines: {lines}")
-
         return {
             'doc_ids': docids,
             'doc_model': 'efund.investor',

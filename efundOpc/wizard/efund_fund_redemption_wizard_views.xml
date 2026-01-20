@@ -28,6 +28,7 @@
                     </group>
                     <group string="Détails du rachat" col="3">
                         <group>
+                            <field name="is_redemption_fee"/>
                             <field name="buy_choice"/>
                             <field name="parts_to_redeem" readonly="buy_choice == 'amount'" required="buy_choice == 'amount'"/>
                             <field name="desired_amount" readonly="buy_choice == 'share'" required="buy_choice == 'share'"/>

@@ -39,18 +39,19 @@ class FundRedemptionWizard(models.TransientModel):
     gross_amount = fields.Monetary(string="Montant + frais", )
     desired_amount = fields.Monetary(string="Montant souhaité")
     share_class_id = fields.Many2one('efund.fund.share.class', string="Classe de part", compute="_compute_nav_value", store=True)
+    is_redemption_fee = fields.Boolean(string="Appliquer Frais", default=True)
 
     # -------------------------
     # COMPUTE
     # -------------------------
-    @api.onchange('desired_amount', 'parts_to_redeem')
+    @api.onchange('desired_amount', 'parts_to_redeem', 'is_redemption_fee')
     def _onchange_desired_amount_or_part(self):
         for sub in self:
             if sub.buy_choice == 'amount':
-                result = self.calculate_redemption(sub.nav, sub.allow_fractional_parts, sub.redemption_fee_rate,
+                result = self.calculate_redemption_update(sub.nav, sub.allow_fractional_parts, sub.redemption_fee_rate,sub.is_redemption_fee,
                                                          sub.desired_amount,None)
             else:
-                result = self.calculate_redemption(sub.nav, sub.allow_fractional_parts, sub.redemption_fee_rate,
+                result = self.calculate_redemption_update(sub.nav, sub.allow_fractional_parts, sub.redemption_fee_rate,sub.is_redemption_fee,
                                                          None,sub.parts_to_redeem)
 
             # affectation des valeurs
@@ -73,50 +74,81 @@ class FundRedemptionWizard(models.TransientModel):
             else:
                 raise UserError("Besoin d'avoir la classe de parts par défaut pour le fonds")
 
-    def calculate_redemption(self, nav,allow_fractional_shares, fee_percent, amount_net_target=None, shares_to_redeem=None):
+    def calculate_redemption_update(
+            self,
+            nav,
+            allow_fractional_shares,
+            fee_percent,
+            apply_redemption_fee=True,
+            amount_net_target=None,
+            shares_to_redeem=None
+    ):
+        """
+        Calcule un rachat de parts (OPCVM / FCP)
+
+        - Soit à partir d'un montant net à recevoir
+        - Soit à partir d'un nombre de parts à racheter
+        """
+
+        # --- CONTRÔLES DE BASE ---
         if nav <= 0:
-            return {'error': "La valeur liquidative doit être supérieure à 0."}
-        if fee_percent >= 100:
+            return {'error': "La valeur liquidative doit être strictement supérieure à 0."}
+
+        if apply_redemption_fee and fee_percent >= 100:
             return {'error': "Les frais de rachat ne peuvent pas atteindre 100%."}
 
-        # --- SCÉNARIO A : ON VEUT UN MONTANT NET PRÉCIS ---
-        if amount_net_target:
-            # Formule : Net = Brut - (Brut * %frais) => Net = Brut * (1 - %frais)
-            # Et Brut = NbParts * NAV
-            # Donc : NbParts = Net / (NAV * (1 - %frais))
-            raw_shares = amount_net_target / (nav * (1 - (fee_percent / 100.0)))
-            _logger.info(f"***** Calculating redemption shares for net amount: {amount_net_target}, NAV: {nav}, fee_percent: {fee_percent}, shares: {raw_shares}")
+        # Taux de frais effectif
+        effective_fee_rate = (fee_percent / 100.0) if apply_redemption_fee else 0.0
+
+        # --- DÉTERMINATION DU NOMBRE DE PARTS ---
+        if amount_net_target is not None:
+            if amount_net_target <= 0:
+                return {'error': "Le montant net doit être supérieur à 0."}
+
+            # Net = Gross * (1 - fee)
+            # Gross = Shares * NAV
+            # => Shares = Net / (NAV * (1 - fee))
+            denominator = nav * (1 - effective_fee_rate)
+
+            if float_is_zero(denominator, precision_rounding=0.0000001):
+                return {'error': "Paramètres invalides pour le calcul du rachat."}
+
+            raw_shares = amount_net_target / denominator
 
             if allow_fractional_shares:
-                shares = float_round(raw_shares, 6)
+                shares = float_round(raw_shares, precision_digits=6)
             else:
-                # On arrondit au supérieur car pour avoir AU MOINS le montant net,
-                # il faut souvent racheter la part entière du dessus
-                shares = int(raw_shares) if float_is_zero(raw_shares % 1, precision_rounding=0.001) else int(
-                    raw_shares) + 1
+                # Arrondi supérieur pour garantir AU MOINS le montant net demandé
+                shares = int(raw_shares)
+                if not float_is_zero(raw_shares - shares, precision_rounding=0.000001):
+                    shares += 1
 
-        # --- SCÉNARIO B : ON VEUT RACHETER UN NOMBRE DE PARTS PRÉCIS ---
-        elif shares_to_redeem:
+        elif shares_to_redeem is not None:
+            if shares_to_redeem <= 0:
+                return {'error': "Le nombre de parts à racheter doit être supérieur à 0."}
+
             shares = shares_to_redeem
             if not allow_fractional_shares:
                 shares = int(shares)
 
         else:
-            return {'error': "Veuillez préciser soit un montant net, soit un nombre de parts."}
+            return {'error': "Veuillez préciser soit un montant net cible, soit un nombre de parts à racheter."}
 
-        # --- CALCULS FINAUX (BASÉS SUR LE NOMBRE DE PARTS RETENU) ---
+        # --- CALCULS FINANCIERS ---
         gross_amount = shares * nav
-        fees_amount = gross_amount * (fee_percent / 100.0)
-        net_amount_to_pay = gross_amount - fees_amount
+        fees_amount = gross_amount * effective_fee_rate
+        net_amount_to_receive = gross_amount - fees_amount
 
-        # Arrondi monétaire
+        # --- ARRONDIS MONÉTAIRES ---
         currency_precision = 6
 
         return {
             'shares_to_redeem': shares,
             'gross_amount': float_round(gross_amount, precision_digits=currency_precision),
             'fees_amount': float_round(fees_amount, precision_digits=currency_precision),
-            'net_amount_to_receive': float_round(net_amount_to_pay, precision_digits=currency_precision),
+            'net_amount_to_receive': float_round(net_amount_to_receive, precision_digits=currency_precision),
+            'fee_applied': apply_redemption_fee,
+            'fee_rate_percent': fee_percent if apply_redemption_fee else 0.0,
         }
 
 
@@ -125,18 +157,16 @@ class FundRedemptionWizard(models.TransientModel):
         for sub in self:
             # RECALCULER les valeurs avant création
             if sub.buy_choice == 'amount':
-                result = self.calculate_redemption(sub.nav, sub.allow_fractional_parts, sub.redemption_fee_rate,
+                result = self.calculate_redemption_update(sub.nav, sub.allow_fractional_parts, sub.redemption_fee_rate,sub.is_redemption_fee,
                                                    sub.desired_amount, None)
             else:
-                result = self.calculate_redemption(sub.nav, sub.allow_fractional_parts, sub.redemption_fee_rate,
+                result = self.calculate_redemption_update(sub.nav, sub.allow_fractional_parts, sub.redemption_fee_rate, sub.is_redemption_fee,
                                                    None, sub.parts_to_redeem)
 
             shares = result.get('shares_to_redeem')
             gross_amount = result.get('gross_amount')
             fees_amount = result.get('fees_amount')
             net_amount_to_pay = result.get('net_amount_to_receive')
-
-            _logger.info("********************* Valeur net_amount_to_pay : %s", shares)
 
 
             if shares > sub.total_parts_available:
@@ -171,5 +201,6 @@ class FundRedemptionWizard(models.TransientModel):
                 'redemption_fee_amount': fees_amount,
                 'redemption_fee_rate': sub.redemption_fee_rate,
                 'share_class_id': sub.share_class_id.id,
+                'is_redemption_fee': sub.is_redemption_fee,
                 'state': 'draft',
             })

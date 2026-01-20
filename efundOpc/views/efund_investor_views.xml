@@ -47,6 +47,14 @@
                             class="btn-secondary"
                             icon="fa-archive"
                             invisible="status not in ['kyc_approved', 'kyc_rejected']"/>
+
+                    <button name="action_print"
+                            type="object"
+                            string="Print KYC"
+                            class="btn-secondary"
+                            />
+
+
                     <button name="%(action_investor_portfolio_report_wizard)d"
                             string="État du portefeuille"
                             type="action"
