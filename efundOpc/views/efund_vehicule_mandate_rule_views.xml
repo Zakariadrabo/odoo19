@@ -1,0 +1,29 @@
+<odoo>
+    <record id="view_efund_mandate_form" model="ir.ui.view">
+        <field name="name">efund.mandate.form</field>
+        <field name="model">efund.vehicule.mandate</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group string="Politique d'Investissement">
+                        <field name="rule_id"/>
+                        <field name="investment_strategy"/>
+                    </group>
+                    <notebook>
+                        <page string="Contraintes de Conformité">
+                            <group>
+                                <field name="allowed_asset_type_ids" widget="many2many_tags" readonly="1"/>
+                                <field name="allowed_zone_ids" widget="many2many_tags" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

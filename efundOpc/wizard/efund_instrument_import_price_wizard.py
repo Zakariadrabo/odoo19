@@ -1,15 +1,15 @@
 # efund_fund_import_price_wizard.py
+import base64
 import logging
 
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError
-import base64
+from odoo.exceptions import UserError, ValidationError
 import io
 import csv
 _logger = logging.getLogger(__name__)
 
 class FundImportPriceWizard(models.TransientModel):
-    _name = "efund.fund.import.price.wizard"
+    _name = "efund.instrument.import.price.wizard"
     _description = "Assistant d'import des cours"
 
     import_type = fields.Selection([
@@ -19,7 +19,7 @@ class FundImportPriceWizard(models.TransientModel):
     ], string="Type d'import", default='single', required=True)
 
     # Pour import unique
-    instrument_id = fields.Many2one('efund.fund.instrument', string="Instrument")
+    instrument_id = fields.Many2one('efund.vehicule.instrument.core', string="Instrument")
     instrument_type = fields.Selection(related="instrument_id.instrument_type", string="Type")
     price_date = fields.Date(string="Date du cours", default=fields.Date.today)
     price = fields.Float(string="Cours", digits=(16, 4))
@@ -36,14 +36,22 @@ class FundImportPriceWizard(models.TransientModel):
     @api.depends('instrument_id', 'price_date')
     def _compute_get_price(self):
         for rec in self:
-            #compute_linear_actuariat_value_at_date(self, valuation_date, buyed_price, buyed_date, nominal_price,maturity_date):
-            valuation_date = rec.price_date
-            buyed_price = rec.instrument_id.purchase_price
-            buyed_date = rec.instrument_id.value_date
-            nominal_price = rec.instrument_id.face_value
-            maturity_date = rec.instrument_id.maturity_date
-            result = rec.instrument_id.compute_linear_actuariat_value_at_date(valuation_date, buyed_price, buyed_date, nominal_price,maturity_date)
-            rec.listed_price = result.get('linear_value', 0.0)
+            if rec.instrument_type != 'bond':
+                if rec.instrument_id.is_listed and rec.instrument_id.valuation_method == "listed":
+                    position = self.env['efund.vehicule.position'].search_count([('instrument_id', '=', rec.instrument_id.id)])
+                    if  position > 1:
+                        raise ValidationError("Instrument déjà positionné plusieurs fois")
+                    elif position == 1:
+                        obj_position = self.env['efund.vehicule.position'].search([('instrument_id', '=', rec.instrument_id.id)], limit=1)
+                        rec.listed_price = obj_position.get_instrument_listed_value(rec.instrument_id, rec.price_date)
+                    else:
+                        rec.listed_price = 0
+                        raise ValidationError("Instrument non positionné")
+                else:
+                    rec.listed_price = 0
+            else:
+                rec.listed_price = 0
+
 
 
     def action_import(self):

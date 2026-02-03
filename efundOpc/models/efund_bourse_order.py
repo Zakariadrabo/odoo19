@@ -130,7 +130,7 @@ class EfundBourseOrder(models.Model):
     def _compute_prenotation(self):
         for rec in self:
             rec.gross_amount = rec.execution_price * rec.executed_quantity
-            rec.commission_sgi = rec.gross_amount * 0.005  # 0,5% exemple
+            rec.commission_sgi = rec.gross_amount * 0.005
             rec.commission_total = rec.commission_sgi
 
     # ---------------------------------------------------------------------

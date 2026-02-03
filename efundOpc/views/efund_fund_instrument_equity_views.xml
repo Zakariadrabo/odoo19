@@ -1,29 +1,150 @@
 <!-- views/instrument_equity_views.xml -->
 <odoo>
-    <record id="view_equity_form" model="ir.ui.view">
-        <field name="name">efund.fund.instrument.equity.form</field>
-        <field name="model">efund.fund.instrument.equity</field>
+    <record id="view_equity_list" model="ir.ui.view">
+        <field name="name">efund.vehicule.instrument.core.equity.list</field>
+        <field name="model">efund.vehicule.instrument.core.equity</field>
         <field name="arch" type="xml">
-            <form string="Caractéristiques Action">
-                <group string="Caractéristiques de l'Action">
-                    <group>
-                        <field name="dividend_yield" string="Dividende Yield (%)"/>
-                        <field name="is_listed" string="Est Coté"/>
-                        <field name="listing_date" string="Date 1ère Cotation"
-                               attrs="{'invisible': [('is_listed', '=', False)]}"/>
-                        <field name="sector" string="Secteur d'activité"/>
-                    </group>
-                    <group>
-                        <field name="market" string="Marché"/>
-                        <field name="state_issuer" string="Émetteur État CEMAC"/>
-                    </group>
-                </group>
+            <list string="Actions" decoration-success="is_listed" decoration-muted="not is_listed"
+                  decoration-info="dividend_yield &gt; 3">
+                <!-- Identification -->
+                <field name="instrument_id" widget="many2one_clickable"/>
+                <field name="isin" string="ISIN"/>
+                <field name="currency_id" widget="many2one_clickable"/>
 
-                <group string="Droits et Options" attrs="{'invisible': [('right_strike_price', '=', False)]}">
-                    <field name="right_strike_price" string="Prix d'exercice"/>
-                    <field name="right_expiry_date" string="Date d'expiration"/>
-                </group>
+                <!-- Secteur et statut -->
+                <field name="sector" string="Secteur"/>
+                <field name="is_listed" string="Coté" widget="boolean_favorite"/>
+
+                <!-- Dividendes -->
+                <field name="last_dividend_amount" string="Dernier Div."/>
+                <field name="last_dividend_date" string="Date Div."/>
+                <field name="dividend_yield" string="Rendement %"/>
+
+                <!-- Prix marché -->
+                <field name="market_price" string="Cours" digits="[16, 4]"/>
+                <field name="market_price_date" string="Date Cours"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_equity_form" model="ir.ui.view">
+        <field name="name">efund.vehicule.instrument.core.equity.form</field>
+        <field name="model">efund.vehicule.instrument.core.equity</field>
+        <field name="arch" type="xml">
+            <form string="Action">
+                <header>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button name="action_activate" type="object"
+                                    string="Activer"
+                                    class="btn-primary oe_highlight"
+                                    invisible="state != 'draft'"/>
+                            <button name="action_suspend" type="object"
+                                    string="Suspendre"
+                                    class="btn-warning"
+                                    invisible="state != 'active'"/>
+                            <button name="action_liquidate" type="object"
+                                    string="Liquider"
+                                    class="btn-danger"
+                                    invisible="state in  ['draft', 'liquidated'] "/>
+                            <button name="action_reset_to_draft" type="object"
+                                    string="Remettre en brouillon"
+                                    class="btn-secondary"
+                                    invisible="state in ('suspended','liquidated')"/>
+                        </div>
+                    </div>
+                    <button name="action_update_market_data" invisible="state != 'active'" string="Mettre à jour"
+                            type="object" class="btn-primary" icon="fa-refresh"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+
+                <sheet>
+                    <group class="oe_title">
+                        <group>
+                            <field name="name" required="1" string="Libellé Action"/>
+                            <field name="isin" placeholder="N° ISIN ..."/>
+                        </group>
+                        <group>
+                            <field name="sector" required="1"/>
+                            <field name="asset_class_id" widget="many2one_clickable" required="1"/>
+                        </group>
+                    </group>
+
+
+                    <!-- Notebook avec onglets -->
+                    <notebook>
+                        <page string="Cotation">
+                            <group col="2">
+                                <group>
+                                    <field name="is_listed" widget="toggle"/>
+                                    <field name="listing_date"/>
+                                </group>
+                                <group>
+                                    <field name="market_price" widget="monetary" readonly="1"/>
+                                    <field name="market_price_date" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- Onglet 2 : Dividendes -->
+                        <page string="Dividendes">
+                            <group col="2">
+                                <group string="Dernier dividende">
+                                    <field name="last_dividend_amount" readonly="1"/>
+                                    <field name="last_dividend_date" readonly="1"/>
+                                    <field name="dividend_frequency" readonly="1"/>
+                                </group>
+                                <group string="Rendement">
+                                    <div class="alert alert-success" role="status">
+                                        <h6 class="alert-heading mb-1">Rendement dividendes</h6>
+                                        <h3 class="mb-0">
+                                            <field name="dividend_yield" widget="percentage" nolabel="1"/>
+                                        </h3>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted">
+                                            Calcul: (Dernier dividende / Cours) × 100
+                                        </small>
+                                    </div>
+                                </group>
+                            </group>
+
+                            <!-- Informations calcul -->
+                            <div class="alert alert-secondary mt-4" role="alert">
+                                <h6 class="alert-heading">Calcul du rendement</h6>
+                                <p class="mb-0">
+                                    Rendement = (Dernier dividende ÷ Cours de marché) × 100
+                                    <br/>
+                                    <small class="text-muted">Basé sur le dernier dividende versé et le cours actuel
+                                    </small>
+                                </p>
+                            </div>
+                        </page>
+
+                        <!-- Onglet 3 : Informations -->
+                        <page string="Technique">
+                            <group>
+                                <group string="Métadonnées">
+                                    <field name="create_date" readonly="1"/>
+                                    <field name="create_uid" readonly="1"/>
+                                    <field name="write_date" readonly="1"/>
+                                    <field name="write_uid" readonly="1"/>
+                                </group>
+
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <!-- Chatter -->
+                <chatter>
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </chatter>
             </form>
         </field>
     </record>
+
+
 </odoo>

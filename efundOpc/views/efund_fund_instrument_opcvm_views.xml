@@ -1,0 +1,86 @@
+<!-- views/instrument_dat_views.xml -->
+<odoo>
+    <record id="view_efund_instrument_core_opcvm_tree" model="ir.ui.view">
+        <field name="name">efund.vehicule.instrument.core.opcvm.list</field>
+        <field name="model">efund.vehicule.instrument.core.opcvm</field>
+        <field name="arch" type="xml">
+            <list string="Instruments OPCVM" decoration-info="state == 'draft'"
+                  decoration-muted="state == 'liquidated'">
+                <field name="isin" optional="show"/>
+                <field name="name" string="Nom du Fonds"/>
+                <field name="issuer_id" optional="show"/>
+
+                <field name="opcvm_type" optional="show"/>
+                <field name="classification_amf" widget="badge" decoration-warning="classification_amf == 'equity'"
+                       decoration-success="classification_amf == 'monetary'"/>
+
+                <field name="nav" string="Dernière VL" sum="Total VL"/>
+                <field name="nav_date" string="Date VL"/>
+
+                <field name="management_fee_rate" widget="percentage" optional="hide"/>
+                <field name="is_capitalization" string="Cap." widget="boolean_toggle"/>
+
+                <field name="state" widget="badge" decoration-success="state == 'active'"
+                       decoration-info="state == 'draft'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_efund_instrument_core_opcvm_form" model="ir.ui.view">
+        <field name="name">efund.vehicule.instrument.core.opcvm.form</field>
+        <field name="model">efund.vehicule.instrument.core.opcvm</field>
+        <field name="arch" type="xml">
+            <form string="Instrument OPCVM">
+                <header>
+                     <button name="action_archived" type="object" string="Archivé" class="btn-danger" invisible="state != 'approved'"/>
+                    <button name="action_approve" type="object" string="Approuvé" class="btn-primary" invisible="state != 'draft'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Nom de l'OPCVM"/>
+                        <h1>
+                            <field name="name" placeholder="ex: Horizon Trésorerie FCP"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Identification">
+                            <field name="isin"/>
+                            <field name="issuer_id"/>
+                            <field name="asset_class_id"/>
+                        </group>
+                        <group string="Caractéristiques">
+                            <field name="opcvm_type"/>
+                            <field name="is_capitalization"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Valorisation &amp; Frais">
+                            <group>
+                                <group string="Dernière VL">
+                                    <field name="nav"/>
+                                    <field name="nav_date"/>
+                                </group>
+                                <group string="Structure de frais">
+                                    <field name="management_fee_rate" widget="percentage"/>
+                                    <field name="subscription_fee_rate" widget="percentage"/>
+                                    <field name="redemption_fee_rate" widget="percentage"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Historique des ordres">
+                            <field name="orders_ids" readonly="1">
+                                <list>
+                                    <field name="create_date" string="Date"/>
+                                    <field name="units_estimated" string="Parts"/>
+                                    <field name="order_amount" string="Montant"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_efund_vehicule_mandate_list" model="ir.ui.view">
+        <field name="name">efund.vehicule.mandate.list</field>
+        <field name="model">efund.vehicule.mandate</field>
+        <field name="arch" type="xml">
+            <list string="Mandats"
+                  decoration-info="state == 'active'"
+                  decoration-warning="state == 'draft'"
+                  decoration-danger="state == 'liquidated'"
+                  decoration-muted="state == 'suspended'">
+
+                <!-- Colonne référence -->
+                <field name="code" string="Référence"/>
+                <field name="vehicule_id" string="Mandat"/>
+
+                <!-- Colonne investisseur -->
+                <field name="investor_id" string="Investisseur"/>
+
+                <!-- Colonne profil de risque avec badge -->
+                <field name="risk_profile" string="Risque" widget="badge"
+                       options="{'classes': {'low': 'success', 'medium': 'warning', 'high': 'danger'}}"/>
+
+                <!-- Colonnes financières -->
+                <field name="initial_amount" string="Montant Initial"/>
+                <field name="target_return_rate" string="Objectif %"/>
+
+                <!-- Indicateurs de performance -->
+                <field name="realized_return_rate" string="Réalisé %"/>
+                <field name="deviation_from_target" string="Écart" widget="progressbar"
+                       options="{'editable': false, 'max_value': 100}"/>
+
+                <!-- Dates importantes -->
+                <field name="start_date" string="Début"/>
+                <field name="maturity_date" string="Échéance"/>
+
+                <!-- Fréquence coupons -->
+                <field name="coupon_frequency" string="Fréquence" widget="selection"/>
+
+                <!-- État du mandat -->
+                <field name="state" string="Statut" widget="selection_badge"
+                       options="{'classes': {'draft': 'warning', 'active': 'success', 'suspended': 'secondary', 'liquidated': 'danger'}}"/>
+
+            </list>
+        </field>
+    </record>
+
+    <record id="view_gestion_vehicule_mandate_form" model="ir.ui.view">
+        <field name="name">efund.vehicule.mandate.form</field>
+        <field name="model">efund.vehicule.mandate</field>
+        <field name="arch" type="xml">
+            <form string="OPCVM" class="o_xxl_form_view">
+                <header>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button name="action_activate" type="object"
+                                    string="Activer"
+                                    class="btn-primary oe_highlight"
+                                    invisible="state != 'draft' or not is_fund_released "/>
+                            <button name="action_suspend" type="object"
+                                    string="Suspendre"
+                                    class="btn-warning"
+                                    invisible="state != 'active'"/>
+                            <button name="action_close_mandate" type="object"
+                                    string="Clôturer définitivement ce mandat?"
+                                    class="btn-danger"
+                                    invisible="state in  ['draft', 'liquidated'] "/>
+                            <button name="action_reset_to_draft" type="object"
+                                    string="Remettre en brouillon"
+                                    class="btn-secondary"
+                                    invisible="state in ('suspended','liquidated')"/>
+                            <button name="action_push_deposit" type="object"
+                                    string="Apport liquidité"
+                                    class="btn-success"
+                                    invisible="is_fund_released"/>
+                            <button name="action_print_report" type="object" string="Rapport" class="btn-secondary"
+                                    invisible="state == 'draft'"/>
+                        </div>
+                    </div>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_coupons" type="object"
+                                class="oe_stat_button" icon="fa-money">
+                            <div class="o_stat_info">
+                                <!--
+                                <field name="coupon_count" string="Coupons" widget="statinfo"/>
+                                -->
+                            </div>
+                        </button>
+                        <button name="action_view_cash_moves" type="object"
+                                class="oe_stat_button" icon="fa-exchange">
+                            <div class="o_stat_info">
+                                <!--
+                               <field name="cash_move_count" string="Flux" widget="statinfo"/>
+                               -->
+                            </div>
+                        </button>
+                        <button name="action_view_valuations" type="object"
+                                class="oe_stat_button" icon="fa-line-chart">
+                            <div class="o_stat_info">
+                                <!--
+                                   <field name="valuation_count" string="Valorisations" widget="statinfo"/>
+                                   -->
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+
+                        <label for="name" class="o_form_label oe_edit_only"/>
+                        <h1 class="mb-0">
+                            <field name="name" placeholder="Nom du véhicule..." class="text-success"/>
+                        </h1>
+                        <label for="investor_id" class="o_form_label oe_edit_only"/>
+                        <h2>
+                            <field name="investor_id" class="text-success" readonly="state =='active'"/>
+                        </h2>
+
+                    </div>
+                    <notebook>
+                        <page string="Informations">
+                            <group>
+                                <group string="Informations financières">
+                                    <field name="initial_amount" placeholder="Montant initial confié ....."/>
+                                    <field name="target_return_rate" placeholder="Taux Objectif ....."/>
+                                    <field name="coupon_frequency" placeholder="Fréquence des coupons ....."/>
+                                </group>
+                                <group string="Paramètres temporelles">
+                                    <field name="days_corridor" placeholder="Nombre de jours Corridor ....."/>
+                                    <field name="amount_received_date" readonly="1"/>
+                                    <field name="calculeted_base" placeholder="choix de la base ....."/>
+                                </group>
+                                <group string="base calcul coupons">
+                                    <field name="start_date" placeholder="Date d'effet ......"/>
+                                    <field name="duration_months" placeholder="Durée du mandat ....."/>
+                                    <field name="maturity_date" placeholder="Date de maturité ....."/>
+                                    <field name="coupon_capitalisation" placeholder="Capitalisation des coupons ....."/>
+                                </group>
+                                <group string="Réalisation">
+                                    <field name="realized_return_rate" readonly="1"/>
+                                    <field name="deviation_from_target" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Profil risque">
+                            <field name="risk_profile" widget="radio" options="{'horizontal': true}"/>
+                        </page>
+                        <page string="Stratégie d'investissement">
+                            <field name="rule_ids" editable="bottom">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="allowed_asset_types"/>
+                                    <field name="allowed_zones"/>
+                                    <field name="max_concentration"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Opérations Diverses">
+                            <field name="cash_operation_ids" readonly="state =='draft'" context="{'default_vehicule_id': vehicule_id}">
+                                <list>
+                                    <field name="date_operation"/>
+                                    <field name="operation_type"/>
+                                    <field name="total_amount" widget="monetary"/>
+                                    <field name="state" widget="badge" options="{'success': 'validated', 'info': 'draft', 'danger': 'cancelled'}"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Coupon">
+                            <button name="generate_coupon_schedule"
+                                    type="object"
+                                    class="btn-primary"
+                                    icon="fa-calculator"
+                                    string="Générer le calendrier des coupons"/>
+
+                            <field name="coupon_ids" readonly="state =='draft'">
+                                <list decoration-info="state == 'active'" decoration-warning="state == 'draft'">
+                                    <field name="coupon_number"/>
+                                    <field name="date_debut" options="{'numeric': true}"/>
+                                    <field name="date_fin" options="{'numeric': true}"/>
+                                    <field name="date_paiement" options="{'numeric': true}"/>
+                                    <field name="nb_jours"/>
+                                    <field name="montant"/>
+                                    <field name="state"/>
+                                    <button name="update_coupon_state" type="object" class="btn-secondary"
+                                            icon="fa-refresh" string="payé ?" invisible="state != 'draft'"/>
+
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Compte Investisseur" invisible="1">
+                            <field name="cash_move_ids">
+                                <list>
+                                    <field name="date"/>
+                                    <field name="amount"/>
+                                    <field name="move_type"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Flux de trésorerie">
+                            <header>
+                                <button name="generate_excel"
+                                    type="object"
+                                    class="btn-primary"
+                                    icon="fa-calculator"
+                                    string="Export sous excel"/>
+                            </header>
+                            <field name="vehicule_cash_move_ids" readonly="1">
+                                <list>
+                                    <field name="date" string="Date"/>
+                                    <field name="label" string="Opération"/>
+                                    <field name="amount" string="Débit" invisible="'_in' in move_type "/>
+                                    <field name="amount" string="Crédit" invisible="'_out' in move_type "/>
+                                    <field name="balance_running" string="Solde"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Echéanciers">
+                            <field name="cashflow_ids" readonly="1">
+                                <list>
+                                    <field name="date_scheduled" string="Date prévue"/>
+                                    <field name="amount_expected" string="Montant attendu"/>
+                                    <field name="flow_type" string="Type de flux"/>
+                                    <field name="state" string="État"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Positions">
+                            <header>
+                                    <button name="action_revalue_positions"
+                                            string="Actualiser la Valorisation"
+                                            type="object"
+                                            icon="fa-refresh"
+                                            class="btn-secondary mb-2"/>
+                                </header>
+                            <field name="position_ids" readonly="1">
+                                <list string="Inventaire des Titres">
+                                    <field name="instrument_id"/>
+                                    <field name="last_price_date"/>
+                                    <field name="quantity"/>
+                                    <field name="last_price"/>
+                                    <field name="avg_cost" string="CMUP"/>
+                                    <field name="issuance_price"/>
+                                    <field name="market_value" sum="Total"/>
+                                    <field name="unrealized_pl" sum="Total PV Latente"
+                                           decoration-success="unrealized_pl &gt; 0"
+                                           decoration-danger="unrealized_pl &lt; 0"/>
+                                </list>
+                            </field>
+                        </page>
+
+                    </notebook>
+                </sheet>
+                <chatter>
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="kanban_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </chatter>
+            </form>
+        </field>
+    </record>
+
+
+</odoo>

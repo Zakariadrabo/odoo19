@@ -4,7 +4,10 @@ from odoo.exceptions import UserError
 class EfundInvestmentTransaction(models.Model):
     _name = 'efund.investment.transaction'
     _description = "Transaction / Exécution"
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
+    name = fields.Char(string="Référence", required=True,
+                       default=lambda self: self.env['ir.sequence'].next_by_code('efund.investment.transaction'))
     order_id = fields.Many2one('efund.investment.order', string="Ordre d'origine", ondelete='cascade')
     vehicule_id = fields.Many2one(related='order_id.vehicule_id', store=True)
     instrument_id = fields.Many2one(related='order_id.instrument_id', store=True)
@@ -14,86 +17,208 @@ class EfundInvestmentTransaction(models.Model):
 
     quantity = fields.Float(string="Quantité exécutée", required=True)
     price_unit = fields.Float(string="Prix unitaire d'exécution", required=True, digits=(16, 6))
+    move_type = fields.Selection([('in', 'Entrée'), ('out', 'Sortie')], string="Type de transaction", required=True, )
+    label = fields.Char(string="Libellé de la transaction", required=True,)
 
     # Frais de transaction
     broker_id = fields.Many2one('res.partner', string="Intermédiaire / Courtier")
     fees_amount = fields.Float(string="Frais de courtage")
     taxes_amount = fields.Float(string="Taxes / TTF")
-
-    amount_net = fields.Float(string="Montant Net", compute='_compute_totals', store=True)
-
-    state = fields.Selection([
-        ('draft', 'Provisoire'),
-        ('confirmed', 'Confirmé'),
-        ('settled', 'Dénoué (R/L)'),
-        ('cancelled', 'Annulé')
+    interest_amount = fields.Float(string="Intérêts courus")
+    free_tax_amount = fields.Float(string="Montant HT",)
+    amount_net = fields.Float(string="Montant Net", )
+    average_execution_price = fields.Float(string="Prix moyen d'exécution",)
+    state = fields.Selection([('draft', 'Provisoire'),('confirmed', 'Confirmé'), ('settled', 'Dénoué (R/L)'),('cancelled', 'Annulé')
     ], default='draft')
-
-    @api.depends('quantity', 'price_unit', 'fees_amount', 'taxes_amount')
-    def _compute_totals(self):
-        for trade in self:
-            # Pour un achat, les frais s'ajoutent au coût ; pour une vente, ils se déduisent du produit
-            gross_amount = trade.quantity * trade.price_unit
-            if trade.order_id.direction == 'buy':
-                trade.amount_net = gross_amount + trade.fees_amount + trade.taxes_amount
-            else:
-                trade.amount_net = gross_amount - trade.fees_amount - trade.taxes_amount
 
 
     def action_confirm_settlement(self):
         """Déclencheur principal du dénouement"""
-        for trade in self:
-            if trade.state == 'settled':
-                continue
+        # Ajouter ici la logique de comptabilisation
+        for rec in self:
+            if rec.quantity <= 0:
+                raise UserError(_("La quantité doit être supérieure à 0 pour confirmer la ligne."))
+            if rec.price_unit <= 0:
+                raise UserError(_("Le prix doit être supérieur à 0 pour confirmer la ligne."))
 
-            # 1. Mise à jour de l'inventaire (Position)
-            trade._update_position_and_pru()
+            # comptabiliation
+            rec.message_post(
+                body=_("Comptabilisation de la transaction. Lancement de la réconciliation..."),
+                subject="comptabilisation de la souscription",
+                message_type="comment",
+                subtype_xmlid="mail.mt_comment"
+            )
 
-            # 2. Génération de la pièce comptable
-            trade._create_accounting_move()
+            # 1- Crédit du compte du fond pour le montant investi
+            vehicule_cash = self.env['efund.vehicule.cash'].search([
+                ('vehicule_id', '=', rec.vehicule_id.id)
+            ], limit=1)
+            if not vehicule_cash:
+                    vehicule_cash = self.env['efund.vehicule.cash'].create({
+                    'name': f"Trésorerie - {rec.vehicule_id.name}",
+                    'vehicule_id': rec.vehicule_id.id,
+                    'company_id': rec.vehicule_id.company_id.id,
+                })
 
-            trade.state = 'settled'
+            # deterniné le sens de l'opération
+            direction = 'buy'
+            if rec.order_id.operation_type == 'trade':
+                if rec.order_id.direction == 'sell':
+                    direction = 'sell'
+            if rec.order_id.operation_type == 'opcvm':
+                if rec.order_id.direction_opcvm == 'redemption':
+                    direction = 'sell'
 
-    def _update_portfolio_position(self):
-        # Logique à implémenter :
-        # 1. Chercher la position actuelle (Portfolio + Instrument)
-        # 2. Mettre à jour Quantité et PRU (Prix de Revient Unitaire)
-        pass
 
-
-    def _update_position_and_pru(self):
-        """Calcul du nouveau PRU et mise à jour de la quantité"""
-        self.ensure_one()
-        pos_obj = self.env['efund.investment.position']
-
-        # Chercher la position existante
-        position = pos_obj.search([
-            ('vehicule_id', '=', self.vehicule_id.id),
-            ('instrument_id', '=', self.instrument_id.id)
-        ], limit=1)
-
-        if not position:
-            if self.order_id.direction == 'sell':
-                raise UserError(_("Impossible de vendre un instrument que vous ne possédez pas."))
-            # Création initiale
-            pos_obj.create({
-                'vehicule_id': self.vehicule_id.id,
-                'instrument_id': self.instrument_id.id,
-                'quantity': self.quantity,
-                'pru': self.price_unit + (self.fees_amount / self.quantity if self.quantity else 0)
+            # 1- debit ou credit de l'achat ou de la vente
+            vehicule_move_trans = self.env['efund.vehicule.cash.move'].create({
+                'name': self.env['ir.sequence'].next_by_code('efund.vehicule.cash.move'),
+                'vehicule_cash_id': vehicule_cash.id,
+                'amount': rec.free_tax_amount,
+                'move_type': 'investment_out' if direction == 'buy' else 'divestment_in',
+                'liquidity_type': 'liquid',
+                'label': rec.label,
+                'state': 'reconciled',
+                'trade_id': rec.id,
+                'instrument_id': rec.order_id.instrument_id.id,
             })
-        else:
-            if self.order_id.direction == 'buy':
-                # Nouveau PRU = (Ancienne Valeur + Nouvelle Valeur) / Nouvelle Quantité Totale
-                new_total_qty = position.quantity + self.quantity
-                new_val = (position.quantity * position.pru) + self.amount_net
-                position.pru = new_val / new_total_qty if new_total_qty else 0
-                position.quantity = new_total_qty
-            else:
-                # Vente : On réduit la quantité, le PRU ne change pas
-                if position.quantity < self.quantity:
-                    raise UserError(_("Position insuffisante pour cette vente."))
-                position.quantity -= self.quantity
+            message = 'Débit du compte du véhicule au montant de %s francs  représentant le montant de la transaction N° %s' if direction == 'buy' else 'Crédit du compte du fond au montant de %s francs  représentant le montant de la transaction N°: %s'
+            rec.message_post(
+                body=_(message) % (
+                    rec.free_tax_amount, rec.name),
+                subject="comptabilisation de la transaction",
+                message_type="comment",
+                subtype_xmlid="mail.mt_comment"
+            )
+
+            # 2- Débit des frais de courtage
+
+            vehicule_move_broker = self.env['efund.vehicule.cash.move']
+            if rec.fees_amount > 0:
+                vehicule_move_broker.create({
+                    'name': self.env['ir.sequence'].next_by_code('efund.vehicule.cash.move'),
+                    'vehicule_cash_id': vehicule_cash.id,
+                    'amount': rec.fees_amount,
+                    'move_type': 'broker_fee_out',
+                    'liquidity_type': 'liquid',
+                    'state': 'reconciled',
+                    'label': 'Frais de courtage',
+                    'trade_id': rec.id,
+                    'instrument_id': rec.order_id.instrument_id.id,
+                })
+                rec.message_post(
+                    body=_("Débit du compte du fond au montant de %s francs représentant les frais de courtage") % (
+                        rec.fees_amount),
+                    subject="comptabilisation de la transaction",
+                    message_type="comment",
+                    subtype_xmlid="mail.mt_comment"
+                )
+
+            # 3- Debit des taxes
+            vehicule_move_tax = self.env['efund.vehicule.cash.move']
+            if rec.taxes_amount > 0:
+                vehicule_move_tax.create({
+                    'name': self.env['ir.sequence'].next_by_code('efund.vehicule.cash.move'),
+                    'vehicule_cash_id': vehicule_cash.id,
+                    'amount': rec.taxes_amount,
+                    'move_type': 'tax_fee_out',
+                    'liquidity_type': 'liquid',
+                    'label': 'Taxes sur courtage',
+                    'state': 'reconciled',
+                    'trade_id': rec.id,
+                    'instrument_id': rec.order_id.instrument_id.id,
+                })
+                rec.message_post(
+                    body=_(
+                        "Débit du compte du fond au montant de %s francs représentant les taxes sur la commission") % (
+                             rec.taxes_amount),
+                    subject="comptabilisation de la transaction",
+                    message_type="comment",
+                    subtype_xmlid="mail.mt_comment"
+                )
+
+            # 4- Credit du compte des frais de commission
+            instrument_fee_broker = self.env['efund.vehicule.instrument.fee']
+            if rec.fees_amount > 0:
+                instrument_fee_broker.create({
+                    'name': self.env['ir.sequence'].next_by_code('efund.vehicule.instrument.fee'),
+                    'vehicule_id': rec.vehicule_id.id,
+                    'fee_category': 'broker_fee',
+                    'base_amount': rec.free_tax_amount,
+                    'fee_amount': rec.fees_amount,
+                    'vehicule_cash_move_id': vehicule_move_broker.id,
+                    'state': 'reconciled',
+                    'broker_id': rec.broker_id.id,
+                    'trade_id': rec.id,
+                    'instrument_id': rec.order_id.instrument_id.id,
+
+                })
+                rec.message_post(
+                    body=_("Crédit du compte des frais au montant de %s francs représentant les frais de courtage") % (
+                        rec.fees_amount),
+                    subject="comptabilisation de la transaction",
+                    message_type="comment",
+                    subtype_xmlid="mail.mt_comment"
+                )
+
+            # 5- Credit du compte des frais des taxes
+            instrument_fee_tax = self.env['efund.vehicule.instrument.fee']
+            if rec.taxes_amount > 0:
+                instrument_fee_tax.create({
+                    'name': self.env['ir.sequence'].next_by_code('efund.vehicule.instrument.fee'),
+                    'vehicule_id': rec.vehicule_id.id,
+                    'fee_category': 'vat',
+                    'base_amount': rec.fees_amount,
+                    'fee_amount': rec.taxes_amount,
+                    'vehicule_cash_move_id': vehicule_move_tax.id,
+                    'state': 'reconciled',
+                    'broker_id': rec.broker_id.id,
+                    'trade_id': rec.id,
+                    'instrument_id': rec.order_id.instrument_id.id,
+                })
+                rec.message_post(
+                    body=_(
+                        "Crédit du compte des frais au montant de %s francs représentant les taxes sur la commission") % (
+                             rec.taxes_amount),
+                    subject="comptabilisation de la transaction",
+                    message_type="comment",
+                    subtype_xmlid="mail.mt_comment"
+                )
+
+            # Mise à jour des référence dans le compte cash du fond
+            if rec.taxes_amount > 0:
+                vehicule_move_broker.write({'fee_id': instrument_fee_tax.id})
+            if rec.fees_amount > 0:
+                vehicule_move_tax.write({'fee_id': instrument_fee_broker.id})
+
+            # Livraison des titres (T+2) et mise à jour des positions
+            position = self.env['efund.vehicule.position'].get_or_create_position(
+                instrument_id = rec.order_id.instrument_id.id,
+                first_price_date = rec.date_transaction,
+                first_price = rec.price_unit,
+                vehicule_id = rec.vehicule_id.id,
+            )
+            trade_date = self
+            position.apply_trade(trade_date)
+            position.action_generate_cashflows(rec.instrument_id)
+            rec.message_post(
+                body=_(
+                    "Mise à jour de la position de l'instrument %s du fonds %s avec %s titres à %s francs") % (
+                         rec.order_id.instrument_id.name, rec.vehicule_id.name, rec.quantity, rec.price_unit),
+                subject="mise à jour de la position",
+                message_type="comment",
+                subtype_xmlid="mail.mt_comment"
+            )
+
+            # Post du résultat sur le chatter
+            rec.message_post(
+                body=_("Réconciliation terminée avec succès."),
+                subject="Réconciliation réussie",
+                message_type="comment",
+                subtype_xmlid="mail.mt_comment"
+            )
+            self.write({'state': 'settled'})
+
 
     def _create_accounting_move(self):
         """Génération de l'écriture account.move"""

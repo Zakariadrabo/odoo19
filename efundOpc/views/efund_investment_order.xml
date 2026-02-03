@@ -1,0 +1,158 @@
+<odoo>
+
+    <record id="view_efund_investment_order_list" model="ir.ui.view">
+        <field name="name">efund.investment.order.list</field>
+        <field name="model">efund.investment.order</field>
+        <field name="arch" type="xml">
+            <list string="Ordres d'Investissement" decoration-info="state=='confirmed'"
+                  decoration-warning="state=='draft'" decoration-danger="state=='cancelled'">
+                <!-- Colonne principale avec état coloré -->
+                <field name="name" string="Référence"/>
+
+                <!-- Colonne d'état avec indicateur visuel -->
+                <field name="state" widget="selection_badge"
+                       options="{'classes': {'draft': 'warning', 'confirmed': 'info', 'executed': 'success', 'cancelled': 'danger'}}"/>
+
+                <!-- Informations principales -->
+                <field name="vehicule_id" string="Portefeuille"/>
+                <field name="instrument_id" string="Instrument"/>
+                <field name="operation_type" string="Type Opération" widget="selection"/>
+
+                <!-- Colonnes conditionnelles selon le type d'opération -->
+                <field name="direction" string="Sens"/>
+
+                <!-- Montants avec formatage conditionnel -->
+                <field name="quantity" string="Quantité" invisible="operation_type not in ['trade']"/>
+                <field name="order_amount" string="Montant OPCVM"
+                       invisible="operation_type not in ['subscription', 'redemption']"/>
+                <field name="deposit_amount" string="Montant DAT" invisible="operation_type != 'deposit'"/>
+                <field name="total_amount_trade" string="Montant Total" invisible="operation_type not in ['trade']"/>
+
+                <!-- Informations de prix et date -->
+                <field name="limit_price" string="Prix" invisible="operation_type != 'trade'"/>
+                <field name="price_type" string="Type Prix" invisible="operation_type != 'trade'"/>
+
+                <!-- Dates importantes -->
+                <field name="validity_date" string="Validité" invisible="operation_type != 'trade'"/>
+                <field name="nav_date_expected" string="Date VL"
+                       invisible="operation_type not in ['subscription', 'redemption']"/>
+                <field name="maturity_date" string="Échéance" invisible="operation_type != 'deposit'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_efund_investment_order_form" model="ir.ui.view">
+        <field name="name">efund.investment.order.form</field>
+        <field name="model">efund.investment.order</field>
+        <field name="arch" type="xml">
+            <form string="Ordre d'investissement" readonly="state == 'cancelled'">
+                <header>
+                    <button name="action_cancel" type="object" string="Annuler" class="btn-danger"
+                            invisible="state in ('draft','executed','cancelled')"/>
+                    <button name="action_validate" type="object" string="Valider" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_send" type="object" string="Envoyer" class="btn-primary"
+                            invisible="state != 'validated'"/>
+                    <button name="action_execute" type="object" string="Executé" class="btn-primary"
+                            invisible="state not in ('sent', 'partially_executed')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Contexte">
+                            <field name="vehicule_id" options="{'no_create': True}"/>
+                            <field name="instrument_id" options="{'no_create': True}"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="operation_type"/>
+                            <field name="order_date" required="True"/>
+                        </group>
+                        <group string="Exécution">
+                            <field name="direction" invisible="operation_type != 'trade'" required="operation_type == 'trade'"
+                                   widget="radio" options="{'horizontal': true}"/>
+                            <field name="direction_opcvm" invisible="operation_type != 'opcvm'" required="operation_type == 'opcvm'"
+                                   widget="radio" options="{'horizontal': true}"/>
+
+                        </group>
+                    </group>
+
+                    <group string="Détails de Marché" invisible="operation_type != 'trade'">
+                        <group string="Données">
+                            <field name="price_type"/>
+                            <field name="quantity"/>
+                            <field name="limit_price" invisible="price_type != 'limit'"/>
+                            <field name="total_amount_trade" widget="monetary" class="fw-bold text-primary"/>
+                            <field name="total_amount"/>
+                        </group>
+                        <group string="Commission / Taxe / Intérêts courus ">
+                            <field name="total_interest" readonly="1"/>
+                            <field name="total_broker_commission" readonly="1"/>
+                            <field name="total_tob_commission" readonly="1"/>
+                        </group>
+
+
+                    </group>
+
+                    <group string="Détails de l'Ordre OPCVM" invisible="operation_type != 'opcvm'">
+                        <div class="alert alert-info" role="alert" colspan="2" style="margin-bottom:10px;">
+                            <i class="fa fa-info-circle"/>
+                            Exécution à Valeur Liquidative inconnue.
+                        </div>
+                        <group>
+                            <field name="amount_type" widget="radio" options="{'horizontal': true}"/>
+                            <field name="order_amount" widget="monetary" string="Montant Brut" readonly="amount_type == 'unit'" force_save="1"/>
+                            <field name="nav" string="Valeur liquidative"/>
+                        </group>
+                        <group>
+                            <field name="nav_date_expected"/>
+                            <field name="units_estimated" class="text-muted"  readonly="amount_type == 'amount'" force_save="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Conditions du DAT" invisible="operation_type != 'deposit'">
+                        <group>
+                            <field name="deposit_amount" widget="monetary"/>
+                            <field name="negotiated_rate" widget="float"/>
+                        </group>
+                        <group>
+                            <field name="start_date"/>
+                            <field name="maturity_date"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Exécutions / Transactions" name="transactions">
+                            <field name="execution_line_ids">
+                                <list>
+                                    <field name="date_transaction"/>
+                                    <field name="quantity"/>
+                                    <field name="price_unit" widget="monetary"/>
+                                    <field name="free_tax_amount" widget="monetary"/>
+                                    <field name="fees_amount" widget="monetary"/>
+                                    <field name="taxes_amount" widget="monetary"/>
+                                    <field name="interest_amount" widget="monetary"/>
+                                    <field name="amount_net" sum="Total Net" widget="monetary" font_weight="bold"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Suivi Quantité" name="tracking" invisible="operation_type != 'trade'">
+                            <group>
+                                <field name="executed_qty" readonly="1"/>
+                                <field name="remaining_qty" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter>
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </chatter>
+            </form>
+        </field>
+    </record>
+
+</odoo>

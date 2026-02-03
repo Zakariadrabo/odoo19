@@ -4,6 +4,7 @@ from odoo.exceptions import UserError, ValidationError
 
 class Fund(models.Model):
     _name = 'efund.vehicule.fund'
+    _description = 'Fonds de véhicule'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _inherits = {'efund.vehicule': 'vehicule_id'}
 

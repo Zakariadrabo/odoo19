@@ -1,0 +1,31 @@
+<odoo>
+    <record id="view_efund_vehicule_mandat_deposit_wizard_form" model="ir.ui.view">
+        <field name="name">efund.vehicule.mandat.deposit.wizard.form</field>
+        <field name="model">efund.vehicule.mandat.deposit.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Effectuer un dépôt">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="mandate_id" options="{'no_create': True, 'no_open': True}"/>
+                            <field name="deposit_date" required="1"/>
+                        </group>
+                        <group>
+                            <label for="deposit_amount"/>
+                            <div class="o_row">
+                                <field name="deposit_amount" widget="monetary"
+                                       options="{'currency_field': 'currency_id'}"/>
+                                <field name="currency_id" invisible="1"/>
+                            </div>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_confirm_deposit" string="Confirmer le dépôt" type="object" class="btn-primary"
+                            data-hotkey="q"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel" data-hotkey="z"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

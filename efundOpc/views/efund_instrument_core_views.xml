@@ -1,74 +1,250 @@
 <odoo>
-    <record id="view_efund_instrument_core_form" model="ir.ui.view">
-        <field name="name">efund.fund.instrument.core.form</field>
-        <field name="model">efund.fund.instrument.core.bond</field>
+    <record id="view_bond_tree" model="ir.ui.view">
+        <field name="name">efund.vehicule.instrument.core.bond.list</field>
+        <field name="model">efund.vehicule.instrument.core.bond</field>
         <field name="arch" type="xml">
-            <form string="Instrument Financier">
-                <header>
+            <list string="Obligations" decoration-info="next_coupon_date &gt;= context_today()"
+                  decoration-warning="maturity_date &lt;= context_today()">
+                <!-- Identification -->
+                <field name="instrument_id"/>
+                <field name="isin" string="ISIN"/>
 
-                    <field name="instrument_type" widget="statusbar" statusbar_visible="equity,bond,dat,opcvm"/>
+
+                <!-- Caractéristiques obligataires -->
+                <field name="bond_type" string="Type"/>
+                <field name="face_value" string="Valeur Nominale"/>
+                <field name="coupon_rate" string="Taux Coupon %"/>
+                <field name="valuation_method" string="Méthode Valo"/>
+
+                <!-- Dates importantes -->
+                <field name="issue_date" string="Émission"/>
+                <field name="maturity_date" string="Échéance"/>
+
+                <!-- Calculs dynamiques -->
+                <field name="remaining_date_to_maturity" string="Restant Maturité"/>
+                <field name="next_coupon_date" string="Prochain Coupon"/>
+                <field name="remaining_date_to_coupon" string="Jours Restants Coupon"/>
+
+                <!-- État -->
+                <field name="is_listed" string="Coté" invisible="1"/>
+                <field name="is_listed" string="Coté" widget="boolean_favorite" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_bond_form" model="ir.ui.view">
+        <field name="name">efund.vehicule.instrument.core.bond.form</field>
+        <field name="model">efund.vehicule.instrument.core.bond</field>
+        <field name="arch" type="xml">
+            <form string="Obligation">
+                <header>
+                    <!-- <button name="action_compute_coupons" string="Recalculer Coupons" type="object" class="btn-primary"
+                            invisible="state !='draft'"/>
+                    <widget name="web_ribbon" title="Échu" bg_color="bg-danger" invisible="maturity_date &gt; context_today()"/> -->
+                    <field name="state" widget="statusbar"/>
                 </header>
+
                 <sheet>
-                    <div class="oe_title">
-                        <label for="name" string="Désignation de l'instrument"/>
-                        <h1>
-                            <field name="name" placeholder="ex: Orange CI 6.5% 2023-2030"/>
-                        </h1>
-                        <div class="o_row">
-                            <field name="isin" placeholder="Code ISIN (ex: CI0000000123)" class="oe_inline"/>
-                            <span class="badge rounded-pill text-bg-info" invisible="not is_listed">Coté en bourse
-                            </span>
-                        </div>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_coupons" type="object" class="oe_stat_button" icon="fa-percent">
+                        </button>
+                        <button name="action_view_amortizations" type="object" class="oe_stat_button"
+                                icon="fa-line-chart">
+                        </button>
+                        <button name="action_view_prices" type="object" class="oe_stat_button" icon="fa-money">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Cours</span>
+                            </div>
+                        </button>
                     </div>
 
-                    <group>
-                        <group name="main_info" string="Informations Générales">
-                            <field name="asset_class_id" options="{'no_create': True}"/>
-                            <field name="issuer_id"/>
-                            <field name="currency_id" options="{'no_create': True}"/>
+                    <group class="oe_title">
+                        <group>
+                            <field name="name" placeholder="Nom de l'obligation..."/>
+                            <field name="isin" placeholder="Code ISIN..."/>
                         </group>
-                        <group name="market_info" string="Données de Marché">
-                            <field name="is_listed"/>
-                            <field name="instrument_type" invisible="1"/>
+                        <group>
+                            <field name="issuer_id" widget="many2one_clickable"/>
+                            <field name="asset_class_id" widget="many2one_clickable"/>
                         </group>
                     </group>
 
                     <notebook>
-                        <page string="Caractéristiques Obligataires" invisible="instrument_type != 'bond'">
-                            <div class="alert alert-info text-center" role="alert" style="margin-bottom:10px;">
-                                Données financières de l'obligation
-                            </div>
+                        <!-- Onglet 1 : Caractéristiques Générales -->
+                        <page string="Caractéristiques">
                             <group>
-                                <group string="Émission &amp; Valorisation">
-                                    <field name="instrument_type" widget="radio" options="{'horizontal': true}"/>
+                                <group string="Identification">
+                                    <field name="bond_type"/>
+                                    <field name="issue_amount"/>
                                     <field name="face_value"/>
-                                    <field name="valuation_method"/>
-                                    <field name="coupon_rate" widget="percentage"/>
+                                    <field name="coupon_rate"/>
+
                                 </group>
-                                <group string="Calendrier">
+                                <group string="Dates Clés">
                                     <field name="issue_date"/>
                                     <field name="value_date"/>
                                     <field name="maturity_date"/>
-                                    <field name="remaining_date_to_maturity" class="text-danger fw-bold"/>
                                 </group>
                             </group>
-                            <group string="Gestion des Coupons">
+                            <group>
                                 <group>
-                                    <field name="coupon_frequency"/>
-                                    <field name="coupon_calculation_date"/>
+                                    <field name="is_listed" string="Instrument Coté"/>
+                                    <field name="valuation_method" invisible="not is_listed"/>
+                                </group>
+
+                            </group>
+
+                            <!-- Bloc dynamique pour les durées restantes -->
+                            <group string="Durées Restantes" colspan="2">
+                                <group>
+                                    <label for="remaining_date_to_maturity"/>
+                                    <h2>
+                                        <field name="remaining_date_to_maturity" nolabel="1" readonly="1"
+                                               class="text-danger"/>
+                                    </h2>
                                 </group>
                                 <group>
-                                    <field name="remaining_date_to_coupon" class="text-primary"/>
+                                    <label for="remaining_date_to_coupon"/>
+                                    <h2>
+                                        <field name="remaining_date_to_coupon" nolabel="1" readonly="1"
+                                               class="text-success"/>
+                                    </h2>
+                                </group>
+                            </group>
+                            <!-- Bloc dynamique pour les durées restantes -->
+                            <group string="Valorisation" colspan="2">
+                                <group>
+                                    <label for="last_price_date"/>
+                                    <h2>
+                                        <field name="last_price_date" nolabel="1" readonly="1" class="text-success"/>
+                                    </h2>
+                                </group>
+                                <group>
+                                    <label for="last_validated_price"/>
+                                    <h2>
+                                        <field name="last_validated_price" nolabel="1" readonly="1"
+                                               class="text-success"/>
+                                    </h2>
                                 </group>
                             </group>
                         </page>
 
-                        <page string="Historique des prix" name="prices">
-                            <p class="text-muted">Le graphique de performance sera intégré ici.</p>
+                        <!-- Onglet 2 : Paramètres Coupons -->
+                        <page string="Coupons">
+                            <div>
+                                <button name="action_compute_coupons" string="Générer les coupons" type="object"
+                                        class="btn-primary mt-2"/>
+                            </div>
+                            <group>
+                                <group string="Paramètres Coupon">
+                                    <field name="coupon_frequency"/>
+                                    <field name="calculeted_base"/>
+                                </group>
+                            </group>
+                            <group>
+                                <field name="coupon_ids" readonly="state =='draft'" nolabel="1">>
+                                    <list decoration-info="state == 'active'" decoration-warning="state == 'draft'">
+                                        <field name="coupon_number"/>
+                                        <field name="date_debut" options="{'numeric': true}"/>
+                                        <field name="date_fin" options="{'numeric': true}"/>
+                                        <field name="date_paiement" options="{'numeric': true}"/>
+                                        <field name="nb_jours"/>
+                                        <field name="montant"/>
+                                        <field name="state"/>
+                                        <button name="update_coupon_state" type="object" class="btn-secondary"
+                                                icon="fa-money-bill" string="payer ?" invisible="state != 'draft'"/>
+                                    </list>
+                                </field>
+                            </group>
+                        </page>
+
+                        <!-- =========================== -->
+                        <!-- TAB: Tableau d'amortissement
+                         ===========================-->
+                        <page string="Tableau d'Amortissement" name="bond_amortization">
+                            <div>
+                                <button string="Générer le tableau" type="object"
+                                        class="btn-primary" icon="fa-calculator"
+                                        name="action_open_amortization_wizard"/>
+                            </div>
+                            <group>
+                                <group string="Paramètres tableau">
+                                    <field name="amortization_type"/>
+                                    <field name="calculeted_base"/>
+                                </group>
+                            </group>
+
+                            <field name="bond_amortization_ids" readonly="1" context="{'default_instrument_id': id}">
+                                <list decoration-info="state == 'draft'">
+                                    <field name="installment_number"/>
+                                    <field name="due_date" options="{'numeric': true}"/>
+                                    <field name="opening_principal"/>
+                                    <field name="coupon_amount"/>
+                                    <field name="principal_repayment"/>
+                                    <field name="annuite"/>
+                                    <field name="closing_principal"/>
+                                    <field name="total_payment"/>
+                                    <field name="state" widget="badge" decoration-success="state == 'paid'"/>
+                                    <button name="update_coupon_state" type="object" class="btn-secondary"
+                                            icon="fa-refresh" string="payé ?" invisible="state != 'draft'"/>
+
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Commission et Taxes">
+                            <field name="instrument_fee_ids" context="{'default_instrument_id': id}">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="fee_category"/>
+                                    <field name="calculation_method"/>
+                                    <field name="rate"/>
+                                    <field name="amount"/>
+                                    <field name="capitalizable"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Cours">
+                            <button name="action_import_price_today"
+                                    type="object"
+                                    string="Importer cours"
+                                    class="oe_highlight"
+                                    icon="fa-download"/>
+
+                            <field name="instrument_price_ids" context="{'default_instrument_id': id}">
+                                <list>
+                                    <field name="instrument_id"/>
+                                    <field name="date"/>
+                                    <field name="price"/>
+                                    <field name="is_validated" widget="boolean"/>
+                                    <field name="validated_date"/>
+                                    <field name="validated_by"/>
+                                    <button name="action_validate" type="object" string="Valider" class="oe_highlight" invisible="is_validated == True"/>
+                                </list>
+                            </field>
+                        </page>
+                        <!-- Onglet 3 : Informations Techniques -->
+                        <page string="Technique">
+                            <group>
+                                <group string="Statut">
+                                    <span>string="Statut Calcul"</span>
+                                    <div class="alert alert-info mt-2">
+                                        <p>Les calculs de coupon sont automatiques selon la fréquence définie.</p>
+                                    </div>
+                                </group>
+                            </group>
                         </page>
                     </notebook>
                 </sheet>
+
+                <!-- Discussions et notes -->
+                <chatter>
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </chatter>
             </form>
         </field>
     </record>
+
+
 </odoo>

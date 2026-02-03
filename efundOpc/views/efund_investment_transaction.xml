@@ -1,0 +1,148 @@
+<odoo>
+    <data>
+        <record id="view_efund_investment_transaction_list" model="ir.ui.view">
+            <field name="name">efund.investment.transaction.list</field>
+            <field name="model">efund.investment.transaction</field>
+            <field name="arch" type="xml">
+                <list string="Transactions d'Investissement"
+                      decoration-info="state == 'confirmed'"
+                      decoration-warning="state == 'draft'"
+                      decoration-success="state == 'settled'"
+                      decoration-danger="state == 'cancelled'">
+
+                    <!-- Colonne de référence -->
+                    <field name="order_id" string="Ordre"/>
+
+                    <!-- Informations de base -->
+                    <field name="vehicule_id" string="Portefeuille"/>
+                    <field name="instrument_id" string="Instrument"/>
+
+                    <!-- Date et état -->
+                    <field name="date_transaction" string="Date Transaction"/>
+                    <field name="date_settlement" string="Date Règlement"/>
+
+                    <!-- État -->
+                    <field name="state" string="Statut" widget="badge"
+                           options="{'classes': {'draft': 'warning', 'confirmed': 'info', 'settled': 'success', 'cancelled': 'danger'}}"/>
+
+                    <!-- Détails de la transaction -->
+                    <field name="quantity" string="Quantité"/>
+                    <field name="price_unit" string="Prix Unitaire"/>
+
+                    <!-- Montants -->
+                    <field name="amount_net" string="Montant Net"/>
+
+                    <!-- Frais -->
+                    <field name="fees_amount" string="Frais"/>
+                    <field name="taxes_amount" string="Taxes"/>
+
+                    <!-- Broker -->
+                    <field name="broker_id" string="Courtier"/>
+
+                    <!-- Bouton d'action -->
+                    <button name="action_confirm_settlement"
+                            string="Régler"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-check"
+                            invisible="state in ['settled', 'cancelled']"/>
+                </list>
+            </field>
+        </record>
+
+
+        <record id="view_efund_investment_transaction_form" model="ir.ui.view">
+            <field name="name">efund.investment.transaction.form</field>
+            <field name="model">efund.investment.transaction</field>
+            <field name="arch" type="xml">
+                <form string="Transaction d'Investissement">
+                    <header>
+                        <!-- Boutons d'action selon l'état -->
+                        <button name="action_confirm_settlement" type="object"
+                                string="Comptabiliser le Règlement" class="btn-primary"
+                                invisible="state != 'confirmed'"/>
+                        <field name="state" widget="statusbar"/>
+                    </header>
+
+                    <sheet>
+                        <!-- Informations principales en 2 colonnes -->
+                        <group>
+                            <group string="Transaction">
+                                <!-- Ordre parent -->
+                                <field name="order_id" options="{'no_create': True}"
+                                       context="{'default_state': 'confirmed'}"/>
+                                <!-- Portefeuille et Instrument -->
+                                <field name="vehicule_id" readonly="1"/>
+                                <field name="instrument_id" readonly="1"/>
+
+                                <!-- Dates -->
+                                <field name="date_transaction" string="Date de Transaction"/>
+                                <field name="date_settlement" string="Date de Règlement"/>
+                            </group>
+
+                            <group string="Détails Financiers">
+                                <!-- Quantité et Prix -->
+                                <field name="quantity" string="Quantité exécutée"/>
+                                <field name="price_unit" string="Prix d'exécution"/>
+
+                                <!-- Frais -->
+                                <field name="fees_amount" string="Frais de courtage"/>
+                                <field name="taxes_amount" string="Taxes/TTF"/>
+
+                                <!-- Montant Net (calculé) -->
+                                <field name="amount_net" string="Montant Net" readonly="1"/>
+
+                                <!-- Courtier -->
+                                <field name="broker_id" string="Intermédiaire/Courtier" options="{'no_create': True}"/>
+                            </group>
+                        </group>
+
+                        <!-- Informations complémentaires -->
+                        <group>
+                            <group string="Calculs Automatiques" colspan="2">
+                                <span>string="Détail du calcul"</span>
+                                <div class="border rounded p-3">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <strong>Montant Brut :</strong>
+                                            <span class="float-end">
+                                                <field name="free_tax_amount"/>
+                                            </span>
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Frais totaux :</strong>
+                                            <span class="float-end">
+                                                <field name="fees_amount"/>
+                                                <field name="taxes_amount"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <hr/>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <strong>Montant Net :</strong>
+                                            <span class="float-end">
+                                                <field name="amount_net"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </group>
+                        </group>
+
+                        <!-- Zone d'information -->
+                        <notebook>
+                            <page string="Notes" name="notes_page">
+                                <field name="message_ids" widget="mail_thread"/>
+                            </page>
+
+                            <page string="Suivi" name="tracking_page">
+                                <field name="message_ids" widget="mail_activity"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

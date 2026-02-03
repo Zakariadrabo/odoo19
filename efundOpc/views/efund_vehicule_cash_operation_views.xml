@@ -1,0 +1,66 @@
+<odoo>
+    <record id="view_efund_vehicule_cash_operation_list" model="ir.ui.view">
+    <field name="name">efund.vehicule.cash.operation.list</field>
+    <field name="model">efund.vehicule.cash.operation</field>
+    <field name="arch" type="xml">
+        <list string="Opérations Cash" decoration-info="state == 'draft'" decoration-success="state == 'validated'" decoration-muted="state == 'cancelled'">
+            <field name="date_operation"/>
+            <field name="name"/>
+            <field name="operation_type"/>
+            <field name="total_amount" sum="Total Frais" widget="monetary"/>
+            <field name="state" widget="badge" options="{'success': 'validated', 'info': 'draft', 'danger': 'cancelled'}"/>
+        </list>
+    </field>
+</record>
+
+    <record id="view_efund_vehicule_cash_operation_form" model="ir.ui.view">
+    <field name="name">efund.vehicule.cash.operation.form</field>
+    <field name="model">efund.vehicule.cash.operation</field>
+    <field name="arch" type="xml">
+        <form string="Opération Diverses Cash">
+            <header>
+                <button name="action_validate" string="Valider" type="object"
+                        class="btn-primary" invisible="state != 'draft'"/>
+                <button name="action_cancel" string="Annuler" type="object"
+                        invisible="state == 'cancelled'"/>
+                <field name="state" widget="statusbar" statusbar_visible="draft,validated,cancelled"/>
+            </header>
+            <sheet>
+                <div class="oe_title">
+                    <label for="name" string="Libellé"/>
+                    <h1><field name="name"/></h1>
+                </div>
+                <group string="Détails de l'opération">
+                    <group>
+                        <field name="operation_type"/>
+                        <field name="date_operation"/>
+                    </group>
+                    <group>
+                        <field name="amount" widget="monetary" string="Montant HT"/>
+                        <field name="vat_amount" widget="monetary" string="TVA"/>
+                        <div class="oe_subtotal_footer_separator oe_inline o_td_label">
+                            <label for="total_amount"/>
+                        </div>
+                        <field name="total_amount" nolabel="1" class="oe_subtotal_footer_separator" widget="monetary"/>
+                    </group>
+                </group>
+                <notebook>
+                    <page string="Traçabilité" name="tracking">
+                        <group>
+                            <group>
+                                <field name="create_uid" string="Créé par" readonly="1"/>
+                                <field name="create_date" string="Date création" readonly="1"/>
+                            </group>
+                        </group>
+                    </page>
+                </notebook>
+            </sheet>
+            <chatter>
+                <field name="message_follower_ids"/>
+                <field name="activity_ids"/>
+                <field name="message_ids"/>
+            </chatter>
+        </form>
+    </field>
+</record>
+</odoo>

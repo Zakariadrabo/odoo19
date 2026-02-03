@@ -2,8 +2,8 @@
 <odoo>
     <!-- Wizard d'import des cours -->
     <record id="view_efund_fund_import_price_wizard_form" model="ir.ui.view">
-        <field name="name">efund.fund.import.price.wizard.form</field>
-        <field name="model">efund.fund.import.price.wizard</field>
+        <field name="name">efund.instrument.import.price.wizard.form</field>
+        <field name="model">efund.instrument.import.price.wizard</field>
         <field name="arch" type="xml">
             <form string="Importer des cours">
                 <sheet>
@@ -54,13 +54,5 @@
                 </sheet>
             </form>
         </field>
-    </record>
-
-    <!-- Action pour ouvrir le wizard -->
-    <record id="action_efund_fund_import_price_wizard" model="ir.actions.act_window">
-        <field name="name">Importer des cours</field>
-        <field name="res_model">efund.fund.import.price.wizard</field>
-        <field name="view_mode">form</field>
-        <field name="target">new</field>
     </record>
 </odoo>

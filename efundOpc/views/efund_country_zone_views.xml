@@ -1,0 +1,45 @@
+<odoo>
+    <record id="view_efund_country_zone_tree" model="ir.ui.view">
+        <field name="name">efund.country.zone.tree</field>
+        <field name="model">efund.country.zone</field>
+        <field name="arch" type="xml">
+            <list string="Zones Géographiques">
+                <field name="code" optional="show"/>
+                <field name="name"/>
+                <field name="country_ids" widget="many2many_tags" options="{'no_create': True}"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_efund_country_zone_form" model="ir.ui.view">
+        <field name="name">efund.country.zone.form</field>
+        <field name="model">efund.country.zone</field>
+        <field name="arch" type="xml">
+            <form string="Zone Géographique">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="ex: CEMAC, UEMOA..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="ex: CM-01"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Pays Inclus" name="countries">
+                            <field name="country_ids" placeholder="Sélectionnez les pays de la zone...">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="code"/>
+                                    <field name="currency_id"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

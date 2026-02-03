@@ -1,27 +1,173 @@
 <!-- views/instrument_dat_views.xml -->
 <odoo>
-    <record id="view_dat_form" model="ir.ui.view">
-        <field name="name">efund.fund.instrument.dat.form</field>
-        <field name="model">efund.fund.instrument.dat</field>
+    <record id="view_dat_list" model="ir.ui.view">
+        <field name="name">efund.vehicule.instrument.core.dat.list</field>
+        <field name="model">efund.vehicule.instrument.core.dat</field>
         <field name="arch" type="xml">
-            <form string="Caractéristiques DAT">
-                <group string="Paramètres du DAT">
-                    <group>
-                        <field name="dat_principal" string="Montant du DAT" required="1"/>
-                        <field name="dat_interest_rate" string="Taux DAT (%)" digits="(16,4)" required="1"/>
-                        <field name="dat_start_date" string="Date de début" required="1"/>
-                        <field name="dat_maturity_date" string="Date d'échéance" required="1"/>
-                    </group>
-                    <group>
-                        <field name="dat_day_count" string="Base de calcul"/>
-                        <field name="dat_amortized_value" string="Valeur amortie actuelle" readonly="1"/>
-                    </group>
-                </group>
+            <list string="Dépôts à Terme" decoration-success="accrued_interest &gt; 0"
+                  decoration-danger="end_date &lt;= context_today()" decoration-info="end_date &gt; context_today()">
+                <!-- Banque et montant -->
+                <field name="account_number" string="Compte"/>
+                <field name="bank_id" widget="many2one_clickable"/>
+                <field name="amount_deposit" string="Montant"/>
 
-                <group string="Informations Complémentaires">
-                    <field name="custodian" string="Dépositaire"/>
-                </group>
+                <!-- Dates clés -->
+                <field name="start_date" string="Début"/>
+                <field name="end_date" string="Échéance"/>
+                <field name="duration_days" string="Durée (j)"/>
+
+                <!-- Taux et intérêts -->
+                <field name="interest_rate" string="Taux %"/>
+                <field name="accrued_interest" string="Intérêts Courus"/>
+
+                <!-- Statut rapide -->
+                <field name="state" widget="badge"
+                       options='{"classes": {"active": "bg-success", "matured": "bg-secondary", "cancelled": "bg-danger"}}'
+                       string="Statut"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dat_form" model="ir.ui.view">
+        <field name="name">efund.vehicule.instrument.core.dat.form</field>
+        <field name="model">efund.vehicule.instrument.core.dat</field>
+        <field name="arch" type="xml">
+            <form string="Dépôt à Terme (DAT)">
+                <header>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button name="action_activate" type="object"
+                                    string="Activer"
+                                    class="btn-primary oe_highlight"
+                                    invisible="state != 'draft'"/>
+                            <button name="action_suspend" type="object"
+                                    string="Suspendre"
+                                    class="btn-warning"
+                                    invisible="state != 'active'"/>
+                            <button name="action_liquidate" type="object"
+                                    string="Liquider"
+                                    class="btn-danger"
+                                    invisible="state in  ['draft', 'liquidated'] "/>
+                            <button name="action_reset_to_draft" type="object"
+                                    string="Remettre en brouillon"
+                                    class="btn-secondary"
+                                    invisible="state in ('suspended','liquidated')"/>
+                        </div>
+                    </div>
+                    <!-- Boutons d'action dans l'en-tête -->
+                    <button name="action_compute_interests" string="Recalculer Intérêts" type="object"
+                            class="btn-primary" invisible="state in ('draft')"/>
+                    <button name="action_close_dat" string="Clôturer" type="object" class="btn-secondary"
+                            invisible="state != 'active'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+
+                <sheet>
+                    <!-- Boîte de boutons statistiques -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_interest_details" type="object" class="oe_stat_button"
+                                icon="fa-percent">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value text-success">
+                                    <field name="accrued_interest" widget="monetary"/>
+                                </span>
+                                <span class="o_stat_text">Intérêts Courus</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Informations principales -->
+                    <group class="oe_title">
+                        <group>
+                            <field name="name" required="1" string="Libellé DAT"/>
+                            <field name="account_number" placeholder="N° de compte DAT..."/>
+                        </group>
+                        <group>
+                            <field name="bank_id" required="1"/>
+                            <field name="asset_class_id" widget="many2one_clickable" required="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Notebook avec onglets -->
+                    <notebook>
+                        <!-- Onglet 1 : Caractéristiques du DAT -->
+                        <page string="Caractéristiques">
+                            <group>
+                                <group string="Dépôt">
+                                    <field name="amount_deposit"/>
+                                    <field name="interest_rate" digits="[16, 4]"/>
+                                    <field name="interest_calculation_type"/>
+                                    <field name="daily_interest_rate" string="Taux journalier" widget="percentage" digits="[16, 6]" readonly="1"/>
+                                </group>
+                                <group string="Période">
+                                    <field name="start_date"/>
+                                    <field name="end_date"/>
+                                    <field name="duration_days" readonly="1"/>
+
+                                    <field string="Jours écoulés" name="days_elapsed" widget="integer" readonly="1" />
+                                </group>
+
+                            </group>
+
+                            <!-- Résumé financier -->
+                            <div class="alert alert-info mt-4" role="alert">
+                                <h5 class="alert-heading">Résumé Financier</h5>
+                                <group class="row">
+                                    <div class="col-6">
+                                        <strong>Montant initial:</strong>
+                                        <div class="text-primary font-weight-bold">
+                                            <field name="amount_deposit" widget="monetary" nolabel="1"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <strong>Intérêts courus:</strong>
+                                        <div class="text-success font-weight-bold">
+                                            <field name="accrued_interest" widget="monetary" nolabel="1"/>
+                                        </div>
+                                    </div>
+                                </group>
+                                <hr/>
+                                <div>
+                                    <strong>Valeur estimée:</strong>
+                                    <h4 class="text-success">
+                                        <field name="estimated_value" widget="monetary" nolabel="1"/>
+                                    </h4>
+                                </div>
+                            </div>
+                        </page>
+
+                        <!-- Onglet 2 : Calcul des Intérêts -->
+                        <page string="Intérêts">
+                            <group>
+                                <group string="Détails du calcul">
+
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- Onglet 3 : Informations Techniques -->
+                        <page string="Technique">
+                            <group>
+                                <group string="Métadonnées">
+                                    <field name="create_date" readonly="1"/>
+                                    <field name="create_uid" readonly="1"/>
+                                    <field name="write_date" readonly="1"/>
+                                    <field name="write_uid" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <!-- Chatter (discussions et activités) -->
+                <chatter>
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </chatter>
             </form>
         </field>
     </record>
+
+
 </odoo>

@@ -43,7 +43,7 @@
                                     <field name="remaining_qty" class="text-danger fw-bold"/>
                                 </group>
                             </group>
-                            <field name="transaction_ids" readonly="1">
+                            <field name="execution_line_ids" readonly="1">
                                 <list>
                                     <field name="date_transaction"/>
                                     <field name="quantity"/>

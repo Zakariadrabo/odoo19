@@ -1,16 +1,16 @@
-# efund_fund_instrument_price.py
+# efund_vehicule_instrument_core_price.py
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from datetime import datetime, date
 
 
 class FundInstrumentPrice(models.Model):
-    _name = "efund.fund.instrument.price"
+    _name = "efund.vehicule.instrument.core.price"
     _description = "Cours d'un instrument financier"
     _order = "date desc, instrument_id"
     _rec_name = "display_name"
 
-    instrument_id = fields.Many2one('efund.fund.instrument', string="Instrument", required=True, index=True)
+    instrument_id = fields.Many2one('efund.vehicule.instrument.core', string="Instrument", required=True, index=True)
     date = fields.Date(string="Date du cours", required=True, default=fields.Date.today, index=True)
     price = fields.Float(string="Cours", digits=(16, 4), required=True)
     currency_id = fields.Many2one(related="instrument_id.currency_id", string="Devise du cours")
@@ -36,12 +36,12 @@ class FundInstrumentPrice(models.Model):
                 price.validated_by = self.env.user
 
                 # Mettre à jour les positions des fonds
-                self._update_fund_positions(price)
+                #self._update_fund_positions(price)
 
     def _update_fund_positions(self, price):
         """Mettre à jour le market_value des positions basé sur le nouveau cours"""
         # Récupérer toutes les positions pour cet instrument
-        positions = self.env['efund.fund.position'].search([
+        positions = self.env['efund.vehicule.position'].search([
             ('instrument_id', '=', price.instrument_id.id),
         ])
 
@@ -53,7 +53,7 @@ class FundInstrumentPrice(models.Model):
 
         # Recalculer la valeur de marché pour toutes les positions
         for position in positions:
-            position._compute_market_value()
+            position.compute_market_value()
 
     def action_validate_batch(self):
         """Valider plusieurs cours en une fois"""

@@ -1,5 +1,39 @@
 <!-- views/instrument_bond_views.xml -->
 <odoo>
+    <record id="view_bond_tree" model="ir.ui.view">
+        <field name="name">efund.vehicule.instrument.core.bond.list</field>
+        <field name="model">efund.vehicule.instrument.core.bond</field>
+        <field name="arch" type="xml">
+            <list string="Obligations" decoration-info="next_coupon_date &gt;= context_today()"
+                  decoration-warning="maturity_date &lt;= context_today()">
+                <!-- Identification -->
+                <field name="instrument_id" widget="many2one_clickable"/>
+                <field name="isin" string="ISIN"/>
+                <field name="currency_id" widget="many2one_clickable"/>
+
+                <!-- Caractéristiques obligataires -->
+                <field name="bond_type" string="Type"/>
+                <field name="face_value" string="Valeur Nominale"/>
+                <field name="coupon_rate" string="Taux Coupon %"/>
+                <field name="valuation_method" string="Méthode Valo"/>
+
+                <!-- Dates importantes -->
+                <field name="issue_date" string="Émission"/>
+                <field name="maturity_date" string="Échéance"/>
+
+                <!-- Calculs dynamiques -->
+                <field name="remaining_date_to_maturity" string="Restant Maturité"/>
+                <field name="next_coupon_date" string="Prochain Coupon"/>
+                <field name="remaining_date_to_coupon" string="Jours Restants Coupon"/>
+
+                <!-- État -->
+                <field name="is_listed" string="Coté" invisible="1"/>
+                <field name="is_listed" string="Coté" widget="boolean_favorite" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+
     <record id="view_bond_form" model="ir.ui.view">
         <field name="name">efund.fund.instrument.bond.form</field>
         <field name="model">efund.fund.instrument.bond</field>

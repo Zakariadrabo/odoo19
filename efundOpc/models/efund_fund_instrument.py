@@ -58,7 +58,7 @@ class FundInstrument(models.Model):
     # --------------------------------------------------------
     #  RELATIONS
     # --------------------------------------------------------
-    price_ids = fields.One2many('efund.fund.instrument.price', 'instrument_id', string="Prix")
+    #instrument_price_ids = fields.One2many('efund.fund.instrument.price', 'instrument_id', string="Prix")
     custodian = fields.Selection([('dcbr', 'DC/BR'), ('bceao', 'BCEAO'), ('autre', 'Autre'), ], default='dcbr',
                                  string="Dépositaire", )
     asset_class_id = fields.Many2one('efund.asset.class', string="Classe d'actif",
@@ -84,9 +84,8 @@ class FundInstrument(models.Model):
                                            ('b', 'B'), ('ccc', 'CCC'), ('cc', 'CC'), ('c', 'C'),
                                            ('d', 'D (Default)'), ], string='Notation', tracking=True)
     rating_agency = fields.Char(string='Agence Notation')
-    bond_amortization_ids = fields.One2many('efund.bond.amortization', 'instrument_id',
-                                            string="calendrier des amortissements")
-    coupon_ids = fields.One2many('efund.bond.coupon', 'instrument_id', string="Calendrier des coupons")
+    #bond_amortization_ids = fields.One2many('efund.bond.amortization', 'instrument_id',    string="calendrier des amortissements")
+    #coupon_ids = fields.One2many('efund.bond.coupon', 'instrument_id', string="Calendrier des coupons")
     issue_amount = fields.Monetary(string='Montant Emission', currency_field='currency_id', tracking=True,
                                    help="Montant total émis par l'émetteur")
     face_value = fields.Monetary(string='Valeur nominale', currency_field='currency_id', tracking=True,
@@ -159,8 +158,7 @@ class FundInstrument(models.Model):
     # ----------------------------------------------------
     event_ids = fields.One2many('efund.fund.instrument.event', 'instrument_id', string="Événements",
                                 help="Événements sur cet instrument")
-    instrument_fee_ids = fields.One2many('efund.fund.instrument.fee.rule', 'instrument_id', string="Frais",
-                                         help="Frais sur cet instrument")
+    #instrument_fee_ids = fields.One2many('efund.fund.instrument.fee.rule', 'instrument_id', string="Frais",help="Frais sur cet instrument")
     upcoming_event_count = fields.Integer(string="Événements à venir", compute='_compute_upcoming_event_count',
                                           store=False)
     recent_event_ids = fields.One2many('efund.fund.instrument.event', 'instrument_id', string="Événements récents",
@@ -397,10 +395,10 @@ class FundInstrument(models.Model):
 
     # === MÉTHODES DE CALCUL ===
     # === MÉTHODE UNIFIÉE ===
-    @api.depends('price_ids')
+    #@api.depends('price_ids')
     def _compute_last_validated_price(self):
         for instrument in self:
-            last_price = instrument.price_ids.filtered(
+            last_price = instrument.instrument_price_ids.filtered(
                 lambda p: p.is_validated
             ).sorted('date', reverse=True)
 
@@ -676,7 +674,7 @@ class FundInstrument(models.Model):
     def action_view_coupon_schedule(self):
         """Affiche le calendrier des coupons"""
         self.ensure_one()
-        _logger.info(f"************** je suis dans la procédure")
+
 
         # Générer automatiquement si vide
         if not self.coupon_ids:

@@ -11,66 +11,49 @@
     <!-- Tranding et ordres -->
     <menuitem id="menu_investment_transactions_root" name="Transactions" parent="menu_fund_management_root"
               sequence="40"/>
-    <menuitem id="menu_investment_core_transactions" name="Transactions / Exécutions" parent="menu_investment_transactions_root"
-              action="action_efund_investment_core_transaction" sequence="10"/>
+
 
     <!-- Produits et Clients -->
-    <menuitem id="menu_products_clients_root" name="Produits &amp; Clients" parent="menu_fund_management_root"
-              sequence="20"/>
+    <menuitem id="menu_products_clients_root" name="Produits &amp; Clients" parent="menu_fund_management_root" sequence="20"/>
     <menuitem id="menu_vehicules_sub" name="Véhicules de gestion" parent="menu_products_clients_root" sequence="10"/>
-    <menuitem id="menu_fund_list" name="Fonds (OPCVM)" parent="menu_vehicules_sub" action="action_efund_vehicule_fund"
-              sequence="10"/>
-    <menuitem id="menu_mandat_list" name="Mandats" parent="menu_vehicules_sub" action="action_efund_mandat"
-              sequence="20"/>
+    <menuitem id="menu_fund_list" name="Fonds (OPCVM)" parent="menu_vehicules_sub" action="action_efund_vehicule_fund" sequence="10"/>
+    <menuitem id="menu_mandat_list" name="Mandats" parent="menu_vehicules_sub" action="action_efund_vehicule_mandat" sequence="20"/>
 
     <menuitem id="menu_clients_sub" name="Registre Porteurs" parent="menu_products_clients_root" sequence="20"/>
-    <menuitem id="menu_investors_list" name="Clients &amp; KYC" parent="menu_clients_sub"
-              action="action_fund_investor_list" sequence="10"/>
-    <menuitem id="menu_kyc_alerts" name="Alertes AML/Compliance" parent="menu_clients_sub"
-              action="action_fund_aml_alerte" sequence="20"/>
+    <menuitem id="menu_investors_list" name="Clients &amp; KYC" parent="menu_clients_sub" action="action_fund_investor_list" sequence="10"/>
+    <menuitem id="menu_kyc_alerts" name="Alertes AML/Compliance" parent="menu_clients_sub" action="action_fund_aml_alerte" sequence="20"/>
 
     <!-- Gestion d'actif -->
     <menuitem id="menu_asset_management_root" name="Gestion d'Actifs" parent="menu_fund_management_root" sequence="30"/>
     <menuitem id="menu_universe_sub" name="Univers d'Investissement" parent="menu_asset_management_root" sequence="10"/>
-    <menuitem id="menu_instr_bond" name="Obligations" parent="menu_universe_sub" action="action_efund_instrument_core_bond"
-              sequence="10"/>
-    <menuitem id="menu_instr_equity" name="Actions" parent="menu_universe_sub" action="action_efund_instrument_core_equity"
-              sequence="20"/>
-    <menuitem id="menu_instr_dat" name="Dépôts à Terme (DAT)" parent="menu_universe_sub"
-              action="action_efund_instrument_core_dat" sequence="30"/>
-    <menuitem id="menu_instr_opcvm" name="Fonds Externes" parent="menu_universe_sub"
-              action="action_efund_instrument_core_opcvm" sequence="40"/>
+    <menuitem id="menu_instr_bond" name="Obligations" parent="menu_universe_sub" action="action_efund_instrument_core_bond" sequence="10"/>
+
+    <menuitem id="menu_instr_equity" name="Actions" parent="menu_universe_sub" action="action_efund_instrument_core_equity" sequence="20"/>
+    <menuitem id="menu_instr_dat" name="Dépôts à Terme (DAT)" parent="menu_universe_sub" action="action_efund_instrument_core_dat" sequence="30"/>
+    <menuitem id="menu_instr_opcvm" name="Fonds Externes" parent="menu_universe_sub" action="action_efund_instrument_core_opcvm" sequence="40"/>
 
     <menuitem id="menu_execution_sub" name="Trading &amp; Ordres" parent="menu_asset_management_root" sequence="20"/>
-    <menuitem id="menu_investment_orders" name="Ordres de Bourse" parent="menu_execution_sub"
-              action="action_efund_investment_order" sequence="10"/>
-
-    <menuitem id="menu_portfolio_positions" name="Inventaire des Positions" parent="menu_execution_sub"
-              action="action_fund_position_list" sequence="20"/>
+    <menuitem id="menu_investment_orders" name="Ordre de Bourse" parent="menu_execution_sub" action="action_efund_investment_order" sequence="10"/>
+    <menuitem id="menu_investment_transactions" name="Transactions" parent="menu_execution_sub" action="action_efund_investment_transaction" sequence="15"/>
+    <menuitem id="menu_portfolio_positions" name="Inventaire des Positions" parent="menu_execution_sub" action="action_fund_position_list" sequence="20"/>
 
     <!-- Opérations de flux   -->
     <menuitem id="menu_flows_root" name="Opérations de Flux" parent="menu_fund_management_root" sequence="40"/>
-    <menuitem id="menu_sub_red" name="Souscriptions / Rachats" parent="menu_flows_root"
-              action="action_investor_subscription" sequence="10"/>
-    <menuitem id="menu_nav_calc" name="Calcul des VL" parent="menu_flows_root" action="action_fund_nav_list"
-              sequence="20"/>
-    <menuitem id="menu_events" name="OST / Évènements" parent="menu_flows_root"
-              action="action_efund_fund_instrument_event" sequence="30"/>
+    <menuitem id="menu_sub_red" name="Souscriptions / Rachats" parent="menu_flows_root" action="action_investor_subscription" sequence="10"/>
+    <menuitem id="menu_nav_calc" name="Calcul des VL" parent="menu_flows_root" action="action_fund_nav_list" sequence="20"/>
+    <menuitem id="menu_events" name="OST / Évènements" parent="menu_flows_root" action="action_efund_fund_instrument_event" sequence="30"/>
 
     <!-- Configuration -->
     <menuitem id="menu_config_root" name="Configuration" parent="menu_fund_management_root" sequence="100"/>
     <menuitem id="menu_ref_statique" name="Référentiels" parent="menu_config_root" sequence="10"/>
-    <menuitem id="menu_issuers" name="Émetteurs" parent="menu_ref_statique" action="action_efund_instrument_issuer"
-              sequence="10"/>
+    <menuitem id="menu_issuers" name="Émetteurs" parent="menu_ref_statique" action="action_efund_instrument_issuer" sequence="10"/>
     <menuitem id="menu_fund_type" name="Type de fonds"  parent="menu_ref_statique"  action="action_efund_fund_type" sequence="15"/>
-    <menuitem id="menu_asset_classes" name="Classes d'actifs" parent="menu_ref_statique"
-              action="action_efund_asset_class" sequence="20"/>
-    <menuitem id="menu_brokers" name="Sociétés de Bourse / Dépositaires" parent="menu_ref_statique"
-              action="action_efund_depositaire" sequence="30"/>
+    <menuitem id="menu_asset_classes" name="Classes d'actifs" parent="menu_ref_statique" action="action_efund_asset_class" sequence="20"/>
+    <menuitem id="menu_brokers" name="Sociétés de Bourse / Dépositaires" parent="menu_ref_statique" action="action_efund_depositaire" sequence="30"/>
+    <menuitem id="menu_country_zone" name="Zone économique" parent="menu_ref_statique" action="action_efund_country_zone" sequence="40"/>
 
     <!-- Reporting -->
     <menuitem id="menu_reporting_root" name="Reporting &amp; Conformité" parent="menu_fund_management_root" sequence="50"/>
-
     <menuitem id="menu_rep_inventory" name="Inventaires" parent="menu_reporting_root" sequence="10"/>
         <!--
         <menuitem id="menu_rep_pos_val" name="Inventaire Valorisé" parent="menu_rep_inventory" action="action_report_portfolio_valuation" sequence="10"/>

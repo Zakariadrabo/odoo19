@@ -32,7 +32,7 @@
                     <div class="panel-body">
                         <div class="row">
                             <div class="col-4">
-                                <strong>Montant brut:</strong>
+                                <strong>Montant HT:</strong>
                                 <br/>
                                 <field name="free_tax_amount" widget="monetary"
                                        options="{'currency_field': 'currency_id'}"
@@ -63,7 +63,7 @@
                                        readonly="1"/>
                             </div>
                             <div class="col-4">
-                                <strong>Montant Net:
+                                <strong>Montant TTC:
                                 </strong>
                                 <br/>
                                 <field name="total_amount" widget="monetary"

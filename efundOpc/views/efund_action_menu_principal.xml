@@ -125,6 +125,21 @@
         </field>
     </record>
 
+    <!-- Action VEHICULE Mandat -->
+    <record id="action_efund_vehicule_mandat" model="ir.actions.act_window">
+        <field name="name">Mandats</field>
+        <field name="res_model">efund.vehicule.mandate</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer un nouveau mandat
+            </p>
+            <p>
+                Avant de créer un mandat, assurez-vous d'avoir une société de gestion configurée.
+            </p>
+        </field>
+    </record>
+
     <record id="action_fund_class_list" model="ir.actions.act_window">
         <field name="name">Classes de parts</field>
         <field name="res_model">efund.fund.share.class</field>
@@ -262,7 +277,7 @@
      <!-- Obligations -->
     <record id="action_efund_instrument_core_bond" model="ir.actions.act_window">
         <field name="name">Instrument</field>
-        <field name="res_model">efund.fund.instrument.core.bond</field>
+        <field name="res_model">efund.vehicule.instrument.core.bond</field>
         <field name="view_mode">list,form,kanban</field>
         <field name="context">{'default_instrument_type': 'bond'}</field>
         <field name="help" type="html">
@@ -274,7 +289,7 @@
     <!-- Action -->
     <record id="action_efund_instrument_core_equity" model="ir.actions.act_window">
         <field name="name">Action</field>
-        <field name="res_model">efund.fund.instrument.core.equity</field>
+        <field name="res_model">efund.vehicule.instrument.core.equity</field>
         <field name="view_mode">list,form,kanban</field>
         <field name="context">{'default_instrument_type': 'equity'}</field>
         <field name="help" type="html">
@@ -286,7 +301,7 @@
     <!-- Opcvm -->
     <record id="action_efund_instrument_core_opcvm" model="ir.actions.act_window">
         <field name="name">Opcvm</field>
-        <field name="res_model">efund.fund.instrument.core.opcvm</field>
+        <field name="res_model">efund.vehicule.instrument.core.opcvm</field>
         <field name="view_mode">list,form,kanban</field>
         <field name="context">{'default_instrument_type': 'opcvm'}</field>
         <field name="help" type="html">
@@ -298,7 +313,7 @@
     <!-- DAT -->
     <record id="action_efund_instrument_core_dat" model="ir.actions.act_window">
         <field name="name">DAT</field>
-        <field name="res_model">efund.fund.instrument.core.dat</field>
+        <field name="res_model">efund.vehicule.instrument.core.dat</field>
         <field name="view_mode">list,form,kanban</field>
         <field name="context">{'default_instrument_type': 'dat'}</field>
         <field name="help" type="html">
@@ -309,10 +324,15 @@
     </record>
 
     <!-- Transactions  -->
-    <record id="action_efund_investment_core_transaction" model="ir.actions.act_window">
+    <record id="action_efund_investment_transaction" model="ir.actions.act_window">
         <field name="name">Transactions / Exécutions</field>
         <field name="res_model">efund.investment.transaction</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer et gérer votre première transaction.
+            </p>
+        </field>
     </record>
 
     <!-- Positions -->
@@ -347,7 +367,7 @@
     </record>
 
 
-    <!-- Cours -->
+    <!-- Cours
     <record id="action_efund_fund_instrument_price" model="ir.actions.act_window">
         <field name="name">Cours des instruments</field>
         <field name="res_model">efund.fund.instrument.price</field>
@@ -357,7 +377,7 @@
                 Créez la liste des cours.
             </p>
         </field>
-    </record>
+    </record>-->
 
     <!-- Événements sur Instruments -->
     <record id="action_efund_fund_instrument_event" model="ir.actions.act_window">
@@ -475,10 +495,21 @@
          9. CONFIGURATION
     ========================== -->
 
-    <!-- Action Import   -->
+    <!-- Action Import
     <record id="action_efund_fund_instrument_price_import" model="ir.actions.act_window">
         <field name="name">Import des cours</field>
         <field name="res_model">efund.fund.instrument.price.import</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configurez l'import des cours depuis Excel ou API
+            </p>
+        </field>
+    </record>-->
+
+    <record id="action_efund_country_zone" model="ir.actions.act_window">
+        <field name="name">Zone de pays</field>
+        <field name="res_model">efund.country.zone</field>
         <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -508,6 +539,13 @@
     <record id="action_generate_bond_amortization" model="ir.actions.act_window">
         <field name="name">Générer Tableau d'Amortissement</field>
         <field name="res_model">efund.bond.amortization.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <record id="action_efund_vehicule_instrument_fee_rule" model="ir.actions.act_window">
+        <field name="name">charge sur les instruments</field>
+        <field name="res_model">efund.vehicule.instrument.fee.rule</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
     </record>

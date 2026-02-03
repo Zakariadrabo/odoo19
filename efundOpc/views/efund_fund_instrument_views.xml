@@ -87,7 +87,7 @@
                         <!-- =========================== -->
                         <!-- =========================== -->
                         <!-- TAB: Coupons           -->
-                        <!-- =========================== -->
+                        <!-- ===========================
                         <page string="Coupon Schedule">
                             <button name="action_generate_coupon_schedule"
                                     type="object"
@@ -109,9 +109,10 @@
                                 </list>
                             </field>
                         </page>
+                         -->
                         <!-- =========================== -->
                         <!-- TAB: Tableau d'amortissement           -->
-                        <!-- =========================== -->
+                        <!-- ===========================
                         <page string="Tableau d'Amortissement" name="bond_amortization"
                               invisible="instrument_type != 'bond'">
                             <button string="Générer le tableau"
@@ -132,6 +133,7 @@
                                 </list>
                             </field>
                         </page>
+                        -->
                         <page string="Simulation amortissement décote" invisible="instrument_type != 'bond'">
                             <group>
                                 <field name="valuation_date"/>
@@ -150,7 +152,7 @@
 
                         <!-- =========================== -->
                         <!-- TAB: Informations générales -->
-                        <!-- =========================== -->
+                        <!-- ===========================
                         <page string="Commission et Taxes">
                             <field name="instrument_fee_ids">
                                 <list editable="bottom">
@@ -162,7 +164,7 @@
                                     <field name="capitalizable"/>
                                 </list>
                             </field>
-                        </page>
+                        </page>-->
 
                         <page string="Informations générales">
                             <group>
@@ -248,7 +250,7 @@
 
                         <!-- =========================== -->
                         <!-- TAB: Cours        -->
-                        <!-- =========================== -->
+                        <!-- ===========================
                         <page string="Cours" invisible="instrument_type not in ('bond','equity')">
                             <button name="action_import_price_today"
                                     type="object"
@@ -289,7 +291,7 @@
                                 </form>
                             </field>
 
-                        </page>
+                        </page>-->
 
                     </notebook>
                 </sheet>
