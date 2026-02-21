@@ -1,0 +1,49 @@
+<odoo>
+    <record id="view_efund_management_company_form" model="ir.ui.view">
+        <field name="name">efund.management.company.form</field>
+        <field name="model">efund.management.company</field>
+        <field name="arch" type="xml">
+            <form string="Société de Gestion">
+                <sheet>
+
+                    <div class="oe_title">
+                        <label for="company_id"/>
+                        <h1>
+                           <field name="company_id" options="{'no_create': True}" class="text-success"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Configuration Légale">
+                            <field name="regulatory_license"/>
+                            <field name="compliance_officer_id" widget="many2one_avatar_user"/>
+                        </group>
+                        <group string="Indicateurs">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="aum" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Politiques et Gouvernance" name="governance">
+                            <separator string="Politique de Gestion des Risques"/>
+                            <field name="risk_management_policy"
+                                   placeholder="Décrivez ici les procédures de contrôle interne..."/>
+                        </page>
+
+                        <page string="Liste des Fonds" name="funds">
+                            <field name="managed_funds" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="vehicle_type"/>
+                                    <field name="currency_id" invisible="1"/>
+                                    <!-- <field name="initial_amount" sum="Total AUM"/> -->
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -32,7 +32,7 @@
         </field>
     </record>
     <!-- SGO -->
-    <record id="action_management_company" model="ir.actions.act_window">
+    <record id="action_efund_management_compagny" model="ir.actions.act_window">
         <field name="name">Ordres de Bourse</field>
         <field name="res_model">efund.management.company</field>
         <field name="view_mode">list,form,kanban</field>
@@ -223,9 +223,9 @@
     <!-- =========================
          4. OPÉRATIONS
     ========================== -->
-    <record id="action_investor_deposit" model="ir.actions.act_window">
-        <field name="name">Déposit Souscription</field>
-        <field name="res_model">efund.investor.deposit</field>
+    <record id="action_investor_cash_operation" model="ir.actions.act_window">
+        <field name="name">Opération Cash</field>
+        <field name="res_model">efund.investor.cash.operation</field>
         <field name="view_mode">list,form</field>
     </record>
 
@@ -274,7 +274,7 @@
         </field>
     </record>
 
-     <!-- Obligations -->
+    <!-- Obligations -->
     <record id="action_efund_instrument_core_bond" model="ir.actions.act_window">
         <field name="name">Instrument</field>
         <field name="res_model">efund.vehicule.instrument.core.bond</field>
@@ -338,7 +338,7 @@
     <!-- Positions -->
     <record id="action_fund_position_list" model="ir.actions.act_window">
         <field name="name">Positions</field>
-        <field name="res_model">efund.fund.position</field>
+        <field name="res_model">efund.vehicule.position</field>
         <field name="view_mode">list,form,graph</field>
     </record>
 
@@ -439,7 +439,7 @@
         </field>
     </record>
 
-     <!-- Classe d'actif  -->
+    <!-- Classe d'actif  -->
     <record id="action_efund_instrument_trasaction" model="ir.actions.act_window">
         <field name="name">Transaction</field>
         <field name="res_model">efund.bourse.order.execution.line</field>
@@ -450,6 +450,9 @@
             </p>
         </field>
     </record>
+
+
+    action_efund_accounting_schema
 
     <!-- =========================
          6. VALEUR LIQUIDATIVE
@@ -467,6 +470,28 @@
         <field name="name">Frais</field>
         <field name="res_model">efund.fund.valuation.fee</field>
         <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_efund_accounting_schema" model="ir.actions.act_window">
+        <field name="name">Configuration Schéma Comptable</field>
+        <field name="res_model">efund.accounting.schema</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configurez le schéma comptable
+            </p>
+        </field>
+    </record>
+
+    <record id="action_efund_accounting_event" model="ir.actions.act_window">
+        <field name="name">Evènement</field>
+        <field name="res_model">efund.accounting.event</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configurez les évènements comptables
+            </p>
+        </field>
     </record>
 
 
@@ -496,16 +521,16 @@
     ========================== -->
 
     <!-- Action Import
-    <record id="action_efund_fund_instrument_price_import" model="ir.actions.act_window">
-        <field name="name">Import des cours</field>
-        <field name="res_model">efund.fund.instrument.price.import</field>
-        <field name="view_mode">list,form</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Configurez l'import des cours depuis Excel ou API
-            </p>
-        </field>
-    </record>-->
+        <record id="action_efund_fund_instrument_price_import" model="ir.actions.act_window">
+            <field name="name">Import des cours</field>
+            <field name="res_model">efund.fund.instrument.price.import</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Configurez l'import des cours depuis Excel ou API
+                </p>
+            </field>
+        </record>-->
 
     <record id="action_efund_country_zone" model="ir.actions.act_window">
         <field name="name">Zone de pays</field>
@@ -517,6 +542,18 @@
             </p>
         </field>
     </record>
+
+    <record id="action_efund_codification_numero_compte" model="ir.actions.act_window">
+        <field name="name">Codification Numéro de Compte</field>
+        <field name="res_model">efund.company.number</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Codification
+            </p>
+        </field>
+    </record>
+
 
     <!-- Action AML Alerte   -->
     <record id="action_efund_aml_alert" model="ir.actions.act_window">

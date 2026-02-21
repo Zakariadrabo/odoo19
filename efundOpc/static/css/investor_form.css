@@ -1,0 +1,130 @@
+/* Design amélioré pour la fiche investisseur */
+.efund-investor-form .oe_avatar_large {
+    width: 192px;
+    height: 192px;
+    border-radius: 8px;
+    border: 3px solid #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.efund-investor-form .o_statusbar_buttons .btn-group {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.efund-investor-form .oe_stat_button {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.efund-investor-form .oe_stat_button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-color: #007bff;
+}
+
+.efund-investor-form .oe_stat_button .fa {
+    opacity: 0.8;
+}
+
+.efund-investor-form .alert {
+    border-radius: 8px;
+    border-left: 4px solid;
+}
+
+.efund-investor-form .progress {
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.efund-investor-form .form-control-plaintext {
+    font-weight: 500;
+    color: #333;
+}
+
+.efund-investor-form h1 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.efund-investor-form .text-muted {
+    color: #6c757d !important;
+    font-size: 0.875rem;
+}
+
+/* Amélioration des onglets */
+.efund-investor-form .o_notebook .nav-link {
+    font-weight: 500;
+    color: #495057;
+    border-bottom: 2px solid transparent;
+    padding: 0.5rem 1rem;
+    margin-bottom: -1px;
+}
+
+.efund-investor-form .o_notebook .nav-link.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+    background-color: transparent;
+}
+
+/* Meilleure lisibilité des groupes */
+.efund-investor-form .o_group {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e9ecef;
+}
+
+.efund-investor-form .o_group > label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.75rem;
+    display: block;
+    font-size: 1rem;
+}
+
+/* Liste améliorée */
+.efund-investor-form .list-view .o_list_table {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.efund-investor-form .list-view .o_list_table thead {
+    background: #f8f9fa;
+}
+
+/* Badges améliorés */
+.efund-investor-form .badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+}
+
+/* Boutons dans les listes */
+.efund-investor-form .list-view .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 4px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .efund-investor-form .oe_title {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .efund-investor-form .oe_title .me-4 {
+        margin-right: 0 !important;
+        margin-bottom: 1rem;
+    }
+
+    .efund-investor-form .oe_button_box .col-3 {
+        margin-bottom: 0.5rem;
+    }
+}

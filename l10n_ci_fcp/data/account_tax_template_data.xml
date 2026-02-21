@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- TVA 18% sur Achats -->
+        <record id="ci_fcp_tax_tva_achat_18" model="account.tax.template">
+            <field name="name">TVA 18% Achat</field>
+            <field name="description">TVA 18% A</field>
+            <field name="amount">18.0</field>
+            <field name="amount_type">percent</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="chart_template_id" ref="ci_fcp_chart_template"/>
+            <field name="invoice_repartition_line_ids" eval="[(5, 0, 0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('ci_fcp_355200'),
+                }),
+            ]"/>
+            <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('ci_fcp_355200'),
+                }),
+            ]"/>
+        </record>
+
+        <!-- TVA 18% sur Ventes -->
+        <record id="ci_fcp_tax_tva_vente_18" model="account.tax.template">
+            <field name="name">TVA 18% Vente</field>
+            <field name="description">TVA 18% V</field>
+            <field name="amount">18.0</field>
+            <field name="amount_type">percent</field>
+            <field name="type_tax_use">sale</field>
+            <field name="chart_template_id" ref="ci_fcp_chart_template"/>
+            <field name="invoice_repartition_line_ids" eval="[(5, 0, 0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('ci_fcp_353100'),
+                }),
+            ]"/>
+            <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('ci_fcp_353100'),
+                }),
+            ]"/>
+        </record>
+
+        <!-- TVA 18% sur Commissions -->
+        <record id="ci_fcp_tax_tva_commission_18" model="account.tax.template">
+            <field name="name">TVA 18% Commission</field>
+            <field name="description">TVA 18% COM</field>
+            <field name="amount">18.0</field>
+            <field name="amount_type">percent</field>
+            <field name="type_tax_use">sale</field>
+            <field name="chart_template_id" ref="ci_fcp_chart_template"/>
+            <field name="invoice_repartition_line_ids" eval="[(5, 0, 0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('ci_fcp_353200'),
+                }),
+            ]"/>
+            <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('ci_fcp_353200'),
+                }),
+            ]"/>
+        </record>
+
+        <!-- TVA 18% sur Services Extérieurs -->
+        <record id="ci_fcp_tax_tva_service_18" model="account.tax.template">
+            <field name="name">TVA 18% Service</field>
+            <field name="description">TVA 18% SER</field>
+            <field name="amount">18.0</field>
+            <field name="amount_type">percent</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="chart_template_id" ref="ci_fcp_chart_template"/>
+            <field name="invoice_repartition_line_ids" eval="[(5, 0, 0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('ci_fcp_355400'),
+                }),
+            ]"/>
+            <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('ci_fcp_355400'),
+                }),
+            ]"/>
+        </record>
+
+        <!-- Taxe sur Opérations Boursières (TOB) -->
+        <record id="ci_fcp_tax_tob" model="account.tax.template">
+            <field name="name">TOB 0.3%</field>
+            <field name="description">TOB</field>
+            <field name="amount">0.3</field>
+            <field name="amount_type">percent</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="chart_template_id" ref="ci_fcp_chart_template"/>
+            <field name="invoice_repartition_line_ids" eval="[(5, 0, 0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('ci_fcp_389101'),
+                }),
+            ]"/>
+            <field name="refund_repartition_line_ids" eval="[(5, 0, 0),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'base',
+                }),
+                (0,0, {
+                    'factor_percent': 100,
+                    'repartition_type': 'tax',
+                    'account_id': ref('ci_fcp_389101'),
+                }),
+            ]"/>
+        </record>
+
+        <!-- Impôt sur les Bénéfices -->
+        <record id="ci_fcp_tax_impot_benefice" model="account.tax.template">
+            <field name="name">Impôt sur Bénéfices</field>
+            <field name="description">IB</field>
+            <field name="amount">0.0</field>
+            <field name="amount_type">percent</field>
+            <field name="type_tax_use">none</field>
+            <field name="chart_template_id" ref="ci_fcp_chart_template"/>
+        </record>
+
+    </data>
+</odoo>

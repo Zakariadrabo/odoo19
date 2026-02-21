@@ -1,0 +1,108 @@
+id;code;name;account_type;reconcile
+fcp_111001;111001;Compte Espèces;asset_cash;FAUX
+fcp_121001;121001;Compte Courant;asset_cash;FAUX
+fcp_141710;141710;Intérêts courus / Placements monétaires;asset_current;FAUX
+fcp_141712;141712;Intérêts courus / Bon Trésor;asset_current;FAUX
+fcp_141714;141714;Intérêts courus des comptes courants;asset_current;FAUX
+fcp_217100;217100;Intérêts courus sur Obligations;asset_current;FAUX
+fcp_217300;217300;Différence d'estimation ACTIONS;asset_current;FAUX
+fcp_217400;217400;Différence d'estimation OBLIGATIONS;asset_current;FAUX
+fcp_217500;217500;Différence d'estimation OPCVM;asset_current;FAUX
+fcp_240001;240001;Obligation à recevoir;asset_current;FAUX
+fcp_240002;240002;Bon à recevoir;asset_current;FAUX
+fcp_240003;240003;Action à recevoir;asset_current;FAUX
+fcp_240004;240004;OPCVM à recevoir;asset_current;FAUX
+fcp_351000;351000;Impôt sur les bénéfices;liability_current;FAUX
+fcp_353100;353100;Etat, TVA facturée sur prestation de services;liability_payable;VRAI
+fcp_353200;353200;Etat, TVA facturée sur commissions;liability_payable;VRAI
+fcp_353500;353500;Etat, TVA facturée sur factures à établir;liability_payable;VRAI
+fcp_355200;355200;Etat, TVA récupérable sur achats;asset_receivable;VRAI
+fcp_355400;355400;Etat, TVA récupérable sur services extérieurs et autres charges;asset_receivable;VRAI
+fcp_355500;355500;Etat, TVA récupérable sur factures non parvenues;asset_receivable;VRAI
+fcp_371200;371200;Clients, compte espèces;asset_receivable;VRAI
+fcp_389002;389002;Actions, Obligations à payer;liability_payable;VRAI
+fcp_389003;389003;Vente / titres à encaisser;asset_receivable;VRAI
+fcp_389006;389006;Dividendes à payer;liability_payable;VRAI
+fcp_389007;389007;Revenus / Actions à encaisser;asset_receivable;VRAI
+fcp_389008;389008;Coupons à recevoir Obligations;asset_receivable;VRAI
+fcp_389100;389100;Conservateurs, Droits de Garde;liability_current;FAUX
+fcp_389101;389101;TOB-SGI;liability_current;FAUX
+fcp_389200;389200;Créditeur CREPMF, Cpte de Redevance;liability_payable;VRAI
+fcp_389201;389201;TOB-AVT;liability_current;FAUX
+fcp_389300;389300;Commission actif sous-gestion;liability_current;FAUX
+fcp_389400;389400;Créditeurs, Frais de Gestion;liability_payable;VRAI
+fcp_389401;389401;TOB-SGO;liability_current;FAUX
+fcp_389500;389500;Créditeurs, CREPMF, Frais d'agrément;liability_payable;VRAI
+fcp_389501;389501;Créditeurs, CREPMF, Frais de publication d'information;liability_payable;VRAI
+fcp_389700;389700;Honoraires CAC;liability_current;FAUX
+fcp_389800;389800;Rompus souscriptions clients;asset_receivable;VRAI
+fcp_389900;389900;Droits d'entrée / sortie Sortie Acquis à la SGO;liability_current;FAUX
+fcp_389901;389901;TOB-DES;liability_current;FAUX
+fcp_389902;389902;Associés apports en numéraire + Autres clients;asset_receivable;VRAI
+fcp_389903;389903;Débiteurs divers;asset_receivable;VRAI
+fcp_389904;389904;Créditeurs divers;liability_payable;VRAI
+fcp_389905;389905;Créditeurs divers BOA-AM;liability_payable;VRAI
+fcp_389908;389908;BOA CI Dépositaire;liability_current;FAUX
+fcp_389909;389909;Compte d attente BOA BENIN;liability_current;FAUX
+fcp_389910;389910;BOA-CI, Concervateur marché;liability_current;FAUX
+fcp_389911;389911;Créditeur  BOA BN;liability_payable;VRAI
+fcp_389912;389912;Créditeurs Garants de liquidité;liability_payable;VRAI
+fcp_389915;389915;Droit d'attribution exceptionnel;liability_current;FAUX
+fcp_389950;389950;Compte de liaisson Dépositaire;liability_current;FAUX
+fcp_389951;389951;Droits de sortie acquis à la SGO;liability_current;FAUX
+fcp_389952;389952;Droits d'entrée acquis à la SGO;liability_current;FAUX
+fcp_551120;551120;Réguls lot et primes;equity;FAUX
+fcp_551801;551801;Plus values sur obligations;equity;FAUX
+fcp_551802;551802;Moins values sur obligations;equity;FAUX
+fcp_551803;551803;Plus values sur actions;equity;FAUX
+fcp_551804;551804;Moins values sur actions;equity;FAUX
+fcp_553100;553100;Différence d'estimation portefeuille;equity;FAUX
+fcp_553200;553200;Frais sur titres (achat, vente, garde);equity;FAUX
+fcp_553300;553300;Droits d'entrée / sortie Sortie Acquis au fond;equity;FAUX
+fcp_553400;553400;Droits d'entrée acquis au FCP;equity;FAUX
+fcp_553401;553401;Droits de sortie acquis au FCP;equity;FAUX
+fcp_571000;571000;Capital;equity;FAUX
+fcp_571001;571001;REGUL SUR LE CAPITAL;equity;FAUX
+fcp_571002;571002;Droit d'entrée/sortie;equity;FAUX
+fcp_572100;572100;Souscriptions exercice;equity;FAUX
+fcp_572200;572200;Rachats exercice;equity;FAUX
+fcp_581100;581100;Report à nouveau créditeur;equity;FAUX
+fcp_581200;581200;Réport à nouveau débiteur;equity;FAUX
+fcp_581300;581300;Réguls résultat antérieur incorporé à la VL;equity;FAUX
+fcp_591100;591100;Résultat à affecter;equity;FAUX
+fcp_591110;591110;Régul résultat de l'exercice clos;equity;FAUX
+fcp_603100;603100;Frais de gestion;expense;FAUX
+fcp_603200;603200;Droit de garde ;expense;FAUX
+fcp_603800;603800;Autres frais de gestion;expense;FAUX
+fcp_615100;615100;Frais bancaires;expense;FAUX
+fcp_615180;615180;Autres frais bancaires;expense;FAUX
+fcp_615210;615210;Redevances CREPMF;expense;FAUX
+fcp_615220;615220;Honoraires CAC;expense;FAUX
+fcp_615230;615230;Commissions sur l'actif net;expense;FAUX
+fcp_615310;615310;Autres frais;expense;FAUX
+fcp_615311;615311;Frais d'engagement liquidité;expense;FAUX
+fcp_690000;690000;Impôt sur les bénéfices;expense;FAUX
+fcp_710100;710100;Revenus des ACTIONS;income;FAUX
+fcp_710200;710200;Revenus des OBLIGATIONS;income;FAUX
+fcp_710300;710300;Revenus des BONS;income;FAUX
+fcp_710400;710400;Autres Produits;income;FAUX
+fcp_710500;710500;Revenus des autres valeurs;income;FAUX
+fcp_710600;710600;Revenus des OPCVM;income;FAUX
+fcp_727110;727110;Intérêts courus sur obligations;income;FAUX
+fcp_727111;727111;Intérêts courus sur transaction;income;FAUX
+fcp_727120;727120;Intérêts courus sur DAT;income;FAUX
+fcp_727130;727130;Intérêts courus sur BTC;income;FAUX
+fcp_727200;727200;Intérêts des Comptes courants;income;FAUX
+fcp_727400;727400;Revenus de titres de placement;income;FAUX
+fcp_731100;731100;Revenus sur DAT et autres Placements ;income;FAUX
+fcp_770000;770000;Régul résultat exercice en cours;income;FAUX
+fcp_922110;922110;Obligation à recevoir du DC/BR;asset_current;FAUX
+fcp_922120;922120;Bon à recevoir du DC/BR;asset_current;FAUX
+fcp_922130;922130;Action à recevoir du DC/BR;asset_current;FAUX
+fcp_922140;922140;OPCVM à recevoir du DC/BR;asset_current;FAUX
+fcp_940001;940001;Souscription / Rachat;asset_current;FAUX
+fcp_950001;950001;Stock titre obligation;asset_current;FAUX
+fcp_950002;950002;Stock titre bon;asset_current;FAUX
+fcp_950003;950003;Stock titre action;asset_current;FAUX
+fcp_950004;950004;Stock titre OPCVM;asset_current;FAUX
+fcp_960001;960001;Stock part;asset_current;FAUX

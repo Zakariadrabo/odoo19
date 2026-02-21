@@ -3,7 +3,7 @@
     <!-- Vue tree des positions -->
     <record id="view_efund_fund_position_list" model="ir.ui.view">
         <field name="name">efund.fund.position.list</field>
-        <field name="model">efund.fund.position</field>
+        <field name="model">efund.vehicule.position</field>
         <field name="arch" type="xml">
             <list string="Positions">
                 <field name="instrument_id"/>
@@ -33,7 +33,7 @@
     <!-- Vue formulaire des positions -->
     <record id="view_efund_fund_position_form" model="ir.ui.view">
         <field name="name">efund.fund.position.form</field>
-        <field name="model">efund.fund.position</field>
+        <field name="model">efund.vehicule.position</field>
         <field name="arch" type="xml">
             <form string="Position">
                 <header>
@@ -50,7 +50,7 @@
 
                     <group>
                         <group string="Informations de base">
-                            <field name="fund_id"/>
+                            <field name="vehicule_id"/>
                             <field name="instrument_id"/>
                             <field name="valuation_date"/>
                             <field name="state"/>

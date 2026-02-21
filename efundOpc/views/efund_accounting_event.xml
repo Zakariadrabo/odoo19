@@ -1,0 +1,57 @@
+<odoo>
+    <record id="view_efund_accounting_event_form" model="ir.ui.view">
+        <field name="name">efund.accounting.event.form</field>
+        <field name="model">efund.accounting.event</field>
+        <field name="arch" type="xml">
+            <form string="Événement Comptable" create="false" edit="false">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,processed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="event_type"/>
+                        <h1>
+                            <field name="event_type"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Contexte">
+                            <field name="vehicule_id" options="{'no_open': True}"/>
+                            <field name="reference"/>
+                        </group>
+                        <group string="Résultat Comptable">
+                            <field name="move_id" invisible="not move_id"/>
+                            <field name="create_date" string="Date de réception"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Données Brutes (Payload)" name="payload_data">
+                            <field name="payload" widget="ace" options="{'mode': 'python'}"/>
+                        </page>
+                    </notebook>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_efund_accounting_event_tree" model="ir.ui.view">
+        <field name="name">efund.accounting.event.list</field>
+        <field name="model">efund.accounting.event</field>
+        <field name="arch" type="xml">
+            <list string="Registre des Événements"
+                  decoration-info="state == 'draft'"
+                  decoration-success="state == 'processed'"
+                  create="false">
+                <field name="create_date" string="Date"/>
+                <field name="event_type"/>
+                <field name="vehicule_id"/>
+                <field name="reference"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-success="state == 'processed'"/>
+                <field name="move_id" string="Pièce Comptable"/>
+            </list>
+        </field>
+    </record>
+</odoo>

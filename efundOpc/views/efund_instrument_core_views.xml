@@ -56,6 +56,12 @@
                                 <span class="o_stat_text">Cours</span>
                             </div>
                         </button>
+                        <button name="action_open_simulation_wizard" type="object" class="oe_stat_button" icon="fa-money">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Simulateur de Cours</span>
+                            </div>
+                        </button>
+
                     </div>
 
                     <group class="oe_title">
@@ -224,13 +230,9 @@
                         </page>
                         <!-- Onglet 3 : Informations Techniques -->
                         <page string="Technique">
-                            <group>
-                                <group string="Statut">
-                                    <span>string="Statut Calcul"</span>
-                                    <div class="alert alert-info mt-2">
-                                        <p>Les calculs de coupon sont automatiques selon la fréquence définie.</p>
-                                    </div>
-                                </group>
+                            <group string="'Simulation de cours">
+                                simul_ids
+
                             </group>
                         </page>
                     </notebook>

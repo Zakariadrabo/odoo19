@@ -1,0 +1,36 @@
+<odoo>
+<record id="view_bond_simulation_wizard_form_excel" model="ir.ui.view">
+    <field name="name">efund.bond.simulation.wizard.form.excel</field>
+    <field name="model">efund.bond.simulation.wizard</field>
+    <field name="arch" type="xml">
+        <form string="Simulation et Export">
+            <sheet>
+                <group invisible="excel_file">
+                    <group string="Configuration">
+                        <field name="bond_id" readonly="1"/>
+                        <field name="acquisition_date"/>
+                        <field name="acquisition_price"/>
+                    </group>
+                    <group string="Période">
+                        <field name="date_start"/>
+                        <field name="date_end"/>
+                    </group>
+                </group>
+
+                <div invisible="not excel_file" class="alert alert-success text-center" role="alert">
+                    <p>La simulation est prête ! Cliquez sur le lien ci-dessous pour télécharger le fichier.</p>
+                    <h2>
+                        <field name="excel_file" filename="file_name" widget="binary" string="Télécharger l'Excel"/>
+                    </h2>
+                    <field name="file_name" invisible="1"/>
+                </div>
+
+                <footer>
+                    <button name="action_generate_excel" string="Générer Excel" type="object" class="btn-primary" invisible="excel_file"/>
+                    <button string="Fermer" class="btn-secondary" special="cancel"/>
+                </footer>
+            </sheet>
+        </form>
+    </field>
+</record>
+</odoo>

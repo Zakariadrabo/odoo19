@@ -1,5 +1,10 @@
+import logging
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
+
+_logger = logging.getLogger(__name__)
+
 
 class EfundVehicle(models.Model):
     _name = 'efund.vehicule'
@@ -10,10 +15,11 @@ class EfundVehicle(models.Model):
     # 2. CADRE RÉGLEMENTAIRE
     # =========================================================
     name = fields.Char(required=True, string="Nom")
-    vehicle_type = fields.Selection([('fund', 'Fonds'), ('mandate', 'Mandat')],  string="Type")
+    vehicle_type = fields.Selection([('fund', 'Fonds'), ('mandate', 'Mandat')], string="Type")
     company_id = fields.Many2one('res.company', string='Compagnie', ondelete='cascade')
-    management_company_id = fields.Many2one('efund.management.company', string='Société de gestion', domain="[('company_id', '!=', company_id)]")
-    currency_id = fields.Many2one('res.currency', required=True)
+    management_company_id = fields.Many2one('efund.management.company', string='Société de gestion',
+                                            domain="[('company_id', '!=', company_id)]")
+    currency_id = fields.Many2one('res.currency',)
     created_date = fields.Date(string='Date de création')
     start_date = fields.Date(string="Date d'opération")
     phone = fields.Char(string="Contact")
@@ -42,7 +48,6 @@ class EfundVehicle(models.Model):
     cash_operation_ids = fields.One2many('efund.vehicule.cash.operation', 'vehicule_id', string="Opérations diverses")
     cashflow_ids = fields.One2many('efund.vehicule.cashflow', 'vehicule_id', string="Flux de trésorerie prévus")
 
-
     @api.model_create_multi
     def create(self, vals_list):
         """Create a res.company automatically when creating a Fund."""
@@ -66,38 +71,89 @@ class EfundVehicle(models.Model):
             if existing_company:
                 raise ValidationError(_("Existence du même nom"))
 
-            if vals.get('vehicle_type') != 'mandate':
+            is_mandate = self.env.context.get('is_mandate_creation') or vals.get('vehicle_type') == 'mandate'
 
-                # Crée automatiquement la société associée
+            # On ne crée la compagnie QUE si ce n'est PAS un mandat
+            if not is_mandate:
                 company = self.env['res.company'].sudo().create({
                     'name': fund_name,
                     'currency_id': currency_id,
+                    'is_funder': True,
+                    'is_management_company': False,
                 })
 
                 # Met à jour le partner associé
                 partner = company.partner_id
                 partner.write({'is_fund': True})
-
-                # Injecte les champs dépendants
                 vals['company_id'] = company.id
-                vals['management_company_id'] = management_company.id
-                vals['currency_id'] = currency_id
+
+
+
+
+                """
+                # Création du plan comptable
+                # 2️⃣ Charger le chart template
+                template = self.env.ref('l10n_fcp.chart_template_fcp')
+
+                if not template:
+                    raise UserError("Chart template FCP introuvable.")
+
+                # ⭐ SUPER IMPORTANT
+                template.sudo()._load(company)
+                """
+
+                vals['company_id'] = company.id
+
+            # Injecte les champs dépendants
+
+            vals['management_company_id'] = management_company.id
+            vals['currency_id'] = management_company.currency_id.id
 
             # Appel du super
             funds = super(EfundVehicle, self).create(vals_list)
 
-            # Post-traitement si nécessaire
+            # 2. Parcours des fonds créés pour configurer la comptabilité
             for fund in funds:
-                fund._post_create_setup(fund.company_id)
+                if fund.vehicle_type == 'fund':
+                    # On vérifie que la compagnie est bien créée/liée
+                    if fund.company_id:
+                        _logger.info("Initialisation de la comptabilité pour le fond : %s", fund.name)
+                        fund._setup_fund_accounting()
+
+
+            # Post-traitement si nécessaire
+            #for fund in funds:
+            #    fund._post_create_setup(fund.company_id)
 
             return funds
 
+    def _setup_fund_accounting(self):
+        """ Logique d'appel de la localisation l10n_fcp """
+        # Si self est vide, on sort proprement sans crash
+        if not self:
+            return
 
+        self.ensure_one()
 
+        # Récupération du template via l'ID que nous avons identifié
+        template = self.env.ref('l10n_fcp.fcp', raise_if_not_found=False)
 
-    def _post_create_setup(self, company):
-        """Optional post-creation configuration."""
-        return True
+        if not template:
+            # Si l'ID n'est pas trouvé, on essaie de chercher par nom
+            template = self.env['account.chart.template'].search([('name', '=', 'Plan Comptable OPCVM UEMOA')], limit=1)
+
+        if not template:
+            _logger.error("Le plan comptable OPCVM est introuvable.")
+            return
+
+        # Vérifier si la société n'a pas déjà un plan comptable
+        if self.company_id.chart_template:
+            _logger.info("Le plan comptable est déjà configuré pour cette société.")
+            return
+
+        # Installation effective
+        template._load(self.company_id)
+
 
     def _post_create_setup(self, company):
         """Initialisation post-création : journaux, comptes, etc."""
@@ -110,4 +166,3 @@ class EfundVehicle(models.Model):
             'company_id': company.id,
         }
         self.env['account.journal'].sudo().create(journal_vals)
-

@@ -36,7 +36,7 @@ class EfundFundCashMove(models.Model):
     ], string="Liquidité", default='liquid')
 
     # Références aux transactions investisseurs
-    investor_cash_move_id = fields.Many2one('efund.investor.cash.move', string="Mouvement Investisseur")
+    investor_cash_move_id = fields.Many2one('efund.investor.cash_account.move', string="Mouvement Investisseur")
     subscription_id = fields.Many2one('efund.investor.subscription', string="Ordre de Souscription")
     redemption_id = fields.Many2one('efund.investor.redemption', string="Ordre de Rachat")
 

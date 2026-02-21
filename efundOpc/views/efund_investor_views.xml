@@ -226,7 +226,6 @@
                                     <field name="employer"/>
                                     <field name="employer_address"/>
 
-
                                 </group>
                                 <group>
                                     <field name="revenu"/>

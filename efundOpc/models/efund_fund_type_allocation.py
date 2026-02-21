@@ -5,7 +5,7 @@ class EfundFundTypeAllocation(models.Model):
     _name = 'efund.fund.type.allocation'
     _description = 'Allocation des types de fonds'
 
-    fund_type_id = fields.Many2one('efund.fund.type', required=True)
+    fund_type_id = fields.Many2one('efund.fund.type', required=True, readonly=True)
     asset_class_id = fields.Many2one('efund.asset.class', required=True)
     min_pct = fields.Float(string="Minimum Allocation (%)", required=True)
     max_pct = fields.Float(string="Maximum Allocation (%)",required=True)

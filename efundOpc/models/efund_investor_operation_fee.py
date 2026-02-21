@@ -9,13 +9,13 @@ class EfundFeeType(models.Model):
     name = fields.Char(string="Référence", required=True,
                        default=lambda self: self.env['ir.sequence'].next_by_code('efund.investor.operation.fee'))
     fee_type = fields.Selection([('subscription','Soucription'),('redemption','Rachat'),('management','Gestion')])
-    fund_id = fields.Many2one('efund.fund', required=True)
-    company_id = fields.Many2one('res.company', related='fund_id.company_id', store=True, index=True, readonly=True)
-    currency_id = fields.Many2one(related='fund_id.currency_id')
+    vehicule_id = fields.Many2one('efund.vehicule', required=True)
+    company_id = fields.Many2one('res.company', related='vehicule_id.company_id', store=True, index=True, readonly=True)
+    currency_id = fields.Many2one(related='vehicule_id.currency_id')
 
     # Reconciliation
-    investor_cash_move_id = fields.Many2one('efund.investor.cash.move', string="Cash Investisseur", readonly=True)
-    fund_cash_move_id = fields.Many2one('efund.fund.cash.move', string="Cash Fonds", readonly=True)
+    investor_cash_move_id = fields.Many2one('efund.investor.cash_account.move', string="Cash Investisseur", readonly=True)
+    fund_cash_move_id = fields.Many2one('efund.vehicule.cash.move', string="Cash Fonds", readonly=True)
     investor_id = fields.Many2one('efund.investor')
 
     # Récociliation Opération

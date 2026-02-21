@@ -1,0 +1,120 @@
+<odoo>
+    <record id="view_efund_investor_subscription_form" model="ir.ui.view">
+        <field name="name">efund.investor.subscription.form</field>
+        <field name="model">efund.investor.subscription</field>
+        <field name="arch" type="xml">
+            <form string="Souscription Fonds">
+                <header>
+                    <button name="action_submit" string="Soumettre" type="object" invisible="state != 'draft'"
+                            class="btn-primary"/>
+                    <button name="action_validate" string="Valider" type="object" invisible="state != 'submitted'"
+                            class="btn-success"/>
+                    <button name="action_account"
+                            type="object"
+                            string="Comptabiliser"
+                            class="btn-secondary"
+                            invisible="state != 'validated'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,validated,accounted"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Identification">
+                            <field name="investor_id" options="{'no_create': True}"/>
+                            <field name="fund_id" string="Fonds" options="{'no_create': True}"/>
+                        </group>
+                        <group string="Dates et Comptes">
+                            <field name="date_operation"/>
+                            <field name="date_valeur"/>
+                        </group>
+                    </group>
+                    <group string="Comptes">
+                        <group>
+                            <field name="cash_account_id" readonly="1"/>
+                            <field name="balance" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="part_account_id" readonly="1"/>
+                            <field name="total_shares" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Paramètres de Souscription">
+                        <group>
+                            <field name="buy_choice" widget="radio" options="{'horizontal': true}"/>
+                            <field name="nav" string="VL Appliquée"/>
+                        </group>
+                        <group>
+                            <field name="gross_amount" invisible="buy_choice != 'amount'"/>
+                            <field name="shares" invisible="buy_choice != 'share'"/>
+                            <field name="is_subscription_fee"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Décomposition Financière" name="financial_details">
+                            <group>
+                                <group string="Flux Global">
+                                    <field name="gross_amount" readonly="1"/>
+                                    <field name="subscription_fee_amount" string="Frais de souscription"/>
+                                    <field name="net_amount" decoration-bf="1"/>
+                                    <field name="shares" />
+                                    <field name="amount_remaining" string="Reliquat"/>
+                                </group>
+                                <group string="Défalque (Comptabilité)">
+                                    <field name="amount_capital"/>
+                                    <field name="amount_non_distribuable"/>
+                                    <field name="amount_res_anterieurs"/>
+                                    <field name="amount_res_clos"/>
+                                    <field name="amount_income_current"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Défaulque Réglementaire VL" name="vl_decomposition">
+                            <group>
+                                <group string="Composantes par Part">
+                                    <field name="vl_capital_init"/>
+                                    <field name="vl_non_distribuable"/>
+                                    <field name="vl_res_anterieurs"/>
+                                    <field name="vl_res_clos"/>
+                                    <field name="vl_res_en_cours"/>
+                                </group>
+                                <group string="Montants à Comptabiliser">
+
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter>
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </chatter>
+            </form>
+        </field>
+    </record>
+    <record id="view_efund_investor_subscription_tree" model="ir.ui.view">
+        <field name="name">efund.investor.subscription.list</field>
+        <field name="model">efund.investor.subscription</field>
+        <field name="arch" type="xml">
+            <list string="Souscriptions Fonds"
+                  decoration-info="state == 'draft'"
+                  decoration-success="state == 'validated'">
+                <field name="date_operation"/>
+                <field name="name"/>
+                <field name="investor_id"/>
+                <field name="fund_id" string="Fonds"/>
+                <field name="gross_amount" sum="Total Brut" widget="monetary"/>
+                <field name="shares" sum="Total Parts"/>
+                <field name="nav" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'submitted'"
+                       decoration-success="state == 'validated'"/>
+            </list>
+        </field>
+    </record>
+
+</odoo>

@@ -73,11 +73,17 @@
 
                             <group string="Montants Minimums">
                                 <group>
-                                    <field name="minimum_subscription" widget="monetary" options="{'currency_field': 'currency_id'}" readonly="state not in ('draft', 'validate')"/>
-                                    <field name="minimum_additional_subscription" widget="monetary" options="{'currency_field': 'currency_id'}" readonly="state not in ('draft', 'validate')"/>
+                                    <field name="minimum_subscription" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}"
+                                           readonly="state not in ('draft', 'validate')"/>
+                                    <field name="minimum_additional_subscription" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}"
+                                           readonly="state not in ('draft', 'validate')"/>
                                 </group>
                                 <group>
-                                    <field name="minimum_redemption" widget="monetary" options="{'currency_field': 'currency_id'}" readonly="state not in ('draft', 'validate')"/>
+                                    <field name="minimum_redemption" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}"
+                                           readonly="state not in ('draft', 'validate')"/>
                                 </group>
                             </group>
                         </page>
@@ -110,16 +116,13 @@
                                            options="{'currency_field': 'currency_id'}" readonly="1"/>
                                 </group>
                                 <group>
-                                    <!-- Espace pour d'autres indicateurs -->
-                                    <div class="o_form_label text-info">
-                                        Ratio de Dépenses Total (TER)
-                                    </div>
-                                    <div>
-                                        <field name="management_fee_rate" widget="percentage"
-                                               options="{'digits': [6,4]}" readonly="1"/>
-                                        <span>(estimé)</span>
-                                    </div>
+                                    <field name="vl_capital_init"/>
+                                    <field name="vl_non_distribuable"/>
+                                    <field name="vl_res_anterieurs"/>
+                                    <field name="vl_res_clos"/>
+                                    <field name="vl_res_en_cours"/>
                                 </group>
+
                             </group>
 
                             <!-- Graphique de l'évolution de la NAV -->

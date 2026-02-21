@@ -1,0 +1,37 @@
+<odoo>
+    <record id="view_efund_codification_numero_compte_form" model="ir.ui.view">
+        <field name="name">efund.company.number.form</field>
+        <field name="model">efund.company.number</field>
+        <field name="arch" type="xml">
+            <form string="Codification Numéro de Compte">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="code_teneur_compte" string="Structure du Compte"/>
+                        <h1>
+                            <field name="code_teneur_compte" placeholder="Ex: 1234"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Segments d'Identification">
+                            <field name="code_teneur_compte" string="Code Teneur (4 car.)"/>
+                            <field name="code_agence" string="Code Agence (2 car.)"/>
+                        </group>
+                        <group string="Classification">
+                            <field name="code_type_compte" string="Type de Compte (2 car.)"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Informations Complémentaires" name="info">
+                            <group>
+                                <div class="alert alert-info" role="alert">
+                                    Configurez ici les codes de structure utilisés pour la génération automatique des
+                                    numéros de compte bancaires ou titres.
+                                </div>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

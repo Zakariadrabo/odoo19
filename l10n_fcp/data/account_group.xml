@@ -1,0 +1,380 @@
+<odoo>
+
+    <record id="group_11" model="account.group">
+        <field name="name">Comptes ordinaires chez les banques de règlement</field>
+        <field name="code_prefix_start">11</field>
+        <field name="code_prefix_end">11</field>
+    </record>
+
+    <record id="group_111" model="account.group">
+        <field name="name">Banques de règlement</field>
+        <field name="code_prefix_start">111</field>
+        <field name="code_prefix_end">111</field>
+    </record>
+
+    <record id="group_12" model="account.group">
+        <field name="name">TRESORERIE</field>
+        <field name="code_prefix_start">12</field>
+        <field name="code_prefix_end">12</field>
+    </record>
+
+    <record id="group_121" model="account.group">
+        <field name="name">Banques comptes courants</field>
+        <field name="code_prefix_start">121</field>
+        <field name="code_prefix_end">121</field>
+    </record>
+
+    <record id="group_14" model="account.group">
+        <field name="name">Dépôts à terme (DAT)</field>
+        <field name="code_prefix_start">14</field>
+        <field name="code_prefix_end">14</field>
+    </record>
+
+    <record id="group_141" model="account.group">
+        <field name="name">Dépôt à terme</field>
+        <field name="code_prefix_start">141</field>
+        <field name="code_prefix_end">141</field>
+    </record>
+
+    <record id="group_1411" model="account.group">
+        <field name="name">Dépôt à terme (DAT)</field>
+        <field name="code_prefix_start">1411</field>
+        <field name="code_prefix_end">1411</field>
+    </record>
+
+    <record id="group_1417" model="account.group">
+        <field name="name">Intérêts cours sur placements</field>
+        <field name="code_prefix_start">1417</field>
+        <field name="code_prefix_end">1417</field>
+    </record>
+
+    <record id="group_21" model="account.group">
+        <field name="name">Titres de placement</field>
+        <field name="code_prefix_start">21</field>
+        <field name="code_prefix_end">21</field>
+    </record>
+
+    <record id="group_211" model="account.group">
+        <field name="name">Obligations</field>
+        <field name="code_prefix_start">211</field>
+        <field name="code_prefix_end">211</field>
+    </record>
+
+    <record id="group_212" model="account.group">
+        <field name="name">Bons</field>
+        <field name="code_prefix_start">212</field>
+        <field name="code_prefix_end">212</field>
+    </record>
+
+    <record id="group_213" model="account.group">
+        <field name="name">Actions</field>
+        <field name="code_prefix_start">213</field>
+        <field name="code_prefix_end">213</field>
+    </record>
+
+    <record id="group_214" model="account.group">
+        <field name="name">Titres d'OPCVM</field>
+        <field name="code_prefix_start">214</field>
+        <field name="code_prefix_end">214</field>
+    </record>
+
+    <record id="group_217" model="account.group">
+        <field name="name">Intérêts courus et différence d'estimations</field>
+        <field name="code_prefix_start">217</field>
+        <field name="code_prefix_end">217</field>
+    </record>
+
+    <record id="group_24" model="account.group">
+        <field name="name">Comptes de négociation et de règlement relatif aux opérations sur titres</field>
+        <field name="code_prefix_start">24</field>
+        <field name="code_prefix_end">24</field>
+    </record>
+
+    <record id="group_240" model="account.group">
+        <field name="name">Comptes de négociation et de règlement relatifs aux opérations sur titres</field>
+        <field name="code_prefix_start">240</field>
+        <field name="code_prefix_end">240</field>
+    </record>
+
+    <record id="group_35" model="account.group">
+        <field name="name">Etat et collectivités publiques</field>
+        <field name="code_prefix_start">35</field>
+        <field name="code_prefix_end">35</field>
+    </record>
+
+    <record id="group_351" model="account.group">
+        <field name="name">Etat, Impôt sur les bénéfices</field>
+        <field name="code_prefix_start">351</field>
+        <field name="code_prefix_end">351</field>
+    </record>
+
+    <record id="group_353" model="account.group">
+        <field name="name">Etat, TVA facturée</field>
+        <field name="code_prefix_start">353</field>
+        <field name="code_prefix_end">353</field>
+    </record>
+
+    <record id="group_355" model="account.group">
+        <field name="name">Etat, TVA récupérable</field>
+        <field name="code_prefix_start">355</field>
+        <field name="code_prefix_end">355</field>
+    </record>
+
+    <record id="group_37" model="account.group">
+        <field name="name">Clients Associés</field>
+        <field name="code_prefix_start">37</field>
+        <field name="code_prefix_end">37</field>
+    </record>
+
+    <record id="group_371" model="account.group">
+        <field name="name">Clients associés , compte d'opération</field>
+        <field name="code_prefix_start">371</field>
+        <field name="code_prefix_end">371</field>
+    </record>
+
+    <record id="group_38" model="account.group">
+        <field name="name">Débiteurs et créditeurs divers</field>
+        <field name="code_prefix_start">38</field>
+        <field name="code_prefix_end">38</field>
+    </record>
+
+    <record id="group_389" model="account.group">
+        <field name="name">Créditeurs / débiteurs divers</field>
+        <field name="code_prefix_start">389</field>
+        <field name="code_prefix_end">389</field>
+    </record>
+
+    <record id="group_55" model="account.group">
+        <field name="name">Sommes non distribuables</field>
+        <field name="code_prefix_start">55</field>
+        <field name="code_prefix_end">55</field>
+    </record>
+
+    <record id="group_551" model="account.group">
+        <field name="name">Sommes non distribuables</field>
+        <field name="code_prefix_start">551</field>
+        <field name="code_prefix_end">551</field>
+    </record>
+
+    <record id="group_553" model="account.group">
+        <field name="name">Différence d'estimation et frais sur titres</field>
+        <field name="code_prefix_start">553</field>
+        <field name="code_prefix_end">553</field>
+    </record>
+
+    <record id="group_57" model="account.group">
+        <field name="name">Capital souscriptions et rachats</field>
+        <field name="code_prefix_start">57</field>
+        <field name="code_prefix_end">57</field>
+    </record>
+
+    <record id="group_571" model="account.group">
+        <field name="name">Capital</field>
+        <field name="code_prefix_start">571</field>
+        <field name="code_prefix_end">571</field>
+    </record>
+
+    <record id="group_572" model="account.group">
+        <field name="name">Souscriptions et rachats de l'exercice</field>
+        <field name="code_prefix_start">572</field>
+        <field name="code_prefix_end">572</field>
+    </record>
+
+    <record id="group_58" model="account.group">
+        <field name="name">Report à nouveau</field>
+        <field name="code_prefix_start">58</field>
+        <field name="code_prefix_end">58</field>
+    </record>
+
+    <record id="group_581" model="account.group">
+        <field name="name">Report à nouveau</field>
+        <field name="code_prefix_start">581</field>
+        <field name="code_prefix_end">581</field>
+    </record>
+
+    <record id="group_59" model="account.group">
+        <field name="name">Résultat</field>
+        <field name="code_prefix_start">59</field>
+        <field name="code_prefix_end">59</field>
+    </record>
+
+    <record id="group_591" model="account.group">
+        <field name="name">Résultat de l'éxercice</field>
+        <field name="code_prefix_start">591</field>
+        <field name="code_prefix_end">591</field>
+    </record>
+
+    <record id="group_60" model="account.group">
+        <field name="name">Charges sur opérations sur titres</field>
+        <field name="code_prefix_start">60</field>
+        <field name="code_prefix_end">60</field>
+    </record>
+
+    <record id="group_603" model="account.group">
+        <field name="name">Charges de gestion de compte</field>
+        <field name="code_prefix_start">603</field>
+        <field name="code_prefix_end">603</field>
+    </record>
+
+    <record id="group_61" model="account.group">
+        <field name="name">Charges externes et charges diverses d’exploitation</field>
+        <field name="code_prefix_start">61</field>
+        <field name="code_prefix_end">61</field>
+    </record>
+
+    <record id="group_615" model="account.group">
+        <field name="name">Autres services extérieurs</field>
+        <field name="code_prefix_start">615</field>
+        <field name="code_prefix_end">615</field>
+    </record>
+
+    <record id="group_6151" model="account.group">
+        <field name="name">Frais bancaires</field>
+        <field name="code_prefix_start">6151</field>
+        <field name="code_prefix_end">6151</field>
+    </record>
+
+    <record id="group_6152" model="account.group">
+        <field name="name">Rémunérations d’intermédiaires et de conseils</field>
+        <field name="code_prefix_start">6152</field>
+        <field name="code_prefix_end">6152</field>
+    </record>
+
+    <record id="group_6153" model="account.group">
+        <field name="name">Autres frais</field>
+        <field name="code_prefix_start">6153</field>
+        <field name="code_prefix_end">6153</field>
+    </record>
+
+    <record id="group_69" model="account.group">
+        <field name="name">Impôt sur les bénéfices</field>
+        <field name="code_prefix_start">69</field>
+        <field name="code_prefix_end">69</field>
+    </record>
+
+    <record id="group_690" model="account.group">
+        <field name="name">Impôt sur les bénéfices</field>
+        <field name="code_prefix_start">690</field>
+        <field name="code_prefix_end">690</field>
+    </record>
+
+    <record id="group_71" model="account.group">
+        <field name="name">Produits sur opérations sur titres</field>
+        <field name="code_prefix_start">71</field>
+        <field name="code_prefix_end">71</field>
+    </record>
+
+    <record id="group_710" model="account.group">
+        <field name="name">Produits sur opérations sur titres</field>
+        <field name="code_prefix_start">710</field>
+        <field name="code_prefix_end">710</field>
+    </record>
+
+    <record id="group_72" model="account.group">
+        <field name="name">Autres produits sur comptes divers d'exploitation</field>
+        <field name="code_prefix_start">72</field>
+        <field name="code_prefix_end">72</field>
+    </record>
+
+    <record id="group_727" model="account.group">
+        <field name="name">Revenus financiers et produits assimilés</field>
+        <field name="code_prefix_start">727</field>
+        <field name="code_prefix_end">727</field>
+    </record>
+
+    <record id="group_73" model="account.group">
+        <field name="name">Revenus sur placements monétaires</field>
+        <field name="code_prefix_start">73</field>
+        <field name="code_prefix_end">73</field>
+    </record>
+
+    <record id="group_731" model="account.group">
+        <field name="name">Revenus sur placements monétaires</field>
+        <field name="code_prefix_start">731</field>
+        <field name="code_prefix_end">731</field>
+    </record>
+
+    <record id="group_77" model="account.group">
+        <field name="name">Régul résultat exercice en cours</field>
+        <field name="code_prefix_start">77</field>
+        <field name="code_prefix_end">77</field>
+    </record>
+
+    <record id="group_770" model="account.group">
+        <field name="name">Régul résultat exercice en cours</field>
+        <field name="code_prefix_start">770</field>
+        <field name="code_prefix_end">770</field>
+    </record>
+
+    <record id="group_92" model="account.group">
+        <field name="name">Engagement sur titre - valeurs</field>
+        <field name="code_prefix_start">92</field>
+        <field name="code_prefix_end">92</field>
+    </record>
+
+    <record id="group_922" model="account.group">
+        <field name="name">Titres à recevoir</field>
+        <field name="code_prefix_start">922</field>
+        <field name="code_prefix_end">922</field>
+    </record>
+
+    <record id="group_94" model="account.group">
+        <field name="name">Opérations effectuées pour le compte de tiers - valeurs</field>
+        <field name="code_prefix_start">94</field>
+        <field name="code_prefix_end">94</field>
+    </record>
+
+    <record id="group_940" model="account.group">
+        <field name="name">Opérations effectuées pour le compte de tiers - valeurs</field>
+        <field name="code_prefix_start">940</field>
+        <field name="code_prefix_end">940</field>
+    </record>
+
+    <record id="group_95" model="account.group">
+        <field name="name">Comptabilité titres pour compte-propre</field>
+        <field name="code_prefix_start">95</field>
+        <field name="code_prefix_end">95</field>
+    </record>
+
+    <record id="group_950" model="account.group">
+        <field name="name">Comptabilité titres pour compte-propre</field>
+        <field name="code_prefix_start">950</field>
+        <field name="code_prefix_end">950</field>
+    </record>
+
+    <record id="group_951" model="account.group">
+        <field name="name">Obligations</field>
+        <field name="code_prefix_start">951</field>
+        <field name="code_prefix_end">951</field>
+    </record>
+
+    <record id="group_952" model="account.group">
+        <field name="name">Bons</field>
+        <field name="code_prefix_start">952</field>
+        <field name="code_prefix_end">952</field>
+    </record>
+
+    <record id="group_953" model="account.group">
+        <field name="name">Actions</field>
+        <field name="code_prefix_start">953</field>
+        <field name="code_prefix_end">953</field>
+    </record>
+
+    <record id="group_954" model="account.group">
+        <field name="name">Titres OPCVM</field>
+        <field name="code_prefix_start">954</field>
+        <field name="code_prefix_end">954</field>
+    </record>
+
+    <record id="group_96" model="account.group">
+        <field name="name">Autres engagements</field>
+        <field name="code_prefix_start">96</field>
+        <field name="code_prefix_end">96</field>
+    </record>
+
+    <record id="group_960" model="account.group">
+        <field name="name">Autres engagements</field>
+        <field name="code_prefix_start">960</field>
+        <field name="code_prefix_end">960</field>
+    </record>
+</odoo>

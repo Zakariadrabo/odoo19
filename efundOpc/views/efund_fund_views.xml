@@ -44,19 +44,18 @@
 
                 <sheet>
                     <group>
+
                         <group string="Informations Génerales">
                             <field name="name"/>
                             <field name="fund_type_id"/>
                             <field name="risk_level"/>
                             <field name="nav_frequency"/>
                         </group>
-
                         <group string="Informations financières">
                             <field name="initial_nav"/>
                             <field name="initial_price"/>
                             <field name="allow_fractional_parts" />
                         </group>
-
                         <group string="Cadre Réglementaire">
                             <field name="license_number"/>
                             <field name="license_date" options="{'numeric': true}"/>

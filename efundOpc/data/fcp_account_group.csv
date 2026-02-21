@@ -1,0 +1,64 @@
+id;name;code_prefix_start;code_prefix_end
+l10n_fcp.group_11;Comptes ordinaires chez les banques de règlement;11;11
+l10n_fcp.group_111;Banques de règlement;111;111
+l10n_fcp.group_12;TRESORERIE;12;12
+l10n_fcp.group_121;Banques comptes courants;121;121
+l10n_fcp.group_14;Dépôts à terme (DAT);14;14
+l10n_fcp.group_141;Dépôt à terme;141;141
+l10n_fcp.group_1411;Dépôt à terme (DAT);1411;1411
+l10n_fcp.group_1417;Intérêts cours sur placements;1417;1417
+l10n_fcp.group_21;Titres de placement;21;21
+l10n_fcp.group_211;Obligations;211;211
+l10n_fcp.group_212;Bons;212;212
+l10n_fcp.group_213;Actions;213;213
+l10n_fcp.group_214;Titres d'OPCVM;214;214
+l10n_fcp.group_217;Intérêts courus et différence d'estimations;217;217
+l10n_fcp.group_24;Comptes de négociation et de règlement relatif aux opérations sur titres;24;24
+l10n_fcp.group_240;Comptes de négociation et de règlement relatifs aux opérations sur titres;240;240
+l10n_fcp.group_35;Etat et collectivités publiques;35;35
+l10n_fcp.group_351;Etat, Impôt sur les bénéfices;351;351
+l10n_fcp.group_353;Etat, TVA facturée;353;353
+l10n_fcp.group_355;Etat, TVA récupérable;355;355
+l10n_fcp.group_37;Clients Associés;37;37
+l10n_fcp.group_371;Clients associés , compte d'opération;371;371
+l10n_fcp.group_38;Débiteurs et créditeurs divers;38;38
+l10n_fcp.group_389;Créditeurs / débiteurs divers;389;389
+l10n_fcp.group_55;Sommes non distribuables;55;55
+l10n_fcp.group_551;Sommes non distribuables;551;551
+l10n_fcp.group_553;Différence d'estimation et frais sur titres;553;553
+l10n_fcp.group_57;Capital souscriptions et rachats;57;57
+l10n_fcp.group_571;Capital;571;571
+l10n_fcp.group_572;Souscriptions et rachats de l'exercice;572;572
+l10n_fcp.group_58;Report à nouveau;58;58
+l10n_fcp.group_581;Report à nouveau;581;581
+l10n_fcp.group_59;Résultat;59;59
+l10n_fcp.group_591;Résultat de l'éxercice;591;591
+l10n_fcp.group_60;Charges sur opérations sur titres;60;60
+l10n_fcp.group_603;Charges de gestion de compte;603;603
+l10n_fcp.group_61;Charges externes et charges diverses d’exploitation;61;61
+l10n_fcp.group_615;Autres services extérieurs;615;615
+l10n_fcp.group_6151;Frais bancaires;6151;6151
+l10n_fcp.group_6152;Rémunérations d’intermédiaires et de conseils;6152;6152
+l10n_fcp.group_6153;Autres frais;6153;6153
+l10n_fcp.group_69;Impôt sur les bénéfices;69;69
+l10n_fcp.group_690;Impôt sur les bénéfices;690;690
+l10n_fcp.group_71;Produits sur opérations sur titres;71;71
+l10n_fcp.group_710;Produits sur opérations sur titres;710;710
+l10n_fcp.group_72;Autres produits sur comptes divers d'exploitation;72;72
+l10n_fcp.group_727;Revenus financiers et produits assimilés;727;727
+l10n_fcp.group_73;Revenus sur placements monétaires;73;73
+l10n_fcp.group_731;Revenus sur placements monétaires;731;731
+l10n_fcp.group_77;Régul résultat exercice en cours;77;77
+l10n_fcp.group_770;Régul résultat exercice en cours;770;770
+l10n_fcp.group_92;Engagement sur titre - valeurs;92;92
+l10n_fcp.group_922;Titres à recevoir;922;922
+l10n_fcp.group_94;Opérations effectuées pour le compte de tiers - valeurs;94;94
+l10n_fcp.group_940;Opérations effectuées pour le compte de tiers - valeurs;940;940
+l10n_fcp.group_95;Comptabilité titres pour compte-propre;95;95
+l10n_fcp.group_950;Comptabilité titres pour compte-propre;950;950
+l10n_fcp.group_951;Obligations;951;951
+l10n_fcp.group_952;Bons;952;952
+l10n_fcp.group_953;Actions;953;953
+l10n_fcp.group_954;Titres OPCVM;954;954
+l10n_fcp.group_96;Autres engagements;96;96
+l10n_fcp.group_960;Autres engagements;960;960

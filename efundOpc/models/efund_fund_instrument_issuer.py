@@ -14,8 +14,8 @@ class FundInstrumentIssuer(models.Model):
         ('industrie', 'Industrie'),
         ('transport', 'Transport'),
         ('autre', 'Autre')
-    ], default='finance')
-    rating = fields.Char("Notation (S&P / Moody’s / Bloomfield)")
+    ], default='finance', string='Industries')
+    rating = fields.Char("Notation (S&P / Moody’s / Bloomfield / Fitch)")
     website = fields.Char("Site Web")
     description = fields.Text("Informations complémentaires")
     #Nouveau
@@ -24,7 +24,7 @@ class FundInstrumentIssuer(models.Model):
         ('financial', 'Institution Financière'),
         ('supranational', 'Institution Régionale'),
         ('corporate', 'Société'),
-    ], string='Issuer Type', )
+    ], string='Type Emetteur', )
 
     instrument_count = fields.Integer(
         string="Nombre d'instruments",

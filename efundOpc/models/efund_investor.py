@@ -85,6 +85,12 @@ class FundInvestor(models.Model):
 
 
     #infos commune
+    account_type_titre = fields.Selection([("00", "Ordinaire"), ("01", "Géré"), ("02", "Dédié à la bourse en ligne"),("08","titre nanti") ], string="Compte Titre")
+    account_type_espece = fields.Selection([("10", "Ordinaire"), ("11", "Géré"), ("12", "Dédié à la bourse en ligne"), ("18", "titre nanti")],string="Compte Espèce")
+    investor_category = fields.Selection([("01", "Client Ordinaire"), ("02", "Non Client"), ("03", "Compte propre"), ("04", "Compte Emetteur")], string="Type d'investisseur")
+    account_investor_type = fields.Selection([("10", "Personne physique UEMOA"), ("11", "Personne physique Non UEMOA"), ("20", "Personne Morale UEMOA"),
+                                              ("21", "Personne Morale Non UEMOA"),("22", "Institution Financière UEMOA")], string="Type d'investisseur")
+    account_order = fields.Char(string="N° d'Ordre")
     name_bank = fields.Char(string="Nom de la banque")
     bank_address = fields.Char(string="Adresse de la banque")
     account_number = fields.Char(string="Numéro de compte")
@@ -100,10 +106,6 @@ class FundInvestor(models.Model):
     email = fields.Char(string="Adresse Email")
     mobility_phone = fields.Char(string="Téléphone (mobile)")
     place_phone = fields.Char(string="Téléphone (domicile)")
-
-
-
-
 
 
     # lifecycle / compliance
@@ -366,6 +368,40 @@ class FundInvestor(models.Model):
     # -------------------------
     # ACTIONS / UTILITIES
     # -------------------------
+    def create_investor_accounts(self):
+        """Créer automatiquement compte titre + compte espèces."""
+        self.ensure_one()
+        if self.account_part_ids or self.account_cash_ids:
+            raise UserError(_("Cet investisseur possède déjà des comptes."))
+
+        company_code = self.env['efund.company.number'].search([('code_teneur_compte', '=', '3611'),],limit=1)
+        if not company_code:
+            raise UserError(_("Aucun code de teneur de compte trouvé pour la société."))
+        _logger.info(f"***** Company code found: {company_code.code_teneur_compte}, agence: {company_code.code_agence}, ")
+        account_number_titre = company_code.code_teneur_compte + company_code.code_agence + "00" + self.account_type_titre + self.account_investor_type + self.account_order
+        account_number_espece = company_code.code_teneur_compte + company_code.code_agence + "10" + self.account_type_espece + self.account_investor_type + self.account_order
+
+        #Creation des comptes
+        self.env['efund.investor.part_account'].create({
+            'name': f"Compte Titre - {self.full_name or self.name or 'Investor'}",
+            'investor_id': self.id,
+            'account_number': account_number_titre,
+            'total_parts': 0,
+            'state': 'active',
+        })
+
+        self.env['efund.investor.cash_account'].create({
+            'name': f"Compte Espèces - {self.full_name or self.name or 'Investor'}",
+            'investor_id': self.id,
+            'account_number': account_number_espece,
+            'balance': 0,
+            'state': 'active',
+        })
+
+
+
+
+
     def action_create_investor_accounts(self):
         """Créer automatiquement compte titre + compte espèces."""
         self.ensure_one()
@@ -503,6 +539,7 @@ class FundInvestor(models.Model):
         for rec in self:
             if rec.status != "kyc_pending":
                 raise UserError("Seuls les investisseurs en attente peuvent être approuvés.")
+            rec.create_investor_accounts()
             rec.status = "kyc_approved"
 
     def action_reject_kyc(self):

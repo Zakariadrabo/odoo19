@@ -1,0 +1,85 @@
+<odoo>
+
+    <!-- ========================= -->
+    <!-- JOURNAUX INVESTISSEURS -->
+    <!-- ========================= -->
+
+    <record id="journal_subscriptions" model="account.journal">
+        <field name="name">Souscriptions investisseurs</field>
+        <field name="code">SUB</field>
+        <field name="type">general</field>
+    </record>
+
+    <record id="journal_redemptions" model="account.journal">
+        <field name="name">Rachats investisseurs</field>
+        <field name="code">RED</field>
+        <field name="type">general</field>
+    </record>
+
+
+    <!-- ========================= -->
+    <!-- TRESORERIE -->
+    <!-- ========================= -->
+
+    <record id="journal_bank_fund" model="account.journal">
+        <field name="name">Banque du fonds</field>
+        <field name="code">BNK</field>
+        <field name="type">bank</field>
+    </record>
+
+
+    <!-- ========================= -->
+    <!-- OPERATIONS DE MARCHE -->
+    <!-- ========================= -->
+
+    <record id="journal_securities" model="account.journal">
+        <field name="name">Opérations sur titres</field>
+        <field name="code">SEC</field>
+        <field name="type">general</field>
+    </record>
+
+
+    <!-- ========================= -->
+    <!-- VALORISATION -->
+    <!-- ========================= -->
+
+    <record id="journal_nav" model="account.journal">
+        <field name="name">Valorisation / Valeur liquidative</field>
+        <field name="code">NAV</field>
+        <field name="type">general</field>
+    </record>
+
+
+    <!-- ========================= -->
+    <!-- FRAIS -->
+    <!-- ========================= -->
+
+    <record id="journal_expenses" model="account.journal">
+        <field name="name">Frais du fonds</field>
+        <field name="code">EXP</field>
+        <field name="type">general</field>
+    </record>
+
+
+    <!-- ========================= -->
+    <!-- DISTRIBUTIONS -->
+    <!-- ========================= -->
+
+    <record id="journal_distributions" model="account.journal">
+        <field name="name">Distributions aux porteurs</field>
+        <field name="code">DST</field>
+        <field name="type">general</field>
+    </record>
+
+
+    <!-- ========================= -->
+    <!-- AJUSTEMENTS / CUT-OFF -->
+    <!-- ========================= -->
+
+    <record id="journal_adjustments" model="account.journal">
+        <field name="name">Ajustements et régularisations</field>
+        <field name="code">ADJ</field>
+        <field name="type">general</field>
+    </record>
+
+</odoo>

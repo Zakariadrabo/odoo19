@@ -60,3 +60,5 @@ class FundBondCoupon(models.Model):
     def action_execute_confirmed(self):
         self.ensure_one()
         self.action_pay()
+
+

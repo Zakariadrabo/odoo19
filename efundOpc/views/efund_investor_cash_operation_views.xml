@@ -1,0 +1,61 @@
+<odoo>
+    <record id="view_efund_investor_cash_operation_form" model="ir.ui.view">
+        <field name="name">efund.investor.cash.operation.form</field>
+        <field name="model">efund.investor.cash.operation</field>
+        <field name="arch" type="xml">
+            <form string="Opération de Trésorerie">
+                <header>
+                    <button name="action_submit" string="Soumettre" type="object" invisible="state != 'draft'"
+                            class="btn-primary"/>
+                    <button name="action_validate" string="Valider" type="object" invisible="state != 'submitted'"
+                            class="btn-success"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,validated"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Informations de base">
+                            <field name="type" widget="radio" options="{'horizontal': true}"/>
+                            <field name="investor_id" options="{'no_create': True}"/>
+                            <field name="vehicule_id" />
+
+                        </group>
+                        <group string="Détails Financiers">
+                            <field name="cash_account_id" options="{'no_create': True}"/>
+                            <field name="amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            <field name="fee_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            <field name="payment_mode"/>
+                            <field name="date_operation"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter>
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </chatter>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_efund_investor_cash_operation_tree" model="ir.ui.view">
+        <field name="name">efund.investor.cash.operation.list</field>
+        <field name="model">efund.investor.cash.operation</field>
+        <field name="arch" type="xml">
+            <list string="Opérations de Trésorerie" decoration-info="state == 'draft'"
+                  decoration-success="state == 'validated'">
+                <field name="date_operation"/>
+                <field name="name"/>
+                <field name="investor_id"/>
+                <field name="type" widget="badge" decoration-warning="type == 'withdraw'"
+                       decoration-info="type == 'deposit'"/>
+                <field name="amount" sum="Total"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+</odoo>

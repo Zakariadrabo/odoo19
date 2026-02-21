@@ -36,9 +36,10 @@ class IrUiMenu(models.Model):
         except:
             return  # si le menu n'existe pas encore
 
-        if menu_id in menus.get('parents', []):
-            menus['parents'].pop(menu_id, None)
-        if menu_id in menus.get('children', []):
-            menus['children'].pop(menu_id, None)
-        if menu_id in menus:
-            menus.pop(menu_id, None)
+        if menu_id:
+            if menu_id in menus.get('parents', []):
+                menus['parents'].pop(menu_id, None)
+            if menu_id in menus.get('children', []):
+                menus['children'].pop(menu_id, None)
+            if menu_id in menus:
+                menus.pop(menu_id, None)

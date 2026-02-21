@@ -18,9 +18,9 @@ class FundOperation(models.AbstractModel):
 
     ], default='draft', tracking=True)
 
-    fund_id = fields.Many2one('efund.fund', required=True, string="Fonds", index=True)
-    investor_id = fields.Many2one('efund.investor', required=True, string="Investisseur", index=True)
-    company_id = fields.Many2one('res.company',related='fund_id.company_id',store=True)
+    vehicule_id = fields.Many2one('efund.vehicule', string="Véhicule", required=True, tracking=True)
+    investor_id = fields.Many2one('efund.investor', string="Investisseur", required=True, tracking=True)
+    company_id = fields.Many2one('res.company',related='vehicule_id.company_id',store=True)
 
     def action_submit(self):
         self.write({'state': 'submitted'})

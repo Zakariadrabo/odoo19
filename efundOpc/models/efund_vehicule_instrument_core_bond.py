@@ -46,6 +46,7 @@ class FundInstrumentBond(models.Model):
     coupon_ids = fields.One2many('efund.bond.coupon', 'bond_id', string="Calendrier des coupons")
     bond_amortization_ids = fields.One2many('efund.bond.amortization', 'bond_id', string="calendrier des amortissements")
 
+
     @api.depends('coupon_frequency', 'coupon_calculation_date')
     def _compute_coupon_schedule(self):
         """Calcule toutes les informations de coupon en une passe"""
@@ -421,5 +422,18 @@ class FundInstrumentBond(models.Model):
             'context': {
                 'default_instrument_id': self.id,
                 'default_price_date': fields.Date.today(),
+            }
+        }
+
+    def action_open_simulation_wizard(self):
+        return {
+            'name': _('Simulation du Cours'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'efund.bond.simulation.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_bond_id': self.id,
+                'default_date_start': fields.Date.today(),
             }
         }

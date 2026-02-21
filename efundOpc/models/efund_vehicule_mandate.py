@@ -17,7 +17,7 @@ class Mandate(models.Model):
     code = fields.Char(string="Référence", required=True,
                        default=lambda self: self.env['ir.sequence'].next_by_code('efund.vehicule.mandate'))
     vehicule_id = fields.Many2one('efund.vehicule', required=True, ondelete='cascade')
-    #vehicle_type = fields.Selection([('mandate', 'Mandat')], default='mandate', required=True, string="Type")
+    vehicle_type = fields.Selection(related='vehicule_id.vehicle_type',default='mandate',store=True,readonly=False, required=True, string="Type")
     investor_id = fields.Many2one('efund.investor', required=True, string="Investisseur")
     risk_profile = fields.Selection([('low', 'Prudent'), ('medium', 'Équilibré'), ('high', 'Dynamique')],
                                     string='Profil de risque', required=True)
@@ -71,6 +71,16 @@ class Mandate(models.Model):
     # ---------------------------------------------------------
     # CONTROLES
     # ---------------------------------------------------------
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            # On garde votre sécurité actuelle : force le type dans les valeurs
+            vals['vehicle_type'] = 'mandate'
+
+        # On passe 'is_mandate_creation' dans le contexte pour que le parent
+        # sache avec certitude qu'il s'agit d'un mandat
+        return super(Mandate, self.with_context(is_mandate_creation=True)).create(vals_list)
+
     @api.depends('start_date', 'duration_months')
     def _compute_maturity_date(self):
         for rec in self:

@@ -11,7 +11,6 @@ class FundClass(models.Model):
     name = fields.Char(string='Classe de Parts',required=True,help="Nom de la classe de parts (ex: 'Class A EUR Acc', 'Class I USD Dist')")
     sequence = fields.Integer(string='Sequence',default=10,help="Ordre d'affichage dans les listes")
     # === Relations ===
-    #fund_id = fields.Many2one('efund.fund',string='Fonds',required=True,ondelete='cascade')
     vehicule_fund_id = fields.Many2one('efund.vehicule.fund', required=True, ondelete='cascade')
 
     # === Frais ===
@@ -37,6 +36,15 @@ class FundClass(models.Model):
     total_shares = fields.Float(string='Total Shares Outstanding',digits=(16, 2),compute='_compute_share_statistics',store=True,help="Nombre total de parts en circulation")
     total_net_assets = fields.Float(string='Total Net Assets',compute='_compute_share_statistics',store=True,help="Actifs nets attribués à cette classe")
     current_nav = fields.Float(string='Valeur Liquidative',compute='_compute_current_nav',help="Dernière valeur liquidative disponible", store=True)
+
+    # decomposition de la VL
+    vl_capital_init = fields.Float(string="VL Capital (Début Période)", digits=(12, 4))
+    vl_non_distribuable = fields.Float(string="VL Sommes Non Distrib.", digits=(12, 4))
+
+    # revenu
+    vl_res_anterieurs = fields.Float(string="VL Résult. Antérieurs", digits=(12, 4))
+    vl_res_clos = fields.Float(string="VL Résult. Exercice Clos", digits=(12, 4))
+    vl_res_en_cours = fields.Float(string="VL Résult. en Cours (ICNE)", digits=(12, 4))
 
 
     # === Computed Methods ===

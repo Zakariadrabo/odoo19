@@ -39,18 +39,29 @@
 
     <!-- Opérations de flux   -->
     <menuitem id="menu_flows_root" name="Opérations de Flux" parent="menu_fund_management_root" sequence="40"/>
-    <menuitem id="menu_sub_red" name="Souscriptions / Rachats" parent="menu_flows_root" action="action_investor_subscription" sequence="10"/>
-    <menuitem id="menu_nav_calc" name="Calcul des VL" parent="menu_flows_root" action="action_fund_nav_list" sequence="20"/>
-    <menuitem id="menu_events" name="OST / Évènements" parent="menu_flows_root" action="action_efund_fund_instrument_event" sequence="30"/>
+    <menuitem id="menu_cash" name="Apport / retrait Liquidité" parent="menu_flows_root" action="action_investor_cash_operation" sequence="10"/>
+    <menuitem id="menu_sub" name="Souscriptions" parent="menu_flows_root" action="action_investor_subscription" sequence="20"/>
+    <menuitem id="menu_red" name="Rachats" parent="menu_flows_root" action="action_investor_redemption" sequence="30"/>
+    <menuitem id="menu_nav_calc" name="Calcul des VL" parent="menu_flows_root" action="action_fund_nav_list" sequence="40"/>
+    <menuitem id="menu_events" name="OST / Évènements" parent="menu_flows_root" action="action_efund_fund_instrument_event" sequence="50"/>
+
+     <!-- Comptabilité   -->
+    <menuitem id="menu_account_root" name="Comptabilité" parent="menu_fund_management_root" sequence="50"/>
+    <menuitem id="menu_account_schema" name="Schéma comptable" parent="menu_account_root" action="action_efund_accounting_schema" sequence="10"/>
+    <menuitem id="menu_account_event" name="Evènements" parent="menu_account_root" action="action_efund_accounting_event" sequence="20"/>
+
 
     <!-- Configuration -->
     <menuitem id="menu_config_root" name="Configuration" parent="menu_fund_management_root" sequence="100"/>
     <menuitem id="menu_ref_statique" name="Référentiels" parent="menu_config_root" sequence="10"/>
+    <menuitem id="menu_management_compagny" name="Société de gestion" parent="menu_ref_statique" action="action_efund_management_compagny" sequence="10"/>
     <menuitem id="menu_issuers" name="Émetteurs" parent="menu_ref_statique" action="action_efund_instrument_issuer" sequence="10"/>
     <menuitem id="menu_fund_type" name="Type de fonds"  parent="menu_ref_statique"  action="action_efund_fund_type" sequence="15"/>
+
     <menuitem id="menu_asset_classes" name="Classes d'actifs" parent="menu_ref_statique" action="action_efund_asset_class" sequence="20"/>
     <menuitem id="menu_brokers" name="Sociétés de Bourse / Dépositaires" parent="menu_ref_statique" action="action_efund_depositaire" sequence="30"/>
     <menuitem id="menu_country_zone" name="Zone économique" parent="menu_ref_statique" action="action_efund_country_zone" sequence="40"/>
+    <menuitem id="menu_codification_account_number" name="Codification Numéro de Compte" parent="menu_ref_statique" action="action_efund_codification_numero_compte" sequence="50"/>
 
     <!-- Reporting -->
     <menuitem id="menu_reporting_root" name="Reporting &amp; Conformité" parent="menu_fund_management_root" sequence="50"/>
