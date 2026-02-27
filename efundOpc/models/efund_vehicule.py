@@ -87,23 +87,6 @@ class EfundVehicle(models.Model):
                 partner.write({'is_fund': True})
                 vals['company_id'] = company.id
 
-
-
-
-                """
-                # Création du plan comptable
-                # 2️⃣ Charger le chart template
-                template = self.env.ref('l10n_fcp.chart_template_fcp')
-
-                if not template:
-                    raise UserError("Chart template FCP introuvable.")
-
-                # ⭐ SUPER IMPORTANT
-                template.sudo()._load(company)
-                """
-
-                vals['company_id'] = company.id
-
             # Injecte les champs dépendants
 
             vals['management_company_id'] = management_company.id
@@ -118,12 +101,7 @@ class EfundVehicle(models.Model):
                     # On vérifie que la compagnie est bien créée/liée
                     if fund.company_id:
                         _logger.info("Initialisation de la comptabilité pour le fond : %s", fund.name)
-                        fund._setup_fund_accounting()
-
-
-            # Post-traitement si nécessaire
-            #for fund in funds:
-            #    fund._post_create_setup(fund.company_id)
+                        #fund._setup_fund_accounting()
 
             return funds
 
@@ -166,3 +144,6 @@ class EfundVehicle(models.Model):
             'company_id': company.id,
         }
         self.env['account.journal'].sudo().create(journal_vals)
+
+    def action_revalue_positions(self):
+        pass

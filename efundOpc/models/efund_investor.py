@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+from logging import setLoggerClass
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
@@ -8,13 +9,15 @@ import json, logging
 
 _logger = logging.getLogger(__name__)
 
+
 class FundInvestor(models.Model):
     _name = "efund.investor"
     _description = "Investor / Porteur - KYC record"
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "id desc"
 
-    partner_id = fields.Many2one('res.partner',string="Partner",required=False,ondelete='cascade',domain="[('is_investor', '=', True)]",)
+    partner_id = fields.Many2one('res.partner', string="Partner", required=False, ondelete='cascade',
+                                 domain="[('is_investor', '=', True)]", )
     company_id = fields.Many2one('res.company', string="Context Company (Fund)", index=True)
 
     # store the name for easier reading (populated from partner)
@@ -26,7 +29,7 @@ class FundInvestor(models.Model):
     investor_type = fields.Selection([("individual", "Personne physique"), ("company", "Personne morale"), ],
                                      string="Type de client", default="individual", required=True)
 
-    #Personne physique
+    # Personne physique
     civilite = fields.Selection([('Mr', 'Monsieur'), ('Mrs', 'Madame')])
     full_name = fields.Char(string="Nom complet", compute="_compute_full_name", store=True)
     nom = fields.Char(string="Nom", store=True)
@@ -40,21 +43,25 @@ class FundInvestor(models.Model):
     address_place = fields.Char(string="Ville / Codepostal")
     address = fields.Char(string="Adresse de résidence principale")
     marital_status = fields.Selection(
-        [('single', 'Célibataire'), ('married', 'Marié(e)'), ('divorced', 'Divorcé(e)'), ('widowed', 'Veuf/veuve')], string="Statut matrimonial")
+        [('single', 'Célibataire'), ('married', 'Marié(e)'), ('divorced', 'Divorcé(e)'), ('widowed', 'Veuf/veuve')],
+        string="Statut matrimonial")
 
     contact_adress = fields.Char(string="Adresse de correspondance (si différent)")
     other_nationnality = fields.Char(string="Autres Nationnalité")
     employer = fields.Char(string="Employeur")
     employer_address = fields.Char(string="Adresse de l'employeur")
 
-    #Personne Morale
+    # Personne Morale
     company_name = fields.Char(string="Raison sociale")
     company_short_name = fields.Char(string="Sigle")
-    legal_form = fields.Selection([('sa', 'Société Anonyme (SA)'),('sas', 'Société par Actions Simplifiée (SAS)'),
-        ('sarl', 'Société à Responsabilité Limitée (SARL)'),('snc', 'Société en Nom Collectif (SNC)'),
-        ('scs', 'Société en Commandite Simple (SCS)'),('gie', "Groupement d'Intérêt Économique (GIE)"),
-        ('sep', 'Société en Participation (SEP)'),('coop', 'Société Coopérative'),
-        ('other', 'Autre')], string="Forme Juridique", default='sa', help="Forme juridique selon le droit OHADA")
+    legal_form = fields.Selection([('sa', 'Société Anonyme (SA)'), ('sas', 'Société par Actions Simplifiée (SAS)'),
+                                   ('sarl', 'Société à Responsabilité Limitée (SARL)'),
+                                   ('snc', 'Société en Nom Collectif (SNC)'),
+                                   ('scs', 'Société en Commandite Simple (SCS)'),
+                                   ('gie', "Groupement d'Intérêt Économique (GIE)"),
+                                   ('sep', 'Société en Participation (SEP)'), ('coop', 'Société Coopérative'),
+                                   ('other', 'Autre')], string="Forme Juridique", default='sa',
+                                  help="Forme juridique selon le droit OHADA")
     license_number = fields.Char(string="N° Immatriculation")
     creation_date = fields.Date(string="Date de création")
     company_address = fields.Char(string="Adresse siège social")
@@ -83,13 +90,19 @@ class FundInvestor(models.Model):
         [("lt_100", "< 100 M FCFA"), ("100_500", "100 – 500 M FCFA"), ("500_2b", "500 M – 2 Mds FCFA"),
          ("gt_2b", "> 2 Mds FCFA"), ], string="Volume prévisionnel des opérations (annuel)")
 
-
-    #infos commune
-    account_type_titre = fields.Selection([("00", "Ordinaire"), ("01", "Géré"), ("02", "Dédié à la bourse en ligne"),("08","titre nanti") ], string="Compte Titre")
-    account_type_espece = fields.Selection([("10", "Ordinaire"), ("11", "Géré"), ("12", "Dédié à la bourse en ligne"), ("18", "titre nanti")],string="Compte Espèce")
-    investor_category = fields.Selection([("01", "Client Ordinaire"), ("02", "Non Client"), ("03", "Compte propre"), ("04", "Compte Emetteur")], string="Type d'investisseur")
-    account_investor_type = fields.Selection([("10", "Personne physique UEMOA"), ("11", "Personne physique Non UEMOA"), ("20", "Personne Morale UEMOA"),
-                                              ("21", "Personne Morale Non UEMOA"),("22", "Institution Financière UEMOA")], string="Type d'investisseur")
+    # infos commune
+    account_type_titre = fields.Selection(
+        [("00", "Ordinaire"), ("01", "Géré"), ("02", "Dédié à la bourse en ligne"), ("08", "titre nanti")],
+        string="Compte Titre")
+    account_type_espece = fields.Selection(
+        [("10", "Ordinaire"), ("11", "Géré"), ("12", "Dédié à la bourse en ligne"), ("18", "titre nanti")],
+        string="Compte Espèce")
+    investor_category = fields.Selection(
+        [("01", "Client Ordinaire"), ("02", "Non Client"), ("03", "Compte propre"), ("04", "Compte Emetteur")],
+        string="Type d'investisseur")
+    account_investor_type = fields.Selection(
+        [("10", "Personne physique CEMAC"), ("11", "Personne physique Non CEMAC"), ("20", "Personne Morale CEMAC"),
+         ("21", "Personne Morale Non CEMAC"), ("22", "Institution Financière CEMAC")], string="Type d'investisseur")
     account_order = fields.Char(string="N° d'Ordre")
     name_bank = fields.Char(string="Nom de la banque")
     bank_address = fields.Char(string="Adresse de la banque")
@@ -100,18 +113,24 @@ class FundInvestor(models.Model):
     business_object_relation = fields.Char(string="Nature de la relation d'affaire")
     fund_country_origin = fields.Many2one("res.country", string="Pays d'origine des fonds")
     fund_country_destination = fields.Many2one("res.country", string="Pays de destination des fonds")
-    market_knowledge = fields.Selection([('1','1'),('2','2'),('3','3'),('4','4'),('5','5'),('6','6'),('7','7'),],string='Connaissance du marché', widget='Priority')
-    activity_knowledge = fields.Selection([('1','1'),('2','2'),('3','3'),('4','4'),('5','5'),('6','6'),('7','7'),],string='Connaissance de l\'activité', widget='Priority')
-    risk_level_acceptable = fields.Selection([('1','1'),('2','2'),('3','3'),('4','4'),('5','5'),('6','6'),('7','7'),],string='Niveau de risque acceptable', widget='Priority')
+    market_knowledge = fields.Selection(
+        [('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'), ('5', '5'), ('6', '6'), ('7', '7'), ],
+        string='Connaissance du marché', widget='Priority')
+    activity_knowledge = fields.Selection(
+        [('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'), ('5', '5'), ('6', '6'), ('7', '7'), ],
+        string='Connaissance de l\'activité', widget='Priority')
+    risk_level_acceptable = fields.Selection(
+        [('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'), ('5', '5'), ('6', '6'), ('7', '7'), ],
+        string='Niveau de risque acceptable', widget='Priority')
     email = fields.Char(string="Adresse Email")
     mobility_phone = fields.Char(string="Téléphone (mobile)")
     place_phone = fields.Char(string="Téléphone (domicile)")
 
-
     # lifecycle / compliance
-    status = fields.Selection([('draft', 'Brouillon'),('kyc_pending', 'KYC en attente'),('kyc_approved', 'KYC approuvé'),
-        ('kyc_rejected', 'KYC refusé'),('archived', 'Archivé')], default='draft', tracking=True)
-    kyc_level = fields.Selection([('low','Low'),('medium','Medium'),('high','High')], default='low')
+    status = fields.Selection(
+        [('draft', 'Brouillon'), ('kyc_pending', 'KYC en attente'), ('kyc_approved', 'KYC approuvé'),
+         ('kyc_rejected', 'KYC refusé'), ('archived', 'Archivé')], default='draft', tracking=True)
+    kyc_level = fields.Selection([('low', 'Low'), ('medium', 'Medium'), ('high', 'High')], default='low')
     kyc_score = fields.Integer(default=0)
     kyc_last_update = fields.Datetime()
     kyc_operator_id = fields.Many2one('res.users', string="KYC Operator")
@@ -125,26 +144,28 @@ class FundInvestor(models.Model):
     document_ids = fields.One2many('efund.kyc.document', 'investor_id', string="KYC Documents")
     kyc_check_ids = fields.One2many('efund.kyc.check', 'investor_id', string="KYC Checks")
     aml_alert_ids = fields.One2many('efund.aml.alert', 'investor_id', string="AML Alerts")
-    represented_person_ids = fields.One2many('efund.investor.represented','investor_id',string="Personnes représentées")
+    represented_person_ids = fields.One2many('efund.investor.represented', 'investor_id',
+                                             string="Personnes représentées")
 
     heirs_person_ids = fields.One2many('efund.investor.heirs', 'investor_id',
-                                             string="Héritiés et personne à contacter")
-    intervention_mode_ids = fields.One2many('efund.investor.intervention.mode','investor_id', string="Investisseur")
+                                       string="Héritiés et personne à contacter")
+    intervention_mode_ids = fields.One2many('efund.investor.intervention.mode', 'investor_id', string="Investisseur")
     represented_company_ids = fields.One2many('efund.investor.company.represented', 'investor_id',
-                                            string="Réprésentant de la société")
+                                              string="Réprésentant de la société")
 
     active = fields.Boolean(default=True)
 
-    fund_investor_ids = fields.One2many('efund.fund.investor','investor_id',string="Fonds")
-    mandate_investor_ids = fields.One2many('efund.mandate.investor','investor_id',string="Mandats")
+    fund_investor_ids = fields.One2many('efund.fund.investor', 'investor_id', string="Fonds")
+    mandate_investor_ids = fields.One2many('efund.mandate.investor', 'investor_id', string="Mandats")
 
-    cash_account_ids = fields.One2many('efund.investor.cash','investor_id',string="Comptes espèces")
-    part_account_ids = fields.One2many('efund.investor.part','investor_id',string="Comptes titres")
+    cash_account_ids = fields.One2many('efund.investor.cash_account', 'investor_id', string="Comptes espèces")
+    part_account_ids = fields.One2many('efund.investor.part_account', 'investor_id', string="Comptes titres")
 
     # compliance computed fields
-    compliance_status = fields.Selection([('compliant','Compliant'),('non_compliant','Non-Compliant'),
-        ('medium_risk','Medium Risk'),('high_risk','High Risk'),('pending_review','Pending Review'),
-    ], compute='_compute_compliance_status', store=True)
+    compliance_status = fields.Selection([('compliant', 'Compliant'), ('non_compliant', 'Non-Compliant'),
+                                          ('medium_risk', 'Medium Risk'), ('high_risk', 'High Risk'),
+                                          ('pending_review', 'Pending Review'),
+                                          ], compute='_compute_compliance_status', store=True)
     compliance_score = fields.Integer(compute='_compute_compliance_status', store=True)
     last_compliance_check = fields.Datetime()
     compliance_notes = fields.Text()
@@ -152,36 +173,47 @@ class FundInvestor(models.Model):
     # Personal info (allow using form to create partner data)
     minor = fields.Boolean(string="Mineur ?")
     nationality = fields.Many2one("res.country", string="Nationalité principale")
-    tranche = fields.Selection([("<55","Jusqu'à 55ans"),("56T74","56-74"),(">75",">75")])
-    language_id = fields.Many2one("res.lang",string="Langue")
-
+    tranche = fields.Selection([("<55", "Jusqu'à 55ans"), ("56T74", "56-74"), (">75", ">75")])
+    language_id = fields.Many2one("res.lang", string="Langue")
 
     # Situation professionnelle
     socio_professional_category = fields.Char(string="Catégorie socio-professionnelle")
     profession = fields.Char(string="Profession")
     function = fields.Char(string="Fonction")
-    activity_sector = fields.Selection([('agriculture', 'Agriculture'),('industrie', 'Industrie'),('batiment', 'Bâtiment et Travaux Publics'),
-    ('commerce', 'Commerce'),('transport', 'Transport et Logistique'),('tourisme', 'Tourisme et Hôtellerie'),('sante', 'Santé et Social'),
-    ('education', 'Éducation et Formation'),('finances', 'Finances et Assurance'),('immobilier', 'Immobilier'),('services', 'Services aux Entreprises'),
-    ('tic', 'Technologies de l\'Information et Communication'),('culture', 'Culture et Loisirs'),('energie', 'Énergie et Environnement'),
-    ('autre', 'Autre'),], string="Secteur d'activité", default='finances')
-
+    activity_sector = fields.Selection(
+        [('agriculture', 'Agriculture'), ('industrie', 'Industrie'), ('batiment', 'Bâtiment et Travaux Publics'),
+         ('commerce', 'Commerce'), ('transport', 'Transport et Logistique'), ('tourisme', 'Tourisme et Hôtellerie'),
+         ('sante', 'Santé et Social'),
+         ('education', 'Éducation et Formation'), ('finances', 'Finances et Assurance'), ('immobilier', 'Immobilier'),
+         ('services', 'Services aux Entreprises'),
+         ('tic', 'Technologies de l\'Information et Communication'), ('culture', 'Culture et Loisirs'),
+         ('energie', 'Énergie et Environnement'),
+         ('autre', 'Autre'), ], string="Secteur d'activité", default='finances')
 
     # Financial profile
-    estimation = fields.Selection([('M5','<5M'),('E5','5-50M'),('P5','>50M')], string="Patrimoine")
-    revenu = fields.Selection([('M5','<5M'),('E5','5-10M'),('P5','>10M')], string="Revenu annuel")
+    estimation = fields.Selection([('M5', '<5M'), ('E5', '5-50M'), ('P5', '>50M')], string="Patrimoine")
+    revenu = fields.Selection([('M5', '<5M'), ('E5', '5-10M'), ('P5', '>10M')], string="Revenu annuel")
     montant_mois = fields.Integer(string="Montant estimé transactions / mois")
-    periodicite = fields.Selection([('Monthly','Mensuel'),('Quarterly','Trimestriel'),('Semi-Annual','Semestriel'),('Annual','Annuel')], string="Fréquence des souscriptions")
+    periodicite = fields.Selection(
+        [('Monthly', 'Mensuel'), ('Quarterly', 'Trimestriel'), ('Semi-Annual', 'Semestriel'), ('Annual', 'Annuel')],
+        string="Fréquence des souscriptions")
 
-    origine = fields.Selection([('salary','Salaire'),('investment','Revenus d\'activités'),('estate','Revenus immobiliers'),('legacy','Héritage / Donation'),('savings','Epargne'),('other','Autre')], string="Origine des fonds")
+    origine = fields.Selection(
+        [('salary', 'Salaire'), ('investment', 'Revenus d\'activités'), ('estate', 'Revenus immobiliers'),
+         ('legacy', 'Héritage / Donation'), ('savings', 'Epargne'), ('other', 'Autre')], string="Origine des fonds")
     other_origine = fields.Char(string="Autre origine")
-    activite = fields.Selection([('employee','Salarié'),('liberal','Profession libérale'),('business','Entrepreneur'),('etudiant','Etudiant'),('retraite','Rétraité'),('sans_emploi','Sans emploi'),('other','Autre')], string="Situation professionnelle")
+    activite = fields.Selection(
+        [('employee', 'Salarié'), ('liberal', 'Profession libérale'), ('business', 'Entrepreneur'),
+         ('etudiant', 'Etudiant'), ('retraite', 'Rétraité'), ('sans_emploi', 'Sans emploi'), ('other', 'Autre')],
+        string="Situation professionnelle")
     other_activite = fields.Char(string="Autre activité")
-    objectif = fields.Selection([('investissement','Investissement'),('savings','Epargne'),('transactions','Transactions'),('other','Autre')], string="Objectif financier")
+    objectif = fields.Selection(
+        [('investissement', 'Investissement'), ('savings', 'Epargne'), ('transactions', 'Transactions'),
+         ('other', 'Autre')], string="Objectif financier")
     other_objectif = fields.Char(string="Autre objectif")
 
-    pep = fields.Selection([('Yes','Oui'),('No','Non')], string="PEP (info)")
-    violation = fields.Selection([('Yes','Oui'),('No','Non')], string="Antécédents")
+    pep = fields.Selection([('Yes', 'Oui'), ('No', 'Non')], string="PEP (info)")
+    violation = fields.Selection([('Yes', 'Oui'), ('No', 'Non')], string="Antécédents")
 
     # Accounts relations
     account_part_ids = fields.One2many('efund.investor.part', 'investor_id', string='Comptes Parts / Actions')
@@ -197,15 +229,15 @@ class FundInvestor(models.Model):
     company_currency_id = fields.Many2one('res.currency', related='company_id.currency_id', store=True, readonly=True)
 
     ## Objet de smart bouton
-    subscription_count = fields.Integer(compute='_compute_subscription_count',string="Souscriptions")
+    subscription_count = fields.Integer(compute='_compute_subscription_count', string="Souscriptions")
     deposit_count = fields.Integer(compute='_compute_deposit_count', string="Déposit")
     redemption_count = fields.Integer(compute='_compute_redemption_count', string="Rachat")
     withdraw_count = fields.Integer(compute='_compute_withdraw_count', string="Retrait Cash")
 
     # image
     image = fields.Binary(string="Photo / Logo",
-        help="Photo pour une personne physique, logo pour une personne morale",
-        attachment=True,store=True)
+                          help="Photo pour une personne physique, logo pour une personne morale",
+                          attachment=True, store=True)
     image_1920 = fields.Image(
         string="Photo / Logo",
         max_width=1920,
@@ -251,7 +283,8 @@ class FundInvestor(models.Model):
     business_relation_type_autre = fields.Char(string="Préciser (Autre)",
                                                help="Saisir le type de relation si 'Autre' est sélectionné")
     fund_origin_country = fields.Many2one("res.country", string="Pays d’origine habituelle des fonds ")
-    #legal_representative_ids = fields.One2many("efund.company.legal.representative", "investor_id", string="Représentant légal")
+
+    # legal_representative_ids = fields.One2many("efund.company.legal.representative", "investor_id", string="Représentant légal")
 
     @api.depends('nom', 'prenom')
     def _compute_full_name(self):
@@ -265,7 +298,6 @@ class FundInvestor(models.Model):
             if record.email and not email_regex.match(record.email):
                 raise ValidationError(
                     "L'adresse e-mail '%s' n'est pas valide. Veuillez utiliser un format comme 'utilisateur@domaine.com'." % record.email)
-
 
     @api.onchange('nom', 'prenom')
     def _onchange_nom_prenom(self):
@@ -306,7 +338,8 @@ class FundInvestor(models.Model):
     def _prepare_partner_vals(self, vals):
         """Convertit les champs EfundInvestor → res.partner proprement."""
         return {
-            "name": vals.get("nom") +' ' + vals.get("prenom") if vals.get("investor_type")  == 'individual' else vals.get("company_name"),
+            "name": vals.get("nom") + ' ' + vals.get("prenom") if vals.get(
+                "investor_type") == 'individual' else vals.get("company_name"),
             "email": vals.get("email"),
             "phone": vals.get("phone"),
             "street": vals.get("address"),
@@ -314,7 +347,6 @@ class FundInvestor(models.Model):
             "country_id": vals.get("country_id"),
             "is_investor": True,
         }
-
 
     # -------------------------
     # BUSINESS / COMPUTED
@@ -327,7 +359,8 @@ class FundInvestor(models.Model):
                 total += float(acc.balance or 0.0)
             rec.available_cash = total
 
-    @api.depends('document_ids', 'kyc_score', 'pep_flag', 'sanctions_flag', 'kyc_last_update', 'document_ids.expiry_date')
+    @api.depends('document_ids', 'kyc_score', 'pep_flag', 'sanctions_flag', 'kyc_last_update',
+                 'document_ids.expiry_date')
     def _compute_compliance_status(self):
         for rec in self:
             score = 100
@@ -340,7 +373,8 @@ class FundInvestor(models.Model):
                 status = 'non_compliant'
             # expired docs
             today = date.today()
-            expired = rec.document_ids.filtered(lambda d: d.expiry_date and d.expiry_date < today and d.status != 'expired')
+            expired = rec.document_ids.filtered(
+                lambda d: d.expiry_date and d.expiry_date < today and d.status != 'expired')
             if expired:
                 score -= 20
                 status = 'non_compliant'
@@ -374,14 +408,15 @@ class FundInvestor(models.Model):
         if self.account_part_ids or self.account_cash_ids:
             raise UserError(_("Cet investisseur possède déjà des comptes."))
 
-        company_code = self.env['efund.company.number'].search([('code_teneur_compte', '=', '3611'),],limit=1)
+        company_code = self.env['efund.company.number'].search([('code_teneur_compte', '=', '3611'), ], limit=1)
         if not company_code:
             raise UserError(_("Aucun code de teneur de compte trouvé pour la société."))
-        _logger.info(f"***** Company code found: {company_code.code_teneur_compte}, agence: {company_code.code_agence}, ")
+        _logger.info(
+            f"***** Company code found: {company_code.code_teneur_compte}, agence: {company_code.code_agence}, ")
         account_number_titre = company_code.code_teneur_compte + company_code.code_agence + "00" + self.account_type_titre + self.account_investor_type + self.account_order
         account_number_espece = company_code.code_teneur_compte + company_code.code_agence + "10" + self.account_type_espece + self.account_investor_type + self.account_order
 
-        #Creation des comptes
+        # Creation des comptes
         self.env['efund.investor.part_account'].create({
             'name': f"Compte Titre - {self.full_name or self.name or 'Investor'}",
             'investor_id': self.id,
@@ -397,10 +432,6 @@ class FundInvestor(models.Model):
             'balance': 0,
             'state': 'active',
         })
-
-
-
-
 
     def action_create_investor_accounts(self):
         """Créer automatiquement compte titre + compte espèces."""
@@ -491,7 +522,8 @@ class FundInvestor(models.Model):
             rec.sudo().write({'pep_flag': False, 'sanctions_flag': False})
             try:
                 result = self._mocked_external_checks()
-                rec.sudo().write({'pep_flag': result.get('pep', False), 'sanctions_flag': result.get('sanctions', False)})
+                rec.sudo().write(
+                    {'pep_flag': result.get('pep', False), 'sanctions_flag': result.get('sanctions', False)})
             except Exception:
                 _logger.exception("Screening failed for investor %s", rec.id)
             # compute score via pluggable engine (keep existing call pattern)
@@ -522,7 +554,8 @@ class FundInvestor(models.Model):
 
     def action_check_kyc_compliance(self):
         # keep your existing implementation (omitted here for brevity)
-        return super(FundInvestor, self).action_check_kyc_compliance() if hasattr(super(), 'action_check_kyc_compliance') else {}
+        return super(FundInvestor, self).action_check_kyc_compliance() if hasattr(super(),
+                                                                                  'action_check_kyc_compliance') else {}
 
     def action_create_aml_alert(self):
         _logger.info("test")
@@ -556,8 +589,6 @@ class FundInvestor(models.Model):
         for rec in self:
             if rec.status != 'kyc_approved':
                 raise UserError("Le client doit être KYC validé pour effectuer cette action.")
-
-
 
     def _compute_subscription_count(self):
         Subscription = self.env['efund.investor.subscription']
@@ -609,6 +640,7 @@ class FundInvestor(models.Model):
                 'search_default_investor_id': self.id,
             }
         }
+
     def action_open_deposit(self):
         self.ensure_one()
 
@@ -623,6 +655,7 @@ class FundInvestor(models.Model):
                 'search_default_investor_id': self.id,
             }
         }
+
     def action_open_redemption(self):
         self.ensure_one()
 
@@ -637,6 +670,7 @@ class FundInvestor(models.Model):
                 'search_default_investor_id': self.id,
             }
         }
+
     def action_open_withdraw(self):
         self.ensure_one()
 
@@ -655,5 +689,97 @@ class FundInvestor(models.Model):
     def action_print(self):
         return (self.env.ref('efundOpc.action_report_investor').report_action(self))
 
+    # Ajout l'investisseur à un compte
+
+    def open_join_fund_wizard(self):
+        """ Ouvre la fenêtre pour choisir le fonds """
+        return {
+            'name': _('Adhésion à un nouveau Fonds'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'efund.investor.join.fund.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_investor_id': self.id}
+        }
+
+    def action_join_fund(self, fund_id):
+        """ Création des comptes Titres et Espèces """
+        self.ensure_one()
+
+        # 1. Création du Compte Titres
+        part_account_obj = self.env['efund.investor.part_account']
+        existing_part = part_account_obj.search([
+            ('investor_id', '=', self.id),
+            ('vehicule_id', '=', fund_id.vehicule_id.id)
+        ])
+        if not existing_part:
+            part_account_obj.create({
+                'name': f"Compte Titres - {fund_id.name}",
+                'investor_id': self.id,
+                'vehicule_id': fund_id.vehicule_id.id,
+                'account_number': self._generate_account_number('part'),
+                'date_opened': fields.Date.today(),
+            })
+
+        # 2. Création du Compte Espèces
+        cash_account_obj = self.env['efund.investor.cash_account']
+        existing_cash = cash_account_obj.search([
+            ('investor_id', '=', self.id),
+            ('vehicule_id', '=', fund_id.vehicule_id.id)
+        ])
+        if not existing_cash:
+            cash_account_obj.create({
+                'name': f"Compte Espèces - {fund_id.name}",
+                'investor_id': self.id,
+                'vehicule_id': fund_id.vehicule_id.id,
+                'account_number': self._generate_account_number('cash'),
+                'date_opened': fields.Date.today(),
+            })
+        return True
+
+    def _generate_account_number(self, account_type):
+        """ Génère un numéro de compte conforme à la circulaire UMOA 001-2022 """
+        self.ensure_one()
+        config = self.env['efund.company.number'].search([], limit=1)
+        if not config:
+            raise UserError("Veuillez configurer les codes Teneur et Agence dans les paramètres.")
+
+        # 1. Détermination des segments
+        teneur = config.code_teneur_compte.zfill(4)
+        agence = config.code_agence.zfill(3)
+
+        # Type de compte (UMOA : 00=Titres, 01=Espèces)
+        type_compte = '00' if account_type == 'part' else '01'
+
+        # Catégorie & Type Client (Dynamique selon l'investisseur)
+        categorie = ''
+        if self.investor_category == '00':
+            categorie = '00'  if account_type == 'part' else 10
+        elif self.investor_category == '01':
+            categorie = '01' if account_type == 'part' else 11
+        elif self.investor_category == '02':
+            categorie = '02' if account_type == 'part' else 12
+        else:
+            categorie = '08' if account_type == 'part' else 18
 
 
+        type_client = "10" if self.investor_type == "individual" else "20"
+
+        # Numéro chronologique (Séquence Odoo de 5 chiffres)
+        sequence = self.env['ir.sequence'].next_by_code('efund.investor.account.number') or '00001'
+        sequence = sequence[-5:]  # On s'assure d'avoir 5 chiffres
+
+        # 2. Construction du radical (18 chiffres)
+        radical = f"{teneur}{agence}{type_compte}{categorie}{type_client}{sequence}"
+
+        # 3. Calcul de la Clé de Contrôle (Algorithme Modulo 97)
+        # Selon la circulaire : Reste de (Radical * 1000) / 97, puis 97 - Reste
+        # Note : Pour les grands nombres en Python, on peut manipuler l'entier directement
+        val_for_key = int(radical + "000")
+        reste = val_for_key % 97
+        cle = 97 - reste
+
+        # Formatage final sur 2 chiffres
+        cle_str = str(cle).zfill(2)
+
+        return f"{radical}{cle_str}"

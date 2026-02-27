@@ -15,15 +15,11 @@ class Fund(models.Model):
     _inherits = {'efund.vehicule': 'vehicule_id'}
 
     vehicule_id = fields.Many2one('efund.vehicule', required=True, ondelete='cascade')
-    vehicle_type = fields.Selection(related='vehicule_id.vehicle_type', default='fund', store=True, readonly=False,
-                                    required=True, string="Type")
+    vehicle_type = fields.Selection(related='vehicule_id.vehicle_type', default='fund', store=True, readonly=False,required=True, string="Type")
     isin = fields.Char(string='Code Isin')
-    nav_frequency = fields.Selection([('daily', 'Journalière'), ('weekly', 'Hebdomaire'), ('monthly', 'Mensuelle'), ],
-                                     string="Périodicité calcul VL", default='daily')
-    cutoff_time = fields.Float(string="Heure de cut-off", default=16.0,
-                               help="Heure limite de réception des ordres (format décimal).\nExemples : 14.0 = 14h00, 14.5 = 14h30, 16.75 = 16h45.")
-    allow_fractional_parts = fields.Boolean(string="Autoriser les parts fractionnées", default=False,
-                                            help="Si décoché, les souscriptions sont arrondies à l'entier inférieur.")
+    nav_frequency = fields.Selection([('daily', 'Journalière'), ('weekly', 'Hebdomaire'), ('monthly', 'Mensuelle'), ], string="Périodicité calcul VL", default='daily')
+    cutoff_time = fields.Float(string="Heure de cut-off", default=16.0, help="Heure limite de réception des ordres (format décimal).\nExemples : 14.0 = 14h00, 14.5 = 14h30, 16.75 = 16h45.")
+    allow_fractional_parts = fields.Boolean(string="Autoriser les parts fractionnées", default=False,  help="Si décoché, les souscriptions sont arrondies à l'entier inférieur.")
     origin_nav = fields.Char(string="VL d'origine")
 
     ##################################################
@@ -86,9 +82,16 @@ class Fund(models.Model):
     def get_chart_account_data(self, company_id ):
         file_path = 'efundOpc/data/fcp_plan_comptable.csv'
         accounts_to_create = []
+        # On récupère l'objet société
+        target_company = self.env['res.company'].browse(company_id)
+
+        # On bascule l'environnement sur la société cible
+        # Toutes les opérations à l'intérieur du "with" verront target_company comme active
+        AccountObj = self.env['account.account'].with_company(target_company).sudo()
+
         try:
         # 1. Lecture complète et stockage en mémoire
-            with misc.file_open(file_path, mode='r') as f:
+            with (misc.file_open(file_path, mode='r') as f):
                 reader = csv.DictReader(f, delimiter=';')
 
                 for row in reader:
@@ -96,21 +99,18 @@ class Fund(models.Model):
                     # On s'assure que les colonnes existent dans le CSV
                     reconcile_raw = str(row.get('reconcile', '')).upper()
                     reconcile_bool = True if reconcile_raw == 'VRAI' else False
-                    code_store_data = {
-                        'company_id': company_id,
-                        'code': row.get('code'),
-                    }
                     vals = {
                         'code': row.get('code'),
                         'name': row.get('name'),
                         'account_type': row.get('account_type'),
-                        'code_store': code_store_data,
+                        'code_store': f'"{company_id}": "{ row.get('code')}"',
                         'reconcile': reconcile_bool,
                     }
 
                     # Validation simple : on n'ajoute que si le code et le nom sont là
                     if vals['code'] and vals['name']:
                         accounts_to_create.append(vals)
+
 
             # 2. Création massive dans la base de données
 
@@ -120,20 +120,18 @@ class Fund(models.Model):
                 # Option A : Création un par un (plus sûr pour isoler les erreurs)
                 for acc_vals in accounts_to_create:
                     # Vérifier si le compte existe déjà pour éviter les crashs
-                    """
-                    existing = self.env['account.account'].search([
-                        ('code', '=', acc_vals['code']),
-                        (f'code_store.{company_id}', '=', acc_vals['code'])
+                    # Correction de la recherche sur champ JSON
+                    company_key = str(company_id)  # La clé JSON est souvent une chaîne de caractères
+                    existing = self.env['account.account'].with_company(target_company).search([
+                        ('code_store', 'like', f'"{company_key}": "{acc_vals["code"]}"')
                     ], limit=1)
-                    """
 
-                    existing = False
 
                     if not existing:
                         # Création du plan comptable
-                        self.env['account.account'].sudo().create(acc_vals)
+                        AccountObj.create(acc_vals)
+                        #self.env['account.account'].sudo().create(acc_vals)
 
-                        """
                         # Création des journaux comptables
                         journals = [
                             ('Souscriptions investisseurs', 'SUB', 'general'),
@@ -143,9 +141,7 @@ class Fund(models.Model):
                             ('Valorisation / Valeur liquidative', 'NAV', 'general'),
                             ('Frais', 'EXP', 'general'),
                         ]
-                        """
 
-                        """
                         journal_data = []
                         for name, code, jtype in journals:
                             vals = {
@@ -156,14 +152,15 @@ class Fund(models.Model):
                             }
                             journal_data.append(vals)
 
+                        JournalObj = self.env['account.journal'].with_company(target_company).sudo()
                         for j_vals in journal_data:
-                            existing_journal = self.env['account.journal'].search([
+                            existing_journal = self.env['account.journal'].with_company(target_company).search([
                                 ('code', '=', j_vals['code']),
                                 ('company_id', '=', j_vals['company_id'])
                             ], limit=1)
 
                             if not existing_journal:
-                                self.env['account.journal'].sudo().create(j_vals)
+                                JournalObj.create(j_vals)
                             else:
                                 _logger.warning("Le journal comptable %s existe déjà, passage au suivant.", j_vals['code'])
 
@@ -172,7 +169,7 @@ class Fund(models.Model):
                         # Création des groupes de comptes
                         #self.create_account_groups(company_id)
 
-                        """
+
 
 
                     else:
@@ -218,3 +215,25 @@ class Fund(models.Model):
             # On log l'erreur et on informe l'utilisateur
             _logger.error("Erreur critique lors de l'import : %s", str(e))
             raise UserError(f"Impossible d'importer le plan comptable : {str(e)}")
+
+    def action_revalue_positions(self):
+        for record in self:
+            position_ids = record.position_ids
+            for pos in position_ids:
+                # 1. Aller chercher le dernier prix VALIDÉ pour cet instrument
+                last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+                    ('instrument_id', '=', pos.instrument_id.id),
+                    ('is_validated', '=', True),
+                    ('date', '<=', fields.Date.today())
+                ], order='date desc', limit=1)
+
+                if last_price_rec:
+                    # 2. Mettre à jour la position avec le prix officiel
+                    pos.write({
+                        'last_price': last_price_rec.price,
+                        'last_price_date': last_price_rec.date
+                    })
+                    # Le _compute_valuation_details fera le reste (Clean/Dirty/Accrued)
+                else:
+                    last_price_rec.cron_generate_daily_prices()
+                    # self.action_refresh_valuation()

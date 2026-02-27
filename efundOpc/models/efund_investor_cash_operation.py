@@ -1,4 +1,5 @@
 import logging
+from email.policy import default
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
@@ -19,29 +20,29 @@ class EfundInvestorCashOperation(models.Model):
     ], string="Type de mouvement", required=True, index=True)
 
     # Le domaine dynamique limite les comptes à ceux de l'investisseur choisi
-    cash_account_id = fields.Many2one('efund.investor.cash_account',string="Compte Espèces",required=True,
-        domain="[('investor_id', '=', investor_id),]")
+    cash_account_id = fields.Many2one('efund.investor.cash_account', string="Compte Espèces",
+                                      compute="_compute_accounts",store=True, readonly=True, precompute=True, required=True)
+    balance = fields.Float(string="Solde", related="cash_account_id.balance", readonly=True)
 
     currency_id = fields.Many2one(related='cash_account_id.vehicule_id.currency_id', string="Devise", store=True)
     amount = fields.Monetary(string="Montant", currency_field="currency_id", required=True)
     fee_amount = fields.Monetary(string="Frais", currency_field="currency_id", store=True)
     payment_mode = fields.Selection([('bank', 'Virement Bancaire'),('cheque', 'Chèque'),
-        ('cash', 'Espèces'),('mobile', 'Mobile Money')], string='Mode de règlement', required=True)
+        ('cash', 'Espèces'),('mobile', 'Mobile Money')], string='Mode de règlement', default='bank', required=True)
     date_operation = fields.Datetime(string="Date opération", default=fields.Datetime.now)
     event_id = fields.Many2one('efund.accounting.event', string="Événement", readonly=True)
     investor_cash_move_id = fields.Many2one('efund.investor.cash_account.move', string="Cash Investisseur", readonly=True)
 
-    @api.onchange('investor_id', )
-    def _onchange_investor_fund(self):
-        """ Auto-sélection du compte si un seul est disponible """
-        if self.investor_id :
-            accounts = self.env['efund.investor.cash'].search([
-                ('investor_id', '=', self.investor_id.id)
-            ])
-            if len(accounts) == 1:
-                self.cash_account_id = accounts[0]
-            else:
-                self.cash_account_id = False
+    @api.depends('investor_id','vehicule_id')
+    def _compute_accounts(self):
+        for rec in self:
+            if rec.investor_id and rec.vehicule_id:
+                # On cherche le compte espèces
+                rec.cash_account_id = self.env['efund.investor.cash_account'].search([
+                    ('investor_id', '=', rec.investor_id.id),
+                    ('vehicule_id', '=', rec.vehicule_id.id)
+                ], limit=1)
+
 
     def action_validate(self):
         for rec in self:
@@ -122,3 +123,9 @@ class EfundInvestorCashOperation(models.Model):
                 'fees': self.fee_amount,
             }
         }
+
+    def write(self, vals):
+        for record in self:
+            if record.state == 'reconciled':
+                raise UserError("Vous ne pouvez pas modifier une opération cash déjà comptabilisée.")
+        return super(EfundInvestorCashOperation, self).write(vals)

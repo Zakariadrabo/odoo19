@@ -2,84 +2,118 @@
 <odoo>
     <!-- Vue tree des positions -->
     <record id="view_efund_fund_position_list" model="ir.ui.view">
-        <field name="name">efund.fund.position.list</field>
-        <field name="model">efund.vehicule.position</field>
-        <field name="arch" type="xml">
-            <list string="Positions">
-                <field name="instrument_id"/>
-                <field name="decoration_state" invisible="1"/>
-                <field name="valuation_date"/>
-                <field name="quantity"/>
-                <field name="avg_cost"/>
-                <field name="last_price"/>
-                <field name="market_value"/>
-                <field name="unrealized_pl"/>
-                <field name="unrealized_pl_percent"/>
+    <field name="name">efund.fund.position.list</field>
+    <field name="model">efund.vehicule.position</field>
+    <field name="arch" type="xml">
+        <list string="Positions du Portefeuille"
+              decoration-success="unrealized_pl &gt; 0"
+              decoration-danger="unrealized_pl &lt; 0">
 
-                <field name="state" widget="badge" decoration-info="state=='active'"
-                       decoration-warning="state=='suspended'" decoration-danger="state=='closed'"/>
+            <header>
+                <button name="action_refresh_valuation"
+                        string="Actualiser la Valorisation"
+                        type="object"
+                        class="btn-primary"
+                        confirm="Voulez-vous recalculer les valeurs de marché et intérêts courus pour les positions sélectionnées ?"/>
+            </header>
 
-                <button name="action_update_position" type="object" string="Modifier" class="oe_highlight"
-                        invisible="state == 'closed'"/>
+            <field name="vehicule_id" optional="show"/>
+            <field name="instrument_id"/>
+            <field name="last_price_date"/>
 
-                <button name="action_close_position" type="object" string="Clôturer" invisible="state == 'closed'"/>
+            <field name="quantity" sum="Total Quantité"/>
+            <field name="avg_cost" widget="monetary" string="Prix Revient"/>
+            <field name="last_price" widget="monetary" string="Dernier Cours"/>
 
-                <button name="action_view_instrument" type="object" string="Instrument" class="oe_link"
-                        icon="fa-external-link"/>
-            </list>
-        </field>
-    </record>
+            <field name="clean_value" widget="monetary" optional="hide" string="Valeur Titre"/>
+            <field name="accrued_interest" widget="monetary" optional="show" string="Intérêts Courus"/>
 
-    <!-- Vue formulaire des positions -->
+            <field name="market_value" widget="monetary" string="Valeur Marché" sum="Total Valeur"/>
+
+            <field name="unrealized_pl" widget="monetary" sum="Total P&amp;L"/>
+            <field name="unrealized_pl_percent" widget="percentage" string="%"/>
+
+            <field name="state" widget="badge" decoration-info="state=='active'"  decoration-danger="state=='closed'"/>
+        </list>
+    </field>
+</record>
+
     <record id="view_efund_fund_position_form" model="ir.ui.view">
         <field name="name">efund.fund.position.form</field>
         <field name="model">efund.vehicule.position</field>
         <field name="arch" type="xml">
-            <form string="Position">
+            <form string="Position du Fonds" readonly="state == 'closed'">
                 <header>
-                    <button name="action_update_position" type="object" string="Modifier" class="oe_highlight"
+                    <button name="action_update_position" type="object" string="Actualiser" class="oe_highlight"
                             invisible="state == 'closed'"/>
-                    <button name="action_close_position" type="object" string="Clôturer"
-                            invisible="state == 'closed'"/>
+                    <button name="action_close_position" type="object" string="Clôturer" invisible="state == 'closed'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="active,suspended,closed"/>
                 </header>
                 <sheet>
-                    <div class="oe_button_box" name="button_box">
-                        <button name="action_view_instrument" type="object" string="Voir l'instrument"
-                                class="oe_highlight" icon="fa-line-chart"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="instrument_id" placeholder="Instrument Financier"
+                                   readonly="state == 'closed'"/>
+                        </h1>
+                        <h3>
+                            <field name="vehicule_id" placeholder="Véhicule / Fonds" readonly="state == 'closed'"/>
+                        </h3>
                     </div>
-
                     <group>
-                        <group string="Informations de base">
-                            <field name="vehicule_id"/>
-                            <field name="instrument_id"/>
-                            <field name="valuation_date"/>
-                            <field name="state"/>
-                        </group>
-                        <group string="Informations de cours">
-                            <field name="last_price" readonly="1"/>
+                        <group string="Contexte de Valorisation">
+                            <field name="last_price_date" readonly="state == 'closed'"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="last_price" widget="monetary" readonly="1"/>
                             <field name="last_price_date" readonly="1"/>
                         </group>
-                    </group>
-
-                    <separator string="Données de position"/>
-
-                    <group>
-                        <group string="Position">
-                            <field name="quantity"/>
-                            <field name="avg_cost"/>
-                            <field name="currency_id" readonly="1"/>
-                        </group>
-                        <group string="Valorisation">
-                            <field name="market_value" readonly="1"/>
-                            <field name="unrealized_pl" readonly="1"/>
-                            <field name="unrealized_pl_percent" readonly="1"/>
+                        <group string="Détails de la Quantité">
+                            <field name="quantity" readonly="state == 'closed'"/>
+                            <field name="avg_cost" widget="monetary" readonly="state == 'closed'"/>
+                            <label for="first_price" string="Prix d'émission"/>
+                            <div class="o_row">
+                                <field name="first_price" widget="monetary" readonly="state == 'closed'"/>
+                            </div>
                         </group>
                     </group>
 
-                    <group string="Notes">
-                        <field name="notes"/>
-                    </group>
+                    <notebook>
+                        <page string="Valorisation Détaillée" name="valuation">
+                            <group>
+                                <group string="Composantes de la Valeur">
+                                    <field name="clean_value" widget="monetary" string="Valeur des titres"/>
+                                    <field name="accrued_interest" widget="monetary" string="Intérêts courus"/>
+                                    <field name="market_value" widget="monetary" string="Valeur Totale"
+                                           class="oe_subtotal_footer_separator"/>
+                                </group>
+                                <group string="Analyse de Performance">
+                                    <field name="unrealized_pl" widget="monetary"
+                                           decoration-danger="unrealized_pl &lt; 0"
+                                           decoration-success="unrealized_pl &gt; 0"/>
+                                    <field name="unrealized_pl_percent" widget="percentage"
+                                           decoration-danger="unrealized_pl_percent &lt; 0"
+                                           decoration-success="unrealized_pl_percent &gt; 0"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Échéancier / Cashflows" name="cashflows" invisible="accrued_interest == 0">
+                            <field name="cashflow_ids" readonly="1">
+                                <list>
+                                    <field name="date_scheduled"/>
+                                    <field name="amount_expected" sum="Total attendu"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="notes" placeholder="Observations sur cette position..."/>
+                        </page>
+                    </notebook>
                 </sheet>
+                <chatter>
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </chatter>
             </form>
         </field>
     </record>

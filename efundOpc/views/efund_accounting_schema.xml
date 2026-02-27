@@ -17,8 +17,7 @@
                     </div>
                     <group invisible="not company_id">
                         <group>
-                            <field name="journal_id" options="{'no_create': True}" invisible="not company_id"
-                                   required="company_id" domain="[('company_id', '=', company_id)]"/>
+                            <field name="journal_id" domain="[('company_id', '=', company_id)]" options="{'no_create': True}"/>
                             <field name="event_type" placeholder="Type d'évènement ..."/>
                         </group>
                     </group>

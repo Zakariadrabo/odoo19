@@ -37,12 +37,18 @@ class FundSubscription(models.Model):
     # -----------------------------------------------------------------
     # RELATIONS
     # -----------------------------------------------------------------
+    """
     cash_account_id = fields.Many2one('efund.investor.cash_account', string="Compte Espèces",
                                       compute="_compute_cash_account_id",
                                       store=True, readonly=True, precompute=True, required=True)
     part_account_id = fields.Many2one('efund.investor.part_account', string="Compte Titre",
                                       compute="_compute_part_account_id",
                                       store=True, readonly=True, precompute=True, required=True)
+                                      """
+    part_account_id = fields.Many2one('efund.investor.part_account', string="Compte Titres",compute="_compute_accounts",
+        store=True,readonly=True, precompute=True, required=True)
+    cash_account_id = fields.Many2one('efund.investor.cash_account',string="Compte Espèces", compute="_compute_accounts",
+        store=True, readonly=True, precompute=True, required=True)
 
     balance = fields.Float(string="Solde", related="cash_account_id.balance", readonly=True)
 
@@ -73,12 +79,28 @@ class FundSubscription(models.Model):
     event_id = fields.Many2one('efund.accounting.event', string="Événement", readonly=True)
 
     # -----------------------------------------------------------------
+    @api.depends('investor_id', 'fund_id')
+    def _compute_accounts(self):
+        for rec in self:
+            if rec.investor_id and rec.fund_id:
+                # On cherche le compte titre lié à cet investisseur pour ce véhicule
+                rec.part_account_id = self.env['efund.investor.part_account'].search([
+                    ('investor_id', '=', rec.investor_id.id),
+                    ('vehicule_id', '=', rec.fund_id.vehicule_id.id)
+                ], limit=1)
+
+                # On cherche le compte espèces
+                rec.cash_account_id = self.env['efund.investor.cash'].search([
+                    ('investor_id', '=', rec.investor_id.id),
+                    ('vehicule_id', '=', rec.fund_id.vehicule_id.id)
+                ], limit=1)
+    """
     @api.depends('investor_id', )
     def _compute_cash_account_id(self):
-        """
+      
         Sélectionne automatiquement le compte espèces de l'investisseur
         pour le fonds sélectionné.
-        """
+       
         if self.investor_id:
             # On recherche le compte espèces lié à cet investisseur et ce fonds
             cash_account = self.env['efund.investor.cash_account'].search([
@@ -93,10 +115,7 @@ class FundSubscription(models.Model):
 
     @api.depends('investor_id', 'fund_id')
     def _compute_part_account_id(self):
-        """
-        Sélectionne automatiquement le compte espèces de l'investisseur
-        pour le fonds sélectionné.
-        """
+       
         if self.investor_id and self.fund_id:
             # On recherche le compte espèces lié à cet investisseur et ce fonds
             part_account = self.env['efund.investor.part_account'].search([
@@ -109,6 +128,7 @@ class FundSubscription(models.Model):
             else:
                 # Optionnel : remettre à faux si aucun compte n'est trouvé
                 self.part_account_id = False
+         """
 
     @api.depends('fund_id','shares')
     def _compute_get_share_class_id(self):
@@ -579,3 +599,9 @@ class FundSubscription(models.Model):
                 'gross_amount': gross_amount,
                 'state': 'submitted',
             })
+
+    def write(self, vals):
+        for record in self:
+            if record.state == 'reconciled':
+                raise UserError("Vous ne pouvez pas modifier une opération cash déjà comptabilisée.")
+        return super(FundSubscription, self).write(vals)

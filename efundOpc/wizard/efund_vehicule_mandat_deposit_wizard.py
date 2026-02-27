@@ -1,10 +1,13 @@
+import logging
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
+_loggers = logging.getLogger(__name__)
 
 class EfundVehiculeMandatDepositWizard(models.TransientModel):
     _name = 'efund.vehicule.mandat.deposit.wizard'
     _description = 'Wizard pour faire le déposit du mandat'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
+
 
     mandate_id = fields.Many2one('efund.vehicule.mandate', string='Mandat', required=True)
     deposit_amount = fields.Monetary(string='Montant du déposit', required=True)
@@ -13,13 +16,15 @@ class EfundVehiculeMandatDepositWizard(models.TransientModel):
 
     def action_confirm_deposit(self):
         self.ensure_one()
+        _loggers.info("*******je suis dans la procédure Confirming deposit for mandate %s" % (self.mandate_id.id))
 
         cash_account = self.env['efund.investor.cash_account'].search([('vehicule_id', '=', self.mandate_id.vehicule_id.id)])
+        _loggers.info("*******je suis dans la procédure Confirming deposit for mandate %s" % (cash_account))
         if not cash_account:
             self.env['efund.investor.cash_account'].create({
                 'name': f"Compte Espèces - {self.mandate_id.investor_id.full_name or self.mandate_id.investor_id.name or self.mandate_id.investor_id.company_name or 'Investor'}",
                 'investor_id': self.mandate_id.investor_id.id,
-                'account_number': self._get_investor_account(self.mandate_id.investor_id),
+                'account_number': self.mandate_id.investor_id._generate_account_number('cash'), #self._get_investor_account(self.mandate_id.investor_id),
                 'vehicule_id': self.mandate_id.vehicule_id.id,
                 'balance': 0,
                 'state': 'active',
@@ -47,11 +52,4 @@ class EfundVehiculeMandatDepositWizard(models.TransientModel):
 
             mandat.write({'is_fund_released': True})
 
-    def _get_investor_account(self, investor):
-        code = ''
-        if investor.investor_type == 'individual':
-            code = 'ES-PP-' + self.mandate_id.code
-        elif investor.investor_type == 'company':
-            code = 'ES-PM-' + self.mandate_id.code
-        return code
 

@@ -23,7 +23,7 @@ class FundAccountingEngine(models.AbstractModel):
 
         if not schema:
             raise UserError(
-                _("Aucun schema pour %s") % event.event_code
+                _("Aucun schema pour %s") % event.event_type
             )
 
         lines = []
@@ -50,7 +50,8 @@ class FundAccountingEngine(models.AbstractModel):
             }))
 
         #raise UserError(f"lines = {lines}")
-        move = self.env['account.move'].create({
+        target_company = event.vehicule_id.company_id
+        move = self.env['account.move'].sudo().with_company(target_company).create({
             'journal_id': schema.journal_id.id,
             'company_id': event.vehicule_id.company_id.id,
             'ref': event.reference,
@@ -65,6 +66,8 @@ class FundAccountingEngine(models.AbstractModel):
         })
 
         return move
+
+
 
 
     """

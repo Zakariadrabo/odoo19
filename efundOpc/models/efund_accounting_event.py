@@ -5,7 +5,7 @@ class AccountingEvent(models.Model):
     _description = "Financial Events"
     _order = "id desc"
 
-    event_type = fields.Selection([('CASH_IN', 'Déposit'), ('CASH_OUT', 'Rétrait'), ('SUB_VALIDATED', 'Souscription Validée'),
+    event_type = fields.Selection([('CASH_IN', 'Apport de liquidité'), ('CASH_OUT', 'Retrait de liquidité'), ('SUB_VALIDATED', 'Souscription Validée'),
          ('RED_VALIDATED', 'Rachat Validé'), ('TRADE_EXECUTED', 'Transaction Titre Exécutée'),
          ('NAV_CALCULATED', 'Valeur Liquidative Calculée'),('FEE_COMPUTED', 'Frais Provisionnés'),
          ('DIV_DECLARED', 'Dividende/Coupon Déclaré'),

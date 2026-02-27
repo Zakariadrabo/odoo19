@@ -13,7 +13,7 @@ from . import confirmable_mixin, res_company, forme_juridique, statut_operationn
     efund_depositaire, \
     efund_operation_base, efund_bourse_order_execution_line, efund_fund_instrument_event, efund_position_adjustment, \
     efund_fund_investor, efund_investor_part_move, efund_investor_cash_move, efund_investor_deposit, \
-    efund_investor_redemption, efund_investor_subscription, efund_mandate, efund_mandate_coupon, \
+    efund_investor_redemption, efund_vehicule_fund_subscription, efund_mandate, efund_mandate_coupon, \
     efund_mandate_termination, efund_operation_reconciliation_log, \
     efund_mandate_investor, efund_investor_withdraw, efund_vehicule_instrument_fee, efund_fund_instrument_fee, \
     efund_fund_type, efund_asset_class, \

@@ -30,6 +30,21 @@
                         <button name="action_print" type="object"
                                 string="Imprimer" class="btn-outline-secondary"
                                 icon="fa-print"/>
+                        <button name="open_join_fund_wizard"
+                                string="Adhérer à un Fonds"
+                                type="object"
+                                class="btn-primary"
+                                invisible="investor_type == False"/>
+                        <button name="action_print"
+                                type="object"
+                                string="Print KYC"
+                                class="btn-secondary"
+                        />
+                        <button name="%(action_investor_portfolio_report_wizard)d"
+                                string="État du portefeuille"
+                                type="action"
+                                class="oe_highlight"
+                                icon="fa-file-pdf"/>
                     </div>
 
                     <!-- Barre de statut améliorée -->
@@ -58,11 +73,21 @@
                                         <field name="prenom"/>
                                         <field name="sex" widget="radio" options="{'horizontal': true}"/>
                                         <field name="birthdate"/>
-                                         <field name="birthplace"/>
-                                         <field name="birth_country_id"/>
+                                        <field name="birthplace"/>
+                                        <field name="birth_country_id"/>
                                     </group>
                                     <group invisible="investor_type != 'company'">
-                                        <field name="license_number"/>
+                                        <field name="company_name" required="investor_type == 'company'"/>
+                                        <field name="company_address" required="investor_type  == 'company'"/>
+                                        <field name="company_town" required="investor_type  == 'company'"/>
+                                        <field name="company_country_id" required="investor_type  == 'company'"/>
+                                        <field name="identical_address"/>
+                                        <field name="company_direction_address" invisible="identical_address"
+                                               required="not identical_address"/>
+                                        <field name="company_direction_town" invisible="identical_address"
+                                               required="not identical_address"/>
+                                        <field name="company_direction_country_id" invisible="identical_address"
+                                               required="not identical_address"/>
                                     </group>
                                 </group>
 
@@ -158,59 +183,30 @@
                         <!-- Onglet 1: Identité -->
                         <page string="Identité">
                             <group>
-                                <group string="Type d'investisseur">
-                                    <field name="account_type_titre" />
-                                     <field name="account_type_espece" />
-                                     <field name="investor_category"/>
-                                     <field name="account_investor_type"/>
-                                     <field name="account_order"/>
-
-                                </group>
-                            </group>
-
-                            <!-- Personne Physique (affichage conditionnel) -->
-                            <group string="Informations Personnelles" invisible="investor_type != 'individual'">
-                                <group>
+                                <group string="Informations Personnelles" invisible="investor_type != 'individual'">
                                     <field name="civilite"/>
-                                    <field name="nom" required="investor_type == 'individual'"/>
-                                    <field name="prenom" required="investor_type == 'individual'"/>
-                                    <field name="nom_jeune_fille"/>
-                                    <field name="sex" widget="radio" options="{'horizontal': true}"/>
-                                </group>
-                                <group>
-                                    <field name="birthdate" required="investor_type == 'individual'"/>
-                                    <field name="birthplace" required="investor_type == 'individual'"/>
-                                    <field name="birth_country_id" required="investor_type == 'individual'"/>
                                     <field name="nationality"/>
                                     <field name="other_nationnality"/>
                                     <field name="marital_status"/>
                                 </group>
-                            </group>
-
-                            <!-- Personne Morale (affichage conditionnel) -->
-                            <group string="Informations Société" invisible="investor_type != 'company'">
-                                <group>
-                                    <field name="company_name" required="investor_type == 'company'"/>
+                                <group invisible="investor_type != 'company'">
                                     <field name="company_short_name"/>
                                     <field name="legal_form" required="investor_type == 'company'"/>
-                                    <field name="license_number" required="investor_type == 'company'"/>
+                                    <field name="license_number" required="investor_type == 'company'" string="Registre de commerce"/>
                                     <field name="creation_date" required="investor_type == 'company'"/>
+                                    <field name="mobility_phone" widget="phone"/>
+                                    <field name="place_phone" widget="phone"/>
+                                    <field name="email" widget="email"/>
                                 </group>
-                                <group>
-                                    <field name="company_address" required="investor_type == 'company'"/>
-                                    <field name="company_town" required="investor_type == 'company'"/>
-                                    <field name="company_country_id" required="investor_type == 'company'"/>
-                                    <field name="identical_address"/>
-                                    <div invisible="identical_address">
-                                        <field name="company_direction_address"/>
-                                        <field name="company_direction_town"/>
-                                        <field name="company_direction_country_id"/>
-                                    </div>
+                                <group string="Type d'investisseur">
+                                    <field name="account_type_titre" string="Type de compte" required="1"/>
+                                    <field name="investor_category" string="Catégorie investisseur" required="1"/>
+                                    <field name="account_investor_type" string="Type d'investisseur" required="1"/>
                                 </group>
                             </group>
 
                             <!-- Coordonnées (commun) -->
-                            <group string="Coordonnées">
+                            <group string="Coordonnées" invisible="investor_type != 'individual'">
                                 <group>
                                     <field name="address"/>
                                     <field name="address_place"/>
@@ -238,7 +234,6 @@
                                     <field name="activity_sector"/>
                                     <field name="socio_professional_category"/>
                                 </group>
-
                                 <group string="Paramètres Financiers" invisible="investor_type != 'individual'">
                                     <field name="revenu"/>
                                     <field name="estimation"/>
@@ -262,7 +257,7 @@
                                 </group>
                                 <group>
                                     <field name="expected_operations_volume"/>
-                                    <field name="main_activity_countries"/>
+                                    <field name="main_activity_countries" widget="many2many_tags"/>
                                     <field name="website"/>
                                     <field name="company_duration_years"/>
                                     <field name="is_beneficiaire_effectif"/>
@@ -357,56 +352,24 @@
 
                         <!-- Onglet 7: Comptes -->
                         <page string="Comptes">
+                            <br />
                             <div class="row">
-                                <div class="col-6">
-                                    <h5>Comptes Espèces</h5>
+                                <div class="col-5">
                                     <field name="cash_account_ids">
                                         <list create="false">
                                             <field name="account_number"/>
+                                            <field name="vehicule_id" />
                                             <field name="balance" widget="monetary"/>
-                                            <field name="state" widget="badge"/>
-                                            <button name="action_open_cash_deposit_wizard" type="object"
-                                                    string="Déposer" class="btn-sm btn-primary"
-                                                    invisible="state != 'active'"/>
                                         </list>
                                     </field>
                                 </div>
-                                <div class="col-6">
-                                    <h5>Comptes Titres</h5>
+                                <div class="col-2" />
+                                <div class="col-5">
                                     <field name="part_account_ids">
                                         <list create="false">
                                             <field name="account_number"/>
+                                            <field name="vehicule_id" />
                                             <field name="total_parts"/>
-                                            <field name="state" widget="badge"/>
-                                            <button name="action_open_subscription_wizard" type="object"
-                                                    string="Souscrire" class="btn-sm btn-success"
-                                                    invisible="state != 'active'"/>
-                                        </list>
-                                    </field>
-                                </div>
-                            </div>
-                        </page>
-
-                        <!-- Onglet 8: Abonnements -->
-                        <page string="Abonnements">
-                            <div class="row">
-                                <div class="col-6">
-                                    <h5>Fonds</h5>
-                                    <field name="fund_investor_ids">
-                                        <list>
-                                            <field name="fund_id"/>
-                                            <field name="state" widget="badge"/>
-                                            <field name="validation_date"/>
-                                        </list>
-                                    </field>
-                                </div>
-                                <div class="col-6">
-                                    <h5>Mandats</h5>
-                                    <field name="mandate_investor_ids">
-                                        <list>
-                                            <field name="mandate_id"/>
-                                            <field name="state" widget="badge"/>
-                                            <field name="validation_date"/>
                                         </list>
                                     </field>
                                 </div>

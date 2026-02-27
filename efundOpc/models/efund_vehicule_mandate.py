@@ -29,6 +29,9 @@ class Mandate(models.Model):
     is_fund_released = fields.Boolean(string='Est un fonds', default=False)
     coupon_capitalisation = fields.Boolean(string='Est capitalisé', default=False)
 
+    # compte comptable du mandant
+    partner_account_id = fields.Many2one('account.account', string='Compte comptable du mandant')
+
     # risk_profile_id = fields.Many2one('mandate.risk.profile',string='Profil de risque',required=True)
 
     # ---------------------------------------------------------
@@ -179,6 +182,7 @@ class Mandate(models.Model):
                 'vehicule_id': rec.vehicule_id.id,
             })
             rec.message_post(body=_("Crédit de %s venant du compte investisseur.") % balance)
+            rec.on_mandate_confirmed(rec)
             rec.state = 'active'
             rec.message_post(body=_("Le mandat a été confirmé et est maintenant actif."))
 
@@ -439,5 +443,47 @@ class Mandate(models.Model):
             'nodestroy': True,
         }
 
+    @api.model
+    def on_mandate_confirmed(self, mandat):
+        """
+        Déclenché à la validation du mandat.
+        Crée un compte de tiers incrémental basé sur la racine 467.
+        """
+        root_code = "320"
+        company = self.env['res.company'].sudo().search([('name', '=like', f"MANDATS"),], limit=1)
+        if company:
+            # 1. Rechercher le dernier compte créé avec cette racine dans cette société
+            # On trie par code descendant pour obtenir le plus grand
 
+            last_account = self.env['account.account'].sudo().with_company(company).search([
+                ('code', '=like', f"{root_code}%"),
+            ], order='code desc', limit=1)
 
+            if last_account:
+                # On extrait la partie numérique et on ajoute 1
+                # Exemple: '4670001' -> 4670001 + 1 = 4670002
+                try:
+                    last_code_int = int(last_account.code)
+                    new_code = str(last_code_int + 1)
+                except ValueError:
+                    # Sécurité si le code n'est pas purement numérique
+                    new_code = f"{root_code}0001"
+            else:
+                # Premier compte de la série
+                new_code = f"{root_code}0001"
+
+            # 2. Création du compte de passif (Capital sous mandat)
+            new_account = self.env['account.account'].sudo().with_company(company).create({
+                'name': f"Mandat - {mandat.name}",
+                'code': new_code,
+                'account_type': 'liability_current',
+                'reconcile': True,
+            })
+
+            # 3. Mise à jour du mandat avec le compte tiers et le compte analytique
+            # On suppose que l'événement crée aussi le compte analytique ici
+            mandat.write({
+                'partner_account_id': new_account.id,
+            })
+
+            _logger.info(f"Compte de passif incrémentiel créé : {new_code} pour {mandat.name}")

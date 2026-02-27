@@ -12,7 +12,7 @@ class FundPosition(models.Model):
     _description = "Position du véhicule sur un instrument"
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = "display_name"
-    _order = "valuation_date desc, instrument_id"
+    _order = "last_price_date desc, instrument_id"
 
     # ========== CHAMPS DE BASE ==========
     vehicule_id = fields.Many2one('efund.vehicule', required=True, ondelete='cascade')
@@ -22,8 +22,7 @@ class FundPosition(models.Model):
     # ========== INFORMATIONS DE POSITION ==========
     quantity = fields.Float(string="Quantité", digits=(16, 4), default=0.0, required=True)
     avg_cost = fields.Monetary(string="Coût moyen unitaire")
-    market_value = fields.Monetary(string="Valeur de marché", compute='_compute_market_value', store=True, )
-    valuation_date = fields.Date(string="Date de valorisation",  index=True, )
+    #market_value = fields.Monetary(string="Valeur de marché", compute='_compute_market_value', store=True, )
 
     # ========== INFORMATIONS DE COURS ==========
     last_price = fields.Float(string="Dernier cours", digits=(16, 4), compute='_compute_last_price', store=True, )
@@ -49,32 +48,103 @@ class FundPosition(models.Model):
     adjustment_ids = fields.One2many('efund.position.adjustment', 'position_id', string="Ajustements")
     cashflow_ids = fields.One2many('efund.vehicule.cashflow', 'position_id', string="Flux de trésorerie prévus")
 
-    @api.depends('quantity', 'avg_cost', 'instrument_id', 'valuation_date')
+    # --- Nouveaux champs de valorisation détaillée ---
+    clean_value = fields.Monetary(string="Valeur Hors Coupons", compute='_compute_market_value', store=True, help="Quantité * Dernier Cours")
+    accrued_interest = fields.Monetary(string="Intérêts Courus", compute='_compute_market_value', store=True, help="Coupons courus non échus à la date de valorisation")
+    # market_value devient la somme (Dirty Price)
+    market_value = fields.Monetary(string="Valeur de Marché (Dirty)",compute='_compute_market_value',store=True)
+
+    @api.depends('quantity', 'last_price', 'instrument_id', 'last_price_date')
+    def _compute_valuation_details(self):
+        for pos in self:
+            # 1. Calcul de la valeur "Clean" (Cours brut)
+            # On considère que last_price est exprimé en % du nominal pour les bonds
+            pos.clean_value = pos.quantity * pos.last_price
+
+            # 2. Calcul des intérêts courus (uniquement pour les obligations)
+            accrued = 0.0
+            if pos.instrument_id.instrument_type == 'bond':
+                bond = self.env['efund.vehicule.instrument.core.bond'].search([
+                    ('instrument_id', '=', pos.instrument_id.id)
+                ], limit=1)
+                if bond:
+                    accrued = self._calculate_accrued_interest(bond, pos.quantity, pos.last_price_date)
+
+            pos.accrued_interest = accrued
+
+            # 3. Valeur de marché totale (Dirty Price)
+            pos.market_value = pos.clean_value + pos.accrued_interest
+
+    def _calculate_accrued_interest(self, bond, quantity, val_date):
+        """
+        Calcul du coupon couru basé sur la dernière date anniversaire (value_date/issue_date)
+        """
+        # 1. Vérifications de sécurité
+        if not bond.coupon_rate or not bond.issue_date or not val_date:
+            return 0.0
+
+        # 2. Déterminer la date du dernier coupon (Date anniversaire)
+        # On part de la date d'émission (qui est la date de valeur initiale)
+        issue_date = bond.issue_date
+
+        if val_date < issue_date:
+            return 0.0
+
+        # Calcul du nombre d'années complètes écoulées
+        years_elapsed = val_date.year - issue_date.year
+
+        # On crée la date anniversaire pour l'année en cours
+        # Si la date de val est avant l'anniversaire de l'année N, le dernier coupon était l'année N-1
+        last_anniversary = issue_date.replace(year=issue_date.year + years_elapsed)
+
+        if last_anniversary > val_date:
+            last_anniversary = issue_date.replace(year=issue_date.year + years_elapsed - 1)
+
+        # La start_date est maintenant la date du dernier coupon payé
+        start_date = last_anniversary
+
+        # 3. Calcul du prorata temporis
+        days_accrued = (val_date - start_date).days
+
+        # Formule UMOA : Nominal * Quantité * Taux * (Jours / 365)
+        # Note : Si le marché impose l'Exact/360, remplacez 365 par 360
+        annual_interest = (bond.face_value * quantity) * (bond.coupon_rate / 100.0)
+        accrued_amount = annual_interest * (days_accrued / 365.0)
+
+        return accrued_amount
+
+
+
+    @api.depends('quantity', 'avg_cost', 'last_price', 'clean_value', 'accrued_interest')
     def _compute_market_value(self):
+        """Calcule la valeur de marché globale et la performance latente"""
         for rec in self:
-            instrument = rec.instrument_id
-            today = rec.valuation_date or fields.Date.today()
-            price = 0.0
+            # 1. Calcul de la valeur de marché (Dirty Price)
+            # On utilise la somme calculée par _compute_valuation_details
+            market_value = rec.market_value or 0.0
 
-            # --- CAS 1 : INSTRUMENTS COTÉS OU OPCVM ---
-            if instrument.is_listed:
-                if instrument.valuation_method == 'listed':
-                    if instrument.instrument_type == 'bond':
-                        bond = self.env['efund.vehicule.instrument.core.bond'].browse(instrument.id)
-                        if hasattr(bond, 'maturity_date') and bond.maturity_date >= today:
-                            price = rec._calculate_linear_accretion(bond, today)
-                        else:
-                            raise ValidationError('La date de maturité est invalide.')
+            # Sécurité : si market_value n'est pas encore calculé, on fait un calcul simple
+            if not market_value and rec.quantity and rec.last_price:
+                market_value = rec.quantity * rec.last_price
+
+            rec.market_value = market_value
+
+            # 2. Calcul du coût de revient total
+            cost_basis = rec.quantity * (rec.avg_cost or 0.0)
+
+            # 3. Calcul de la plus-value latente (Unrealized P&L)
+            if rec.quantity > 0:
+                rec.unrealized_pl = market_value - cost_basis
+                # Calcul du pourcentage
+                if cost_basis != 0:
+                    rec.unrealized_pl_percent = rec.unrealized_pl / cost_basis
                 else:
-                    if hasattr(instrument, 'last_validated_price') and instrument.last_validated_price > 0:
-                        price = instrument.last_validated_price
+                    rec.unrealized_pl_percent = 0.0
             else:
-                price = rec.first_price or rec.avg_cost
+                rec.unrealized_pl = 0.0
+                rec.unrealized_pl_percent = 0.0
 
-            rec.last_price = price
-            rec.market_value = rec.quantity * price
-            rec.unrealized_pl = rec.market_value - (rec.quantity * rec.avg_cost)
-            rec.unrealized_pl_percent = ((rec.market_value - (rec.quantity * rec.avg_cost)) / (rec.quantity * rec.avg_cost)) * 100
+
 
     def _calculate_linear_accretion(self, instrument, target_date):
         """ Calcule la valeur étalée de l'obligation à une date donnée """
@@ -185,40 +255,12 @@ class FundPosition(models.Model):
                 pos.last_price = 0.0
                 pos.last_price_date = False
 
-
-    @api.depends('quantity', 'avg_cost', 'last_price')
-    def _compute_market_value(self):
-        """Calcule la valeur de marché basée sur le dernier cours"""
-        for pos in self:
-            if pos.quantity and pos.last_price:
-                pos.market_value = pos.quantity * pos.last_price
-            elif pos.quantity and not pos.issuance_price:
-                pos.market_value = pos.quantity * pos.issuance_price
-            else:
-                pos.market_value = 0.0
-
-
-    @api.depends('market_value', 'quantity', 'avg_cost')
-    def _compute_performance(self):
-        """Calcule les plus/moins-values latentes"""
-        for pos in self:
-            cost_basis = pos.quantity * (pos.avg_cost or 0.0)
-            market_value = pos.market_value
-
-            if cost_basis:
-                pos.unrealized_pl = market_value - cost_basis
-                pos.unrealized_pl_percent = ((market_value - cost_basis) / cost_basis) * 100
-            else:
-                pos.unrealized_pl = 0.0
-                pos.unrealized_pl_percent = 0.0
-
-
-    @api.depends('vehicule_id', 'instrument_id', 'valuation_date')
+    @api.depends('vehicule_id', 'instrument_id', 'last_price_date')
     def _compute_display_name(self):
         """Génère un nom d'affichage convivial"""
         for rec in self:
             if rec.vehicule_id and rec.instrument_id:
-                rec.display_name = f"{rec.vehicule_id.name} - {rec.instrument_id.name} ({rec.valuation_date or fields.Date.today()})"
+                rec.display_name = f"{rec.vehicule_id.name} - {rec.instrument_id.name} ({rec.last_price_date or fields.Date.today()})"
             else:
                 rec.display_name = "Nouvelle position"
 
@@ -423,4 +465,24 @@ class FundPosition(models.Model):
                             'amount_expected': self.quantity * bond.face_value * (bond.coupon_rate / 100),
                             'flow_type': 'coupon',
                         })
+
+    def action_refresh_valuation(self):
+        for record in self:
+            # 1. Aller chercher le dernier prix VALIDÉ pour cet instrument
+            last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+                ('instrument_id', '=', record.instrument_id.id),
+                ('is_validated', '=', True),
+                ('date', '<=', fields.Date.today())
+            ], order='date desc', limit=1)
+
+            if last_price_rec:
+                # 2. Mettre à jour la position avec le prix officiel
+                record.write({
+                    'last_price': last_price_rec.price,
+                    'last_price_date': last_price_rec.date
+                })
+                # Le _compute_valuation_details fera le reste (Clean/Dirty/Accrued)
+            else:
+                last_price_rec.cron_generate_daily_prices()
+                #self.action_refresh_valuation()
 

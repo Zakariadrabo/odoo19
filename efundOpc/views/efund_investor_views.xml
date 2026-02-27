@@ -48,18 +48,8 @@
                             icon="fa-archive"
                             invisible="status not in ['kyc_approved', 'kyc_rejected']"/>
 
-                    <button name="action_print"
-                            type="object"
-                            string="Print KYC"
-                            class="btn-secondary"
-                            />
 
 
-                    <button name="%(action_investor_portfolio_report_wizard)d"
-                            string="État du portefeuille"
-                            type="action"
-                            class="oe_highlight"
-                            icon="fa-file-pdf"/>
 
                     <field name="status" widget="statusbar"/>
                 </header>
@@ -119,7 +109,7 @@
                             <field name="creation_date" required="investor_type  == 'company'"
                                    options="{'numeric': true}"/>
                         </group>
-                        <group  invisible="investor_type != 'company'">
+                        <group invisible="investor_type != 'company'">
                             <field name="company_address" required="investor_type  == 'company'"/>
                             <field name="company_town" required="investor_type  == 'company'"/>
                             <field name="company_country_id" required="investor_type  == 'company'"/>
@@ -134,7 +124,7 @@
                     </group>
 
                     <group string="Personnes physiques" invisible="investor_type != 'individual'">
-                        <group  invisible="investor_type != 'individual'">
+                        <group invisible="investor_type != 'individual'">
                             <field name="nom" required="investor_type  == 'individual'"/>
                             <field name="prenom" required="investor_type  == 'individual'"/>
                             <field name="nom_jeune_fille"/>
@@ -219,8 +209,9 @@
                         <page string="PP - Information KYC" invisible="investor_type != 'individual'">
                             <group>
                                 <group>
-                                     <field name="activite"/>
-                                    <field name="other_activite" required="activite == 'other'" invisible="activite != 'other'"/>
+                                    <field name="activite"/>
+                                    <field name="other_activite" required="activite == 'other'"
+                                           invisible="activite != 'other'"/>
                                     <field name="profession"/>
                                     <field name="function"/>
                                     <field name="employer"/>

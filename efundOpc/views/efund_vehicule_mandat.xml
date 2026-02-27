@@ -242,7 +242,7 @@
                                     <field name="quantity"/>
                                     <field name="last_price"/>
                                     <field name="avg_cost" string="CMUP"/>
-                                    <field name="issuance_price"/>
+                                    <field name="first_price"/>
                                     <field name="market_value" sum="Total"/>
                                     <field name="unrealized_pl" sum="Total PV Latente"
                                            decoration-success="unrealized_pl &gt; 0"

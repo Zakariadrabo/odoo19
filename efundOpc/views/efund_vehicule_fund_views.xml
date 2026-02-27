@@ -29,7 +29,8 @@
                         <div class="d-flex align-items-center">
                             <i title="info" class="fa fa-info-circle fa-2x text-info mr-3"/>
                             <div>
-                                <strong>Mode Brouillon :</strong> Ce véhicule d'investissement n'est pas encore actif.
+                                <strong>Mode Brouillon :</strong>
+                                Ce véhicule d'investissement n'est pas encore actif.
                                 Veuillez configurer les paramètres ISIN et la devise avant l'activation.
                             </div>
                         </div>
@@ -56,7 +57,8 @@
 
                     <notebook>
                         <page string="Politique d'Investissement" name="policy">
-                            <div class="o_horizontal_separator text-primary mt-3 mb-3" style="font-weight: bold; font-size: 1.2em;">
+                            <div class="o_horizontal_separator text-primary mt-3 mb-3"
+                                 style="font-weight: bold; font-size: 1.2em;">
                                 Objectifs du Fonds
                             </div>
                             <group>
@@ -79,6 +81,29 @@
                                 </list>
                             </field>
                         </page>
+                        <page string="Positions">
+                            <header>
+                                <button name="action_revalue_positions"
+                                        string="Actualiser la Valorisation"
+                                        type="object"
+                                        icon="fa-refresh"
+                                        class="btn-secondary mb-2"/>
+                            </header>
+                            <field name="position_ids" readonly="1">
+                                <list string="Inventaire des Titres">
+                                    <field name="instrument_id"/>
+                                    <field name="last_price_date"/>
+                                    <field name="quantity"/>
+                                    <field name="last_price"/>
+                                    <field name="avg_cost" string="CMUP"/>
+                                    <field name="issuance_price"/>
+                                    <field name="market_value" sum="Total"/>
+                                    <field name="unrealized_pl" sum="Total PV Latente"
+                                           decoration-success="unrealized_pl &gt; 0"
+                                           decoration-danger="unrealized_pl &lt; 0"/>
+                                </list>
+                            </field>
+                        </page>
 
                         <page string="Configuration Comptable" name="accounting" groups="account.group_account_manager">
                             <div class="p-3 mb-2 border-left border-info bg-light">
@@ -86,7 +111,7 @@
                                 Paramètres de liaison avec la comptabilité analytique de la société de gestion.
                             </div>
                             <group>
-                                </group>
+                            </group>
                         </page>
                     </notebook>
                 </sheet>

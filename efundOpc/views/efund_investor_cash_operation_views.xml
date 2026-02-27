@@ -20,17 +20,18 @@
                     </div>
                     <group>
                         <group string="Informations de base">
-                            <field name="type" widget="radio" options="{'horizontal': true}"/>
-                            <field name="investor_id" options="{'no_create': True}"/>
-                            <field name="vehicule_id" />
+                            <field name="type" widget="radio" options="{'horizontal': true}"  readonly="state == 'reconciled' "/>
+                            <field name="investor_id" options="{'no_create': True}"  readonly="state == 'reconciled' "/>
+                            <field name="vehicule_id"  readonly="state == 'reconciled' "/>
 
                         </group>
                         <group string="Détails Financiers">
                             <field name="cash_account_id" options="{'no_create': True}"/>
-                            <field name="amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                            <field name="fee_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                            <field name="payment_mode"/>
-                            <field name="date_operation"/>
+                            <field name="balance" widget="monetary" options="{'currency_field': 'currency_id'}" class="font-weight-bold" readonly="1"/>
+                            <field name="amount" widget="monetary" options="{'currency_field': 'currency_id'}"  readonly="state == 'reconciled' "/>
+                            <field name="fee_amount" widget="monetary" options="{'currency_field': 'currency_id'}" readonly="state == 'reconciled' "/>
+                            <field name="payment_mode" readonly="state == 'reconciled' "/>
+                            <field name="date_operation" readonly="state == 'reconciled' "/>
                         </group>
                     </group>
                 </sheet>
