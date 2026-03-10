@@ -581,7 +581,7 @@ class FundInvestor(models.Model):
 
     def action_approve_kyc(self):
         for rec in self:
-            if rec.status != "kyc_pending":
+            if rec.status != "draft":
                 raise UserError("Seuls les investisseurs en attente peuvent être approuvés.")
             #rec.create_investor_accounts()
             rec.status = "approved"
