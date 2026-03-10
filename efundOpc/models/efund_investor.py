@@ -128,7 +128,7 @@ class FundInvestor(models.Model):
 
     # lifecycle / compliance
     status = fields.Selection(
-        [('draft', 'Brouillon'), ('kyc_approved', 'KYC approuvé'),('kyc_pending', 'KYC en attente'),('kyc_rejected', 'KYC refusé'), ('archived', 'Archivé')], default='draft', tracking=True)
+        [('draft', 'Brouillon'), ('approved', 'approuvé'),('kyc_pending', 'KYC en attente'), ('kyc_approved', 'approuvé'),('kyc_rejected', 'KYC refusé'), ('archived', 'Archivé')], default='draft', tracking=True)
     kyc_level = fields.Selection([('low', 'Low'), ('medium', 'Medium'), ('high', 'High')], default='low')
     kyc_score = fields.Integer(default=0)
     kyc_last_update = fields.Datetime()
@@ -364,26 +364,30 @@ class FundInvestor(models.Model):
         for rec in self:
             score = 100
             status = 'compliant'
+            error_msg=''
             required_docs = ['id_card', 'proof_of_address']
             existing = rec.document_ids.mapped('document_type')
             missing = [d for d in required_docs if d not in existing]
             if missing:
                 score -= 30 * len(missing)
                 status = 'non_compliant'
+                error_msg = f"Certains documents sont manquants: {missing}"
             # expired docs
             today = date.today()
-            expired = rec.document_ids.filtered(
-                lambda d: d.expiry_date and d.expiry_date < today and d.status != 'expired')
+            expired = rec.document_ids.filtered(lambda d: d.expiry_date and d.expiry_date < today and d.status != 'expired')
             if expired:
                 score -= 20
                 status = 'non_compliant'
+                error_msg = f"Certains documents sont expirés: {expired.mapped('document_type')}"
             # risk flags
             if rec.sanctions_flag:
                 score -= 50
                 status = 'high_risk'
+                error_msg = f"Le investisseur est sur liste des sanctions"
             elif rec.pep_flag and not rec.whitelisted:
                 score -= 25
                 status = 'medium_risk'
+                error_msg = f"Le investisseur est sur liste des PEP"
             if rec.kyc_score >= 70:
                 score -= rec.kyc_score - 70
                 status = 'medium_risk' if rec.kyc_score < 90 else 'high_risk'
@@ -397,6 +401,12 @@ class FundInvestor(models.Model):
                     pass
             rec.compliance_score = max(0, int(score))
             rec.compliance_status = status
+            if status == 'compliant':
+                rec.status = 'kyc_approved'
+            else:
+                rec.status = "kyc_pending"
+                raise ValidationError(error_msg)
+
 
     # -------------------------
     # ACTIONS / UTILITIES
@@ -564,16 +574,17 @@ class FundInvestor(models.Model):
 
     def action_submit_kyc(self):
         for rec in self:
-            if rec.status != "draft":
-                raise UserError("Seuls les investisseurs en draft peuvent être soumis au KYC.")
-            rec.status = "kyc_pending"
+            if rec.status not in ('approved','kyc_pending'):
+                raise UserError("Seuls les investisseurs en approuvé peuvent être soumis au KYC.")
+            rec._compute_compliance_status()
+
 
     def action_approve_kyc(self):
         for rec in self:
             if rec.status != "kyc_pending":
                 raise UserError("Seuls les investisseurs en attente peuvent être approuvés.")
             #rec.create_investor_accounts()
-            rec.status = "kyc_approved"
+            rec.status = "approved"
 
     def action_reject_kyc(self):
         for rec in self:

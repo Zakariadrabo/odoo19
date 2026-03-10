@@ -8,46 +8,16 @@
                 <header>
                     <!-- Workflow KYC -->
                     <div class="o_statusbar_buttons d-flex flex-wrap gap-2">
-                        <button name="action_submit_kyc" type="object"
-                                string="Verifier KYC" class="btn-primary"
-                                icon="fa-paper-plane"
-                                invisible="status != 'kyc_approved'"/>
-
-                        <div class="btn-group" role="group" invisible="status != 'draft'">
-                            <button name="action_approve_kyc" type="object"
-                                    string="Approuver" class="btn-success"
-                                    icon="fa-check"/>
-                            <button name="action_reject_kyc" type="object"
-                                    string="Rejeter" class="btn-danger"
-                                    icon="fa-times"/>
-                        </div>
-
-                        <button name="action_archive" type="object"
-                                string="Archiver" class="btn-secondary"
-                                icon="fa-archive"
-                                invisible="status not in ['kyc_approved', 'kyc_rejected']"/>
-
-                        <button name="open_join_fund_wizard"
-                                string="Adhérer à un Fonds"
-                                type="object"
-                                class="btn-primary"
-                                invisible="status !='kyc_approved'"/>
-                        <button name="action_print"
-                                type="object"
-                                string="Print KYC"
-                                class="btn-secondary"
-                        />
+                        <button name="action_approve_kyc" type="object" string="Valider" class="btn-success" icon="fa-check" invisible="status != 'draft'"/>
+                        <button name="action_reject_kyc" type="object" string="Rejeter" class="btn-danger" icon="fa-times" invisible="status != 'draft'"/>
+                        <button name="action_submit_kyc" type="object" string="Verifier KYC" class="btn-primary" icon="fa-paper-plane" invisible="status in ('draft','kyc_rejected','archived')"/>
+                        <button name="open_join_fund_wizard" string="Adhérer à un Fonds"  type="object"  class="btn-primary"  invisible="status not in ('approved','kyc_approved','kyc_pending')"/>
+                        <button name="action_print" type="object" string="Print KYC" class="btn-secondary" />
                         <button name="%(action_investor_portfolio_report_wizard)d"
-                                string="État du portefeuille"
-                                type="action"
-                                class="oe_highlight"
-                                invisible="status !='1'"
-                                icon="fa-file-pdf"/>
+                                string="État du portefeuille" type="action" class="oe_highlight" invisible="status !='1'"  icon="fa-file-pdf"/>
+                        <button name="action_archive" type="object" string="Archiver" class="btn-secondary" icon="fa-archive" invisible="status not in ['approved','kyc_approved', 'kyc_rejected']"/>
                     </div>
-
-                    <!-- Barre de statut améliorée -->
-                    <field name="status" widget="statusbar"
-                           statusbar_visible="draft,kyc_pending,kyc_approved,kyc_rejected,archived"/>
+                    <field name="status" widget="statusbar"/>
                 </header>
 
                 <!-- ==================== SHEET PRINCIPAL ==================== -->
