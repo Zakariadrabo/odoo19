@@ -9,11 +9,11 @@
                     <!-- Workflow KYC -->
                     <div class="o_statusbar_buttons d-flex flex-wrap gap-2">
                         <button name="action_submit_kyc" type="object"
-                                string="Soumettre KYC" class="btn-primary"
+                                string="Verifier KYC" class="btn-primary"
                                 icon="fa-paper-plane"
-                                invisible="status != 'draft'"/>
+                                invisible="status != 'kyc_approved'"/>
 
-                        <div class="btn-group" role="group" invisible="status != 'kyc_pending'">
+                        <div class="btn-group" role="group" invisible="status != 'draft'">
                             <button name="action_approve_kyc" type="object"
                                     string="Approuver" class="btn-success"
                                     icon="fa-check"/>
@@ -27,14 +27,11 @@
                                 icon="fa-archive"
                                 invisible="status not in ['kyc_approved', 'kyc_rejected']"/>
 
-                        <button name="action_print" type="object"
-                                string="Imprimer" class="btn-outline-secondary"
-                                icon="fa-print"/>
                         <button name="open_join_fund_wizard"
                                 string="Adhérer à un Fonds"
                                 type="object"
                                 class="btn-primary"
-                                invisible="investor_type == False"/>
+                                invisible="status !='kyc_approved'"/>
                         <button name="action_print"
                                 type="object"
                                 string="Print KYC"
@@ -44,6 +41,7 @@
                                 string="État du portefeuille"
                                 type="action"
                                 class="oe_highlight"
+                                invisible="status !='1'"
                                 icon="fa-file-pdf"/>
                     </div>
 

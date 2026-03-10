@@ -65,10 +65,13 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                 bond = self.env['efund.vehicule.instrument.core.bond'].search([('instrument_id', '=', rec.order_id.instrument_id.id), ])
 
                 days_elapsed = (bond.next_coupon_date - rec.execution_date).days
+                _logger.info(f"nombre de jour: {days_elapsed}, debut {bond.next_coupon_date}, fin {rec.execution_date}, coupon {bond.coupon_frequency}")
                 rec.formulas_accured_interest = f"Interet Couru =  {rec.accrured_interest} : (Taux d'interet ({bond.coupon_rate}) * Nominale ({bond.face_value}) * Nombre de jours écoulés {days_elapsed} / 365 sinon 366 si bessextile)"
                 leap_year = 366 if calendar.isleap(rec.execution_date.year) else 365
                 ratio = days_elapsed / leap_year
+                _logger.info(f"ratio: {ratio}")
                 rec.accrured_interest = bond.coupon_rate * bond.face_value * ratio /100
+                _logger.info(f"interet couru: {rec.accrured_interest}")
                 rec.total_interest = rec.accrured_interest * rec.executed_quantity
                 rec.free_tax_amount = rec.executed_quantity * rec.execution_price
                 rec.total_amount = rec.executed_quantity * rec.execution_price + rec.total_interest + rec.total_tob_commission + rec.total_broker_commission

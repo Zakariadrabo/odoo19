@@ -18,6 +18,8 @@
 
                 <!-- Taux et intérêts -->
                 <field name="interest_rate" string="Taux %"/>
+                <field name="tax_rate" string="TVA %"/>
+
                 <field name="accrued_interest" string="Intérêts Courus"/>
 
                 <!-- Statut rapide -->
@@ -96,6 +98,7 @@
                                 <group string="Dépôt">
                                     <field name="amount_deposit"/>
                                     <field name="interest_rate" digits="[16, 4]"/>
+                                    <field name="tax_rate" digits="[16, 4]" string="TVA %"/>
                                     <field name="interest_calculation_type"/>
                                     <field name="daily_interest_rate" string="Taux journalier" widget="percentage" digits="[16, 6]" readonly="1"/>
                                 </group>

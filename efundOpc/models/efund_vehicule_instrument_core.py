@@ -20,7 +20,7 @@ class FundInstrument(models.Model):
     last_validated_price = fields.Float(string="Dernier cours validé")
     last_price_date = fields.Date(string="Date dernier cours")
     is_listed = fields.Boolean(string='Est Coté', default=False)
-    valuation_method = fields.Selection([('market', 'Au marché'), ('listed', 'Cours Listé')], string="Valorisation")
+    valuation_method = fields.Selection([('market', 'Au marché'), ('listed', 'Cours Lissé')], string="Valorisation")
     #valuation_type = fields.Selection([('actuarial', 'Actuarielle'), ('linear', 'Linéaire')])
 
     # Relations techniques

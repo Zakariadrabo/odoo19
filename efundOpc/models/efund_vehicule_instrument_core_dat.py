@@ -29,6 +29,7 @@ class FundInstrumentDAT(models.Model):
     interest_calculation_type = fields.Selection([('360', '360 jours (Standard)'), ('365', '365 jours')], default='360', string="Base de calcul")
     duration_days = fields.Integer(string="Durée (jours)", compute="_compute_duration", store=True)
     accrued_interest = fields.Monetary(string="Intérêts courus", compute="_compute_dat_interests")
+    tax_rate = fields.Float(string="Taux de TVA (%)", digits=(16, 4))
 
     # champs ajoutés
     # Champs calculés

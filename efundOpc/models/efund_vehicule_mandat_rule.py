@@ -12,3 +12,4 @@ class EfundMandateRule(models.Model):
     allowed_asset_types = fields.Many2many('efund.asset.class', string="Types d'actifs autorisés")
     allowed_zones = fields.Many2many( 'efund.country.zone', string="Zones géographiques autorisées")
     max_concentration = fields.Float(string="Limite de concentration (%)")
+    min_liquidite = fields.Float(string="Limite de liquidité (%)")

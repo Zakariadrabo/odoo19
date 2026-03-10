@@ -13,6 +13,7 @@ class FundInstrumentIssuer(models.Model):
         ('distribution', 'Distribution'),
         ('industrie', 'Industrie'),
         ('transport', 'Transport'),
+        ('etat', 'État'),
         ('autre', 'Autre')
     ], default='finance', string='Industries')
     rating = fields.Char("Notation (S&P / Moody’s / Bloomfield / Fitch)")

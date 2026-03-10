@@ -46,7 +46,7 @@
                     <group>
                         <group string="Identité &amp; Classification">
                             <field name="isin" placeholder="ex: QS000..."/>
-                            <field name="fund_type_id"/>
+                            <field name="fund_type_id" string="Classe d'OPCVM"/>
                         </group>
                         <group string="Gestion &amp; Dates">
                             <field name="management_company_id" options="{'no_create': True}"/>

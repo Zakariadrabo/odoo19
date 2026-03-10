@@ -6,7 +6,7 @@ class JoinFundWizard(models.TransientModel):
 
     investor_id = fields.Many2one('efund.investor', string="Investisseur", required=True, readonly=True)
     fund_id = fields.Many2one('efund.vehicule.fund', string="Choisir le Fonds", required=True)
-    fund_id = fields.Many2one('efund.vehicule.fund', string="Fonds à rejoindre", required=True, domain="[('id', 'in', available_fund_ids)]")
+    #fund_id = fields.Many2one('efund.vehicule.fund', string="Fonds à rejoindre", required=True, domain="[('id', 'in', available_fund_ids)]")
 
     # Champ technique pour stocker les IDs autorisés
     available_fund_ids = fields.Many2many('efund.vehicule.fund', compute='_compute_available_funds')

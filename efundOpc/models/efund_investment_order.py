@@ -3,6 +3,7 @@ import logging
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
+from dateutil.relativedelta import relativedelta
 
 _logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ class EfundInvestmentOrder(models.Model):
 
     order_date = fields.Date(string="Date de commande", default=fields.Date.context_today)
     direction = fields.Selection([('buy', 'Achat'), ('sell', 'Vente')], string="Sens", )
-    state = fields.Selection([('draft', 'Brouillon'), ('validated', 'Validé'), ('sent', 'Envoyé à la SGI'),
+    state = fields.Selection([('draft', 'Brouillon'), ('validated', 'Validé'), ('sent', 'Envoyé'),
                               ('partially_executed', 'Partiellement exécuté'), ('executed', 'Exécuté'),
                               ('cancelled', 'Annuler')], default='draft', string="Statut")
     broker_tax = fields.Float(string="Commission courtier")
@@ -345,6 +346,41 @@ class EfundInvestmentOrder(models.Model):
             order.write({'state': 'confirmed'})
         return True
 
+    def get_coupon_period(self, order_date, maturity_date):
+        """
+        Calcule les dates de coupon entourant la commande basée sur la maturité.
+        On suppose une fréquence annuelle (standard UMOA).
+        """
+        if not order_date or not maturity_date:
+            return False
+
+        # 1. On se place sur la date anniversaire de la maturité pour l'année de commande
+        # Exemple : Maturité 15/06/2028, Commande 10/03/2026 -> On teste 15/06/2026
+        current_anniversary = maturity_date.replace(year=order_date.year)
+
+        # 2. Déterminer le Prochain et le Dernier coupon
+        if current_anniversary >= order_date:
+            # La date de commande est AVANT l'anniversaire de cette année
+            next_coupon_date = current_anniversary
+            last_coupon_date = next_coupon_date - relativedelta(years=1)
+        else:
+            # La date de commande est APRÈS l'anniversaire de cette année
+            last_coupon_date = current_anniversary
+            next_coupon_date = last_coupon_date + relativedelta(years=1)
+
+        # 3. Calcul du nombre de jours courus (A)
+        days_accrued = (order_date - last_coupon_date).days
+
+        # 4. Calcul du nombre de jours total de la période (B) pour la base Exact/365 ou 360
+        days_in_period = (next_coupon_date - last_coupon_date).days
+
+        return {
+            'last_coupon': last_coupon_date,
+            'next_coupon': next_coupon_date,
+            'days_accrued': days_accrued,
+            'days_in_period': days_in_period
+        }
+
 
     def action_cancel(self):
         """
@@ -408,11 +444,19 @@ class EfundInvestmentOrder(models.Model):
                 if bond:
                     bond_id = bond.id
 
-                days_elapsed = (bond.next_coupon_date - rec.order_date).days
-                #rec.formulas_accured_interest = f"Interet Couru =  {rec.accrured_interest} : (Taux d'interet ({bond.coupon_rate}) * Nominale ({bond.face_value}) * Nombre de jours écoulés {days_elapsed} / 365 sinon 366 si bessextile)"
-                leap_year = 366 if calendar.isleap(rec.order_date.year) else 365
-                ratio = days_elapsed / leap_year
-                interest_per_unit = bond.coupon_rate * bond.face_value * ratio / 100
+
+                result = self.get_coupon_period(rec.order_date, bond.maturity_date)
+                interest_per_unit = 0
+                if result:
+                    days_elapsed = result.get("days_accrued") #(bond.next_coupon_date - rec.order_date).days
+                    _logger.info(f"*******************days_elapsed: {days_elapsed} debut: {rec.order_date} fin: {bond.next_coupon_date}")
+                    #rec.formulas_accured_interest = f"Interet Couru =  {rec.accrured_interest} : (Taux d'interet ({bond.coupon_rate}) * Nominale ({bond.face_value}) * Nombre de jours écoulés {days_elapsed} / 365 sinon 366 si bessextile)"
+                    leap_year = 366 if calendar.isleap(rec.order_date.year) else 365
+                    ratio = days_elapsed / leap_year
+                    _logger.info(f"*******************ratio: {ratio}")
+                    interest_per_unit = bond.coupon_rate * bond.face_value * ratio / 100
+
+                _logger.info(f"*******************interest_per_unit: {interest_per_unit}")
                 rec.total_interest = interest_per_unit * rec.quantity
                 rec.total_amount = rec.quantity * rec.limit_price + rec.total_interest + rec.total_tob_commission + rec.total_broker_commission
                 # if rec.order_id.order_sens == 'achat':

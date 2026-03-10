@@ -153,6 +153,7 @@
                                     <field name="allowed_asset_types"/>
                                     <field name="allowed_zones"/>
                                     <field name="max_concentration"/>
+                                    <field name="min_liquidite"/>
                                 </list>
                             </field>
                         </page>

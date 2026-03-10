@@ -1,4 +1,16 @@
 <odoo>
+    <record id="view_efund_codification_numero_compte_list" model="ir.ui.view">
+        <field name="name">efund.company.number.list</field>
+        <field name="model">efund.company.number</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="code_teneur_compte"/>
+                <field name="code_agence"/>
+                <field name="code_type_compte"/>
+            </list>
+        </field>
+    </record>
+
     <record id="view_efund_codification_numero_compte_form" model="ir.ui.view">
         <field name="name">efund.company.number.form</field>
         <field name="model">efund.company.number</field>

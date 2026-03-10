@@ -128,8 +128,7 @@ class FundInvestor(models.Model):
 
     # lifecycle / compliance
     status = fields.Selection(
-        [('draft', 'Brouillon'), ('kyc_pending', 'KYC en attente'), ('kyc_approved', 'KYC approuvé'),
-         ('kyc_rejected', 'KYC refusé'), ('archived', 'Archivé')], default='draft', tracking=True)
+        [('draft', 'Brouillon'), ('kyc_approved', 'KYC approuvé'),('kyc_pending', 'KYC en attente'),('kyc_rejected', 'KYC refusé'), ('archived', 'Archivé')], default='draft', tracking=True)
     kyc_level = fields.Selection([('low', 'Low'), ('medium', 'Medium'), ('high', 'High')], default='low')
     kyc_score = fields.Integer(default=0)
     kyc_last_update = fields.Datetime()
@@ -408,11 +407,12 @@ class FundInvestor(models.Model):
         if self.account_part_ids or self.account_cash_ids:
             raise UserError(_("Cet investisseur possède déjà des comptes."))
 
-        company_code = self.env['efund.company.number'].search([('code_teneur_compte', '=', '3611'), ], limit=1)
+        company_code = self.env['efund.company.number'].search([], limit=1)
         if not company_code:
             raise UserError(_("Aucun code de teneur de compte trouvé pour la société."))
         _logger.info(
             f"***** Company code found: {company_code.code_teneur_compte}, agence: {company_code.code_agence}, ")
+        _logger.info(f"***** Account type: {self.account_type_titre or 'account_type_titre'}, {self.account_type_espece or 'account_type_espece'}, {self.account_investor_type or 'account_investor_type'}, {self.account_order or 'account_order'}")
         account_number_titre = company_code.code_teneur_compte + company_code.code_agence + "00" + self.account_type_titre + self.account_investor_type + self.account_order
         account_number_espece = company_code.code_teneur_compte + company_code.code_agence + "10" + self.account_type_espece + self.account_investor_type + self.account_order
 
@@ -572,7 +572,7 @@ class FundInvestor(models.Model):
         for rec in self:
             if rec.status != "kyc_pending":
                 raise UserError("Seuls les investisseurs en attente peuvent être approuvés.")
-            rec.create_investor_accounts()
+            #rec.create_investor_accounts()
             rec.status = "kyc_approved"
 
     def action_reject_kyc(self):
