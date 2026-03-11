@@ -366,7 +366,9 @@ class FundInvestor(models.Model):
             status = 'compliant'
             error_msg=''
             required_docs = ['id_card', 'proof_of_address']
+            _logger.info(f"***** required_docs: {required_docs}")
             existing = rec.document_ids.mapped('document_type')
+            _logger.info(f"***** existing: {existing}")
             missing = [d for d in required_docs if d not in existing]
             if missing:
                 score -= 30 * len(missing)
@@ -401,11 +403,9 @@ class FundInvestor(models.Model):
                     pass
             rec.compliance_score = max(0, int(score))
             rec.compliance_status = status
-            if status == 'compliant':
-                rec.status = 'kyc_approved'
-            else:
-                rec.status = "kyc_pending"
-                raise ValidationError(error_msg)
+            return error_msg
+
+
 
 
     # -------------------------
@@ -576,7 +576,12 @@ class FundInvestor(models.Model):
         for rec in self:
             if rec.status not in ('approved','kyc_pending'):
                 raise UserError("Seuls les investisseurs en approuvé peuvent être soumis au KYC.")
-            rec._compute_compliance_status()
+            error_msg = rec._compute_compliance_status()
+            if rec.status == 'compliant':
+                rec.status = 'kyc_approved'
+            else:
+                rec.status = "kyc_pending"
+                raise ValidationError(error_msg)
 
 
     def action_approve_kyc(self):
