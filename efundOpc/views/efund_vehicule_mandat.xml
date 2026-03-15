@@ -251,6 +251,9 @@
                                 </list>
                             </field>
                         </page>
+                        <page string="Comptabilité">
+                            <field name="analytic_account_id" readonly="1" string="Compte Analytique"/>
+                        </page>
 
                     </notebook>
                 </sheet>

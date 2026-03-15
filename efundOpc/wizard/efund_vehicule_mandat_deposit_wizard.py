@@ -2,7 +2,7 @@ import logging
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
-_loggers = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 class EfundVehiculeMandatDepositWizard(models.TransientModel):
     _name = 'efund.vehicule.mandat.deposit.wizard'
@@ -16,10 +16,7 @@ class EfundVehiculeMandatDepositWizard(models.TransientModel):
 
     def action_confirm_deposit(self):
         self.ensure_one()
-        _loggers.info("*******je suis dans la procédure Confirming deposit for mandate %s" % (self.mandate_id.id))
-
         cash_account = self.env['efund.investor.cash_account'].search([('vehicule_id', '=', self.mandate_id.vehicule_id.id)])
-        _loggers.info("*******je suis dans la procédure Confirming deposit for mandate %s" % (cash_account))
         if not cash_account:
             self.env['efund.investor.cash_account'].create({
                 'name': f"Compte Espèces - {self.mandate_id.investor_id.full_name or self.mandate_id.investor_id.name or self.mandate_id.investor_id.company_name or 'Investor'}",
@@ -29,6 +26,7 @@ class EfundVehiculeMandatDepositWizard(models.TransientModel):
                 'balance': 0,
                 'state': 'active',
             })
+
 
 
         investor_cash_account_id = self.env['efund.investor.cash_account'].get_cash_account_id_investor_by_vehicule_and_investor_id(
@@ -42,6 +40,9 @@ class EfundVehiculeMandatDepositWizard(models.TransientModel):
             'date': self.deposit_date,
             'state': 'reconciled'
         })
+
+
+
         mandat = self.env['efund.vehicule.mandate'].search([('id', '=', self.mandate_id.id)])
         if mandat:
             mandat.message_post(
@@ -51,5 +52,6 @@ class EfundVehiculeMandatDepositWizard(models.TransientModel):
                 subtype_xmlid="mail.mt_comment")
 
             mandat.write({'is_fund_released': True})
+
 
 

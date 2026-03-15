@@ -32,6 +32,7 @@ class Mandate(models.Model):
     # compte comptable du mandant
     partner_account_id = fields.Many2one('account.account', string='Compte comptable du mandant')
 
+
     # risk_profile_id = fields.Many2one('mandate.risk.profile',string='Profil de risque',required=True)
 
     # ---------------------------------------------------------
@@ -138,6 +139,7 @@ class Mandate(models.Model):
             balance = self.env['efund.investor.cash_account'].get_balance_by_investor(rec.investor_id.id, rec.vehicule_id.id)
             if balance <= 0:
                 raise ValidationError(_("Le compte de l'investisseur n'a pas suffisamment de fonds pour confirmer le mandat."))
+            # Création du Compte analytique du mandat
 
 
             # Vérification de l'existence du compte cash du fond
@@ -185,6 +187,27 @@ class Mandate(models.Model):
             rec.on_mandate_confirmed(rec)
             rec.state = 'active'
             rec.message_post(body=_("Le mandat a été confirmé et est maintenant actif."))
+
+            # Création de Event
+            event = self.env['efund.accounting.event'].create(self.build_event_payload())
+            # rec.event_id = event.id
+            self.env['efund.accounting.engine'].process_event(event)
+
+
+    def build_event_payload(self):
+
+        self.ensure_one()
+
+        return {
+            'event_type': ('CASH_IN'),
+            'vehicule_id': self.vehicule_id.id,
+            'reference': 'Apport Liquidité - ' + self.vehicule_id.name,
+            'event_date': self.start_date,
+            'state': 'draft',
+            'payload': {
+                'gross': self.initial_amount,
+            }
+        }
 
     def action_suspend(self):
         for record in self:

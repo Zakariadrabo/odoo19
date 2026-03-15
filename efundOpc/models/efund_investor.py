@@ -113,15 +113,14 @@ class FundInvestor(models.Model):
     business_object_relation = fields.Char(string="Nature de la relation d'affaire")
     fund_country_origin = fields.Many2one("res.country", string="Pays d'origine des fonds")
     fund_country_destination = fields.Many2one("res.country", string="Pays de destination des fonds")
-    market_knowledge = fields.Selection(
-        [('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'), ('5', '5'), ('6', '6'), ('7', '7'), ],
-        string='Connaissance du marché', widget='Priority')
+    market_knowledge = fields.Selection( [('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'), ('5', '5'), ('6', '6'), ('7', '7'), ],
+        string='Connaissance du marché', )
     activity_knowledge = fields.Selection(
         [('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'), ('5', '5'), ('6', '6'), ('7', '7'), ],
-        string='Connaissance de l\'activité', widget='Priority')
+        string='Connaissance de l\'activité',)
     risk_level_acceptable = fields.Selection(
         [('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'), ('5', '5'), ('6', '6'), ('7', '7'), ],
-        string='Niveau de risque acceptable', widget='Priority')
+        string='Niveau de risque acceptable', )
     email = fields.Char(string="Adresse Email")
     mobility_phone = fields.Char(string="Téléphone (mobile)")
     place_phone = fields.Char(string="Téléphone (domicile)")
@@ -245,16 +244,20 @@ class FundInvestor(models.Model):
 
     # Rachide
     # --- Informations générales PM ---
-    registration_country_id = fields.Many2one("res.country", string="Pays d’immatriculation")
-    company_duration_years = fields.Integer(string="Durée de la société (ans)")
     company_zip = fields.Char(string="Code postal")
-    website = fields.Char(string="Site internet")
     phone = fields.Char(string="Numéro de Téléphone")
     activite_sector = fields.Selection([('finance', 'Services Financiers'), ('tech', 'Nouvelles Technologies & IA'),
                                         ('green', 'Transition Écologique'),
                                         ('industry', 'Industrie & Transport'), ('agri', 'Agro-industrie'),
                                         ('public', 'Services Publics'),
                                         ('other', 'Autre')], string="Secteur d'activité")
+    """
+    registration_country_id = fields.Many2one("res.country", string="Pays d’immatriculation")
+    company_duration_years = fields.Integer(string="Durée de la société (ans)")
+    
+    
+    website = fields.Char(string="Site internet")
+   
     main_activity_countries = fields.Many2many("res.country", "efund_company_activity_country_rel", "investor_id",
                                                "country_id", string="Pays principal d’activité")
 
@@ -270,9 +273,10 @@ class FundInvestor(models.Model):
     expected_operations_volume = fields.Selection(
         [("lt_100", "< 100 M FCFA"), ("100_500", "100 – 500 M FCFA"), ("500_2b", "500 M – 2 Mds FCFA"),
          ("gt_2b", "> 2 Mds FCFA"), ], string="Volume prévisionnel des opérations (annuel)")
+    """
 
     # --- Connaissance financière PM ---
-    market_knowledge_pm = fields.Integer(tring="Connaissance du marché (PM)")
+    #market_knowledge_pm = fields.Integer(tring="Connaissance du marché (PM)")
     activity_knowledge_pm = fields.Integer(string="Connaissance de l’activité (PM)")
     risk_tolerance_pm = fields.Integer(string="Niveau de risque acceptable (PM)")
     business_relation_type = fields.Selection(

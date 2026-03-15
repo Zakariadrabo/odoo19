@@ -10,12 +10,12 @@
                             <group>
                                 <field name="name" class="text-primary" string="Nom"/>
                                 <field name="company_id" options="{'no_create': True}"
-                                       domain="[('is_funder', '=', True)]" placeholder="FCP..." class="text-success"
-                                       string="Fond"/>
+                                       domain="['|', ('is_funder', '=', True), ('company_code', '=', 'MANDATS')]"
+                                       placeholder='FCP...' class="text-success"   string="Fond"/>
                             </group>
 
                     </div>
-                    <group invisible="not company_id">
+                    <group invisible="not company_id">*
                         <group>
                             <field name="journal_id" domain="[('company_id', '=', company_id)]" options="{'no_create': True}"/>
                             <field name="event_type" placeholder="Type d'évènement ..."/>
@@ -28,6 +28,7 @@
                                     <field name="account_id" options="{'no_create': True}"/>
                                     <field name="account_selection_type"/>
                                     <field name="side"/>
+                                    <field name="use_analytic"/>
                                     <field name="amount_type"/>
                                 </list>
                             </field>

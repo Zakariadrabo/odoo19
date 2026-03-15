@@ -31,4 +31,4 @@ from . import confirmable_mixin, res_company, forme_juridique, statut_operationn
     efund_bank, efund_service, efund_country_zone, efund_vehicule_mandat_rule, efund_vehicule_cash, \
     efund_vehicule_cash_move, efund_vehicule_position, efund_vehicule_cash_operation, efund_vehicule_cashflow, \
     efund_accounting_schema, efund_accounting_schema_line, efund_accounting_event, efund_accounting_engine, \
-    efund_investor_cash_operation, efund_codification_numero_compte,efund_investor_part_account
+    efund_investor_cash_operation, efund_codification_numero_compte,efund_investor_part_account,efund_event_handler, efund_event_type

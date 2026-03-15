@@ -16,6 +16,7 @@ class EfundVehicle(models.Model):
     # =========================================================
     name = fields.Char(required=True, string="Nom")
     vehicle_type = fields.Selection([('fund', 'Fonds'), ('mandate', 'Mandat')], string="Type")
+    vehicule_code = fields.Char(string="Référence", default=lambda self: self.env['ir.sequence'].next_by_code('efund.vehicule'))
     company_id = fields.Many2one('res.company', string='Compagnie', ondelete='cascade')
     management_company_id = fields.Many2one('efund.management.company', string='Société de gestion',
                                             domain="[('company_id', '!=', company_id)]")
@@ -47,6 +48,8 @@ class EfundVehicle(models.Model):
     vehicule_cash_move_ids = fields.One2many('efund.vehicule.cash.move', 'vehicule_id', string="Flux financiers")
     cash_operation_ids = fields.One2many('efund.vehicule.cash.operation', 'vehicule_id', string="Opérations diverses")
     cashflow_ids = fields.One2many('efund.vehicule.cashflow', 'vehicule_id', string="Flux de trésorerie prévus")
+    analytic_account_id = fields.Many2one('account.analytic.account', string='Compte analytique du mandant')
+
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -86,6 +89,9 @@ class EfundVehicle(models.Model):
                 partner = company.partner_id
                 partner.write({'is_fund': True})
                 vals['company_id'] = company.id
+            else:
+                # 1. Vérifier/Créer la société MANDATS
+                company_mandat = self._get_or_create_mandat_company(management_company.currency_id.id)
 
             # Injecte les champs dépendants
 
@@ -93,57 +99,38 @@ class EfundVehicle(models.Model):
             vals['currency_id'] = management_company.currency_id.id
 
             # Appel du super
-            funds = super(EfundVehicle, self).create(vals_list)
+            vehicules = super(EfundVehicle, self).create(vals_list)
 
             # 2. Parcours des fonds créés pour configurer la comptabilité
-            for fund in funds:
-                if fund.vehicle_type == 'fund':
-                    # On vérifie que la compagnie est bien créée/liée
-                    if fund.company_id:
-                        _logger.info("Initialisation de la comptabilité pour le fond : %s", fund.name)
-                        #fund._setup_fund_accounting()
 
-            return funds
+            for vehicule in vehicules:
+                # 1. Appel du Handler pour créer la structure comptable et analytique
+                self.env['efund.event.handler'].on_vehicule_created(vehicule)
 
-    def _setup_fund_accounting(self):
-        """ Logique d'appel de la localisation l10n_fcp """
-        # Si self est vide, on sort proprement sans crash
-        if not self:
-            return
-
-        self.ensure_one()
-
-        # Récupération du template via l'ID que nous avons identifié
-        template = self.env.ref('l10n_fcp.fcp', raise_if_not_found=False)
-
-        if not template:
-            # Si l'ID n'est pas trouvé, on essaie de chercher par nom
-            template = self.env['account.chart.template'].search([('name', '=', 'Plan Comptable OPCVM UEMOA')], limit=1)
-
-        if not template:
-            _logger.error("Le plan comptable OPCVM est introuvable.")
-            return
-
-        # Vérifier si la société n'a pas déjà un plan comptable
-        if self.company_id.chart_template:
-            _logger.info("Le plan comptable est déjà configuré pour cette société.")
-            return
-
-        # Installation effective
-        template._load(self.company_id)
+            return vehicules
 
 
-    def _post_create_setup(self, company):
-        """Initialisation post-création : journaux, comptes, etc."""
-        self.ensure_one()
-        # Exemple : création automatique de journaux spécifiques au fonds
-        journal_vals = {
-            'name': f"{self.name} Bank Journal",
-            'code': 'BANK',
-            'type': 'bank',
-            'company_id': company.id,
-        }
-        self.env['account.journal'].sudo().create(journal_vals)
+    def _get_or_create_mandat_company(self, currency):
+        """ Recherche la société MANDATS, la crée et la configure si besoin """
+        company_name = "MANDATS"
+        company = self.env['res.company'].search([('name', '=', company_name)], limit=1)
+
+        if not company:
+            # Création de la société
+            company = self.env['res.company'].create({
+                'name': company_name,
+                'company_code': 'MANDATS',
+                'currency_id': currency,  # FCFA par défaut pour UMOA
+            })
+            _logger.info("Société pivot MANDATS créée.")
+
+        # Vérifier si le plan comptable est installé
+        if not company.chart_template:
+            self.env['efund.event.handler'].get_chart_account_data(company.id)
+
+        return company
+
+
 
     def action_revalue_positions(self):
         pass

@@ -18,9 +18,11 @@ class FundAccountingSchema(models.Model):
          ('NAV_CALCULATED', 'Valeur Liquidative Calculée'),('FEE_COMPUTED', 'Frais Provisionnés'),
          ('DIV_DECLARED', 'Dividende/Coupon Déclaré'),], string="Type d'Événement", required=True)
     company_id = fields.Many2one('res.company', required=True, index=True)
+    company_code = fields.Char(related='company_id.company_code', string="Code société",)
     journal_id = fields.Many2one('account.journal', string="Journal", required=True,)
     active = fields.Boolean(default=True)
     line_ids = fields.One2many('efund.accounting.schema.line', 'schema_id', string="Lignes comptables")
+
 
     @api.onchange('company_id')
     def _onchange_company_id(self):

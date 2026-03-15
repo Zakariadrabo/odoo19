@@ -109,6 +109,8 @@ class EfundService(models.Model):
         return schedule
 
 
+
+
     def generate_all_coupon_dates(self, value_date, maturity_date, coupon_frequency):
         dates = []
         current_date = value_date
@@ -140,8 +142,9 @@ class EfundService(models.Model):
         else:
             return maturity_date
 
+    """
     def _compute_coupon_amount(self):
-        """Calcule le montant de chaque coupon"""
+        Calcule le montant de chaque coupon
         for coupon in self:
             if coupon.bond_id.coupon_frequency == 'annual':
                 periods = 1
@@ -156,3 +159,26 @@ class EfundService(models.Model):
 
             annual_coupon = coupon.bond_id.face_value * (coupon.bond_id.coupon_rate / 100)
             coupon.coupon_amount = annual_coupon / periods
+            
+            """
+
+    def _compute_coupon_amount(self):
+        """Calcule le montant de chaque coupon de manière constante"""
+        for coupon in self:
+            # 1. Définir le diviseur selon la fréquence
+            # Peu importe l'année, on divise par un nombre de périodes fixe
+            freq_map = {
+                'annual': 1,
+                'semi_annual': 2,
+                'quarterly': 4,
+                'monthly': 12
+            }
+            periods = freq_map.get(coupon.bond_id.coupon_frequency, 1)
+
+            # 2. Calcul constant : (Nominal * Taux) / Nombre de périodes
+            # Exemple : 10 000 000 * 6.5% / 2 (pour semestriel) = 325 000
+            annual_rate = coupon.bond_id.coupon_rate / 100.0
+            nominal = coupon.bond_id.face_value
+
+            # Le montant est désormais identique chaque année
+            coupon.amount = (nominal * annual_rate) / periods

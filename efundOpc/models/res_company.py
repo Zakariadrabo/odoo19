@@ -19,4 +19,5 @@ class ResPartner(models.Model):
         'company_id',
         string="Management Company Record"
     )
+    company_code = fields.Char(string="Company Code", readonly=True)
 
