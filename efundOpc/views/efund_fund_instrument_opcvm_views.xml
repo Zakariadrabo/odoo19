@@ -11,8 +11,6 @@
                 <field name="issuer_id" optional="show"/>
 
                 <field name="opcvm_type" optional="show"/>
-                <field name="classification_amf" widget="badge" decoration-warning="classification_amf == 'equity'"
-                       decoration-success="classification_amf == 'monetary'"/>
 
                 <field name="nav" string="Dernière VL" sum="Total VL"/>
                 <field name="nav_date" string="Date VL"/>

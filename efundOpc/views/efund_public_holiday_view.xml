@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_efund_public_holiday_tree" model="ir.ui.view">
+        <field name="name">efund.public.holiday.list</field>
+        <field name="model">efund.public.holiday</field>
+        <field name="arch" type="xml">
+            <list string="Jours Fériés">
+                <field name="holiday_date"/>
+                <field name="name"/>
+                <field name="year" readonly="1" optional="show"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_efund_public_holiday_form" model="ir.ui.view">
+        <field name="name">efund.public.holiday.form</field>
+        <field name="model">efund.public.holiday</field>
+        <field name="arch" type="xml">
+            <form string="Jour Férié">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="Ex: Fête de la Tabaski"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="holiday_date"/>
+                        </group>
+                        <group>
+                            <field name="year"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -3,9 +3,11 @@ import io
 import logging
 from datetime import timedelta
 
+from dateutil.relativedelta import relativedelta
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 import xlsxwriter
+
 _logger = logging.getLogger(__name__)
 
 
@@ -17,7 +19,8 @@ class Mandate(models.Model):
     code = fields.Char(string="Référence", required=True,
                        default=lambda self: self.env['ir.sequence'].next_by_code('efund.vehicule.mandate'))
     vehicule_id = fields.Many2one('efund.vehicule', required=True, ondelete='cascade')
-    vehicle_type = fields.Selection(related='vehicule_id.vehicle_type',default='mandate',store=True,readonly=False, required=True, string="Type")
+    vehicle_type = fields.Selection(related='vehicule_id.vehicle_type', default='mandate', store=True, readonly=False,
+                                    required=True, string="Type")
     investor_id = fields.Many2one('efund.investor', required=True, string="Investisseur")
     risk_profile = fields.Selection([('low', 'Prudent'), ('medium', 'Équilibré'), ('high', 'Dynamique')],
                                     string='Profil de risque', required=True)
@@ -28,10 +31,6 @@ class Mandate(models.Model):
     rule_ids = fields.One2many('efund.vehicule.mandate.rule', 'mandate_id', string="Règles de Mandat")
     is_fund_released = fields.Boolean(string='Est un fonds', default=False)
     coupon_capitalisation = fields.Boolean(string='Est capitalisé', default=False)
-
-    # compte comptable du mandant
-    partner_account_id = fields.Many2one('account.account', string='Compte comptable du mandant')
-
 
     # risk_profile_id = fields.Many2one('mandate.risk.profile',string='Profil de risque',required=True)
 
@@ -64,13 +63,12 @@ class Mandate(models.Model):
     # ---------------------------------------------------------
     # INDICATEURS CALCULÉS (PAS SAISIS)
     # ---------------------------------------------------------
-    realized_return_rate = fields.Float(string='Taux de rendement réalisé (%)', compute='_compute_realized_performance',
-                                        store=True)
-    deviation_from_target = fields.Float(string='Écart vs objectif (%)', compute='_compute_realized_performance',
-                                         store=True)
+    last_realized_rate = fields.Float(string='Dernier taux de rendement réalisé (%)', store=True)
+    performance_variation = fields.Float(string='Écart vs objectif (%)', store=True)
 
     # Relation
-
+    performance_ids = fields.One2many('efund.vehicule.mandate.performance.history', 'mandat_id',
+                                      string="Performances Annuelles")
 
     # ---------------------------------------------------------
     # CONTROLES
@@ -92,7 +90,6 @@ class Mandate(models.Model):
                 rec.maturity_date = fields.Date.add(
                     rec.start_date, months=rec.duration_months
                 )
-
 
     @api.depends('initial_amount')
     def _compute_realized_performance(self):
@@ -136,11 +133,12 @@ class Mandate(models.Model):
                 continue
 
             # implementer le déplacement du cash du compte investisseur vers le compte mandat
-            balance = self.env['efund.investor.cash_account'].get_balance_by_investor(rec.investor_id.id, rec.vehicule_id.id)
+            balance = self.env['efund.investor.cash_account'].get_balance_by_investor(rec.investor_id.id,
+                                                                                      rec.vehicule_id.id)
             if balance <= 0:
-                raise ValidationError(_("Le compte de l'investisseur n'a pas suffisamment de fonds pour confirmer le mandat."))
+                raise ValidationError(
+                    _("Le compte de l'investisseur n'a pas suffisamment de fonds pour confirmer le mandat."))
             # Création du Compte analytique du mandat
-
 
             # Vérification de l'existence du compte cash du fond
             vehicule_cash = self.env['efund.vehicule.cash'].search([('vehicule_id', '=', rec.vehicule_id.id)], limit=1)
@@ -154,13 +152,15 @@ class Mandate(models.Model):
                 rec.message_post(body=_("Création du compte Cash du Mandat."))
 
             # récupérer ID du compte cash du fond
-            vehicule_cash_id =  self.env['efund.vehicule.cash'].get_vehicule_cash_id_by_vehicule_id(rec.vehicule_id.id)
+            vehicule_cash_id = self.env['efund.vehicule.cash'].get_vehicule_cash_id_by_vehicule_id(rec.vehicule_id.id)
 
-            if vehicule_cash_id <= 0 :
+            if vehicule_cash_id <= 0:
                 raise ValidationError(_("Le compte cash du mandat n'a pas été trouvé. Veuillez contacter le support."))
 
             # débit du compte cash de l'investisseur vers le compte mandat
-            investor_cash_account_id = self.env['efund.investor.cash_account'].get_cash_account_id_investor_by_vehicule_and_investor_id(self.vehicule_id.id, self.investor_id.id)
+            investor_cash_account_id = self.env[
+                'efund.investor.cash_account'].get_cash_account_id_investor_by_vehicule_and_investor_id(
+                self.vehicule_id.id, self.investor_id.id)
             investor_cash_move = self.env['efund.investor.cash_account.move'].create({
                 'name': self.env['ir.sequence'].next_by_code('efund.investor.cash_account.move'),
                 'cash_account_id': investor_cash_account_id,
@@ -169,7 +169,8 @@ class Mandate(models.Model):
                 'amount': balance,
                 'state': 'reconciled'
             })
-            rec.message_post(body=_(f"Débit de %s de francs cfa du compte de l'investisseur pour le compte du mandat .")% (balance))
+            rec.message_post(
+                body=_(f"Débit de %s de francs cfa du compte de l'investisseur pour le compte du mandat .") % (balance))
 
             # mouvement du compte investisseur vers le compte mandat
             fund_move = self.env['efund.vehicule.cash.move'].create({
@@ -184,7 +185,7 @@ class Mandate(models.Model):
                 'vehicule_id': rec.vehicule_id.id,
             })
             rec.message_post(body=_("Crédit de %s venant du compte investisseur.") % balance)
-            rec.on_mandate_confirmed(rec)
+
             rec.state = 'active'
             rec.message_post(body=_("Le mandat a été confirmé et est maintenant actif."))
 
@@ -192,7 +193,6 @@ class Mandate(models.Model):
             event = self.env['efund.accounting.event'].create(self.build_event_payload())
             # rec.event_id = event.id
             self.env['efund.accounting.engine'].process_event(event)
-
 
     def build_event_payload(self):
 
@@ -252,7 +252,7 @@ class Mandate(models.Model):
         self.ensure_one()
         service = self.env['efund.service']
         # 1. Nettoyage des anciens coupons non payés
-        #self.coupon_ids.filtered(lambda c: c.state == 'draft').unlink()
+        # self.coupon_ids.filtered(lambda c: c.state == 'draft').unlink()
         self.coupon_ids.unlink()
 
         # 2. Appel du générateur
@@ -324,8 +324,6 @@ class Mandate(models.Model):
             }
         }
 
-
-
     def action_push_deposit(self):
         self.ensure_one()
 
@@ -351,9 +349,11 @@ class Mandate(models.Model):
         bolth = workbook.add_format({'bold': 1, 'align': 'left', 'fg_color': '#f2ba2c', 'border': 1})
         titrestation = workbook.add_format({'bold': 1, 'align': 'center', 'font_size': 18})
         boltdg = workbook.add_format({'border': 1, 'bold': 1})
-        boltd = workbook.add_format({'border': 1,'align': 'right', })
-        titre = workbook.add_format({'bold': 1, 'align': 'center', 'valign': 'vcenter','fg_color': '#f2ba2c', 'font_size': 24})
-        sous_type = workbook.add_format({'bold': 1, 'align': 'center', 'valign': 'vcenter','fg_color': '#f2ba2c', 'font_size': 14})
+        boltd = workbook.add_format({'border': 1, 'align': 'right', })
+        titre = workbook.add_format(
+            {'bold': 1, 'align': 'center', 'valign': 'vcenter', 'fg_color': '#f2ba2c', 'font_size': 24})
+        sous_type = workbook.add_format(
+            {'bold': 1, 'align': 'center', 'valign': 'vcenter', 'fg_color': '#f2ba2c', 'font_size': 14})
 
         ws_mandat.set_column(0, 0, 10)
         ws_mandat.set_column(1, 1, 25)
@@ -363,13 +363,14 @@ class Mandate(models.Model):
         ws_mandat.set_column(5, 5, 10)
         ws_mandat.set_column(6, 6, 10)
 
-
         position = self.position_ids.filtered(lambda p: p.state == 'active')
         mvt_cash = self.vehicule_cash_move_ids.filtered(lambda m: m.state == 'reconciled')
 
         rw = 0
         col = 0
-        ws_mandat.merge_range(1, 0, 2, 6,f"Point sur la situation du mandat à la date du {fields.Date.today().strftime('%d-%m-%Y')}",titre)
+        ws_mandat.merge_range(1, 0, 2, 6,
+                              f"Point sur la situation du mandat à la date du {fields.Date.today().strftime('%d-%m-%Y')}",
+                              titre)
 
         ws_mandat.write(rw + 4, col + 1, 'Titre', bolth)
         ws_mandat.write(rw + 4, col + 2, self.name, boltd)
@@ -380,26 +381,26 @@ class Mandate(models.Model):
         ws_mandat.write(rw + 7, col + 1, 'Taux réalisé', bolth)
         ws_mandat.write(rw + 7, col + 2, self.realized_return_rate, boltd)
         ws_mandat.write(rw + 8, col + 1, 'Durée du mandat (ans)', bolth)
-        ws_mandat.write(rw + 8, col + 2, self.duration_months / 12 , boltd)
+        ws_mandat.write(rw + 8, col + 2, self.duration_months / 12, boltd)
         ws_mandat.write(rw + 9, col + 1, 'Date d\'effet', bolth)
         ws_mandat.write(rw + 9, col + 2, self.start_date.strftime('%d-%m-%Y'), boltd)
         ws_mandat.write(rw + 10, col + 1, 'Date d\'échéance', bolth)
         ws_mandat.write(rw + 10, col + 2, self.maturity_date.strftime('%d-%m-%Y'), boltd)
         ws_mandat.write(rw + 11, col + 1, 'Date Coridor 14 jours', bolth)
-        ws_mandat.write(rw + 11, col + 2, (self.maturity_date+ timedelta(self.days_corridor)).strftime('%d-%m-%Y'), boltd)
+        ws_mandat.write(rw + 11, col + 2, (self.maturity_date + timedelta(self.days_corridor)).strftime('%d-%m-%Y'),
+                        boltd)
         ws_mandat.write(rw + 12, col + 1, 'Coupon', bolth)
         ws_mandat.write(rw + 12, col + 2, (self.initial_amount * self.target_return_rate) / 100, boltd)
         ws_mandat.write(rw + 13, col + 1, 'Principal + intérêt annuel', bolth)
-        ws_mandat.write(rw + 13, col + 2, self.initial_amount + (self.initial_amount * self.target_return_rate) / 100, boltd)
-
+        ws_mandat.write(rw + 13, col + 2, self.initial_amount + (self.initial_amount * self.target_return_rate) / 100,
+                        boltd)
 
         ws_mandat.merge_range(15, 0, 15, 6, f"Titres détenus", sous_type)
-
 
         rwstation = rw + 16
         colstation = col
         if position:
-            ws_mandat.write(rwstation , colstation,'S/N',bolth)
+            ws_mandat.write(rwstation, colstation, 'S/N', bolth)
             ws_mandat.write(rwstation, colstation + 1, 'Code Isin', bolth)
             ws_mandat.write(rwstation, colstation + 2, 'Type', bolth)
             ws_mandat.write(rwstation, colstation + 3, 'Sous type', bolth)
@@ -409,12 +410,13 @@ class Mandate(models.Model):
 
             rwstation += 1
 
-            for i,pos in enumerate(position):
-                ws_mandat.write(rwstation, colstation, i+1 , boltd)
+            for i, pos in enumerate(position):
+                ws_mandat.write(rwstation, colstation, i + 1, boltd)
                 ws_mandat.write(rwstation, colstation + 1, pos.instrument_id.isin, boltd)
                 ws_mandat.write(rwstation, colstation + 2, pos.instrument_id.instrument_type, boltd)
                 if pos.instrument_id.instrument_type == 'bond':
-                    bond = self.env['efund.vehicule.instrument.core.bond'].search([('instrument_id', '=', pos.instrument_id.id)])
+                    bond = self.env['efund.vehicule.instrument.core.bond'].search(
+                        [('instrument_id', '=', pos.instrument_id.id)])
                     if bond:
                         ws_mandat.write(rwstation, colstation + 3, bond.bond_type, boltd)
                     else:
@@ -438,11 +440,15 @@ class Mandate(models.Model):
 
             ws_flux += 1
 
-            for  mvt in mvt_cash:
+            for mvt in mvt_cash:
                 ws_mandat.write(ws_flux, colstation, mvt.date.strftime('%d-%m-%Y'), boltd)
                 ws_mandat.write(ws_flux, colstation + 1, f"{mvt.label}", boltd)
-                ws_mandat.write(ws_flux, colstation + 2, mvt.amount, boltd) if '_out' in mvt.move_type else ws_mandat.write(ws_flux, colstation + 2, '', boltd)
-                ws_mandat.write(ws_flux, colstation + 3, mvt.amount, boltd) if '_in' in mvt.move_type else ws_mandat.write(ws_flux, colstation + 3, '', boltd)
+                ws_mandat.write(ws_flux, colstation + 2, mvt.amount,
+                                boltd) if '_out' in mvt.move_type else ws_mandat.write(ws_flux, colstation + 2, '',
+                                                                                       boltd)
+                ws_mandat.write(ws_flux, colstation + 3, mvt.amount,
+                                boltd) if '_in' in mvt.move_type else ws_mandat.write(ws_flux, colstation + 3, '',
+                                                                                      boltd)
                 ws_mandat.write(ws_flux, colstation + 4, mvt.balance_running, boltd)
 
                 ws_flux += 1
@@ -466,47 +472,103 @@ class Mandate(models.Model):
             'nodestroy': True,
         }
 
-    @api.model
-    def on_mandate_confirmed(self, mandat):
-        """
-        Déclenché à la validation du mandat.
-        Crée un compte de tiers incrémental basé sur la racine 467.
-        """
-        root_code = "320"
-        company = self.env['res.company'].sudo().search([('name', '=like', f"MANDATS"),], limit=1)
-        if company:
-            # 1. Rechercher le dernier compte créé avec cette racine dans cette société
-            # On trie par code descendant pour obtenir le plus grand
+    def action_generate_annual_performance(self):
+        """Méthode lancée par un CRON ou manuellement à la date anniversaire"""
+        for mandate in self:
+            today = fields.Date.today()
+            # 1. Récupérer le taux de l'année passée en base
+            last_perf = self.env['efund.vehicule.performance.history'].search([
+                ('vehicule_id', '=', mandate.id)
+            ], order='year desc', limit=1)
 
-            last_account = self.env['account.account'].sudo().with_company(company).search([
-                ('code', '=like', f"{root_code}%"),
-            ], order='code desc', limit=1)
+            # 2. Logique de calcul du taux réalisé sur les 12 derniers mois
+            # (Basé sur la variation de la VL et les mouvements cash)
+            current_rate = 7  # mandate._calculate_annual_return(today)
 
-            if last_account:
-                # On extrait la partie numérique et on ajoute 1
-                # Exemple: '4670001' -> 4670001 + 1 = 4670002
-                try:
-                    last_code_int = int(last_account.code)
-                    new_code = str(last_code_int + 1)
-                except ValueError:
-                    # Sécurité si le code n'est pas purement numérique
-                    new_code = f"{root_code}0001"
-            else:
-                # Premier compte de la série
-                new_code = f"{root_code}0001"
-
-            # 2. Création du compte de passif (Capital sous mandat)
-            new_account = self.env['account.account'].sudo().with_company(company).create({
-                'name': f"Mandat - {mandat.name}",
-                'code': new_code,
-                'account_type': 'liability_current',
-                'reconcile': True,
+            # 3. Créer l'entrée d'historique
+            self.env['efund.vehicule.performance.history'].create({
+                'vehicule_id': mandate.id,
+                'year': today.year,
+                'anniversary_date': today,
+                'realized_rate': current_rate,
+                'previous_year_rate': last_perf.realized_rate if last_perf else 0.0
             })
 
-            # 3. Mise à jour du mandat avec le compte tiers et le compte analytique
-            # On suppose que l'événement crée aussi le compte analytique ici
-            mandat.write({
-                'partner_account_id': new_account.id,
+    def _calculate_annual_return(self, anniversary_date):
+        """Calcule le rendement annuel du mandat à une date donnée"""
+        self.ensure_one()
+
+        date_debut = anniversary_date - relativedelta(years=1)
+
+        # 1. Valeur Initiale (V_i) : Somme des market_value à date_debut
+        # Note : Cela nécessite d'avoir un historique des valorisations
+        valeur_initiale = self._get_portfolio_value_at_date(date_debut)
+
+
+
+        # 2. Valeur Finale (V_e) : Somme des market_value actuelles
+        valeur_finale = sum(self.position_ids.mapped('market_value')) #+ self.cash_balance
+
+        # 3. Flux nets (Apports - Retraits)
+        # On récupère les mouvements cash du type 'deposit_in' et 'withdraw_out' sur la période
+        flux_moves = self.env['efund.vehicule.cash.move'].search([
+            ('vehicule_id', '=', self.id),
+            ('date', '>', date_debut),
+            ('date', '<=', anniversary_date),
+            ('move_type', 'in', ['deposit_in', 'withdraw_out'])
+        ])
+        flux_net = sum(flux_moves.mapped('amount'))
+
+        # 4. Calcul du rendement
+        if valeur_initiale <= 0:
+            return 0.0
+
+        # Rendement = (Valeur Finale - Flux Nets - Valeur Initiale) / Valeur Initiale
+        profit = valeur_finale - flux_net - valeur_initiale
+        return (profit / valeur_initiale) * 100
+
+    def _get_portfolio_value_at_date(self, target_date):
+        """Récupère la valeur historique enregistrée à une date précise"""
+        history = self.env['efund.vehicule.portfolio.history'].search([
+            ('vehicule_id', '=', self.id),
+            ('date', '<=', target_date)
+        ], limit=1)
+        return history.total_valuation if history else 0.0
+
+    def action_generate_performance_line(self):
+        """
+        Génère ou met à jour la ligne de performance pour la période anniversaire actuelle.
+        Permet la modification manuelle après génération.
+        """
+        self.ensure_one()
+        today = fields.Date.today()
+        current_year = today.year
+
+        # On cherche si une ligne existe déjà pour cette année pour éviter les doublons
+        perf_line = self.performance_ids.filtered(lambda p: p.year == current_year)
+
+        # Calcul du taux (selon la logique de rendement définie précédemment)
+        computed_rate = self._calculate_annual_return(today)
+
+        # Récupération de la perf de l'année précédente pour la comparaison
+        prev_perf = self.performance_ids.filtered(lambda p: p.year == current_year - 1)
+        prev_rate = prev_perf[0].realized_rate if prev_perf else 0.0
+
+        if perf_line:
+            # Si elle existe, on propose de la mettre à jour (ou on l'écrase)
+            perf_line.write({
+                'realized_rate': computed_rate,
+                'previous_year_rate': prev_rate,
+                'anniversary_date': today,
+            })
+        else:
+            # Sinon on crée une nouvelle ligne modifiable
+            self.env['efund.vehicule.mandate.performance.history'].create({
+                'mandat_id': self.id,
+                'year': current_year,
+                'anniversary_date': today,
+                'realized_rate': computed_rate,
+                'previous_year_rate': prev_rate,
             })
 
-            _logger.info(f"Compte de passif incrémentiel créé : {new_code} pour {mandat.name}")
+        return True

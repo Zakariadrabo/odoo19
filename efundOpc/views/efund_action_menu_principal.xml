@@ -323,6 +323,17 @@
         </field>
     </record>
 
+    <record id="action_instrument_core_price" model="ir.actions.act_window">
+        <field name="name">Cours des prix</field>
+        <field name="res_model">efund.vehicule.instrument.core.price</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer et gérer les cours des instruments.
+            </p>
+        </field>
+    </record>
+
     <!-- Transactions  -->
     <record id="action_efund_investment_transaction" model="ir.actions.act_window">
         <field name="name">Transactions / Exécutions</field>
@@ -338,7 +349,7 @@
     <!-- Positions -->
     <record id="action_fund_position_list" model="ir.actions.act_window">
         <field name="name">Positions</field>
-        <field name="res_model">efund.vehicule.position</field>
+        <field name="res_model">efund.vehicule.portfolio</field>
         <field name="view_mode">list,form,graph</field>
     </record>
 
@@ -406,7 +417,7 @@
     <!-- Emetteur -->
     <record id="action_efund_instrument_issuer" model="ir.actions.act_window">
         <field name="name">Emetteur</field>
-        <field name="res_model">efund.instrument.issuer</field>
+        <field name="res_model">efund.vehicule.instrument.issuer</field>
         <field name="view_mode">list,form,kanban</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -542,6 +553,39 @@
             </p>
         </field>
     </record>
+    <record id="action_efund_market_fee_config" model="ir.actions.act_window">
+        <field name="name">Paramètre de Commission</field>
+        <field name="res_model">efund.market.fee.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configurez les paramètres de commission pour les opérations sur les marchés financiers
+            </p>
+        </field>
+    </record>
+    <record id="action_efund_public_holiday" model="ir.actions.act_window">
+        <field name="name">Calendrier des Jours Fériés</field>
+        <field name="res_model">efund.public.holiday</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Enregistrez les jours fériés pour le calcul précis des dates de valeur (J+3).
+            </p>
+        </field>
+    </record>
+    <record id="action_efund_event_type" model="ir.actions.act_window">
+    <field name="name">Types d'Événements</field>
+    <field name="res_model">efund.event.type</field>
+    <field name="view_mode">list,form</field>
+    <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">
+            Créez votre premier type d'événement comptable.
+        </p>
+        <p>
+            Ces types (sigles) seront utilisés par l'Accounting Engine pour mapper les schémas.
+        </p>
+    </field>
+</record>
 
     <record id="action_efund_codification_numero_compte" model="ir.actions.act_window">
         <field name="name">Codification Numéro de Compte</field>
@@ -605,6 +649,7 @@
         <field name="print_report_name">'Etat KYC Investor - %s' % (object.name)</field>
 
     </record>
+
 
 
 </odoo>

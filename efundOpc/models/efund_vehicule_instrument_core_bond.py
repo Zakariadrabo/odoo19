@@ -25,6 +25,7 @@ class FundInstrumentBond(models.Model):
     issue_date = fields.Date(string="Date d'émission")
     value_date = fields.Date(string="Date de valeur")
     coupon_rate = fields.Float(string="Taux du Coupon (%)")
+    rate_net = fields.Float(string="Taux net (%)", compute='_compute_rate_net', store=True)
     maturity_date = fields.Date(string="Échéance")
     remaining_date_to_maturity = fields.Char(string="Jours restants à la maturité", compute='_compute_days_to_next_coupon', store=True)
     remaining_date_to_coupon = fields.Char(string="Jours restants au prochain coupon", compute='_compute_days_to_next_coupon', store=True)
@@ -45,6 +46,12 @@ class FundInstrumentBond(models.Model):
     # Champ One2many
     coupon_ids = fields.One2many('efund.bond.coupon', 'bond_id', string="Calendrier des coupons")
     bond_amortization_ids = fields.One2many('efund.bond.amortization', 'bond_id', string="calendrier des amortissements")
+
+
+    @api.depends('coupon_rate', 'tax_rate')
+    def _compute_rate_net(self):
+        for rec in self:
+            rec.rate_net = rec.coupon_rate * (1- rec.tax_rate/100)
 
 
     @api.depends('coupon_frequency', 'coupon_calculation_date')
@@ -335,6 +342,7 @@ class FundInstrumentBond(models.Model):
                 'periode': period,
                 'date_debut': current_date,
                 'date_fin': next_date,
+                'next_date': next_date,
                 'capital_initial': round(capital_restant + amortissement, 2),
                 'interet': round(interet, 2),
                 'amortissement': round(amortissement, 2),

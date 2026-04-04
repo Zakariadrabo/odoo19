@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_efund_market_fee_config_tree" model="ir.ui.view">
+        <field name="name">efund.market.fee.config.list</field>
+        <field name="model">efund.market.fee.config</field>
+        <field name="arch" type="xml">
+            <list string="Configuration des Frais de Marché">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="computation_base"/>
+                <field name="rate" widget="float" options="{'digits': [16, 4]}"/>
+                <field name="state" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_efund_market_fee_config_form" model="ir.ui.view">
+        <field name="name">efund.market.fee.config.form</field>
+        <field name="model">efund.market.fee.config</field>
+        <field name="arch" type="xml">
+            <form string="Paramètre de Commission">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="Ex: Commission BVMAC Achat"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Identification">
+                            <field name="code"/>
+                            <field name="state"/>
+                        </group>
+                        <group string="Méthode de Calcul">
+                            <field name="computation_base"/>
+                            <label for="rate"/>
+                            <div class="o_row">
+                                <field name="rate"/>
+                                <span>%</span>
+                            </div>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Notes &amp; Références" name="notes">
+                            <group>
+                                <field name="description"
+                                       placeholder="Référence à la circulaire de la COSUMAF ou BVMAC..."/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

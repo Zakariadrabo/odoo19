@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_efund_portfolio_history_form" model="ir.ui.view">
+        <field name="name">efund.vehicule.portfolio.history.form</field>
+        <field name="model">efund.vehicule.portfolio.history</field>
+        <field name="arch" type="xml">
+            <form string="Historique de Valorisation" create="false" edit="false">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="vehicule_id" options="{'no_open': True}"/>
+                            <field name="date"/>
+                        </group>
+                        <group>
+                            <field name="total_valuation" class="oe_inline oe_right o_td_label fw-bold"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Composition du Portefeuille" name="lines">
+                            <field name="line_ids">
+                                <list decoration-info="market_value_dirty > 0">
+                                    <field name="instrument_id"/>
+                                    <field name="quantity"/>
+                                    <field name="price_unit"/>
+                                    <field name="accrued_interest" sum="Total Intérêts"/>
+                                    <field name="market_value_dirty" sum="Total Titres"/>
+                                    <field name="weight" widget="progressbar"/>
+                                </list>
+                            </field>
+                            <group class="oe_subtotal_footer oe_right">
+                                <field name="total_market_value" string="Total Portefeuille Titres"/>
+                                <field name="cash_balance" string="Solde Espèces"/>
+                                <field name="total_valuation" class="oe_subtotal_footer_separator" string="Actif Net"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

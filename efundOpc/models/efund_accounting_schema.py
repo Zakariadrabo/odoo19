@@ -12,11 +12,7 @@ class FundAccountingSchema(models.Model):
 
     name = fields.Char(string="Nom", required=True)
 
-    event_type = fields.Selection(
-        [('CASH_IN', 'Apport de liquidité'), ('CASH_OUT', 'Retrait de liquidité'), ('SUB_VALIDATED', 'Souscription Validée'),
-         ('RED_VALIDATED', 'Rachat Validé'), ('TRADE_EXECUTED', 'Transaction Titre Exécutée'),
-         ('NAV_CALCULATED', 'Valeur Liquidative Calculée'),('FEE_COMPUTED', 'Frais Provisionnés'),
-         ('DIV_DECLARED', 'Dividende/Coupon Déclaré'),], string="Type d'Événement", required=True)
+    event_type_id = fields.Many2one('efund.event.type', string="Type d'Événement", required=True)
     company_id = fields.Many2one('res.company', required=True, index=True)
     company_code = fields.Char(related='company_id.company_code', string="Code société",)
     journal_id = fields.Many2one('account.journal', string="Journal", required=True,)

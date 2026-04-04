@@ -70,11 +70,54 @@ class EfundService(models.Model):
 
         return schedule
 
+    def generate_coupon_schedule(self, montant, taux, frequence, date_valeur, date_maturite, base_calcul):
+        """
+        Génère un échéancier avec des montants de coupons constants.
+        """
+        if isinstance(date_valeur, str):
+            date_valeur = datetime.strptime(date_valeur, '%Y-%m-%d').date()
+        if isinstance(date_maturite, str):
+            date_maturite = datetime.strptime(date_maturite, '%Y-%m-%d').date()
 
+        freq_months = {'mensuel': 1, 'trimestriel': 3, 'semestriel': 6, 'annuel': 12}
+        # On définit le nombre de périodes par an (Ex: 2 pour semestriel)
+        periods_per_year = 12 / freq_months.get(frequence.lower(), 12)
+        step = freq_months.get(frequence.lower(), 12)
+
+        schedule = []
+        current_date = date_valeur
+
+        while current_date < date_maturite:
+            next_date = current_date + relativedelta(months=step)
+            if next_date >= date_maturite:
+                next_date = date_maturite
+
+            # --- CORRECTION ICI ---
+            # Au lieu de calculer les jours réels, on divise le taux annuel
+            # par le nombre de périodes dans l'année.
+            # Exemple pour 6% annuel en semestriel : 6 / 2 = 3% fixe par coupon.
+
+            montant_fixe = montant * (taux / 100) / periods_per_year
+
+            schedule.append({
+                'date_debut': current_date,
+                'date_fin': next_date,
+                # On affiche 30 jours par mois ou le prorata théorique pour l'affichage
+                'jours': step * 30,
+                'montant': round(montant_fixe, 2),
+            })
+
+            current_date = next_date
+            if next_date == date_maturite:
+                break
+
+        return schedule
+
+    """
     def generate_coupon_schedule(self,montant, taux, frequence, date_valeur, date_maturite, base_calcul):
-        """
+        
         :param base_calcul: 360 ou 365
-        """
+        
         if isinstance(date_valeur, str):
             date_valeur = datetime.strptime(date_valeur, '%Y-%m-%d').date()
         if isinstance(date_maturite, str):
@@ -108,7 +151,7 @@ class EfundService(models.Model):
 
         return schedule
 
-
+    """
 
 
     def generate_all_coupon_dates(self, value_date, maturity_date, coupon_frequency):
@@ -165,6 +208,31 @@ class EfundService(models.Model):
     def _compute_coupon_amount(self):
         """Calcule le montant de chaque coupon de manière constante"""
         for coupon in self:
+            # 1. On définit un diviseur fixe par fréquence
+            # (Indépendant du calendrier réel)
+            freq_map = {
+                'annuel': 1,
+                'semestriel': 2,
+                'trimestriel': 4,
+                'mensuel': 12
+            }
+
+            # On récupère la fréquence depuis le bond ou le mandat
+            frequence = coupon.bond_id.coupon_frequency  # ex: 'semestriel'
+            periods = freq_map.get(frequence, 1)
+
+            # 2. Calcul standardisé
+            # Formule : (Nominal * Taux) / Nombre de périodes par an
+            nominal = coupon.bond_id.face_value
+            taux_annuel = coupon.bond_id.coupon_rate / 100.0
+
+            # Le montant sera exactement le même en 2027, 2028, etc.
+            coupon.amount = (nominal * taux_annuel) / periods
+
+    """
+    def _compute_coupon_amount(self):
+        Calcule le montant de chaque coupon de manière constante
+        for coupon in self:
             # 1. Définir le diviseur selon la fréquence
             # Peu importe l'année, on divise par un nombre de périodes fixe
             freq_map = {
@@ -182,3 +250,4 @@ class EfundService(models.Model):
 
             # Le montant est désormais identique chaque année
             coupon.amount = (nominal * annual_rate) / periods
+    """

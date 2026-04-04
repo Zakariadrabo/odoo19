@@ -1,5 +1,10 @@
+import logging
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+from zeep.exceptions import ValidationError
+
+_logger = logging.getLogger(__name__)
 
 class EfundInvestmentTransaction(models.Model):
     _name = 'efund.investment.transaction'
@@ -10,6 +15,7 @@ class EfundInvestmentTransaction(models.Model):
                        default=lambda self: self.env['ir.sequence'].next_by_code('efund.investment.transaction'))
     order_id = fields.Many2one('efund.investment.order', string="Ordre d'origine", ondelete='cascade')
     vehicule_id = fields.Many2one(related='order_id.vehicule_id', store=True)
+    currency_id = fields.Many2one(related='vehicule_id.currency_id', store=True)
     instrument_id = fields.Many2one(related='order_id.instrument_id', store=True)
 
     date_transaction = fields.Datetime(string="Date de transaction", default=fields.Datetime.now)
@@ -18,19 +24,73 @@ class EfundInvestmentTransaction(models.Model):
     quantity = fields.Float(string="Quantité exécutée", required=True)
     price_unit = fields.Float(string="Prix unitaire d'exécution", required=True, digits=(16, 6))
     move_type = fields.Selection([('in', 'Entrée'), ('out', 'Sortie')], string="Type de transaction", required=True, )
-    label = fields.Char(string="Libellé de la transaction", required=True,)
+    label = fields.Char(string="Libellé de la transaction", required=True, )
 
-    # Frais de transaction
-    broker_id = fields.Many2one('res.partner', string="Intermédiaire / Courtier")
-    fees_amount = fields.Float(string="Frais de courtage")
-    taxes_amount = fields.Float(string="Taxes / TTF")
-    interest_amount = fields.Float(string="Intérêts courus")
-    free_tax_amount = fields.Float(string="Montant HT",)
-    amount_net = fields.Float(string="Montant Net", )
-    average_execution_price = fields.Float(string="Prix moyen d'exécution",)
-    state = fields.Selection([('draft', 'Provisoire'),('confirmed', 'Confirmé'), ('settled', 'Dénoué (R/L)'),('cancelled', 'Annulé')
-    ], default='draft')
+    # detail
+    total_courtage = fields.Monetary(string="Courtage", )
+    total_tva = fields.Monetary(string="TVA", )
+    total_bvm = fields.Monetary(string="Commission BVM", )
+    total_dc = fields.Monetary(string="Commission DC", )
+    total_regulateur = fields.Monetary(string="Régulateur", )
+    total_interet_brut = fields.Monetary(string="Intérêts brut", )
+    total_interest = fields.Monetary(string="Intérêts net", )
+    total_irvm = fields.Monetary(string="Taxe IRVM", )
+    total_other = fields.Monetary(string="Autres commissions", )
+    total_commission = fields.Monetary(string="Total commissions", )
+    total_transaction = fields.Monetary(string="Total Transaction", )
+    total_amount = fields.Monetary(string="Total TTC", )
+    total_fees = fields.Monetary(string="Total Frais courtage",)
+    total_amount_trade = fields.Monetary(string='Total HT',)
 
+
+    # Valeur DAT
+    deposit_amount = fields.Monetary(string="Montant à placer", )
+    negotiated_rate = fields.Float(string="Taux négocié (%)")
+    interest_type = fields.Selection([('postpaid', 'Postpayé'), ('prepaid', 'Prépayé')], default='postpaid',string="Type d'intérêt")
+    negotiated_rate_net = fields.Float(string="Taux négocié net (%)")
+    maturity_date = fields.Date(string="Échéance prévue")
+    start_date = fields.Date(string="Date de début")
+
+
+    broker_id = fields.Many2one(related='order_id.broker_id', string="Société de bourse")
+
+    average_execution_price = fields.Float(string="Prix moyen d'exécution", )
+    event_id = fields.Many2one('efund.accounting.event', string="Événement", readonly=True)
+    state = fields.Selection(
+        [('draft', 'Provisoire'), ('confirmed', 'Confirmé'), ('settled', 'Dénoué (R/L)'), ('cancelled', 'Annulé')
+         ], default='draft')
+
+
+    def build_event_payload_bond(self):
+
+        self.ensure_one()
+        montant_operation = self.quantity * self.price_unit
+        type_execution = ''
+        if self.instrument_id.instrument_type == 'bond':
+            if self.instrument_id.settlement_mode == 'direct':
+                type_execution = 'DIRECT_INVESTMENT_EXECUTED'
+            else:
+                type_execution = 'MARKET_TRADE_EXECUTED'
+
+        event_name = 'TRADE_SUBSCRIPTION' if type_execution == 'DIRECT_INVESTMENT_EXECUTED' else 'TRADE_EXECUTED'
+        event_type_id = self.env['efund.event.type'].search([('sigle', '=', event_name)], limit=1)
+
+        return {
+            'event_type_id': event_type_id.id,
+            'vehicule_id': self.vehicule_id.id,
+            'reference': self.name,
+            'event_date': self.date_transaction,
+            'state': 'draft',
+
+            'payload': {
+                'instrument_id': self.instrument_id.id,
+                'gross': self.total_amount_trade,
+                'net': self.total_amount,
+                'fees': self.total_fees,
+                'interest': self.total_interest if self.instrument_id.instrument_type == 'bond' else 0,
+                'qte': self.quantity,
+            }
+        }
 
     def action_confirm_settlement(self):
         """Déclencheur principal du dénouement"""
@@ -40,6 +100,26 @@ class EfundInvestmentTransaction(models.Model):
                 raise UserError(_("La quantité doit être supérieure à 0 pour confirmer la ligne."))
             if rec.price_unit <= 0:
                 raise UserError(_("Le prix doit être supérieur à 0 pour confirmer la ligne."))
+
+
+            # 2. Création d'évenement et écriture comptable
+            if self.instrument_id.instrument_type == 'bond':
+                event = self.env['efund.accounting.event'].create(rec.build_event_payload_bond())
+            elif self.instrument_id.instrument_type == 'dat':
+                event = self.env['efund.accounting.event'].create(rec.build_event_payload_dat())
+            elif self.instrument_id.instrument_type == 'option':
+                event = self.env['efund.accounting.event'].create(rec.build_event_payload_opcvm())
+            else:
+                raise ValidationError(f"Instrument type {self.instrument_id.instrument_type} not supported for settlement")
+
+            if event:
+                rec.event_id = event.id
+            else:
+                raise ValidationError(f" Evènement non créé pour la transaction {rec.name}")
+
+
+            self.env['efund.accounting.engine'].process_event(event)
+
 
             # comptabiliation
             rec.message_post(
@@ -54,7 +134,7 @@ class EfundInvestmentTransaction(models.Model):
                 ('vehicule_id', '=', rec.vehicule_id.id)
             ], limit=1)
             if not vehicule_cash:
-                    vehicule_cash = self.env['efund.vehicule.cash'].create({
+                vehicule_cash = self.env['efund.vehicule.cash'].create({
                     'name': f"Trésorerie - {rec.vehicule_id.name}",
                     'vehicule_id': rec.vehicule_id.id,
                     'company_id': rec.vehicule_id.company_id.id,
@@ -69,12 +149,11 @@ class EfundInvestmentTransaction(models.Model):
                 if rec.order_id.direction_opcvm == 'redemption':
                     direction = 'sell'
 
-
             # 1- debit ou credit de l'achat ou de la vente
             vehicule_move_trans = self.env['efund.vehicule.cash.move'].create({
                 'name': self.env['ir.sequence'].next_by_code('efund.vehicule.cash.move'),
                 'vehicule_cash_id': vehicule_cash.id,
-                'amount': rec.free_tax_amount,
+                'amount': rec.quantity * rec.price_unit,
                 'move_type': 'investment_out' if direction == 'buy' else 'divestment_in',
                 'liquidity_type': 'liquid',
                 'label': rec.label,
@@ -84,8 +163,7 @@ class EfundInvestmentTransaction(models.Model):
             })
             message = 'Débit du compte du véhicule au montant de %s francs  représentant le montant de la transaction N° %s' if direction == 'buy' else 'Crédit du compte du fond au montant de %s francs  représentant le montant de la transaction N°: %s'
             rec.message_post(
-                body=_(message) % (
-                    rec.free_tax_amount, rec.name),
+                body=_(message) % ( rec.total_amount_trade, rec.name),
                 subject="comptabilisation de la transaction",
                 message_type="comment",
                 subtype_xmlid="mail.mt_comment"
@@ -94,11 +172,11 @@ class EfundInvestmentTransaction(models.Model):
             # 2- Débit des frais de courtage
 
             vehicule_move_broker = self.env['efund.vehicule.cash.move']
-            if rec.fees_amount > 0:
+            if rec.total_fees > 0:
                 vehicule_move_broker.create({
                     'name': self.env['ir.sequence'].next_by_code('efund.vehicule.cash.move'),
                     'vehicule_cash_id': vehicule_cash.id,
-                    'amount': rec.fees_amount,
+                    'amount': rec.total_fees,
                     'move_type': 'broker_fee_out',
                     'liquidity_type': 'liquid',
                     'state': 'reconciled',
@@ -108,11 +186,33 @@ class EfundInvestmentTransaction(models.Model):
                 })
                 rec.message_post(
                     body=_("Débit du compte du fond au montant de %s francs représentant les frais de courtage") % (
-                        rec.fees_amount),
+                        rec.total_fees),
                     subject="comptabilisation de la transaction",
                     message_type="comment",
                     subtype_xmlid="mail.mt_comment"
                 )
+
+            vehicule_move_interest = self.env['efund.vehicule.cash.move']
+            if rec.total_interest > 0:
+                vehicule_move_broker.create({
+                    'name': self.env['ir.sequence'].next_by_code('efund.vehicule.cash.move'),
+                    'vehicule_cash_id': vehicule_cash.id,
+                    'amount': rec.total_interest,
+                    'move_type': 'interest_out' if direction == 'buy' else 'interest_in',
+                    'liquidity_type': 'liquid',
+                    'state': 'reconciled',
+                    'label': 'Intérêt couru',
+                    'trade_id': rec.id,
+                    'instrument_id': rec.order_id.instrument_id.id,
+                })
+                rec.message_post(
+                    body=_("Intérêt couru du montant de %s francs ") % (
+                        rec.total_interest),
+                    subject="comptabilisation de la transaction",
+                    message_type="comment",
+                    subtype_xmlid="mail.mt_comment"
+                )
+            """
 
             # 3- Debit des taxes
             vehicule_move_tax = self.env['efund.vehicule.cash.move']
@@ -190,13 +290,14 @@ class EfundInvestmentTransaction(models.Model):
                 vehicule_move_broker.write({'fee_id': instrument_fee_tax.id})
             if rec.fees_amount > 0:
                 vehicule_move_tax.write({'fee_id': instrument_fee_broker.id})
+            """
 
             # Livraison des titres (T+2) et mise à jour des positions
-            position = self.env['efund.vehicule.position'].get_or_create_position(
-                instrument_id = rec.order_id.instrument_id.id,
-                first_price_date = rec.date_transaction,
-                first_price = rec.price_unit,
-                vehicule_id = rec.vehicule_id.id,
+            position = self.env['efund.vehicule.portfolio'].get_or_create_position(
+                instrument_id=rec.order_id.instrument_id.id,
+                first_price_date=rec.date_transaction,
+                first_price=rec.price_unit,
+                vehicule_id=rec.vehicule_id.id,
             )
             trade_date = self
             position.apply_trade(trade_date)
@@ -218,6 +319,7 @@ class EfundInvestmentTransaction(models.Model):
                 subtype_xmlid="mail.mt_comment"
             )
             self.write({'state': 'settled'})
+            
 
 
     def _create_accounting_move(self):

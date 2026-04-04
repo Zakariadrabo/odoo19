@@ -10,68 +10,129 @@
                 <group>
                     <field name="order_id"/>
                     <field name="reference"/>
-                    <field name="remaining_quantity"/>
+                    <field name="remaining_quantity" invisible="operation_type != 'trade'"/>
+                    <field name="operation_type" invisible="1"/>
                 </group>
 
-                <group string="Détails d'exécution">
+                <group string="Détails d'exécution" invisible="operation_type != 'trade'">
                     <field name="executed_quantity" required="1"/>
                     <field name="execution_price" required="1"/>
                     <field name="execution_date" required="1"/>
                 </group>
+                <group string="Conditions du DAT" invisible="operation_type != 'deposit'">
+                    <group>
+                        <field name="deposit_amount" widget="monetary"/>
+                        <field name="negotiated_rate" widget="float"/>
+                        <field name="interest_type"/>
+                        <field name="start_date"/>
+                        <field name="maturity_date"/>
+                    </group>
+                    <group>
+                        <field name="total_interet_brut"/>
+                        <field name="total_irvm"/>
+                        <field name="total_interest"/>
+                        <field name="total_amount"/>
+                    </group>
+                </group>
                 <div class="row">
-                     <div class="o_form_label text-info">
+                    <div class="o_form_label text-info">
                         <field name="formulas_accured_interest" readonly="1"/>
                     </div>
                 </div>
 
-                <div class="panel panel-warning">
-                    <div class="panel-heading">
-                        <i class="fa fa-calculator" title="Calculatrice"/>
-                        Résumés
-                    </div>
-                    <div class="panel-body">
-                        <div class="row">
-                            <div class="col-4">
-                                <strong>Montant HT:</strong>
-                                <br/>
-                                <field name="free_tax_amount" widget="monetary"
-                                       options="{'currency_field': 'currency_id'}"
-                                       readonly="1"/>
-                            </div>
-                            <div class="col-4">
-                                <strong>Commission de courtage:
-                                </strong>
-                                <br/>
-                                <field name="total_broker_commission" widget="monetary"
-                                       options="{'currency_field': 'currency_id'}"
-                                       readonly="1"/>
-                            </div>
-                            <div class="col-4">
-                                <strong>Taxe TVA :</strong>
-                                <br/>
-                                <field name="total_tob_commission" widget="monetary"
-                                       options="{'currency_field': 'currency_id'}"
-                                       readonly="1"/>
-                            </div>
+                <div class="border rounded p-3">
+                    <div class="row" invisible="operation_type not in ('deposit','trade')">
+                        <div class="col-4">
+                            <strong>Intérêt couru brut</strong>
+                            <br/>
+                            <field name="total_interet_brut" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
                         </div>
-                        <div class="row">
-                            <div class="col-4">
-                                <strong>Intérêts courus:</strong>
-                                <br/>
-                                <field name="total_interest" widget="monetary"
-                                       options="{'currency_field': 'currency_id'}"
-                                       readonly="1"/>
-                            </div>
-                            <div class="col-4">
-                                <strong>Montant TTC:
-                                </strong>
-                                <br/>
-                                <field name="total_amount" widget="monetary"
-                                       options="{'currency_field': 'currency_id'}"
-                                       readonly="1"/>
-                            </div>
+                        <div class="col-4">
+                            <strong>IRVM / IRCM</strong>
+                            <br/>
+                            <field name="total_irvm" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
+                        </div>
+                        <div class="col-4">
+                            <strong>Intérêt couru net</strong>
+                            <br/>
+                            <field name="total_interest" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
                         </div>
                     </div>
+                    <hr/>
+                    <div class="row" invisible="operation_type not in ('trade')">
+                        <div class="col-4">
+                            <strong>Commission Bourse:</strong>
+                            <br/>
+                            <field name="total_bvm" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
+                        </div>
+                        <div class="col-4">
+                            <strong>Commission Dépositaire Central:
+                            </strong>
+                            <br/>
+                            <field name="total_dc" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
+                        </div>
+                        <div class="col-4">
+                            <strong>Commission Régulateur :</strong>
+                            <br/>
+                            <field name="total_regulateur" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
+                        </div>
+                    </div>
+                    <hr/>
+                    <div class="row" invisible="operation_type not in ('trade')">
+                        <div class="col-6">
+                            <strong>Frais de Courtage:</strong>
+                            <br/>
+                            <field name="total_courtage" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
+                        </div>
+                        <div class="col-6">
+                            <strong>TVA:
+                            </strong>
+                            <br/>
+                            <field name="total_tva" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
+                        </div>
+                    </div>
+                    <hr/>
+                    <div class="row">
+                        <div class="col-4">
+                            <strong>Total Transaction :</strong>
+                            <br/>
+                            <field name="total_amount_trade" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
+                        </div>
+                        <div class="col-4">
+                            <strong>Total Commissions &amp; Taxes:
+                            </strong>
+                            <br/>
+                            <field name="free_tax_amount" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
+                        </div>
+                        <div class="col-4">
+                            <strong>Total TTC :</strong>
+                            <br/>
+                            <field name="total_amount" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"
+                                   readonly="1"/>
+                        </div>
+                    </div>
+
                 </div>
 
                 <footer>

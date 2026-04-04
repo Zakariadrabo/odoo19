@@ -28,13 +28,12 @@
                     <!-- Détails de la transaction -->
                     <field name="quantity" string="Quantité"/>
                     <field name="price_unit" string="Prix Unitaire"/>
-
+                    <field name="total_amount_trade" string="Montant HT"/>
+                <!-- Frais -->
+                    <field name="total_fees" string="Frais"/>
+                    <field name="total_interest" string="Taxes"/>
                     <!-- Montants -->
-                    <field name="amount_net" string="Montant Net"/>
-
-                    <!-- Frais -->
-                    <field name="fees_amount" string="Frais"/>
-                    <field name="taxes_amount" string="Taxes"/>
+                    <field name="total_amount" string="Montant Net"/>
 
                     <!-- Broker -->
                     <field name="broker_id" string="Courtier"/>
@@ -77,69 +76,58 @@
 
                                 <!-- Dates -->
                                 <field name="date_transaction" string="Date de Transaction"/>
-                                <field name="date_settlement" string="Date de Règlement"/>
+                                <field name="date_settlement" string="Date de dénouement"/>
                             </group>
 
                             <group string="Détails Financiers">
                                 <!-- Quantité et Prix -->
                                 <field name="quantity" string="Quantité exécutée"/>
                                 <field name="price_unit" string="Prix d'exécution"/>
-
                                 <!-- Frais -->
-                                <field name="fees_amount" string="Frais de courtage"/>
-                                <field name="taxes_amount" string="Taxes/TTF"/>
-
-                                <!-- Montant Net (calculé) -->
-                                <field name="amount_net" string="Montant Net" readonly="1"/>
+                                <field name="total_amount_trade" string="Total transaction"/>
+                                <field name="total_amount" string="Montant Net" readonly="1"/>
 
                                 <!-- Courtier -->
-                                <field name="broker_id" string="Intermédiaire/Courtier" options="{'no_create': True}"/>
+                                <field name="broker_id" string="Société de Bourse" options="{'no_create': True}"/>
                             </group>
                         </group>
 
                         <!-- Informations complémentaires -->
-                        <group>
-                            <group string="Calculs Automatiques" colspan="2">
-                                <span>string="Détail du calcul"</span>
-                                <div class="border rounded p-3">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <strong>Montant Brut :</strong>
-                                            <span class="float-end">
-                                                <field name="free_tax_amount"/>
-                                            </span>
-                                        </div>
-                                        <div class="col-6">
-                                            <strong>Frais totaux :</strong>
-                                            <span class="float-end">
-                                                <field name="fees_amount"/>
-                                                <field name="taxes_amount"/>
-                                            </span>
-                                        </div>
+                        <span class="text-muted">Détail calcul</span>
+                        <hr/>
+                        <div class="border rounded p-3">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <strong>Montant Brut :</strong>
+                                        <span class="float-end">
+                                            <field name="total_amount_trade"/>
+                                        </span>
                                     </div>
-                                    <hr/>
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <strong>Montant Net :</strong>
-                                            <span class="float-end">
-                                                <field name="amount_net"/>
-                                            </span>
-                                        </div>
+                                    <div class="col-6">
+                                        <strong>Frais totaux :</strong>
+                                        <span class="float-end"><strong> Intérêt Brut : </strong><field name="total_interet_brut" string="Intérêt brut"/></span>
+                                             <span class="float-end"><strong>IVRM : </strong><field name="total_irvm" string="IRVM"/></span>
+                                             <span class="float-end"><strong>Intérêt Net: </strong><field name="total_interest" string="Intérêt net"/></span>
+                                            <span class="float-end"><strong>Bourse: </strong><field name="total_bvm" string="Bourse"/></span>
+                                            <span class="float-end"><strong>Dépositaire Central: </strong><field name="total_dc" string="Dépositaire"/></span>
+                                            <span class="float-end"><strong>Régulateur: </strong><field name="total_regulateur" string="Régulateur"/></span>
+                                            <span class="float-end"><strong>Courtage: </strong><field name="total_courtage" string="Courtage"/></span>
+                                            <span class="float-end"><strong>Tva: </strong><field name="total_tva" string="TVA"/></span>
+
                                     </div>
                                 </div>
-                            </group>
-                        </group>
+                                <hr/>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <strong>Montant Net :</strong>
+                                        <span class="float-end">
+                                            <field name="total_amount"/>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <!-- Zone d'information -->
-                        <notebook>
-                            <page string="Notes" name="notes_page">
-                                <field name="message_ids" widget="mail_thread"/>
-                            </page>
 
-                            <page string="Suivi" name="tracking_page">
-                                <field name="message_ids" widget="mail_activity"/>
-                            </page>
-                        </notebook>
                     </sheet>
                 </form>
             </field>

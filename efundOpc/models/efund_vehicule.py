@@ -44,11 +44,12 @@ class EfundVehicle(models.Model):
 
     depositary_id = fields.Many2one("efund.depositaire", string="Dépositaire")
     expenses_ids = fields.One2many('efund.fund.expense', 'vehicule_id')
-    position_ids = fields.One2many('efund.vehicule.position', 'vehicule_id', string="Positions")
+    position_ids = fields.One2many('efund.vehicule.portfolio', 'vehicule_id', string="Positions")
     vehicule_cash_move_ids = fields.One2many('efund.vehicule.cash.move', 'vehicule_id', string="Flux financiers")
     cash_operation_ids = fields.One2many('efund.vehicule.cash.operation', 'vehicule_id', string="Opérations diverses")
     cashflow_ids = fields.One2many('efund.vehicule.cashflow', 'vehicule_id', string="Flux de trésorerie prévus")
-    analytic_account_id = fields.Many2one('account.analytic.account', string='Compte analytique du mandant')
+    analytic_account_id = fields.Many2one('account.analytic.account', string='Compte analytique')
+    cash_account_id = fields.Many2one('account.account',string="Compte Espèces Dépositaire",help="Compte comptable utilisé pour les règlements/livraisons")
 
 
     @api.model_create_multi

@@ -1,21 +1,32 @@
 <odoo>
     <!-- VUE KANBAN -->
     <record id="view_fund_issuer_kanban" model="ir.ui.view">
-        <field name="name">efund.instrument.issuer.kanban</field>
-        <field name="model">efund.instrument.issuer</field>
+        <field name="name">efund.vehicule.instrument.issuer.kanban</field>
+        <field name="model">efund.vehicule.instrument.issuer</field>
         <field name="arch" type="xml">
             <kanban>
                 <templates>
                     <t t-name="kanban-box">
                         <div class="oe_kanban_global_click">
                             <div class="o_kanban_record_title">
-                                <strong><field name="name"/></strong>
+                                <strong>
+                                    <field name="name"/>
+                                </strong>
                             </div>
-                            <div><field name="country_id"/></div>
-                            <div><field name="industry"/></div>
-                            <div><field name="rating"/></div>
+                            <div>
+                                <field name="country_id"/>
+                            </div>
+                            <div>
+                                <field name="industry"/>
+                            </div>
+                            <div>
+                                <field name="rating"/>
+                            </div>
                             <div class="mt-2">
-                                <span><field name="instrument_count"/> instruments</span>
+                                <span>
+                                    <field name="instrument_count"/>
+                                    instruments
+                                </span>
                             </div>
                         </div>
                     </t>
@@ -26,15 +37,14 @@
 
     <!-- VUE LIST -->
     <record id="view_fund_issuer_list" model="ir.ui.view">
-        <field name="name">efund.instrument.issuer.list</field>
-        <field name="model">efund.instrument.issuer</field>
+        <field name="name">efund.vehicule.instrument.issuer.list</field>
+        <field name="model">efund.vehicule.instrument.issuer</field>
         <field name="arch" type="xml">
             <list>
                 <field name="name"/>
-                <field name="short_name"/>
                 <field name="country_id"/>
                 <field name="industry"/>
-                <field name="rating"/>
+                <field name="current_rating"/>
                 <field name="instrument_count"/>
             </list>
         </field>
@@ -42,28 +52,43 @@
 
     <!-- VUE FORM -->
     <record id="view_fund_issuer_form" model="ir.ui.view">
-        <field name="name">efund.instrument.issuer.form</field>
-        <field name="model">efund.instrument.issuer</field>
+        <field name="name">efund.vehicule.instrument.issuer.form</field>
+        <field name="model">efund.vehicule.instrument.issuer</field>
         <field name="arch" type="xml">
             <form string="Émetteur d'instrument financier">
                 <sheet>
 
                     <group>
+                        <group string="Informations générales">
                         <field name="name"/>
-                        <field name="short_name"/>
                         <field name="country_id"/>
                         <field name="industry"/>
-                        <field name="rating"/>
+                        <field name="current_rating"/>
                         <field name="website"/>
+                    </group>
+                        <group string="Informations financières">
+                            <field name="issuer_type"/>
+                        </group>
                     </group>
 
                     <notebook>
-                        <page string="Description">
-                            <field name="description"/>
+                        <page string="Notations &amp; Solvabilité" name="ratings">
+                            <group>
+                                <field name="current_rating" font_weight="bold"/>
+                            </group>
+                            <field name="rating_ids" nolabel="1">
+                                <list decoration-info="outlook == 'positive'"
+                                      decoration-danger="outlook == 'negative'">
+                                    <field name="rating_date"/>
+                                    <field name="agency_id"/>
+                                    <field name="rating_value"/>
+                                    <field name="outlook"/>
+                                </list>
+                            </field>
                         </page>
 
                         <page string="Instruments émis">
-                            <field name="instrument_count" readonly="1"/>
+                            <field name="instrument_count" readonly="1" string="Nombre d'instrument émis par l'Emetteur "/>
                             <button name="action_open_instruments"
                                     type="object"
                                     string="Voir les instruments"

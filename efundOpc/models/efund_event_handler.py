@@ -158,3 +158,32 @@ class EfundMandatHandler(models.AbstractModel):
 
         # 5. Lier le compte au record du mandat pour les futures écritures
         vehicule.write({'analytic_account_id': analytic_account.id})
+
+    def generate_unique_bond_account(self, instrument_id, vehicule_id):
+        """ Trouve le dernier compte 211xxx et crée le suivant """
+        radical = "211"
+        # 1. Rechercher le dernier compte créé commençant par 211
+        last_account = self.env['account.account'].search([
+            ('code', '=like', radical + '%')
+        ], order='code desc', limit=1)
+
+        # 2. Déterminer le nouveau numéro
+        if last_account:
+            # On extrait la partie numérique et on ajoute 1
+            # Exemple: '211001' -> 211001 + 1 = 211002
+            try:
+                last_code = int(last_account.code)
+                new_code = str(last_code + 1)
+            except ValueError:
+                new_code = radical + "001"
+        else:
+            # Premier compte de la série
+            new_code = radical + "001"
+
+        # 3. Création effective du compte dans le plan comptable Odoo
+        return self.env['account.account'].create({
+            'code': new_code,
+            'name': _("Titre : %s") % instrument_name,
+            'user_type_id': self.env.ref('account.data_account_type_non_current_assets').id,  # Type Actif Immobilisé
+            'reconcile': True,
+        })

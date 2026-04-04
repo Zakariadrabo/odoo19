@@ -7,7 +7,7 @@ from . import confirmable_mixin, res_company, forme_juridique, statut_operationn
     efund_fund_arbitrage, efund_fund_valuation, efund_fund_valuation_fee, efund_fund_valuation_line, \
     efund_fund_valuation_log, efund_fund_report_regulatory, res_partner, efund_investor_cash, efund_investor_part, \
     efund_investor_cash_account_move, efund_initial_valuation_wizard, efund_initial_valuation_investor_line, \
-    efund_investor_position, efund_compliance_policy, efund_fund_instrument_issuer, \
+    efund_investor_position, efund_compliance_policy, efund_vehicule_instrument_issuer, \
     efund_vehicule_instrument_bond_amortization, efund_vehicule_instrument_bond_coupon, \
     efund_vehicule_instrument_core_price, efund_config_import_price, efund_bourse_order, \
     efund_depositaire, \
@@ -31,4 +31,6 @@ from . import confirmable_mixin, res_company, forme_juridique, statut_operationn
     efund_bank, efund_service, efund_country_zone, efund_vehicule_mandat_rule, efund_vehicule_cash, \
     efund_vehicule_cash_move, efund_vehicule_position, efund_vehicule_cash_operation, efund_vehicule_cashflow, \
     efund_accounting_schema, efund_accounting_schema_line, efund_accounting_event, efund_accounting_engine, \
-    efund_investor_cash_operation, efund_codification_numero_compte,efund_investor_part_account,efund_event_handler, efund_event_type
+    efund_investor_cash_operation, efund_codification_numero_compte, efund_investor_part_account, efund_event_handler, \
+    efund_event_type, efund_vehicule_mandate_performance_history, efund_vehicule_portfolio_history, \
+    efund_vehicule_instrument_issuer_rating, efund_market_fee_config,efund_public_holiday, efund_instrument_account

@@ -7,8 +7,11 @@ class FundInstrumentFeeRule(models.Model):
     name = fields.Char(required=True, string="Nom de la règle")
     # Ciblage instrument
     instrument_id = fields.Many2one('efund.vehicule.instrument.core',string="Instrument spécifique")
-    fee_category = fields.Selection([('brokerage', 'Commission de courtage'),('market_tax', 'Taxe de marché'),('vat', 'TVA'),('other', 'Autre'),
-    ],string="Catégorie de frais", required=True)
+    fee_category = fields.Selection(
+        [('courtage', 'Commission de courtage'), ('vat', 'TVA'),
+         ('bvmac', 'Commission Bourse Valeurs Mobilières'), ('dc', 'Commission Dépositaire Central'),
+         ('ircm', 'IRCM / IRVM'), ('regulateur', 'Commission régulateur'),
+         ('other', 'Autres frais'), ], required=True)
     calculation_method = fields.Selection([('percentage', '% du montant'),('fixed', 'Montant fixe'),('per_unit', 'Par titre'),], string="Méthode de calcul", required=True)
     rate = fields.Float(string="Taux (%)")
     amount = fields.Monetary(string="Montant fixe")

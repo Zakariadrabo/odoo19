@@ -39,7 +39,7 @@ class BondAmortization(models.Model):
             if rec.state != 'draft':
                 continue
 
-            instrument = self.env['efund.vehicule.position'].get_vehicles_by_instrument(rec.bond_id.instrument_id.id)
+            instrument = self.env['efund.vehicule.portfolio'].get_vehicles_by_instrument(rec.bond_id.instrument_id.id)
             if instrument:
                 for inst in instrument:
                     coupon_value = rec.coupon_amount * inst.get('quantity') * rec.bond_id.face_value / rec.bond_id.issue_amount

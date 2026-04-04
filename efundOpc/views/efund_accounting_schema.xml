@@ -18,14 +18,15 @@
                     <group invisible="not company_id">*
                         <group>
                             <field name="journal_id" domain="[('company_id', '=', company_id)]" options="{'no_create': True}"/>
-                            <field name="event_type" placeholder="Type d'évènement ..."/>
+                            <field name="event_type_id" placeholder="Type d'évènement ..."/>
                         </group>
                     </group>
                     <notebook>
                         <page string="Configuration des Lignes" name="lines" invisible="not company_id">
                             <field name="line_ids">
                                 <list editable="bottom">
-                                    <field name="account_id" options="{'no_create': True}"/>
+                                    <field name="account_resolution_type" string="Type de Résolution"/>
+                                    <field name="account_id" options="{'no_create': True}" invisible="account_resolution_type != 'fixed'" required="account_resolution_type == 'fixed'"/>
                                     <field name="account_selection_type"/>
                                     <field name="side"/>
                                     <field name="use_analytic"/>
@@ -43,7 +44,8 @@
         <field name="model">efund.accounting.schema</field>
         <field name="arch" type="xml">
             <list string="Schémas Comptables">
-                <field name="event_type"/>
+                <field name="name" />
+                <field name="event_type_id"/>
                 <field name="journal_id"/>
                 <field name="company_id" groups="base.group_multi_company"/>
             </list>

@@ -26,8 +26,8 @@
                 <field name="target_return_rate" string="Objectif %"/>
 
                 <!-- Indicateurs de performance -->
-                <field name="realized_return_rate" string="Réalisé %"/>
-                <field name="deviation_from_target" string="Écart" widget="progressbar"
+                <field name="last_realized_rate" string="Réalisé %"/>
+                <field name="performance_variation" string="Écart" widget="progressbar"
                        options="{'editable': false, 'max_value': 100}"/>
 
                 <!-- Dates importantes -->
@@ -128,7 +128,7 @@
                                 </group>
                                 <group string="Paramètres temporelles">
                                     <field name="days_corridor" placeholder="Nombre de jours Corridor ....."/>
-                                    <field name="amount_received_date" readonly="1"/>
+                                    <field name="amount_received_date"/>
                                     <field name="calculeted_base" placeholder="choix de la base ....."/>
                                 </group>
                                 <group string="base calcul coupons">
@@ -138,14 +138,36 @@
                                     <field name="coupon_capitalisation" placeholder="Capitalisation des coupons ....."/>
                                 </group>
                                 <group string="Réalisation">
-                                    <field name="realized_return_rate" readonly="1"/>
-                                    <field name="deviation_from_target" readonly="1"/>
+                                    <field name="last_realized_rate" readonly="1"/>
+                                    <field name="performance_variation" readonly="1"/>
                                 </group>
                             </group>
                         </page>
                         <page string="Profil risque">
                             <field name="risk_profile" widget="radio" options="{'horizontal': true}"/>
                         </page>
+                        <page string="Performance Annuelle">
+                            <header>
+                                <button name="action_generate_performance_line"
+                                        string="Générer Performance Annuelle"
+                                        type="object"
+                                        class="btn-primary"
+                                        icon="fa-refresh"/>
+                            </header>
+
+                            <group>
+                                <field name="performance_ids" nolabel="1">
+                                    <list decoration-success="variation &gt; 0"  decoration-danger="variation &lt; 0">
+                                        <field name="year"/>
+                                        <field name="anniversary_date"/>
+                                        <field name="realized_rate" widget="float" string="Taux Réalisé (%)"/>
+                                        <field name="previous_year_rate" widget="float" string="Taux N-1 (%)"/>
+                                        <field name="variation" widget="badge" string="Écart (bps)"/>
+                                    </list>
+                                </field>
+                            </group>
+                        </page>
+
                         <page string="Stratégie d'investissement">
                             <field name="rule_ids" editable="bottom">
                                 <list>
@@ -158,12 +180,14 @@
                             </field>
                         </page>
                         <page string="Opérations Diverses">
-                            <field name="cash_operation_ids" readonly="state =='draft'" context="{'default_vehicule_id': vehicule_id}">
+                            <field name="cash_operation_ids" readonly="state =='draft'"
+                                   context="{'default_vehicule_id': vehicule_id}">
                                 <list>
                                     <field name="date_operation"/>
                                     <field name="operation_type"/>
                                     <field name="total_amount" widget="monetary"/>
-                                    <field name="state" widget="badge" options="{'success': 'validated', 'info': 'draft', 'danger': 'cancelled'}"/>
+                                    <field name="state" widget="badge"
+                                           options="{'success': 'validated', 'info': 'draft', 'danger': 'cancelled'}"/>
                                 </list>
                             </field>
                         </page>
@@ -203,10 +227,10 @@
                         <page string="Flux de trésorerie">
                             <header>
                                 <button name="generate_excel"
-                                    type="object"
-                                    class="btn-primary"
-                                    icon="fa-calculator"
-                                    string="Export sous excel"/>
+                                        type="object"
+                                        class="btn-primary"
+                                        icon="fa-calculator"
+                                        string="Export sous excel"/>
                             </header>
                             <field name="vehicule_cash_move_ids" readonly="1">
                                 <list>
@@ -230,12 +254,12 @@
                         </page>
                         <page string="Positions">
                             <header>
-                                    <button name="action_revalue_positions"
-                                            string="Actualiser la Valorisation"
-                                            type="object"
-                                            icon="fa-refresh"
-                                            class="btn-secondary mb-2"/>
-                                </header>
+                                <button name="action_revalue_positions"
+                                        string="Actualiser la Valorisation"
+                                        type="object"
+                                        icon="fa-refresh"
+                                        class="btn-secondary mb-2"/>
+                            </header>
                             <field name="position_ids" readonly="1">
                                 <list string="Inventaire des Titres">
                                     <field name="instrument_id"/>
@@ -252,7 +276,9 @@
                             </field>
                         </page>
                         <page string="Comptabilité">
-                            <field name="analytic_account_id" readonly="1" string="Compte Analytique"/>
+                            <group>
+                                <field name="analytic_account_id" readonly="1" string="Compte Analytique"/>
+                            </group>
                         </page>
 
                     </notebook>

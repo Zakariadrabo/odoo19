@@ -44,8 +44,10 @@ class FundInstrumentPrice(models.Model):
     _rec_name = "display_name"
 
     instrument_id = fields.Many2one('efund.vehicule.instrument.core', string="Instrument", required=True, index=True)
+    vehicule_id = fields.Many2one('efund.vehicule', string="Véhicule", required=True, index=True)
     date = fields.Date(string="Date du cours", required=True, default=fields.Date.today, index=True)
     price = fields.Float(string="Cours", digits=(16, 4), required=True)
+    interest = fields.Float(string="Intérêt", digits=(16, 4), required=True)
     currency_id = fields.Many2one(related="instrument_id.currency_id", string="Devise du cours")
     is_validated = fields.Boolean(string="Validé", default=False)
     validated_date = fields.Date(string="Date de validation")
@@ -62,41 +64,44 @@ class FundInstrumentPrice(models.Model):
     def cron_generate_daily_prices(self):
         """ Méthode appelée par l'action planifiée pour automatiser les cours """
         today = fields.Date.today()
-        instruments = self.env['efund.vehicule.instrument.core'].search([
-            #('state', '=', 'active'),
-            ('instrument_type', 'in', ['bond', 'dat'])
-        ])
+        position = self.env['efund.vehicule.portfolio'].search([])
 
-        for instrument in instruments:
+        for pos in position:
             # --- CAS 1 : LES DAT (Calcul par intérêts courus) ---
-            if instrument.instrument_type == 'dat':
-                self._generate_dat_price(instrument, today)
+            if pos.instrument_id.instrument_type == 'dat':
+                self._generate_dat_price(pos, today)
 
             # --- CAS 2 : LES BONDS LISTÉS (Mise à jour automatique) ---
-            elif instrument.instrument_type == 'bond' and instrument.valuation_method == 'listed':
-                bond = self.env['efund.vehicule.instrument.core.bond'].search([ ('instrument_id', '=', instrument.id),], limit=1)
-                if bond:
-                    self._generate_listed_bond_price(bond, today)
+            elif pos.instrument_id.instrument_type == 'bond' and pos.instrument_id.valuation_method == 'listed':
+                trans_details = self.env['efund.investment.transaction'].search([
+                    ('instrument_id', '=', position.instrument_id.id),
+                    ('vehicule_id', '=', position.vehicule_id.id)], limit=1)
 
-    def _generate_dat_price(self, instrument, target_date):
+                bond = self.env['efund.vehicule.instrument.core.bond'].search([ ('instrument_id', '=', pos.instrument_id.id),], limit=1)
+                if trans_details:
+                    self._generate_listed_bond_price(trans_details,bond, today)
+
+    def _generate_dat_price(self, position, target_date):
         """ Calcule le cours du DAT : Valeur nominale + intérêts linéarisés """
         # On récupère les détails du DAT (taux, date début)
-        dat_details = self.env['efund.vehicule.instrument.core.dat'].search([
-            ('instrument_id', '=', instrument.id)
-        ], limit=1)
+        trans_details = self.env['efund.investment.transaction'].search([
+            ('instrument_id', '=', position.instrument_id.id),
+            ('vehicule_id', '=', position.vehicule_id.id)], limit=1)
 
-        if dat_details and dat_details.start_date and dat_details.rate:
-            days = (target_date - dat_details.start_date).days
+
+        if trans_details and trans_details.start_date and trans_details.negotiated_rate_net:
+            days = (target_date - trans_details.start_date).days
             if days < 0: days = 0
 
             # Calcul du facteur de prix (Base 1)
             # Formule UMOA classique : 1 + (Taux * Jours / 360)
-            computed_factor = 1.0 + (dat_details.rate / 100.0 * days / 360.0)
-            price_value = computed_factor * instrument.face_value
+            computed_factor = (trans_details.negotiated_rate_net / 100.0 * days / 365)
+            price_value = computed_factor * trans_details.total_amount
+            interest_value = computed_factor * trans_details.accrued_interest
 
-            self._update_or_create_price(instrument, target_date, price_value, 'internal')
+            self._update_or_create_price(trans_details.instrument_id,trans_details.vehicule_id, target_date, price_value, interest_value,'internal')
 
-    def _generate_listed_bond_price(self, bond, target_date):
+    def _generate_listed_bond_price(self,trans_details, bond, target_date):
         """ Pour les bonds listés, si pas de prix aujourd'hui, on reprend le dernier connu """
         # On vérifie si un prix existe déjà pour aujourd'hui
 
@@ -104,8 +109,10 @@ class FundInstrumentPrice(models.Model):
 
         existing = self.search([
             ('instrument_id', '=', bond.instrument_id.id),
+            ('vehicule_id', '=', trans_details.vehicule_id.id),
             ('date', '=', target_date)
         ], limit=1)
+
 
         last_price = 0
         if not existing:
@@ -113,7 +120,7 @@ class FundInstrumentPrice(models.Model):
             if bond.instrument_id.is_listed:
                 # Le cours de l'instrument est listé
                 if bond.instrument_id.valuation_method == 'listed':
-                    position = self.env['efund.vehicule.position'].search([ ('instrument_id', '=', bond.instrument_id.id),])
+                    position = self.env['efund.vehicule.portfolio'].search([ ('instrument_id', '=', bond.instrument_id.id),])
                     if position:
                         for pos in position:
                            last_price = compute_linear_actuariat_value_at_date(target_date, pos.first_price, pos.first_price_date, bond.face_value,bond.maturity_date)
@@ -124,7 +131,8 @@ class FundInstrumentPrice(models.Model):
             else:
                 # On cherche le dernier prix validé
                 last_price_obj = self.search([
-                    ('instrument_id', '=', bond.instrument_id.id),
+                    ('instrument_id', '=', trans_details.instrument_id.id),
+                    ('vehicule_id', '=', trans_details.vehicule_id.id),
                     ('is_validated', '=', True),
                     ('date', '<', target_date)
                 ], order='date desc', limit=1)
@@ -133,23 +141,36 @@ class FundInstrumentPrice(models.Model):
 
 
         if last_price:
-            self._update_or_create_price(bond.instrument_id, target_date, last_price, 'internal')
+            last_coupon = trans_details.order_id._get_actual_last_coupon_date(bond.coupon_frequency, bond.value_date,
+                                                            target_date)
 
-    def _update_or_create_price(self, instrument, date, val, source):
+            res = trans_details.order_id.compute_accrued_interest_precise(bond.face_value, bond.coupon_rate, last_coupon,
+                                                        target_date, bond.coupon_frequency, 'act/act',
+                                                        bond.rate_net if bond.rate_net > 0 else 0)
+
+            interest = res.get("interest_net") * trans_details.quantity
+            self._update_or_create_price(trans_details.instrument_id,trans_details.vehicule_id, target_date, last_price,interest, 'internal')
+
+    def _update_or_create_price(self, instrument,vehicule, date, val,interest, source):
         """ Utilitaire pour créer ou mettre à jour un cours """
         price_rec = self.search([
             ('instrument_id', '=', instrument.id),
+            ('vehicule_id','=', vehicule.id),
             ('date', '=', date)
         ], limit=1)
 
         vals = {
             'instrument_id': instrument.id,
+            'vehicule_id': vehicule.id,
             'date': date,
             'price': val,
+            'interest': interest,
             'source': source,
-            'is_validated': True,  # Les prix calculés par modèle sont souvent auto-validés
+            'is_validated': True,
             'price_type': 'close'
         }
+
+        _logger.info(f"*********** mise à jour")
 
         if price_rec:
             price_rec.write(vals)
@@ -175,7 +196,7 @@ class FundInstrumentPrice(models.Model):
     def _update_fund_positions(self, price):
         """Mettre à jour le market_value des positions basé sur le nouveau cours"""
         # Récupérer toutes les positions pour cet instrument
-        positions = self.env['efund.vehicule.position'].search([
+        positions = self.env['efund.vehicule.portfolio'].search([
             ('instrument_id', '=', price.instrument_id.id),
         ])
 

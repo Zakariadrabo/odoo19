@@ -8,7 +8,7 @@ _logger = logging.getLogger(__name__)
 
 
 class FundPosition(models.Model):
-    _name = "efund.vehicule.position"
+    _name = "efund.vehicule.portfolio"
     _description = "Position du véhicule sur un instrument"
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = "display_name"
@@ -54,11 +54,30 @@ class FundPosition(models.Model):
     # market_value devient la somme (Dirty Price)
     market_value = fields.Monetary(string="Valeur de Marché (Dirty)",compute='_compute_market_value',store=True)
 
+    def action_refresh_valuation(self):
+        for record in self:
+            # 1. Aller chercher le dernier prix VALIDÉ pour cet instrument
+            last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+                ('instrument_id', '=', record.instrument_id.id),
+                ('is_validated', '=', True),
+                ('date', '=', fields.Date.today())
+            ], order='date desc', limit=1)
+
+            if last_price_rec:
+                # 2. Mettre à jour la position avec le prix officiel
+                record.write({
+                    'last_price': last_price_rec.price,
+                    'last_price_date': last_price_rec.date,
+                    'accrued_interest': last_price_rec.interest,
+                })
+            else:
+                last_price_rec.cron_generate_daily_prices()
+
+
     @api.depends('quantity', 'last_price', 'instrument_id', 'last_price_date')
     def _compute_valuation_details(self):
         for pos in self:
-            # 1. Calcul de la valeur "Clean" (Cours brut)
-            # On considère que last_price est exprimé en % du nominal pour les bonds
+
             pos.clean_value = pos.quantity * pos.last_price
 
             # 2. Calcul des intérêts courus (uniquement pour les obligations)
@@ -115,17 +134,17 @@ class FundPosition(models.Model):
 
 
 
-    @api.depends('quantity', 'avg_cost', 'last_price', 'clean_value', 'accrued_interest')
+    @api.depends('quantity', 'last_price_date', 'last_price', 'accrued_interest')
     def _compute_market_value(self):
         """Calcule la valeur de marché globale et la performance latente"""
         for rec in self:
             # 1. Calcul de la valeur de marché (Dirty Price)
             # On utilise la somme calculée par _compute_valuation_details
-            market_value = rec.market_value or 0.0
+            market_value = rec.market_value + rec.accrued_interest or 0.0
 
             # Sécurité : si market_value n'est pas encore calculé, on fait un calcul simple
             if not market_value and rec.quantity and rec.last_price:
-                market_value = rec.quantity * rec.last_price
+                market_value = rec.quantity * rec.last_price + rec.accrued_interest
 
             rec.market_value = market_value
 
@@ -386,7 +405,7 @@ class FundPosition(models.Model):
 
     def get_or_create_position(self, instrument_id, first_price_date, first_price, vehicule_id):
         # Par défaut on considère que nous avons un fond
-        pos = self.env['efund.vehicule.position']
+        pos = self.env['efund.vehicule.portfolio']
         position = pos.search([
             ('vehicule_id', '=', vehicule_id),
             ('instrument_id', '=', instrument_id),
@@ -423,7 +442,7 @@ class FundPosition(models.Model):
         """
         # 1. Recherche des positions actives pour cet instrument
         # On filtre sur la quantité > 0 pour n'avoir que les détenteurs réels
-        positions = self.env['efund.vehicule.position'].search([
+        positions = self.env['efund.vehicule.portfolio'].search([
             ('instrument_id', '=', instrument_id),
             ('quantity', '>', 0),
             ('state', '=', 'active')
@@ -466,23 +485,6 @@ class FundPosition(models.Model):
                             'flow_type': 'coupon',
                         })
 
-    def action_refresh_valuation(self):
-        for record in self:
-            # 1. Aller chercher le dernier prix VALIDÉ pour cet instrument
-            last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
-                ('instrument_id', '=', record.instrument_id.id),
-                ('is_validated', '=', True),
-                ('date', '<=', fields.Date.today())
-            ], order='date desc', limit=1)
 
-            if last_price_rec:
-                # 2. Mettre à jour la position avec le prix officiel
-                record.write({
-                    'last_price': last_price_rec.price,
-                    'last_price_date': last_price_rec.date
-                })
-                # Le _compute_valuation_details fera le reste (Clean/Dirty/Accrued)
-            else:
-                last_price_rec.cron_generate_daily_prices()
-                #self.action_refresh_valuation()
+
 

@@ -9,9 +9,9 @@
                 </header>
                 <sheet>
                     <div class="oe_title">
-                        <label for="event_type"/>
+                        <label for="event_type_id"/>
                         <h1>
-                            <field name="event_type"/>
+                            <field name="event_type_id"/>
                         </h1>
                     </div>
                     <group>
@@ -44,7 +44,7 @@
                   decoration-success="state == 'processed'"
                   create="false">
                 <field name="create_date" string="Date"/>
-                <field name="event_type"/>
+                <field name="event_type_id"/>
                 <field name="vehicule_id"/>
                 <field name="reference"/>
                 <field name="state" widget="badge"

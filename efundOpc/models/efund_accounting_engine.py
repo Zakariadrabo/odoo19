@@ -2,7 +2,9 @@ import logging
 
 from odoo import models, _
 from odoo.exceptions import UserError
+
 _logger = logging.getLogger(__name__)
+
 
 class FundAccountingEngine(models.AbstractModel):
     _name = "efund.accounting.engine"
@@ -18,29 +20,28 @@ class FundAccountingEngine(models.AbstractModel):
         if event.state != 'draft':
             return event.move_id
 
-        #Verification si mandat ou fond (company_id = null)
+        # Verification si mandat ou fond (company_id = null)
         analytic_account = event.vehicule_id.analytic_account_id
         company_mandats = self.env['res.company'].sudo().search([('company_code', '=', 'MANDATS')], limit=1)
 
         if not event.vehicule_id.company_id:
-            idcompany_id = company_mandats.id
+            idcompany_id = company_mandats
         else:
-            idcompany_id = event.vehicule_id.company_id.id
-
+            idcompany_id = event.vehicule_id.company_id
 
         schema = self.env['efund.accounting.schema'].search([
-            ('event_type', '=', event.event_type),
-            ('company_id', '=', idcompany_id),
-           #('active', '=', True)
+            ('event_type_id', '=', event.event_type_id),
+            ('company_id', '=', idcompany_id.id),
+            # ('active', '=', True)
         ], limit=1)
 
         if not schema:
-            raise UserError(_("Aucun schema pour %s") % event.event_type)
+            raise UserError(_("Aucun schema pour %s") % event.event_type_id)
 
         lines = []
 
         for rule in schema.line_ids:
-            amount = self._resolve_amount(event,rule.amount_type)
+            amount = self._resolve_amount(event, rule.amount_type)
 
             if not amount:
                 continue
@@ -59,23 +60,53 @@ class FundAccountingEngine(models.AbstractModel):
             if rule.use_analytic and analytic_account:
                 analytic_distribution = {str(analytic_account.id): 100.0}
 
+            # RÉSOLUTIONS DYNAMIQUE DU COMPTE
+            target_account = False
+
+            if rule.account_resolution_type == 'fixed':
+                target_account = rule.account_id
+
+            elif rule.account_resolution_type == 'instrument':
+
+                # RÉSOLUTION : On va chercher dans le dictionnaire payload
+                instrument_id = event.payload.get('instrument_id')
+
+                if not instrument_id:
+                    raise UserError(_("L'ID de l'instrument est manquant dans le payload de l'événement."))
+
+                # On récupère l'objet instrument pour appeler sa méthode de mapping
+                instrument = self.env['efund.vehicule.instrument.core'].browse(instrument_id)
+                _logger.info(f"**************** Instrument: {instrument.name}")
+
+                # On utilise la méthode de mapping chronologique
+                target_account = instrument.get_or_create_accounting_mapping(idcompany_id)
+
+            elif rule.account_resolution_type == 'liquidity':
+                # On récupère le compte de trésorerie lié au fonds/véhicule
+                target_account = event.vehicule_id.cash_account_id
+
+            if not target_account:
+                raise UserError(_("Impossible de déterminer le compte pour la ligne") )
+
             lines.append((0, 0, {
-                'account_id': rule.account_id.id,
+                'account_id': target_account.id,
                 'name': rule.label or event.reference,
                 'debit': amount if rule.side == 'debit' else 0,
                 'credit': amount if rule.side == 'credit' else 0,
-                'currency_id': event.vehicule_id.company_id.currency_id.id if event.vehicule_id.company_id else company_mandats.currency_id.id ,
+                'currency_id': event.vehicule_id.company_id.currency_id.id if event.vehicule_id.company_id else company_mandats.currency_id.id,
                 # Injection de la dimension analytique
                 'analytic_distribution': analytic_distribution if analytic_distribution else False,
             }))
 
-        #raise UserError(f"lines = {lines}")
-        #target_company = event.vehicule_id.company_id
-        target_company = self.env['res.company'].search([('id', '=', idcompany_id)], limit=1)
+        # raise UserError(f"lines = {lines}")
+        # target_company = event.vehicule_id.company_id
+        target_company = self.env['res.company'].search([('id', '=', idcompany_id.id)], limit=1)
+
+        _logger.info(f"**************** Company: {lines}")
 
         move = self.env['account.move'].sudo().with_company(target_company).create({
             'journal_id': schema.journal_id.id,
-            'company_id': idcompany_id,
+            'company_id': idcompany_id.id,
             'ref': event.reference,
             'line_ids': lines,
             'currency_id': event.vehicule_id.company_id.currency_id.id if event.vehicule_id.company_id else company_mandats.currency_id.id,
@@ -89,9 +120,6 @@ class FundAccountingEngine(models.AbstractModel):
         })
 
         return move
-
-
-
 
     """
     def generate_account_move(self, fund, operation_type, data_map, ref=None):

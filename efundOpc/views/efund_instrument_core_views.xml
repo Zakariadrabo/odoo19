@@ -83,17 +83,22 @@
                                     <field name="bond_type"/>
                                     <field name="issue_amount"/>
                                     <field name="face_value"/>
-                                    <field name="coupon_rate"/>
 
                                 </group>
                                 <group string="Dates Clés">
                                     <field name="issue_date"/>
                                     <field name="value_date"/>
                                     <field name="maturity_date"/>
+                                    <field name="settlement_mode"/>
                                 </group>
                             </group>
                             <group>
-                                <group>
+                                <group string="Taux">
+                                    <field name="coupon_rate"/>
+                                    <field name="tax_rate"/>
+                                    <field name="rate_net"/>
+                                </group>
+                                 <group string="Valorisation">
                                     <field name="is_listed" string="Instrument Coté"/>
                                     <field name="valuation_method" invisible="not is_listed"/>
                                 </group>

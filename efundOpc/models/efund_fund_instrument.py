@@ -41,7 +41,7 @@ class FundInstrument(models.Model):
     sector = fields.Selection([('agriculture', 'Agriculture'), ('industrie', 'Industrie'), ],
                               string="Secteur d'activités")
     state_issuer = fields.Boolean(string="Émis ou garanti par un État CEMAC")
-    issuer_id = fields.Many2one("efund.instrument.issuer", string="Émetteur",
+    issuer_id = fields.Many2one("efund.vehicule.instrument.issuer", string="Émetteur",
                                 help="Institution ou entreprise qui émet l'instrument financier.")
     market = fields.Selection([('brvm', 'BRVM'), ('bvmac', 'BVMAC'), ('other', 'Autre marché'), ],
                               string="Marché Principal", default='bvmac')

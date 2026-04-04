@@ -36,6 +36,7 @@
     <menuitem id="menu_investment_orders" name="Ordre de Bourse" parent="menu_execution_sub" action="action_efund_investment_order" sequence="10"/>
     <menuitem id="menu_investment_transactions" name="Transactions" parent="menu_execution_sub" action="action_efund_investment_transaction" sequence="15"/>
     <menuitem id="menu_portfolio_positions" name="Inventaire des Positions" parent="menu_execution_sub" action="action_fund_position_list" sequence="20"/>
+    <menuitem id="menu_instrument_core_price" name="Cours" parent="menu_execution_sub" action="action_instrument_core_price" sequence="21"/>
 
     <!-- Opérations de flux   -->
     <menuitem id="menu_flows_root" name="Opérations de Flux" parent="menu_fund_management_root" sequence="40"/>
@@ -57,6 +58,8 @@
     <menuitem id="menu_management_compagny" name="Société de gestion" parent="menu_ref_statique" action="action_efund_management_compagny" sequence="10"/>
     <menuitem id="menu_issuers" name="Émetteurs" parent="menu_ref_statique" action="action_efund_instrument_issuer" sequence="10"/>
     <menuitem id="menu_fund_type" name="Type de fonds"  parent="menu_ref_statique"  action="action_efund_fund_type" sequence="15"/>
+   <menuitem id="menu_efund_event_type" name="Types Evénements" parent="menu_ref_statique" action="action_efund_event_type"  sequence="16"/>
+    <menuitem id="menu_efund_config_holidays"  name="Jours Fériés"   parent="menu_ref_statique"   action="action_efund_public_holiday" sequence="17"/>
 
     <menuitem id="menu_asset_classes" name="Classes d'actifs" parent="menu_ref_statique" action="action_efund_asset_class" sequence="20"/>
     <menuitem id="menu_brokers" name="Sociétés de Bourse / Dépositaires" parent="menu_ref_statique" action="action_efund_depositaire" sequence="30"/>

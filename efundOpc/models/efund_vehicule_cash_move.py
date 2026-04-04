@@ -15,7 +15,7 @@ class EfundFundCashMove(models.Model):
     move_type = fields.Selection([('subscription_in', 'Entrée Souscription'),('redemption_out', 'Sortie Rachat'),
         ('deposit_in', 'Dépôt Investisseur'),('withdraw_out', 'Retrait Investisseur'),('investment_out', 'Investissement Actif'),
         ('divestment_in', 'Désinvestissement'),('fee_out', 'Frais de Gestion'),('broker_fee_out', 'Frais de Courtage'),('tax_fee_out', 'Taxes'),('dividend_in', 'Dividendes Reçus'),
-        ('coupon_in', 'Coupons Reçus'),('interest_in', 'Intérêts'),('transfer_in', 'Virement Entrant'),
+        ('coupon_in', 'Coupons Reçus'),('interest_in', 'Intérêts'),('interest_out', 'Intérêts'),('transfer_in', 'Virement Entrant'),
         ('transfer_out', 'Virement Sortant'),('other_out', 'Autre Opération'),], string="Type de Mouvement", required=True)
     amount = fields.Monetary(required=True,currency_field='currency_id')
     label = fields.Char(string="Libellé")

@@ -29,7 +29,8 @@ class FundInstrumentDAT(models.Model):
     interest_calculation_type = fields.Selection([('360', '360 jours (Standard)'), ('365', '365 jours')], default='360', string="Base de calcul")
     duration_days = fields.Integer(string="Durée (jours)", compute="_compute_duration", store=True)
     accrued_interest = fields.Monetary(string="Intérêts courus", compute="_compute_dat_interests")
-    tax_rate = fields.Float(string="Taux de TVA (%)", digits=(16, 4))
+    tax_rate = fields.Float(string="Taux de IRCM/IRVM (%)", digits=(16, 4))
+    interest_type = fields.Selection([('postpaid', 'Postpayé'), ('prepaid', 'Prépayé')], default='postpaid', string="Type d'intérêt")
 
     # champs ajoutés
     # Champs calculés
@@ -45,14 +46,6 @@ class FundInstrumentDAT(models.Model):
     last_calculation_date = fields.Date(string="Dernier calcul", readonly=True)
     transaction_count = fields.Integer(string="Transactions", compute="_compute_transaction_count")
 
-    interest_type = fields.Selection(
-        [
-            ('simple', 'Intérêt simple'),
-            ('compound', 'Intérêt composé'),
-        ],
-        default='simple',
-        required=True
-    )
 
     capitalization_frequency = fields.Selection(
         [

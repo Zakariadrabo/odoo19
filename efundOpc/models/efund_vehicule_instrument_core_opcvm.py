@@ -9,8 +9,7 @@ class FundInstrumentOpcvm(models.Model):
     currency_id = fields.Many2one(related='instrument_id.currency_id')
 
     opcvm_type = fields.Selection([('fcp', 'FCP (Fonds Commun de Placement)'), ('sicav', 'SICAV'), ], string="Nature juridique", required=True)
-    classification_amf = fields.Selection([('monetary', 'Monétaire'), ('bond', 'Obligataire'),('equity', 'Actions'), ('diversified', 'Diversifié'),
-    ], string="Classification", required=True)
+
 
     # Valorisation
     nav = fields.Float(string="Dernière VL", digits=(16, 6), help="Valeur Liquidative")

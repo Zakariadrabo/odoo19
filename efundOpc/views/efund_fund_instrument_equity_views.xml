@@ -85,6 +85,18 @@
                                 </group>
                             </group>
                         </page>
+                        <page string="Commission et Taxes">
+                            <field name="instrument_fee_ids" context="{'default_instrument_id': id}">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="fee_category"/>
+                                    <field name="calculation_method"/>
+                                    <field name="rate"/>
+                                    <field name="amount"/>
+                                    <field name="capitalizable"/>
+                                </list>
+                            </field>
+                        </page>
 
                         <!-- Onglet 2 : Dividendes -->
                         <page string="Dividendes">

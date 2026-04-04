@@ -6,7 +6,7 @@ class EfundPortfolioCashflow(models.Model):
     _description = 'Échéancier des flux de portefeuille'
 
     vehicule_id = fields.Many2one('efund.vehicule', string="Véhicule", readonly=True)
-    position_id = fields.Many2one('efund.vehicule.position', string="Position", ondelete='cascade')
+    position_id = fields.Many2one('efund.vehicule.portfolio', string="Position", ondelete='cascade')
     instrument_id = fields.Many2one('efund.vehicule.instrument.core', string="Instrument")
 
     date_scheduled = fields.Date(string="Date prévue")

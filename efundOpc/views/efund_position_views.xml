@@ -3,7 +3,7 @@
     <!-- Vue tree des positions -->
     <record id="view_efund_fund_position_list" model="ir.ui.view">
     <field name="name">efund.fund.position.list</field>
-    <field name="model">efund.vehicule.position</field>
+    <field name="model">efund.vehicule.portfolio</field>
     <field name="arch" type="xml">
         <list string="Positions du Portefeuille"
               decoration-success="unrealized_pl &gt; 0"
@@ -40,7 +40,7 @@
 
     <record id="view_efund_fund_position_form" model="ir.ui.view">
         <field name="name">efund.fund.position.form</field>
-        <field name="model">efund.vehicule.position</field>
+        <field name="model">efund.vehicule.portfolio</field>
         <field name="arch" type="xml">
             <form string="Position du Fonds" readonly="state == 'closed'">
                 <header>
