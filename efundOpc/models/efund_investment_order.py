@@ -819,6 +819,7 @@ class EfundInvestmentOrder(models.Model):
 
     def compute_accrued_interest_precise(self, nominal, annual_rate, last_coupon_date, settlement_date,
                                          frequency='annual', day_count='act/act', tax_rate=0.0):
+        self.ensure_one()
         """
         Calcule l'intérêt couru avec une base dynamique (Dernier Coupon - Prochain Coupon)
         """
@@ -837,7 +838,8 @@ class EfundInvestmentOrder(models.Model):
 
         # 2. Calcul des jours courus avec dénouement (J+3 ouvré)
         # Note: On part de la date de l'ordre, settlement_details nous donne la date de valeur
-        details = self.get_settlement_details(settlement_date, 0 if self.instrument_id.instrument_type in ('dat','opcvm') or self.instrument_id.settlement_mode !='direct' else 3)
+        days = 0 if (self.instrument_id.instrument_type in ('dat', 'opcvm') or self.instrument_id.settlement_mode == 'direct') else 3
+        details = self.get_settlement_details(settlement_date, days)
         final_settlement_date = details['settlement_date']
 
         # Nombre de jours entre le dernier coupon et la date de valeur réelle
