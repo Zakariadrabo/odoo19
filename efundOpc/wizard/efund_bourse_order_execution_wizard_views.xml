@@ -24,6 +24,7 @@
                         <field name="deposit_amount" widget="monetary"/>
                         <field name="negotiated_rate" widget="float"/>
                         <field name="interest_type"/>
+                        <field name="negotiated_rate_net" />
                         <field name="start_date"/>
                         <field name="maturity_date"/>
                     </group>

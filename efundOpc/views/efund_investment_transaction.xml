@@ -73,6 +73,7 @@
                                 <!-- Portefeuille et Instrument -->
                                 <field name="vehicule_id" readonly="1"/>
                                 <field name="instrument_id" readonly="1"/>
+                                <field name="operation_type" invisible="1"/>
 
                                 <!-- Dates -->
                                 <field name="date_transaction" string="Date de Transaction"/>
@@ -81,10 +82,15 @@
 
                             <group string="Détails Financiers">
                                 <!-- Quantité et Prix -->
-                                <field name="quantity" string="Quantité exécutée"/>
-                                <field name="price_unit" string="Prix d'exécution"/>
+                                <field name="quantity" string="Quantité exécutée" invisible="operation_type  == 'deposit'"/>
+                                <field name="price_unit" string="Prix d'exécution" invisible="operation_type  == 'deposit'"/>
+                                <field name="deposit_amount" string="Montant DAT" invisible="operation_type  != 'deposit'"/>
+                                <field name="negotiated_rate" string="taux DAT" invisible="operation_type  != 'deposit'"/>
+                                <field name="start_date" string="Début" invisible="operation_type  != 'deposit'"/>
+                                <field name="maturity_date" string="Maturité" invisible="operation_type  != 'deposit'"/>
+
                                 <!-- Frais -->
-                                <field name="total_amount_trade" string="Total transaction"/>
+                                <field name="total_amount_trade" string="Total transaction" invisible="operation_type  == 'deposit'"/>
                                 <field name="total_amount" string="Montant Net" readonly="1"/>
 
                                 <!-- Courtier -->

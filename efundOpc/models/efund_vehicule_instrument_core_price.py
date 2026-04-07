@@ -1,9 +1,10 @@
 # efund_vehicule_instrument_core_price.py
 import calendar
 import logging
+from math import ceil
 
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -74,8 +75,8 @@ class FundInstrumentPrice(models.Model):
             # --- CAS 2 : LES BONDS LISTÉS (Mise à jour automatique) ---
             elif pos.instrument_id.instrument_type == 'bond' and pos.instrument_id.valuation_method == 'listed':
                 trans_details = self.env['efund.investment.transaction'].search([
-                    ('instrument_id', '=', position.instrument_id.id),
-                    ('vehicule_id', '=', position.vehicule_id.id)], limit=1)
+                    ('instrument_id', '=', pos.instrument_id.id),
+                    ('vehicule_id', '=', pos.vehicule_id.id)], limit=1)
 
                 bond = self.env['efund.vehicule.instrument.core.bond'].search([ ('instrument_id', '=', pos.instrument_id.id),], limit=1)
                 if trans_details:
@@ -84,22 +85,23 @@ class FundInstrumentPrice(models.Model):
     def _generate_dat_price(self, position, target_date):
         """ Calcule le cours du DAT : Valeur nominale + intérêts linéarisés """
         # On récupère les détails du DAT (taux, date début)
-        trans_details = self.env['efund.investment.transaction'].search([
-            ('instrument_id', '=', position.instrument_id.id),
-            ('vehicule_id', '=', position.vehicule_id.id)], limit=1)
 
+        if target_date < position.value_date:
+            raise ValidationError(f"La date de calcul {target_date} est antérieure à la date de début du DAT{position.value_date}")
+        if target_date > position.maturity_date:
+            raise ValidationError(f"La date de calcul {target_date} est postérieure à la date de maturité du DAT{position.maturity_date}")
 
-        if trans_details and trans_details.start_date and trans_details.negotiated_rate_net:
-            days = (target_date - trans_details.start_date).days
+        if position and position.value_date and position.rate:
+            days = (target_date - position.value_date).days
             if days < 0: days = 0
 
             # Calcul du facteur de prix (Base 1)
             # Formule UMOA classique : 1 + (Taux * Jours / 360)
-            computed_factor = (trans_details.negotiated_rate_net / 100.0 * days / 365)
-            price_value = computed_factor * trans_details.total_amount
-            interest_value = computed_factor * trans_details.accrued_interest
+            computed_factor = (position.rate / 100.0 * days / 365)
+            #price_value = computed_factor * position.last_price
+            interest_value = computed_factor * position.last_price
 
-            self._update_or_create_price(trans_details.instrument_id,trans_details.vehicule_id, target_date, price_value, interest_value,'internal')
+            self._update_or_create_price(position.instrument_id,position.vehicule_id, target_date, position.last_price, interest_value,'internal')
 
     def _generate_listed_bond_price(self,trans_details, bond, target_date):
         """ Pour les bonds listés, si pas de prix aujourd'hui, on reprend le dernier connu """
@@ -164,13 +166,11 @@ class FundInstrumentPrice(models.Model):
             'vehicule_id': vehicule.id,
             'date': date,
             'price': val,
-            'interest': interest,
+            'interest': ceil(interest),
             'source': source,
             'is_validated': True,
             'price_type': 'close'
         }
-
-        _logger.info(f"*********** mise à jour")
 
         if price_rec:
             price_rec.write(vals)

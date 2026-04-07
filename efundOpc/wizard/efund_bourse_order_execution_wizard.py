@@ -47,6 +47,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
     # les données de DAT
     deposit_amount = fields.Monetary(string="Montant à placer", )
     negotiated_rate = fields.Float(string="Taux négocié (%)")
+    negotiated_rate_net = fields.Float(string="Taux négocié net (%)", compute='_compute_negotiated_rate_net', store=True)
     interest_type = fields.Selection([('postpaid', 'Postpayé'), ('prepaid', 'Prépayé')], default='postpaid',
                                      string="Type d'intérêt")
     maturity_date = fields.Date(string="Échéance prévue")
@@ -56,6 +57,12 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
     # ----------------------------------------------------
     # Contraintes
     # ----------------------------------------------------
+    @api.depends('negotiated_rate')
+    def _compute_negotiated_rate_net(self):
+        for rec in self:
+            rec.negotiated_rate_net = rec.negotiated_rate * (1 - rec.order_id.instrument_id.tax_rate / 100)
+            _logger.info(f"************* instrument : {rec.order_id.instrument_id.name} taux taxe {rec.order_id.instrument_id.tax_rate}, taux dat : {rec.negotiated_rate}")
+
     @api.onchange('executed_quantity')
     def _check_executed_quantity(self):
         if self.remaining_quantity < self.executed_quantity:
@@ -223,7 +230,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
             )
 
         # 1️⃣ Créer ligne d’exécution
-        res = self.order_id.get_settlement_details(self.execution_date)
+        res = self.order_id.get_settlement_details(self.execution_date,0 if self.order_id.instrument_id.instrument_type in ('dat','opcvm') or self.order_id.instrument_id.settlement_mode !='direct' else 3)
 
         exec_line = self.env['efund.investment.transaction'].create({
                 'order_id': self.order_id.id,
@@ -231,6 +238,11 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                 'date_settlement': res.get('settlement_date'),
                 'quantity': self.executed_quantity,
                 'price_unit': self.execution_price,
+                'start_date': self.start_date,
+                'maturity_date': self.maturity_date,
+                'negotiated_rate': self.negotiated_rate,
+                'negotiated_rate_net': self.negotiated_rate_net,
+                'deposit_amount': self.deposit_amount,
 
                 'total_courtage': self.total_courtage,
                 'total_tva': self.total_tva,

@@ -25,13 +25,13 @@ class FundPosition(models.Model):
     #market_value = fields.Monetary(string="Valeur de marché", compute='_compute_market_value', store=True, )
 
     # ========== INFORMATIONS DE COURS ==========
-    last_price = fields.Float(string="Dernier cours", digits=(16, 4), compute='_compute_last_price', store=True, )
+    last_price = fields.Float(string="Dernier cours", digits=(16, 4), store=True, )
     last_price_date = fields.Date(string="Date dernier cours", compute='_compute_last_price', store=True, )
     first_price = fields.Float(string="Premier cours", digits=(16, 4), store=True, )
     first_price_date = fields.Date(string="Date premier cours", default=fields.Date.today, store=True, )
 
     # ========== CALCULS DE PERFORMANCE ==========
-    unrealized_pl = fields.Monetary(string="Plus/Moins-value latente", currency_field='currency_id',
+    unrealized_pl = fields.Monetary(string="Différence d'estimation", currency_field='currency_id',
                                     compute='_compute_market_value', store=True, )
     unrealized_pl_percent = fields.Float(string="PL %", digits=(16, 2), compute='_compute_market_value', store=True, )
     decoration_state = fields.Selection([('normal', 'Normal'), ('success', 'Success'), ('danger', 'Danger')],
@@ -53,25 +53,79 @@ class FundPosition(models.Model):
     accrued_interest = fields.Monetary(string="Intérêts Courus", compute='_compute_market_value', store=True, help="Coupons courus non échus à la date de valorisation")
     # market_value devient la somme (Dirty Price)
     market_value = fields.Monetary(string="Valeur de Marché (Dirty)",compute='_compute_market_value',store=True)
+    maturity_date = fields.Date(string="Date de Maturité",)
+    days_to_maturity = fields.Integer(string="Jours à échéance", compute="_compute_days_to_maturity")
+    value_date = fields.Date(string="Date de valeur", store=True, index=True)
+    rate = fields.Float(string="Taux", store=True, index=True)
+
+    @api.depends('maturity_date')
+    def _compute_days_to_maturity(self):
+        today = fields.Date.today()
+        for rec in self:
+            if rec.maturity_date:
+                delta = rec.maturity_date - today
+                rec.days_to_maturity = max(0, delta.days)
+            else:
+                rec.days_to_maturity = 0
 
     def action_refresh_valuation(self):
         for record in self:
             # 1. Aller chercher le dernier prix VALIDÉ pour cet instrument
             last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
                 ('instrument_id', '=', record.instrument_id.id),
+                ('vehicule_id', '=', record.vehicule_id.id),
                 ('is_validated', '=', True),
                 ('date', '=', fields.Date.today())
             ], order='date desc', limit=1)
 
             if last_price_rec:
-                # 2. Mettre à jour la position avec le prix officiel
+                instr_type = record.instrument_id.instrument_type
+                # Calcul du Coût (Cost Basis)
+                cost_basis = record.quantity * (record.avg_cost or 0.0)
+                if instr_type == 'dat':
+                    # Pour un DAT, le coût est généralement le nominal (quantity)
+                    cost_basis = record.last_price
+                    market_value = record.last_price + last_price_rec.interest
+                else:
+                    market_value = (record.quantity * last_price_rec.price) + last_price_rec.interest
+
+                # Calcul de la Plus-value latente (P/L)
+                unrealized_pl = market_value - cost_basis
+                pl_percent = (unrealized_pl / cost_basis) if cost_basis != 0 else 0.0
+
+                # 2. Mise à jour de la position
                 record.write({
                     'last_price': last_price_rec.price,
                     'last_price_date': last_price_rec.date,
                     'accrued_interest': last_price_rec.interest,
+                    'market_value': market_value,
+                    'unrealized_pl': unrealized_pl,
+                    'unrealized_pl_percent': pl_percent,
+                })
+            else:
+                # Correction : l'appel du cron doit se faire sur l'instrument
+                # car last_price_rec est vide ici
+                record.instrument_id.cron_generate_daily_prices()
+
+                """
+                
+                
+                # 2. Mettre à jour la position avec le prix officiel
+                cost_basis = record.quantity * (record.avg_cost or 0.0) if last_price_rec.instrument_id.instrument_type != 'dat' else last_price_rec.price
+                market_value = last_price_rec.price + last_price_rec.interest if last_price_rec.instrument_id.instrument_type == 'dat' else record.quantity * last_price_rec.price + last_price_rec.interest,
+                unrealized_pl = market_value - cost_basis
+                record.write({
+                    'last_price': last_price_rec.price,
+                    'last_price_date': last_price_rec.date,
+                    'accrued_interest': last_price_rec.interest,
+                    'market_value': last_price_rec.price + last_price_rec.interest if record.instrument_id.instrument_type == 'dat' else record.quantity * last_price_rec.price + last_price_rec.interest
+                    'unrealized_pl' : unrealized_pl,
+                    'unrealized_pl_percent': unrealized_pl / cost_basis if cost_basis != 0 else 0.0,
                 })
             else:
                 last_price_rec.cron_generate_daily_prices()
+                
+                """
 
 
     @api.depends('quantity', 'last_price', 'instrument_id', 'last_price_date')
@@ -140,19 +194,24 @@ class FundPosition(models.Model):
         for rec in self:
             # 1. Calcul de la valeur de marché (Dirty Price)
             # On utilise la somme calculée par _compute_valuation_details
-            market_value = rec.market_value + rec.accrued_interest or 0.0
+
+            market_value = 0
+            _logger.info(f"********Market value for {rec.id}: {rec.last_price_date} - {rec.last_price} - {rec.accrued_interest}")
+            if rec.instrument_id.instrument_type == 'dat':
+                # Pour le DAT : Valeur = Capital (quantity) + Intérêts cumulés
+                market_value = rec.last_price + (rec.accrued_interest or 0.0)
+
 
             # Sécurité : si market_value n'est pas encore calculé, on fait un calcul simple
-            if not market_value and rec.quantity and rec.last_price:
+            if rec.instrument_id.instrument_type != 'dat':
                 market_value = rec.quantity * rec.last_price + rec.accrued_interest
-
-            rec.market_value = market_value
+                rec.market_value = market_value
 
             # 2. Calcul du coût de revient total
-            cost_basis = rec.quantity * (rec.avg_cost or 0.0)
+            cost_basis = rec.quantity * (rec.avg_cost or 0.0) if rec.instrument_id.instrument_type != 'dat' else rec.last_price
 
             # 3. Calcul de la plus-value latente (Unrealized P&L)
-            if rec.quantity > 0:
+            if cost_basis > 0:
                 rec.unrealized_pl = market_value - cost_basis
                 # Calcul du pourcentage
                 if cost_basis != 0:
@@ -210,6 +269,13 @@ class FundPosition(models.Model):
 
         Q_old = self.quantity
         PRU_old = self.avg_cost or 0.0
+        self.value_date = trade.date_settlement
+
+        if trade.order_id.operation_type == 'deposit':
+           self.last_price = trade.total_amount
+           self.maturity_date = trade.maturity_date
+           self.rate = trade.negotiated_rate_net
+
 
         if trade.move_type == 'in':
             cost_old = Q_old * PRU_old
@@ -265,13 +331,13 @@ class FundPosition(models.Model):
                 ], order='date desc', limit=1)
 
                 if last_price:
-                    pos.last_price = last_price.price
+                    #pos.last_price = last_price.price
                     pos.last_price_date = last_price.date
                 else:
-                    pos.last_price = 0.0
+                    #pos.last_price = 0.0
                     pos.last_price_date = False
             else:
-                pos.last_price = 0.0
+                #pos.last_price = 0.0
                 pos.last_price_date = False
 
     @api.depends('vehicule_id', 'instrument_id', 'last_price_date')

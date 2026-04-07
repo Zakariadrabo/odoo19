@@ -17,6 +17,7 @@ class EfundInvestmentTransaction(models.Model):
     vehicule_id = fields.Many2one(related='order_id.vehicule_id', store=True)
     currency_id = fields.Many2one(related='vehicule_id.currency_id', store=True)
     instrument_id = fields.Many2one(related='order_id.instrument_id', store=True)
+    operation_type = fields.Selection(related='order_id.operation_type',store=True)
 
     date_transaction = fields.Datetime(string="Date de transaction", default=fields.Datetime.now)
     date_settlement = fields.Date(string="Date de Règlement/Livraison", help="Date théorique dénouement (ex: T+2)")
@@ -46,7 +47,7 @@ class EfundInvestmentTransaction(models.Model):
     # Valeur DAT
     deposit_amount = fields.Monetary(string="Montant à placer", )
     negotiated_rate = fields.Float(string="Taux négocié (%)")
-    interest_type = fields.Selection([('postpaid', 'Postpayé'), ('prepaid', 'Prépayé')], default='postpaid',string="Type d'intérêt")
+    interest_type = fields.Selection([('postpaid', 'Post-compté'), ('prepaid', 'Précompté')], default='postpaid',string="Type d'intérêt")
     negotiated_rate_net = fields.Float(string="Taux négocié net (%)")
     maturity_date = fields.Date(string="Échéance prévue")
     start_date = fields.Date(string="Date de début")
@@ -92,14 +93,54 @@ class EfundInvestmentTransaction(models.Model):
             }
         }
 
+    def build_event_payload_dat(self):
+
+        self.ensure_one()
+
+        event_type_id = self.env['efund.event.type'].search([('sigle', '=', 'DAT_EXECUTED')], limit=1)
+
+        return {
+            'event_type_id': event_type_id.id,
+            'vehicule_id': self.vehicule_id.id,
+            'reference': self.name,
+            'event_date': self.date_transaction,
+            'state': 'draft',
+
+            'payload': {
+                'instrument_id': self.instrument_id.id,
+                'gross': self.total_amount,
+            }
+        }
+
+    def build_event_payload_opcvm(self):
+
+        self.ensure_one()
+
+        event_type_id = self.env['efund.event.type'].search([('sigle', '=', 'OPC_EXECUTED')], limit=1)
+
+        return {
+            'event_type_id': event_type_id.id,
+            'vehicule_id': self.vehicule_id.id,
+            'reference': self.name,
+            'event_date': self.date_transaction,
+            'state': 'draft',
+
+            'payload': {
+                'instrument_id': self.instrument_id.id,
+                'gross': self.total_amount,
+                'qte': self.quantity,
+            }
+        }
+
     def action_confirm_settlement(self):
         """Déclencheur principal du dénouement"""
         # Ajouter ici la logique de comptabilisation
         for rec in self:
-            if rec.quantity <= 0:
-                raise UserError(_("La quantité doit être supérieure à 0 pour confirmer la ligne."))
-            if rec.price_unit <= 0:
-                raise UserError(_("Le prix doit être supérieur à 0 pour confirmer la ligne."))
+            if rec.operation_type != 'deposit':
+                if rec.quantity <= 0:
+                    raise UserError(_("La quantité doit être supérieure à 0 pour confirmer la ligne."))
+                if rec.price_unit <= 0:
+                    raise UserError(_("Le prix doit être supérieur à 0 pour confirmer la ligne."))
 
 
             # 2. Création d'évenement et écriture comptable
@@ -149,11 +190,12 @@ class EfundInvestmentTransaction(models.Model):
                 if rec.order_id.direction_opcvm == 'redemption':
                     direction = 'sell'
 
+
             # 1- debit ou credit de l'achat ou de la vente
             vehicule_move_trans = self.env['efund.vehicule.cash.move'].create({
                 'name': self.env['ir.sequence'].next_by_code('efund.vehicule.cash.move'),
                 'vehicule_cash_id': vehicule_cash.id,
-                'amount': rec.quantity * rec.price_unit,
+                'amount': rec.quantity * rec.price_unit if rec.order_id.instrument_type !='deposit' else rec.deposit_amount,
                 'move_type': 'investment_out' if direction == 'buy' else 'divestment_in',
                 'liquidity_type': 'liquid',
                 'label': rec.label,
@@ -193,7 +235,7 @@ class EfundInvestmentTransaction(models.Model):
                 )
 
             vehicule_move_interest = self.env['efund.vehicule.cash.move']
-            if rec.total_interest > 0:
+            if rec.total_interest > 0 and rec.order_id.instrument_type !='deposit':
                 vehicule_move_broker.create({
                     'name': self.env['ir.sequence'].next_by_code('efund.vehicule.cash.move'),
                     'vehicule_cash_id': vehicule_cash.id,

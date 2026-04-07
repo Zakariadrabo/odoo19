@@ -29,8 +29,9 @@ class FundInstrumentDAT(models.Model):
     interest_calculation_type = fields.Selection([('360', '360 jours (Standard)'), ('365', '365 jours')], default='360', string="Base de calcul")
     duration_days = fields.Integer(string="Durée (jours)", compute="_compute_duration", store=True)
     accrued_interest = fields.Monetary(string="Intérêts courus", compute="_compute_dat_interests")
-    tax_rate = fields.Float(string="Taux de IRCM/IRVM (%)", digits=(16, 4))
-    interest_type = fields.Selection([('postpaid', 'Postpayé'), ('prepaid', 'Prépayé')], default='postpaid', string="Type d'intérêt")
+    #tax_rate = fields.Float(string="Taux de IRCM/IRVM (%)", digits=(16, 4))
+    rate_vat = fields.Float(string="Taux Net (%)", digits=(16, 4), compute="_compute_rate_vat", store=True)
+    interest_type = fields.Selection([('postpaid', 'Post-compté'), ('prepaid', 'Précompté')], default='postpaid', string="Type d'intérêt")
 
     # champs ajoutés
     # Champs calculés
@@ -63,7 +64,10 @@ class FundInstrumentDAT(models.Model):
     early_withdrawal_penalty_rate = fields.Float(string='Pénalité sortie anticipée (%)')
     liquidity_level = fields.Selection([('high', 'Haute'),('medium', 'Moyenne'),('low', 'Faible'),], default='medium')
 
-
+    @api.depends('interest_rate', 'tax_rate')
+    def _compute_rate_vat(self):
+        for rec in self:
+            rec.rate_vat = rec.interest_rate * (1 - rec.tax_rate / 100)
 
     @api.depends('start_date', 'end_date')
     def _compute_duration(self):

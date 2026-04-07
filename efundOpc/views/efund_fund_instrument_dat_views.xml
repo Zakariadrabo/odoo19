@@ -99,7 +99,8 @@
                                     <field name="amount_deposit"/>
                                     <field name="interest_rate" digits="[16, 4]"/>
                                     <field name="interest_type"/>
-                                    <field name="tax_rate" digits="[16, 4]" string="TVA %"/>
+                                    <field name="tax_rate" digits="[16, 4]" string="IRCM/IRVM %"/>
+                                    <field name="rate_vat" digits="[16, 4]" string="Taux Net %"/>
                                     <field name="interest_calculation_type"/>
                                     <field name="daily_interest_rate" string="Taux journalier" widget="percentage" digits="[16, 6]" readonly="1"/>
                                 </group>

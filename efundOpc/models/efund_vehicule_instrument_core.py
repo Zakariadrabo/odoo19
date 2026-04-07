@@ -26,7 +26,7 @@ class FundInstrument(models.Model):
     valuation_method = fields.Selection([('market', 'Au marché'), ('listed', 'Cours Lissé')], string="Valorisation")
     #valuation_type = fields.Selection([('actuarial', 'Actuarielle'), ('linear', 'Linéaire')])
 
-    tax_rate = fields.Float("Taux IRVM/IRCM (%)", default=6.0)
+    tax_rate = fields.Float("Taux IRVM/IRCM (%)",)
     is_tax_exempt = fields.Boolean("Exonéré d'impôt", default=False)
     settlement_mode = fields.Selection([ ('market', 'Dénouement de Marché (J+X)'), ('direct', 'Direct / Sans dénouement (DAT, Billet)')
     ], string="Mode de règlement", default='market')

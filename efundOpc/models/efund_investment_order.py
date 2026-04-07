@@ -712,37 +712,51 @@ class EfundInvestmentOrder(models.Model):
     from dateutil.relativedelta import relativedelta
     from datetime import timedelta
 
-    def get_settlement_details(self, purchase_date, days_to_add=3):
+    def get_settlement_details(self, purchase_date, days_to_add):
         """
         Calcule la date de dénouement et le nombre de jours calendaires.
         Purchase_date: Date d'achat (J)
         days_to_add: 3 jours ouvrés
         """
         current_date = purchase_date
-        working_days_counted = 0
+        if days_to_add == 0:
+            while True:
+                # 1. Test Weekend (5=Samedi, 6=Dimanche)
+                if current_date.weekday() >= 5:
+                    current_date += timedelta(days=1)
+                    continue
 
-        # On boucle jusqu'à trouver le 3ème jour ouvré
-        while working_days_counted < days_to_add:
-            current_date += timedelta(days=1)
+                # 2. Test Jours Fériés
+                is_holiday = self.env['efund.public.holiday'].search_count([
+                    ('holiday_date', '=', current_date),
+                ])
+                if is_holiday:
+                    current_date += timedelta(days=1)
+                    continue
 
-            # 1. Test Weekend (5=Samedi, 6=Dimanche)
-            if current_date.weekday() >= 5:
-                continue
+                # Si on arrive ici, c'est un jour ouvré valide
+                break
 
-            # 2. Test Jours Fériés (votre modèle efund.public.holiday)
-            is_holiday = self.env['efund.public.holiday'].search_count([
-                ('holiday_date', '=', current_date),
-            ])
-            if is_holiday:
-                continue
+            # Cas standard : dénouement différé (ex: T+3)
+        else:
+            working_days_counted = 0
+            while working_days_counted < days_to_add:
+                current_date += timedelta(days=1)
 
-            # Si c'est un jour valide, on incrémente
-            working_days_counted += 1
+                # Test Weekend
+                if current_date.weekday() >= 5:
+                    continue
 
-        # Date de dénouement trouvée
+                # Test Jours Fériés
+                is_holiday = self.env['efund.public.holiday'].search_count([
+                    ('holiday_date', '=', current_date),
+                ])
+                if is_holiday:
+                    continue
+
+                working_days_counted += 1
+
         settlement_date = current_date
-
-        # Calcul du nombre de jours calendaires réels (le Delta pour les intérêts)
         calendar_days = (settlement_date - purchase_date).days
 
         return {
@@ -788,7 +802,7 @@ class EfundInvestmentOrder(models.Model):
         # Formule : (Nominal * Taux) * (Jours / Base)
         # Note : La fréquence est implicitement gérée par le ratio jours/base
         # ajout du nombre de jour avant le dénouement
-        nbjour_denouement = self.get_settlement_details(settlement_date)
+        nbjour_denouement = self.get_settlement_details(settlement_date,0 if self.instrument_id.instrument_type in ('dat','opcvm') or self.instrument_id.settlement_mode !='direct' else 3)
         nb_days_to_add = nbjour_denouement['calendar_days']
         interest_gross = (nominal * (annual_rate / 100.0)) * ((days + nb_days_to_add) / year_base)
 
@@ -823,7 +837,7 @@ class EfundInvestmentOrder(models.Model):
 
         # 2. Calcul des jours courus avec dénouement (J+3 ouvré)
         # Note: On part de la date de l'ordre, settlement_details nous donne la date de valeur
-        details = self.get_settlement_details(settlement_date)
+        details = self.get_settlement_details(settlement_date, 0 if self.instrument_id.instrument_type in ('dat','opcvm') or self.instrument_id.settlement_mode !='direct' else 3)
         final_settlement_date = details['settlement_date']
 
         # Nombre de jours entre le dernier coupon et la date de valeur réelle
@@ -844,7 +858,7 @@ class EfundInvestmentOrder(models.Model):
 
         # 4. Calcul de l'intérêt BRUT
         # Formule : Nominal * Taux Annuel * (Jours Courus / Base Dynamique)
-        nbjour_denouement = self.get_settlement_details(settlement_date)
+        nbjour_denouement = self.get_settlement_details(settlement_date,0 if self.instrument_id.instrument_type in ('dat','opcvm') or self.instrument_id.settlement_mode !='direct' else 3)
         nb_days_to_add = nbjour_denouement['calendar_days']
 
         taux_reel = (1 - (tax_rate / 100.0)) * annual_rate
