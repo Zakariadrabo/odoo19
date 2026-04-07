@@ -513,10 +513,10 @@ class EfundInvestmentOrder(models.Model):
                     bond = self.env['efund.vehicule.instrument.core.bond'].search(
                         [('instrument_id', '=', rec.instrument_id.id), ])
                     if bond:
-                        last_coupon = self._get_actual_last_coupon_date(bond.coupon_frequency, bond.value_date,
+                        last_coupon = rec._get_actual_last_coupon_date(bond.coupon_frequency, bond.value_date,
                                                                         rec.order_date)
 
-                        res = self.compute_accrued_interest_precise(bond.face_value, bond.coupon_rate, last_coupon,
+                        res = rec.compute_accrued_interest_precise(bond.face_value, bond.coupon_rate, last_coupon,
                                                                     rec.order_date, bond.coupon_frequency, 'act/act',
                                                                     tx_irvm if tx_irvm > 0 else 0)
                         nbjours = res.get("days")
