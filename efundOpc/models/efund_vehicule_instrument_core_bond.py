@@ -27,8 +27,8 @@ class FundInstrumentBond(models.Model):
     coupon_rate = fields.Float(string="Taux du Coupon (%)")
     rate_net = fields.Float(string="Taux net (%)", compute='_compute_rate_net', store=True)
     maturity_date = fields.Date(string="Échéance")
-    remaining_date_to_maturity = fields.Char(string="Jours restants à la maturité",  compute="_compute_days_to_next_coupon",store=False)
-    remaining_date_to_coupon = fields.Char(string="Jours restants au prochain coupon", compute="_compute_days_to_next_coupon",store=False)
+    remaining_date_to_maturity = fields.Char(string="Jours restants à la maturité", store=False)
+    remaining_date_to_coupon = fields.Char(string="Jours restants au prochain coupon", store=False)
     coupon_frequency = fields.Selection( [('annual', 'Annuel'), ('semi_annual', 'Semestriel'), ('quarterly', 'Trimestriel'),
          ('monthly', 'Mensuel'), ('at_maturity', 'A Maturité'), ], string='Fréquence', default='annual', )
     coupon_calculation_date = fields.Date(string='Date dernier calcul des coupons', default=fields.Date.today, help="Date du dernier calcul des coupons")
@@ -146,20 +146,22 @@ class FundInstrumentBond(models.Model):
     @api.depends('maturity_date')
     def _compute_days_to_next_coupon(self):
         for rec in self:
-            serviceEngine = self.env['efund.service']
-            res = serviceEngine.get_coupon_period(
-                order_date= date.today(),
-                maturity_date=rec.maturity_date,
-                frequency=1)
-            today = date.today()
+            if not rec.maturity_date:
+                serviceEngine = self.env['efund.service']
+                res = serviceEngine.get_coupon_period(
+                    order_date= date.today(),
+                    maturity_date=rec.maturity_date,
+                    frequency=1)
+                today = date.today()
+                _logger.info(f"*********** valeur {res.get('next_coupon')}")
 
-            if not res:
-                if res.get('next_coupon'):
-                    result = rec.date_diff_ymd(today, res.get('next_coupon') )
-                    result1 = rec.date_diff_ymd(today, rec.maturity_date)
+                if not res:
+                    if res.get('next_coupon'):
+                        result = rec.date_diff_ymd(today, res.get('next_coupon') )
+                        result1 = rec.date_diff_ymd(today, rec.maturity_date)
 
-                    rec.remaining_date_to_coupon = f"{result.get('years')} ans {result.get('months')} mois {result.get('days')} jours"
-                    rec.remaining_date_to_maturity = f"{result1.get('years')} ans {result1.get('months')} mois {result1.get('days')} jours"
+                        rec.remaining_date_to_coupon = f"{result.get('years')} ans {result.get('months')} mois {result.get('days')} jours"
+                        rec.remaining_date_to_maturity = f"{result1.get('years')} ans {result1.get('months')} mois {result1.get('days')} jours"
 
     def action_compute_coupons(self):
         self.ensure_one()
