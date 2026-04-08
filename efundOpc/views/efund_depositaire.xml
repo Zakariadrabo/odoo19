@@ -9,6 +9,8 @@
                 <field name="sigle"/>
                 <field name="name"/>
                 <field name="forme_juridique"/>
+                <field name="account_cash"/>
+                <field name="account_part"/>
                 <field name="country_id"/>
             </list>
         </field>
@@ -43,6 +45,17 @@
                         <group string="Localisation">
                             <field name="forme_juridique"/>
                             <field name="country_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="type_depositaire" widget="radio" options="{'horizontal': true}"/>
+                    </group>
+                    <group invisible="type_depositaire != 'depositaire'">
+                        <group string="Compte espèce">
+                            <field name="account_cash"/>
+                        </group>
+                        <group string="Compte titre">
+                            <field name="account_part"/>
                         </group>
                     </group>
                 </sheet>

@@ -109,7 +109,7 @@
                                             <field name="total_amount_trade"/>
                                         </span>
                                     </div>
-                                    <div class="col-6">
+                                    <div class="col-6" invisible="operation_type == 'opcvm'">
                                         <strong>Frais totaux :</strong>
                                         <span class="float-end"><strong> Intérêt Brut : </strong><field name="total_interet_brut" string="Intérêt brut"/></span>
                                              <span class="float-end"><strong>IVRM : </strong><field name="total_irvm" string="IRVM"/></span>

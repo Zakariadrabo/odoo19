@@ -20,7 +20,7 @@ class BondAmortization(models.Model):
     closing_principal = fields.Monetary(string="Restant",)
     currency_id = fields.Many2one(related="bond_id.currency_id", store=True, readonly=True)
     total_payment = fields.Monetary( string="Paiement total",compute="_compute_total_payment",store=True)
-    amortization_type = fields.Selection([('in_fine', "In Fine (Bullet)"), ('constant_annuity', "Annuités Constantes"),
+    amortization_type = fields.Selection([('in_fine', "In Fine"), ('constant_annuity', "Annuités Constantes"),
                                           ('constant_principal', "Amortissement Constant"),
                                           ('custom_schedule', "Échéancier Personnalisé"),
                                           ], string="Type d'Amortissement", default="in_fine")

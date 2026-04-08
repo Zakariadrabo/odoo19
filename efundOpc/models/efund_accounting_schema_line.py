@@ -15,7 +15,7 @@ class FundAccountingSchemaLine(models.Model):
     side = fields.Selection([('debit', 'Debit'),('credit', 'Credit')], string="Sens", required=True)
     amount_type = fields.Selection([('gross', 'Montant Brut'),('net', 'Montant Net'),('fees', 'Frais/Commissions'),
                                     ('capital_init','Souscription Exercice'),('non_distribuable','Sommes Non Distribuables'),
-                                    ('res_anterieurs','Résultat Antérieur'),('res_clos','Résultat Clos'),
+                                    ('res_anterieurs','Résultat Antérieur'),('res_clos','Résultat Clos'),('interest','Intérêt couru'),
                                     ('res_en_cours','Résultat En Cours'),('entry_load','Droit entrée'),('exit_load','Droit sortie'),('reliquat','Reliquat'),
         ('capital', 'Part Capital'),('income', 'Part Revenu'),('tax', 'Taxes/Prélèvements'),], string="Source du Montant", required=True)
     label = fields.Char(help="Libellé de la ligne")

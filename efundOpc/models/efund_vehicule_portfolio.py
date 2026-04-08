@@ -78,6 +78,15 @@ class FundPosition(models.Model):
                 ('date', '=', fields.Date.today())
             ], order='date desc', limit=1)
 
+            # 2. Repli (Fallback) : Cours global (ex: Action BRVM)
+            if not last_price_rec:
+                last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+                    ('instrument_id', '=', record.instrument_id.id),
+                    ('vehicule_id', '=', False),
+                    ('is_validated', '=', True),
+                    ('date', '=', fields.Date.today())
+                ], order='date desc', limit=1)
+
             if last_price_rec:
                 instr_type = record.instrument_id.instrument_type
                 # Calcul du Coût (Cost Basis)
@@ -105,7 +114,8 @@ class FundPosition(models.Model):
             else:
                 # Correction : l'appel du cron doit se faire sur l'instrument
                 # car last_price_rec est vide ici
-                record.instrument_id.cron_generate_daily_prices()
+                #record.instrument_id.cron_generate_daily_prices()
+                last_price_rec.cron_generate_daily_prices()
 
                 """
                 

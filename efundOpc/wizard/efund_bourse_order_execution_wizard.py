@@ -39,7 +39,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
     total_transaction = fields.Monetary(string="Total Transaction", compute='_compute_accrured_interest', inverse='_inverse_nav', store=True)
     total_fees = fields.Monetary(string="Total Frais courtage", compute='_compute_accrured_interest',
                                  inverse='_inverse_nav', store=True)
-    total_amount_trade = fields.Monetary(compute='_compute_accrured_interest',  string='Total HT', store=True)
+    total_amount_trade = fields.Monetary(string='Total HT', store=True)
 
     total_interest = fields.Monetary(string="Intérêts courus net", compute='_compute_accrured_interest', inverse='_inverse_nav', store=True)
     total_amount = fields.Monetary(string="Total TTC", compute='_compute_accrured_interest', inverse='_inverse_nav', store=True)
@@ -48,15 +48,43 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
     deposit_amount = fields.Monetary(string="Montant à placer", )
     negotiated_rate = fields.Float(string="Taux négocié (%)")
     negotiated_rate_net = fields.Float(string="Taux négocié net (%)", compute='_compute_negotiated_rate_net', store=True)
-    interest_type = fields.Selection([('postpaid', 'Postpayé'), ('prepaid', 'Prépayé')], default='postpaid',
-                                     string="Type d'intérêt")
+    interest_type = fields.Selection([('postpaid', 'Postpayé'), ('prepaid', 'Prépayé')], default='postpaid', string="Type d'intérêt")
     maturity_date = fields.Date(string="Échéance prévue")
     start_date = fields.Date(string="Date de début")
+
+    # les données de opcvm
+    amount_type = fields.Selection([('amount', 'Montant'), ('unit', 'Nombre de parts')], string='Type', default='amount')
+    order_amount = fields.Monetary(string="Montant brut souhaité", store=True)
+    nav = fields.Float(string="VL", compute='_compute_nav', inverse='_inverse_nav', store=True, readonly=False,digits=(16, 6))
+    nav_date_expected = fields.Date(string="Date de VL cible", help="Date de la VL qui sera appliquée")
+    units_estimated = fields.Float(string="Parts estimées", store=True)
+    direction_opcvm = fields.Selection([('subscription', 'Souscription'), ('redemption', 'Rachat')], string="Sens")
 
 
     # ----------------------------------------------------
     # Contraintes
     # ----------------------------------------------------
+    @api.onchange('amount_type', 'order_amount', 'units_estimated', 'nav')
+    def _onchange_order_calculations(self):
+        for rec in self:
+            if not rec.nav or rec.nav <= 0:
+                return
+
+            if rec.amount_type == 'amount':
+                # Si on saisit le montant, on calcule les parts
+                rec.units_estimated = rec.order_amount / rec.nav
+                rec.total_amount = round(rec.units_estimated * rec.nav)
+                rec.total_amount_trade = round(rec.units_estimated * rec.nav)
+                rec.executed_quantity = rec.units_estimated
+                rec.execution_price = rec.nav
+            elif rec.amount_type == 'unit':
+                # Si on saisit les parts, on calcule le montant
+                rec.order_amount = rec.units_estimated * rec.nav
+                rec.total_amount = round(rec.units_estimated * rec.nav)
+                rec.total_amount_trade = round(rec.units_estimated * rec.nav)
+                rec.execution_price = rec.nav
+                rec.executed_quantity = rec.units_estimated
+
     @api.depends('negotiated_rate')
     def _compute_negotiated_rate_net(self):
         for rec in self:
@@ -73,7 +101,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
 
 
     @api.depends('execution_date','execution_price','executed_quantity','order_id.order_date', 'order_id.limit_price', 'order_id.quantity', 'order_id.deposit_amount', 'order_id.negotiated_rate', 'order_id.interest_type',
-                 'order_id.maturity_date', 'order_id.start_date', 'order_id.order_amount', 'order_id.nav', 'order_id.direction','deposit_amount', 'negotiated_rate', 'interest_type',)
+                 'order_id.maturity_date', 'order_id.start_date', 'order_id.order_amount', 'order_id.nav', 'order_id.direction','deposit_amount', 'negotiated_rate', 'interest_type', 'order_id.units_estimated')
     def _compute_accrured_interest(self):
         for rec in self:
             tx_courtage = 0
@@ -193,6 +221,9 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
             if rec.order_id.operation_type == 'opcvm':
                 rec.total_amount_trade = rec.executed_quantity * rec.execution_price
                 rec.total_amount = rec.total_amount_trade
+                rec.total_interest = 0
+                rec.total_irvm  = 0
+                rec.total_interet_brut = 0
 
     @api.constrains('executed_quantity')
     def _check_executed_quantity_depend(self):
@@ -256,6 +287,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                 'total_transaction': self.total_amount_trade,
                 'total_fees': self.total_fees,
                 'total_amount': self.total_amount,
+                'total_commission': self.total_commission,
 
                 'move_type': 'out' if self.direction in ('souscription', 'achat') else 'in',
                 'label': f" Exécution de l'ordre N° {self.order_id.name} de {self.direction} de l'instrument {self.order_id.instrument_id.name} - Monstant : {self.free_tax_amount} francs",
@@ -291,3 +323,19 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
             )
 
         return {'type': 'ir.actions.act_window_close'}
+
+    @api.depends('order_id.instrument_id', 'order_id.operation_type')
+    def _compute_nav(self):
+        for rec in self:
+            if rec.order_id.operation_type == 'opcvm' and rec.order_id.instrument_id:
+                opcvm = self.env['efund.vehicule.instrument.core.opcvm'].search(
+                    [('instrument_id', '=', rec.order_id.instrument_id.id)], limit=1)
+                if opcvm:
+                    if hasattr(opcvm, 'nav'):
+                        rec.nav = opcvm.nav
+                    else:
+                        rec.nav = 0.0
+
+    def _inverse_nav(self):
+        """ Cette méthode est vide mais nécessaire pour autoriser la saisie manuelle sur un champ compute """
+        pass

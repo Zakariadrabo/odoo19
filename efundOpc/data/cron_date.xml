@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="ir_cron_update_portfolio_days" model="ir.cron">
+        <field name="name">Portfolio: Update Days to Maturity</field>
+        <field name="model_id" ref="model_efund_vehicule_portfolio"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_update_maturity_days()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="nextcall" eval="(datetime.now() + relativedelta(days=1)).strftime('%Y-%m-%d 00:01:00')"/>
+    </record>
+</odoo>

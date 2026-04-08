@@ -16,10 +16,8 @@ class FundInvestor(models.Model):
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "id desc"
 
-    partner_id = fields.Many2one('res.partner', string="Partner", required=False, ondelete='cascade',
-                                 domain="[('is_investor', '=', True)]", )
+    partner_id = fields.Many2one('res.partner', string="Partner", required=False, ondelete='cascade',domain="[('is_investor', '=', True)]", )
     company_id = fields.Many2one('res.company', string="Context Company (Fund)", index=True)
-
     # store the name for easier reading (populated from partner)
     name = fields.Char(related="partner_id.name", store=True, readonly=True)
 
@@ -251,6 +249,8 @@ class FundInvestor(models.Model):
                                         ('industry', 'Industrie & Transport'), ('agri', 'Agro-industrie'),
                                         ('public', 'Services Publics'),
                                         ('other', 'Autre')], string="Secteur d'activité")
+    main_activity_countries = fields.Many2many("res.country", "efund_company_activity_country_rel", "investor_id",
+                                               "country_id", string="Pays principal d’activité")
     """
     registration_country_id = fields.Many2one("res.country", string="Pays d’immatriculation")
     company_duration_years = fields.Integer(string="Durée de la société (ans)")
@@ -258,8 +258,7 @@ class FundInvestor(models.Model):
     
     website = fields.Char(string="Site internet")
    
-    main_activity_countries = fields.Many2many("res.country", "efund_company_activity_country_rel", "investor_id",
-                                               "country_id", string="Pays principal d’activité")
+   
 
     # --- Informations financières PM ---
     annual_turnover_range = fields.Selection(

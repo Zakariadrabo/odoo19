@@ -1,6 +1,7 @@
 # efund_vehicule_instrument_core_price.py
 import calendar
 import logging
+from email.policy import default
 from math import ceil
 
 from odoo import models, fields, api, _
@@ -45,10 +46,10 @@ class FundInstrumentPrice(models.Model):
     _rec_name = "display_name"
 
     instrument_id = fields.Many2one('efund.vehicule.instrument.core', string="Instrument", required=True, index=True)
-    vehicule_id = fields.Many2one('efund.vehicule', string="Véhicule", required=True, index=True)
+    vehicule_id = fields.Many2one('efund.vehicule', string="Véhicule",  index=True)
     date = fields.Date(string="Date du cours", required=True, default=fields.Date.today, index=True)
     price = fields.Float(string="Cours", digits=(16, 4), required=True)
-    interest = fields.Float(string="Intérêt", digits=(16, 4), required=True)
+    interest = fields.Float(string="Intérêt", digits=(16, 4), )
     currency_id = fields.Many2one(related="instrument_id.currency_id", string="Devise du cours")
     is_validated = fields.Boolean(string="Validé", default=False)
     validated_date = fields.Date(string="Date de validation")
@@ -57,8 +58,8 @@ class FundInstrumentPrice(models.Model):
     # Champs calculés
     display_name = fields.Char(string="Nom", compute='_compute_display_name', store=True)
     # Nouveaux champs pour l'auditabilité
-    price_type = fields.Selection([('close', 'Clôture'), ('bid', 'Achat (Bid)'), ('ask', 'Vente (Ask)'), ('mid', 'Moyen (Mid)')],string="Type de cours", default='close', required=True)
-    source = fields.Selection([('brvm', 'BRVM'), ('internal', 'Estimation Interne'), ('third_party', 'Tiers (SGI/Banque)')],string="Source du cours", required=True)
+    price_type = fields.Selection([('close', 'Clôture'), ('bid', 'Achat (Bid)'), ('ask', 'Vente (Ask)'), ('mid', 'Moyen (Mid)')],string="Type de cours", default='close',)
+    source = fields.Selection([('brvm', 'BRVM'), ('internal', 'Estimation Interne'), ('third_party', 'Tiers (SGI/Banque)')],default='internal', string="Source du cours",)
     comment = fields.Text(string="Notes sur la valorisation")
 
     @api.model

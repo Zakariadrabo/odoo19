@@ -57,11 +57,9 @@ class EfundInvestmentOrder(models.Model):
     total_amount_trade = fields.Monetary(compute='_compute_total_amount', currency_field='currency_id', string='Total HT', store=True)
 
     # les données de opcvm
-    amount_type = fields.Selection([('amount', 'Montant'), ('unit', 'Nombre de parts')], string='Type',
-                                   default='amount')
+    amount_type = fields.Selection([('amount', 'Montant'), ('unit', 'Nombre de parts')], string='Type',default='amount')
     order_amount = fields.Monetary(string="Montant brut souhaité", store=True)
-    nav = fields.Float(string="VL", compute='_compute_nav', inverse='_inverse_nav', store=True, readonly=False,
-                       digits=(16, 6))
+    nav = fields.Float(string="VL", compute='_compute_nav', inverse='_inverse_nav', store=True, readonly=False,digits=(16, 6))
     nav_date_expected = fields.Date(string="Date de VL cible", help="Date de la VL qui sera appliquée")
     units_estimated = fields.Float(string="Parts estimées", store=True)
     direction_opcvm = fields.Selection([('subscription', 'Souscription'), ('redemption', 'Rachat')], string="Sens")
@@ -115,7 +113,7 @@ class EfundInvestmentOrder(models.Model):
 
         # 2. Calcul du taux journalier
         # Exemple : 6% / 360 = 0,01666% par jour
-        daily_rate = (annual_rate / 100.0) / 365
+        daily_rate = (annual_rate / 100.0) / 365,25
 
         # 3. Calcul de l'intérêt brut total pour la période
         # Formule : Nominal * Taux Journalier * Nombre de jours
@@ -304,8 +302,13 @@ class EfundInvestmentOrder(models.Model):
                 'default_start_date': self.start_date,
                 'default_maturity_date': self.maturity_date,
                 'default_operation_type': self.operation_type,
-
-
+                # OPCVM
+                'default_order_amount': self.order_amount,
+                'default_nav': self.nav,
+                'default_amount_type': self.amount_type,
+                'default_units_estimated': self.units_estimated,
+                'default_nav_date_expected': self.nav_date_expected,
+                'default_direction_opcvm': self.direction_opcvm,
             }
         }
 
@@ -318,13 +321,6 @@ class EfundInvestmentOrder(models.Model):
 
             order.state = 'sent'
 
-    def _handle_accrued_interest_storno(self):
-
-        """ Génère l'écriture d'extourne pour éviter le double comptage des intérêts """
-        self.ensure_one()
-        # Logique simplifiée : on marque l'instrument pour recalcul des IC à la validation
-        self.instrument_id.with_context(storno_date=self.date_order)._update_accrued_interests()
-        self.message_post(body=_("Extourne des intérêts courus calculée pour la VL."))
 
     """
     def _check_amf_umoa_compliance(self):
@@ -474,9 +470,10 @@ class EfundInvestmentOrder(models.Model):
             raise ValidationError(_("Le montant et l'échéance sont obligatoires pour un DAT."))
 
     @api.depends('order_date', 'limit_price', 'quantity', 'deposit_amount', 'negotiated_rate', 'interest_type',
-                 'maturity_date', 'start_date', 'order_amount', 'nav', 'direction')
+                 'maturity_date', 'start_date', 'order_amount', 'nav', 'direction', 'units_estimated','nav')
     def _compute_accrured_interest(self):
         for rec in self:
+            serviceEngine = self.env['efund.service']
             tx_courtage = 0
             tx_tva = 0
             tx_regulateur = 0
@@ -513,15 +510,11 @@ class EfundInvestmentOrder(models.Model):
                     bond = self.env['efund.vehicule.instrument.core.bond'].search(
                         [('instrument_id', '=', rec.instrument_id.id), ])
                     if bond:
-                        last_coupon = rec._get_actual_last_coupon_date(bond.coupon_frequency, bond.value_date,
-                                                                        rec.order_date)
+                        res = serviceEngine.compute_accrued_interest_precise(bond.face_value, bond.coupon_rate, rec.order_date, bond.maturity_date,bond.coupon_frequency, tax_rate=tx_irvm if tx_irvm > 0 else 0, add_day=0)
 
-                        res = rec.compute_accrued_interest_precise(bond.face_value, bond.coupon_rate, last_coupon,
-                                                                    rec.order_date, bond.coupon_frequency, 'act/act',
-                                                                    tx_irvm if tx_irvm > 0 else 0)
-                        nbjours = res.get("days")
-                        cc_brut = res.get("interest_gross")
-                        cc_net = res.get("interest_net")
+
+                        cc_brut = res.get('interest_gross')
+                        cc_net = res.get('interest_net')
 
                         if tx_courtage > 0:
                             rec.total_courtage = round((rec.quantity * bond.face_value * tx_courtage) / 100,)
@@ -591,8 +584,8 @@ class EfundInvestmentOrder(models.Model):
                     self.total_amount = cash_out
 
             if rec.operation_type == 'opcvm':
-                rec.total_amount_trade = rec.quantity * rec.limit_price
-                rec.total_amount = rec.quantity * rec.limit_price
+                rec.total_amount_trade = rec.units_estimated * rec.nav
+                rec.total_amount = rec.units_estimated * rec.nav
 
     def action_finalize_execution(self, execution_vals):
         """
@@ -709,8 +702,7 @@ class EfundInvestmentOrder(models.Model):
         move.action_post()
         execution_line.account_move_id = move.id
 
-    from dateutil.relativedelta import relativedelta
-    from datetime import timedelta
+
 
     def get_settlement_details(self, purchase_date, days_to_add):
         """
@@ -883,6 +875,19 @@ class EfundInvestmentOrder(models.Model):
             'interest_gross': round(interest_gross, 8),
             'interest_net': round(interest_net, 8),
         }
+
+    def affichemoilesdetail(self, order):
+        bond = self.env['efund.vehicule.instrument.core.bond'].search(
+            [('instrument_id', '=', order.instrument_id.id), ])
+        serviceEngine = self.env['efund.service'].search([])
+
+        res = serviceEngine.get_coupon_period(
+            order_date=order.order_date,
+            maturity_date=bond.maturity_date,
+            frequency=1)
+
+        raise ValidationError(f"Date dernier coupon: {res.get('last_coupon')} - Prochain coupon:{res.get('next_coupon')} - Nombre jours courus: {res.get('days_accrued')} - Nombre jour dans la période : {res.get('days_in_period')}")
+
 
     def _get_actual_last_coupon_date(self, frequency, value_date, execution_date):
         """

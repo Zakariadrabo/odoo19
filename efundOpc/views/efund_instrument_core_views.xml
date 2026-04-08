@@ -123,7 +123,7 @@
                                 </group>
                             </group>
                             <!-- Bloc dynamique pour les durées restantes -->
-                            <group string="Valorisation" colspan="2">
+                            <group string="Valorisation" colspan="2" invisible="1">
                                 <group>
                                     <label for="last_price_date"/>
                                     <h2>
@@ -159,7 +159,7 @@
                                         <field name="date_debut" options="{'numeric': true}"/>
                                         <field name="date_fin" options="{'numeric': true}"/>
                                         <field name="date_paiement" options="{'numeric': true}"/>
-                                        <field name="nb_jours"/>
+                                        <!-- <field name="nb_jours"/> -->
                                         <field name="montant"/>
                                         <field name="state"/>
                                         <button name="update_coupon_state" type="object" class="btn-secondary"
@@ -181,7 +181,7 @@
                             <group>
                                 <group string="Paramètres tableau">
                                     <field name="amortization_type"/>
-                                    <field name="calculeted_base"/>
+                                    <!-- <field name="calculeted_base"/> -->
                                 </group>
                             </group>
 
@@ -214,7 +214,7 @@
                                 </list>
                             </field>
                         </page>
-                        <page string="Cours">
+                        <page string="Cours" invisible="1">
                             <button name="action_import_price_today"
                                     type="object"
                                     string="Importer cours"

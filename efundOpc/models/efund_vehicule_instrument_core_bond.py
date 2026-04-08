@@ -27,8 +27,8 @@ class FundInstrumentBond(models.Model):
     coupon_rate = fields.Float(string="Taux du Coupon (%)")
     rate_net = fields.Float(string="Taux net (%)", compute='_compute_rate_net', store=True)
     maturity_date = fields.Date(string="Échéance")
-    remaining_date_to_maturity = fields.Char(string="Jours restants à la maturité", compute='_compute_days_to_next_coupon', store=True)
-    remaining_date_to_coupon = fields.Char(string="Jours restants au prochain coupon", compute='_compute_days_to_next_coupon', store=True)
+    remaining_date_to_maturity = fields.Char(string="Jours restants à la maturité",  compute="_compute_days_to_next_coupon",store=False)
+    remaining_date_to_coupon = fields.Char(string="Jours restants au prochain coupon", compute="_compute_days_to_next_coupon",store=False)
     coupon_frequency = fields.Selection( [('annual', 'Annuel'), ('semi_annual', 'Semestriel'), ('quarterly', 'Trimestriel'),
          ('monthly', 'Mensuel'), ('at_maturity', 'A Maturité'), ], string='Fréquence', default='annual', )
     coupon_calculation_date = fields.Date(string='Date dernier calcul des coupons', default=fields.Date.today, help="Date du dernier calcul des coupons")
@@ -38,7 +38,8 @@ class FundInstrumentBond(models.Model):
                                           ('constant_principal', "Amortissement Constant"),
                                           ('custom_schedule', "Échéancier Personnalisé"),
                                           ], string="Type d'Amortissement", default="in_fine")
-
+    #days_to_maturity = fields.Integer(string="Jours restants",  compute="_compute_days_to_next_coupon",store=False)
+    #days_to_maturity_recompute = fields.Integer(string="Jours restants",compute="_compute_days_to_next_coupon",  store=False )
 
     last_validated_price = fields.Float(string="Dernier cours validé")
     last_price_date = fields.Date( string="Date dernier cours")
@@ -47,6 +48,13 @@ class FundInstrumentBond(models.Model):
     coupon_ids = fields.One2many('efund.bond.coupon', 'bond_id', string="Calendrier des coupons")
     bond_amortization_ids = fields.One2many('efund.bond.amortization', 'bond_id', string="calendrier des amortissements")
 
+
+
+    def _cron_update_maturity_days(self):
+        """Méthode appelée par le Cron chaque nuit"""
+        records = self.search([('maturity_date', '!=', False)])
+        # On force le recalcul
+        records._compute_days_to_next_coupon()
 
     @api.depends('coupon_rate', 'tax_rate')
     def _compute_rate_net(self):
@@ -135,12 +143,18 @@ class FundInstrumentBond(models.Model):
             'days': days,
         }
 
-    @api.depends('next_coupon_date')
+    @api.depends('maturity_date')
     def _compute_days_to_next_coupon(self):
-        today = date.today()
         for rec in self:
-            if rec.next_coupon_date:
-                result = rec.date_diff_ymd(today, rec.next_coupon_date)
+            serviceEngine = self.env['efund.service']
+            res = serviceEngine.get_coupon_period(
+                order_date= date.today(),
+                maturity_date=rec.maturity_date,
+                frequency=1)
+            today = date.today()
+
+            if res.get('next_coupon'):
+                result = rec.date_diff_ymd(today, res.get('next_coupon') )
                 result1 = rec.date_diff_ymd(today, rec.maturity_date)
 
                 rec.remaining_date_to_coupon = f"{result.get('years')} ans {result.get('months')} mois {result.get('days')} jours"
@@ -207,13 +221,12 @@ class FundInstrumentBond(models.Model):
 
     def action_open_amortization_wizard(self):
         self.ensure_one()
-
-        # 1. Nettoyage des anciens
-        #self.bond_amortization_ids.filtered(lambda c: c.state == 'draft').unlink()
+        service = self.env['efund.service']
         self.bond_amortization_ids.unlink()
 
         # 2. Appel du générateur
-        amortization_data = self.generate_amortization_schedule(
+        amortization_data = service.generate_amortization_schedule(
+        #amortization_data=service.generate_amortization_schedule(
             self.issue_amount,
             self.coupon_rate,
             self.coupon_frequency,
@@ -255,9 +268,6 @@ class FundInstrumentBond(models.Model):
 
             }
         }
-
-    from datetime import date
-    from dateutil.relativedelta import relativedelta
 
     def generate_amortization_schedule(self,
             montant,
@@ -318,7 +328,7 @@ class FundInstrumentBond(models.Model):
             days = (next_date - current_date).days
 
             interet = (
-                    capital_restant * taux_annuel / 100 * days / base_calcul
+                    capital_restant * taux_periodique #taux_annuel / 100 * days / base_calcul
             )
 
             if type_amortissement == 'in_fine':

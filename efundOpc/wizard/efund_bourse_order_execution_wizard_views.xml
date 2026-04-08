@@ -10,11 +10,11 @@
                 <group>
                     <field name="order_id"/>
                     <field name="reference"/>
-                    <field name="remaining_quantity" invisible="operation_type != 'trade'"/>
+                    <field name="remaining_quantity" invisible="operation_type not in ('trade','opcvm')"/>
                     <field name="operation_type" invisible="1"/>
                 </group>
 
-                <group string="Détails d'exécution" invisible="operation_type != 'trade'">
+                <group string="Détails d'exécution" invisible="operation_type not in ('trade','opcvm')">
                     <field name="executed_quantity" required="1"/>
                     <field name="execution_price" required="1"/>
                     <field name="execution_date" required="1"/>
@@ -35,6 +35,25 @@
                         <field name="total_amount"/>
                     </group>
                 </group>
+                <group string="Détails de l'Ordre OPCVM" invisible="operation_type != 'opcvm'">
+                        <div class="alert alert-info" role="alert" colspan="2" style="margin-bottom:10px;">
+                            <i class="fa fa-info-circle"/>
+                            Exécution à Valeur Liquidative connue.
+                        </div>
+                        <group>
+                            <field name="amount_type" widget="radio" options="{'horizontal': true}"/>
+                            <field name="order_amount" widget="monetary" string="Montant Brut"
+                                   readonly="amount_type == 'unit'" force_save="1"/>
+                            <field name="nav" string="Valeur liquidative"/>
+                             <field name="nav_date_expected"/>
+                            <field name="units_estimated" class="text-muted" readonly="amount_type == 'amount'" force_save="1"/>
+                        </group>
+                        <group>
+                           <field name="total_amount_trade" readonly="1"/>
+                            <field name="total_amount" readonly="1"/>
+                        </group>
+
+                    </group>
                 <div class="row">
                     <div class="o_form_label text-info">
                         <field name="formulas_accured_interest" readonly="1"/>
