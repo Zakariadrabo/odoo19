@@ -197,9 +197,12 @@ class Mandate(models.Model):
     def build_event_payload(self):
 
         self.ensure_one()
+        event_type_id = self.env['efund.event.type'].search([('sigle', '=', 'CASH_IN')], limit=1)
 
         return {
-            'event_type': ('CASH_IN'),
+
+
+            'event_type_id': event_type_id,
             'vehicule_id': self.vehicule_id.id,
             'reference': 'Apport Liquidité - ' + self.vehicule_id.name,
             'event_date': self.start_date,

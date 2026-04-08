@@ -153,12 +153,13 @@ class FundInstrumentBond(models.Model):
                 frequency=1)
             today = date.today()
 
-            if res.get('next_coupon'):
-                result = rec.date_diff_ymd(today, res.get('next_coupon') )
-                result1 = rec.date_diff_ymd(today, rec.maturity_date)
+            if not res:
+                if res.get('next_coupon'):
+                    result = rec.date_diff_ymd(today, res.get('next_coupon') )
+                    result1 = rec.date_diff_ymd(today, rec.maturity_date)
 
-                rec.remaining_date_to_coupon = f"{result.get('years')} ans {result.get('months')} mois {result.get('days')} jours"
-                rec.remaining_date_to_maturity = f"{result1.get('years')} ans {result1.get('months')} mois {result1.get('days')} jours"
+                    rec.remaining_date_to_coupon = f"{result.get('years')} ans {result.get('months')} mois {result.get('days')} jours"
+                    rec.remaining_date_to_maturity = f"{result1.get('years')} ans {result1.get('months')} mois {result1.get('days')} jours"
 
     def action_compute_coupons(self):
         self.ensure_one()
