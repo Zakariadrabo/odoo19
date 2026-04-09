@@ -134,11 +134,10 @@ class EfundVehicle(models.Model):
                 'company_code': 'MANDATS',
                 'currency_id': currency,  # FCFA par défaut pour UMOA
             })
-            _logger.info("Société pivot MANDATS créée.")
 
-        # Vérifier si le plan comptable est installé
-        if not company.chart_template:
+            # Création du plan Comptable du Mandat
             self.env['efund.event.handler'].get_chart_account_data(company.id)
+        
 
         return company
 

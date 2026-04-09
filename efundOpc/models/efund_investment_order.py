@@ -515,6 +515,7 @@ class EfundInvestmentOrder(models.Model):
 
                         cc_brut = res.get('interest_gross')
                         cc_net = res.get('interest_net')
+                        _logger.info(f"************ interest_net: {cc_net} et interest_gross: {cc_brut}")
 
                         if tx_courtage > 0:
                             rec.total_courtage = round((rec.quantity * bond.face_value * tx_courtage) / 100,)
