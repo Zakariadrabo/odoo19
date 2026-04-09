@@ -22,7 +22,7 @@ class FundPosition(models.Model):
     # ========== INFORMATIONS DE POSITION ==========
     quantity = fields.Float(string="Quantité", digits=(16, 4), default=0.0, required=True)
     avg_cost = fields.Monetary(string="Coût moyen unitaire")
-    #market_value = fields.Monetary(string="Valeur de marché", compute='_compute_market_value', store=True, )
+    # market_value = fields.Monetary(string="Valeur de marché", compute='_compute_market_value', store=True, )
 
     # ========== INFORMATIONS DE COURS ==========
     last_price = fields.Float(string="Dernier cours", digits=(16, 4), store=True, )
@@ -49,14 +49,45 @@ class FundPosition(models.Model):
     cashflow_ids = fields.One2many('efund.vehicule.cashflow', 'position_id', string="Flux de trésorerie prévus")
 
     # --- Nouveaux champs de valorisation détaillée ---
-    clean_value = fields.Monetary(string="Valeur Hors Coupons", compute='_compute_market_value', store=True, help="Quantité * Dernier Cours")
-    accrued_interest = fields.Monetary(string="Intérêts Courus", compute='_compute_market_value', store=True, help="Coupons courus non échus à la date de valorisation")
+    clean_value = fields.Monetary(string="Valeur Hors Coupons", compute='_compute_market_value', store=True,
+                                  help="Quantité * Dernier Cours")
+    accrued_interest = fields.Monetary(string="Intérêts Courus", compute='_compute_market_value', store=True,
+                                       help="Coupons courus non échus à la date de valorisation")
     # market_value devient la somme (Dirty Price)
-    market_value = fields.Monetary(string="Valeur de Marché (Dirty)",compute='_compute_market_value',store=True)
-    maturity_date = fields.Date(string="Date de Maturité",)
+    market_value = fields.Monetary(string="Valeur de Marché (Dirty)", compute='_compute_market_value', store=True)
+    maturity_date = fields.Date(string="Date de Maturité", )
     days_to_maturity = fields.Integer(string="Jours à échéance", compute="_compute_days_to_maturity")
     value_date = fields.Date(string="Date de valeur", store=True, index=True)
     rate = fields.Float(string="Taux", store=True, index=True)
+    is_amortized = fields.Boolean(string="Amortissement")
+    amortization_line_ids = fields.One2many('efund.portfolio.amortization.line', 'portfolio_id',
+                                            string="Tableau d'Amortissement Spécifique")
+
+    def action_generate_specific_amortization(self):
+        for rec in self:
+            bond = self.env['efund.vehicule.instrument.core.bond'].search(
+                [('instrument_id', '=', rec.instrument_id.id), ])
+            vals = self.env['efund.service'].generate_amortization_schedule(
+                montant=rec.quantity * bond.face_value,
+                taux_annuel=bond.coupon_rate,
+                frequence=bond.coupon_frequency,
+                date_valeur=rec.value_date,
+                date_maturite=bond.maturity_date,
+            )
+
+            # On crée les lignes liées à CETTE position
+            for line in vals:
+                amort_lines = {
+                    'portfolio_id' : rec.id,
+                    'date' : line['date_fin'],
+                    'capital_debut' : line['capital_initial'],
+                    'principal' : line['amortissement'],
+                    'interet' : line['interet'],
+                    'annuite' : line['annuite'],
+                    'capital_fin' : line['capital_restant']
+                }
+
+                self.env['efund.portfolio.amortization.line'].create(amort_lines)
 
     @api.depends('maturity_date')
     def _compute_days_to_maturity(self):
@@ -114,7 +145,7 @@ class FundPosition(models.Model):
             else:
                 # Correction : l'appel du cron doit se faire sur l'instrument
                 # car last_price_rec est vide ici
-                #record.instrument_id.cron_generate_daily_prices()
+                # record.instrument_id.cron_generate_daily_prices()
                 last_price_rec.cron_generate_daily_prices()
 
                 """
@@ -136,7 +167,6 @@ class FundPosition(models.Model):
                 last_price_rec.cron_generate_daily_prices()
                 
                 """
-
 
     @api.depends('quantity', 'last_price', 'instrument_id', 'last_price_date')
     def _compute_valuation_details(self):
@@ -196,8 +226,6 @@ class FundPosition(models.Model):
 
         return accrued_amount
 
-
-
     @api.depends('quantity', 'last_price_date', 'last_price', 'accrued_interest')
     def _compute_market_value(self):
         """Calcule la valeur de marché globale et la performance latente"""
@@ -206,11 +234,11 @@ class FundPosition(models.Model):
             # On utilise la somme calculée par _compute_valuation_details
 
             market_value = 0
-            _logger.info(f"********Market value for {rec.id}: {rec.last_price_date} - {rec.last_price} - {rec.accrued_interest}")
+            _logger.info(
+                f"********Market value for {rec.id}: {rec.last_price_date} - {rec.last_price} - {rec.accrued_interest}")
             if rec.instrument_id.instrument_type == 'dat':
                 # Pour le DAT : Valeur = Capital (quantity) + Intérêts cumulés
                 market_value = rec.last_price + (rec.accrued_interest or 0.0)
-
 
             # Sécurité : si market_value n'est pas encore calculé, on fait un calcul simple
             if rec.instrument_id.instrument_type != 'dat':
@@ -218,7 +246,8 @@ class FundPosition(models.Model):
                 rec.market_value = market_value
 
             # 2. Calcul du coût de revient total
-            cost_basis = rec.quantity * (rec.avg_cost or 0.0) if rec.instrument_id.instrument_type != 'dat' else rec.last_price
+            cost_basis = rec.quantity * (
+                        rec.avg_cost or 0.0) if rec.instrument_id.instrument_type != 'dat' else rec.last_price
 
             # 3. Calcul de la plus-value latente (Unrealized P&L)
             if cost_basis > 0:
@@ -231,8 +260,6 @@ class FundPosition(models.Model):
             else:
                 rec.unrealized_pl = 0.0
                 rec.unrealized_pl_percent = 0.0
-
-
 
     def _calculate_linear_accretion(self, instrument, target_date):
         """ Calcule la valeur étalée de l'obligation à une date donnée """
@@ -260,15 +287,12 @@ class FundPosition(models.Model):
 
         return valeur_actuelle
 
-
     def get_instrument_listed_value(self, instrument, target_date):
         self.ensure_one()
         if instrument.name != 'efund.vehicule.instrument.core':
             raise ValidationError("Objet instrument invalide.")
 
         return self._calculate_linear_accretion(instrument, target_date)
-
-
 
     # les méthodes de dépendances
     def apply_trade(self, trade):
@@ -282,10 +306,9 @@ class FundPosition(models.Model):
         self.value_date = trade.date_settlement
 
         if trade.order_id.operation_type == 'deposit':
-           self.last_price = trade.total_amount
-           self.maturity_date = trade.maturity_date
-           self.rate = trade.negotiated_rate_net
-
+            self.last_price = trade.total_amount
+            self.maturity_date = trade.maturity_date
+            self.rate = trade.negotiated_rate_net
 
         if trade.move_type == 'in':
             cost_old = Q_old * PRU_old
@@ -317,7 +340,6 @@ class FundPosition(models.Model):
 
         # trade.write({'realized_pl': realized_pl})
 
-
     @api.depends('unrealized_pl')
     def _compute_decoration_state(self):
         for record in self:
@@ -327,7 +349,6 @@ class FundPosition(models.Model):
                 record.decoration_state = 'danger'
             else:
                 record.decoration_state = 'normal'
-
 
     @api.depends('instrument_id')
     def _compute_last_price(self):
@@ -341,13 +362,13 @@ class FundPosition(models.Model):
                 ], order='date desc', limit=1)
 
                 if last_price:
-                    #pos.last_price = last_price.price
+                    # pos.last_price = last_price.price
                     pos.last_price_date = last_price.date
                 else:
-                    #pos.last_price = 0.0
+                    # pos.last_price = 0.0
                     pos.last_price_date = False
             else:
-                #pos.last_price = 0.0
+                # pos.last_price = 0.0
                 pos.last_price_date = False
 
     @api.depends('vehicule_id', 'instrument_id', 'last_price_date')
@@ -359,7 +380,6 @@ class FundPosition(models.Model):
             else:
                 rec.display_name = "Nouvelle position"
 
-
     @api.constrains('quantity', 'avg_cost')
     def _check_positive_values(self):
         """Vérifie que les valeurs sont positives"""
@@ -368,7 +388,6 @@ class FundPosition(models.Model):
                 raise ValidationError(_("La quantité ne peut pas être négative."))
             if rec.avg_cost < 0:
                 raise ValidationError(_("Le coût moyen ne peut pas être négatif."))
-
 
     # ========== MÉTHODES D'ACTION ==========
     def action_update_position(self):
@@ -389,7 +408,6 @@ class FundPosition(models.Model):
             }
         }
 
-
     def action_close_position(self):
         """Clôturer une position"""
         self.ensure_one()
@@ -404,7 +422,6 @@ class FundPosition(models.Model):
             }
         }
 
-
     def action_view_instrument(self):
         """Ouvrir la fiche de l'instrument"""
         self.ensure_one()
@@ -415,7 +432,6 @@ class FundPosition(models.Model):
             'view_mode': 'form',
             'res_id': self.instrument_id.id,
         }
-
 
     def _apply_instrument_event(self, event):
         """
@@ -500,7 +516,6 @@ class FundPosition(models.Model):
 
         return position
 
-
     # retourne la position du titre
     def get_position_by_instrument(self, instrument_id, vehicule_id):
         result = self.search([('instrument_id', '=', instrument_id), ('vehicule_id', '=', vehicule_id)])
@@ -544,7 +559,7 @@ class FundPosition(models.Model):
         # 1. Nettoyage des anciens flux non encaissés
         self.cashflow_ids.filtered(lambda f: f.state == 'draft').unlink()
 
-        #instrument = self.instrument_id
+        # instrument = self.instrument_id
         # On ne génère des flux que pour les obligations (Bonds) ou DAT
         if instrument.instrument_type == 'bond':
             # On suppose que l'instrument a un modèle lié pour son calendrier
@@ -560,7 +575,3 @@ class FundPosition(models.Model):
                             'amount_expected': self.quantity * bond.face_value * (bond.coupon_rate / 100),
                             'flow_type': 'coupon',
                         })
-
-
-
-

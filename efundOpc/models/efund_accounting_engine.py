@@ -43,7 +43,6 @@ class FundAccountingEngine(models.AbstractModel):
 
         for rule in schema.line_ids:
             amount = self._resolve_amount(event, rule.amount_type)
-            _logger.info(f"********* méthode _resolve_amount: {amount}")
 
             if not amount:
                 continue
@@ -65,8 +64,6 @@ class FundAccountingEngine(models.AbstractModel):
             # RÉSOLUTIONS DYNAMIQUE DU COMPTE
             target_account = False
 
-            _logger.info(f"********* Rule: {rule.account_resolution_type}")
-
             if rule.account_resolution_type == 'fixed':
                 target_account = rule.account_id
 
@@ -74,14 +71,12 @@ class FundAccountingEngine(models.AbstractModel):
 
                 # RÉSOLUTION : On va chercher dans le dictionnaire payload
                 instrument_id = event.payload.get('instrument_id')
-                _logger.info(f"********* Id de l'instrument : {instrument_id}")
 
                 if not instrument_id:
                     raise UserError(_("L'ID de l'instrument est manquant dans le payload de l'événement."))
 
                 # On récupère l'objet instrument pour appeler sa méthode de mapping
                 instrument = self.env['efund.vehicule.instrument.core'].browse(instrument_id)
-                _logger.info(f"**************** Instrument: {instrument.name}")
 
                 # On utilise la méthode de mapping chronologique
                 target_account = instrument.get_or_create_accounting_mapping(idcompany_id)
@@ -106,8 +101,6 @@ class FundAccountingEngine(models.AbstractModel):
 
         # target_company = event.vehicule_id.company_id
         target_company = self.env['res.company'].search([('id', '=', idcompany_id.id)], limit=1)
-
-        _logger.info(f"**************** Company: {lines}")
 
         move = self.env['account.move'].sudo().with_company(target_company).create({
             'journal_id': schema.journal_id.id,

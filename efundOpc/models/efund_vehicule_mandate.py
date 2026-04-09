@@ -190,27 +190,14 @@ class Mandate(models.Model):
             rec.message_post(body=_("Le mandat a été confirmé et est maintenant actif."))
 
             # Création de Event
-            event = self.env['efund.accounting.event'].create(self.build_event_payload())
+            serviceEngine = self.env['efund.service']
+            payload = {'gross': rec.initial_amount,}
+            event = self.env['efund.accounting.event'].create(serviceEngine.build_event_payload('CASH_IN', rec.vehicule_id.id, 'Apport Liquidité - ' + rec.name,
+                                                            rec.start_date, payload))
             # rec.event_id = event.id
             self.env['efund.accounting.engine'].process_event(event)
 
-    def build_event_payload(self):
-
-        self.ensure_one()
-        event_type_id = self.env['efund.event.type'].search([('sigle', '=', 'CASH_IN')], limit=1)
-
-        return {
-
-
-            'event_type_id': event_type_id,
-            'vehicule_id': self.vehicule_id.id,
-            'reference': 'Apport Liquidité - ' + self.vehicule_id.name,
-            'event_date': self.start_date,
-            'state': 'draft',
-            'payload': {
-                'gross': self.initial_amount,
-            }
-        }
+    
 
     def action_suspend(self):
         for record in self:

@@ -151,11 +151,11 @@ class EfundInvestmentTransaction(models.Model):
                 payload = {'instrument_id': rec.instrument_id.id, 'net': rec.total_amount, 'qte': rec.quantity, }
                 if rec.move_type == 'in':
                     event = self.env['efund.accounting.event'].create(
-                        serviceEngine.build_event_payload_opcvm( 'OPC_EXECUTED_IN', rec.vehicule_id.id, rec.name,
+                        serviceEngine.build_event_payload( 'OPC_EXECUTED_IN', rec.vehicule_id.id, rec.name,
                                                                 rec.date_transaction, payload))
                 else:
                     event = self.env['efund.accounting.event'].create(
-                        serviceEngine.build_event_payload_opcvm('OPC_EXECUTED_OUT', rec.vehicule_id.id, rec.name,
+                        serviceEngine.build_event_payload('OPC_EXECUTED_OUT', rec.vehicule_id.id, rec.name,
                                                                 rec.date_transaction, payload))
 
             if event:

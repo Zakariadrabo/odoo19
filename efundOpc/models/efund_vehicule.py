@@ -34,6 +34,7 @@ class EfundVehicle(models.Model):
     info_visa_number = fields.Char(string="N° Visa Note d'information")
     info_visa_date = fields.Date(string="Date édition note")
     regulatory_note = fields.Text(string="Informations réglementaires")
+
     state = fields.Selection(
         [('draft', 'Draft'), ('active', 'Active'), ('suspended', 'Suspended'), ('liquidated', 'Liquidated'), ],
         string='Status', default='draft')
@@ -50,7 +51,17 @@ class EfundVehicle(models.Model):
     cashflow_ids = fields.One2many('efund.vehicule.cashflow', 'vehicule_id', string="Flux de trésorerie prévus")
     analytic_account_id = fields.Many2one('account.analytic.account', string='Compte analytique')
     cash_account_id = fields.Many2one('account.account',string="Compte Espèces Dépositaire",help="Compte comptable utilisé pour les règlements/livraisons")
+    all_portfolio_cashflows = fields.One2many('efund.portfolio.amortization.line', compute='_compute_all_cashflows', string="Échéancier Global des Flux")
 
+    def _compute_all_cashflows(self):
+        for vehicule in self:
+            # On récupère toutes les lignes d'amortissement de toutes les positions
+            # dont la date est supérieure ou égale à aujourd'hui
+            lines = self.env['efund.portfolio.amortization.line'].search([
+                ('portfolio_id.vehicule_id', '=', vehicule.id),
+                ('date', '>=', fields.Date.today())
+            ], order='date asc')
+            vehicule.all_portfolio_cashflows = lines
 
     @api.model_create_multi
     def create(self, vals_list):

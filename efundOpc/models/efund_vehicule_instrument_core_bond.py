@@ -27,8 +27,8 @@ class FundInstrumentBond(models.Model):
     coupon_rate = fields.Float(string="Taux du Coupon (%)")
     rate_net = fields.Float(string="Taux net (%)", compute='_compute_rate_net', store=True)
     maturity_date = fields.Date(string="Échéance")
-    remaining_date_to_maturity = fields.Char(string="Jours restants à la maturité", store=False)
-    remaining_date_to_coupon = fields.Char(string="Jours restants au prochain coupon", store=False)
+    remaining_date_to_maturity = fields.Char(string="Jours restants à la maturité", store=True)
+    remaining_date_to_coupon = fields.Char(string="Jours restants au prochain coupon",store=True)
     coupon_frequency = fields.Selection( [('annual', 'Annuel'), ('semi_annual', 'Semestriel'), ('quarterly', 'Trimestriel'),
          ('monthly', 'Mensuel'), ('at_maturity', 'A Maturité'), ], string='Fréquence', default='annual', )
     coupon_calculation_date = fields.Date(string='Date dernier calcul des coupons', default=fields.Date.today, help="Date du dernier calcul des coupons")
@@ -38,8 +38,9 @@ class FundInstrumentBond(models.Model):
                                           ('constant_principal', "Amortissement Constant"),
                                           ('custom_schedule', "Échéancier Personnalisé"),
                                           ], string="Type d'Amortissement", default="in_fine")
-    #days_to_maturity = fields.Integer(string="Jours restants",  compute="_compute_days_to_next_coupon",store=False)
-    #days_to_maturity_recompute = fields.Integer(string="Jours restants",compute="_compute_days_to_next_coupon",  store=False )
+
+    days_to_maturity = fields.Integer(string="Jours restants", compute="_compute_days_to_maturity", store=True)
+
 
     last_validated_price = fields.Float(string="Dernier cours validé")
     last_price_date = fields.Date( string="Date dernier cours")
@@ -54,7 +55,7 @@ class FundInstrumentBond(models.Model):
         """Méthode appelée par le Cron chaque nuit"""
         records = self.search([('maturity_date', '!=', False)])
         # On force le recalcul
-        records._compute_days_to_next_coupon()
+        records._compute_days_to_maturity()
 
     @api.depends('coupon_rate', 'tax_rate')
     def _compute_rate_net(self):
@@ -143,25 +144,23 @@ class FundInstrumentBond(models.Model):
             'days': days,
         }
 
-    @api.depends('maturity_date')
-    def _compute_days_to_next_coupon(self):
+
+    @api.depends('instrument_id',)
+    def _compute_days_to_maturity(self):
+        today = date.today(),
         for rec in self:
-            if not rec.maturity_date:
-                serviceEngine = self.env['efund.service']
-                res = serviceEngine.get_coupon_period(
+            serviceEngine = self.env['efund.service']
+            res = serviceEngine.get_coupon_period(
                     order_date= date.today(),
                     maturity_date=rec.maturity_date,
                     frequency=1)
-                today = date.today()
-                _logger.info(f"*********** valeur {res.get('next_coupon')}")
+            _logger.info(f"************ res.get('next_coupon') {res.get('next_coupon')}")
 
-                if not res:
-                    if res.get('next_coupon'):
-                        result = rec.date_diff_ymd(today, res.get('next_coupon') )
-                        result1 = rec.date_diff_ymd(today, rec.maturity_date)
-
-                        rec.remaining_date_to_coupon = f"{result.get('years')} ans {result.get('months')} mois {result.get('days')} jours"
-                        rec.remaining_date_to_maturity = f"{result1.get('years')} ans {result1.get('months')} mois {result1.get('days')} jours"
+            if res.get('next_coupon'):
+                result = rec.date_diff_ymd(today, res.get('next_coupon') )
+                result1 = rec.date_diff_ymd(today, rec.maturity_date)
+                rec.remaining_date_to_coupon = f"{result.get('years')} ans {result.get('months')} mois {result.get('days')} jours"
+                rec.remaining_date_to_maturity = f"{result1.get('years')} ans {result1.get('months')} mois {result1.get('days')} jours"
 
     def action_compute_coupons(self):
         self.ensure_one()
@@ -229,7 +228,6 @@ class FundInstrumentBond(models.Model):
 
         # 2. Appel du générateur
         amortization_data = service.generate_amortization_schedule(
-        #amortization_data=service.generate_amortization_schedule(
             self.issue_amount,
             self.coupon_rate,
             self.coupon_frequency,

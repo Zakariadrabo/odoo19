@@ -336,7 +336,8 @@ class EfundService(models.Model):
         """
 
 
-    def build_event_payload_opcvm(self, event, vehicule_id, name, date_operation, playload):
+
+    def build_event_payload(self, event, vehicule_id, name, date_operation, playload):
 
         event_type_id = self.env['efund.event.type'].search([('sigle', '=', event)], limit=1)
         if not event_type_id:
@@ -350,9 +351,6 @@ class EfundService(models.Model):
             'state': 'draft',
             'payload': playload,
             }
-
-
-
 
 
     def generate_all_coupon_dates(self, value_date, maturity_date, coupon_frequency):
