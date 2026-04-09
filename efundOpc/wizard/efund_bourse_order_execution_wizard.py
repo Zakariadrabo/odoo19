@@ -194,7 +194,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                         rec.total_other = (rec.total_transaction * tx_other) / 100
 
                     rec.total_commission = rec.total_courtage + rec.total_tva
-                    rec.rec.total_fees = rec.total_bvm + rec.total_regulateur + rec.total_dc + rec.total_commission
+                    rec.total_fees = rec.total_bvm + rec.total_regulateur + rec.total_dc + rec.total_commission
                     rec.total_amount = (rec.total_transaction + rec.total_fees if rec.order_id.direction == 'buy' else rec.total_transaction - rec.total_fees)
 
             if rec.order_id.operation_type == 'deposit':
