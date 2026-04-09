@@ -119,6 +119,16 @@ class FundInstrumentBond(models.Model):
         Calcule la différence calendaire exacte entre deux dates
         en années, mois et jours (bissextile inclus).        """
 
+        # --- AJOUT DE CETTE SÉCURITÉ ---
+        if isinstance(start_date, (list, tuple)) and start_date:
+            start_date = start_date[0]
+        if isinstance(end_date, (list, tuple)) and end_date:
+            end_date = end_date[0]
+
+
+        if not start_date or not end_date:
+            return 0, 0, 0
+
         if end_date < start_date:
             raise ValueError("end_date doit être postérieure à start_date")
 
