@@ -164,7 +164,6 @@ class FundInstrumentBond(models.Model):
                     order_date= date.today(),
                     maturity_date=rec.maturity_date,
                     frequency=1)
-            _logger.info(f"************ res.get('next_coupon') {res.get('next_coupon')}")
 
             if res.get('next_coupon'):
                 result = rec.date_diff_ymd(today, res.get('next_coupon') )
