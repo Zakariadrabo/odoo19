@@ -165,7 +165,7 @@ class FundInstrumentBond(models.Model):
                     maturity_date=rec.maturity_date,
                     frequency=1)
 
-            if res.get('next_coupon'):
+            if isinstance(res, dict) and res.get('next_coupon'):
                 result = rec.date_diff_ymd(today, res.get('next_coupon') )
                 result1 = rec.date_diff_ymd(today, rec.maturity_date)
                 rec.remaining_date_to_coupon = f"{result.get('years')} ans {result.get('months')} mois {result.get('days')} jours"
