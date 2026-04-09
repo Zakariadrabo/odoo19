@@ -3,10 +3,10 @@ from dateutil.relativedelta import relativedelta
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 
+
 class EfundService(models.Model):
     _name = 'efund.service'
     _description = 'Service for Efund'
-
 
     # Obtenir le dernier coupon
     def get_coupon_period(self, order_date, maturity_date, frequency=1):
@@ -16,6 +16,14 @@ class EfundService(models.Model):
         """
         if not order_date or not maturity_date:
             return False
+        # Si on est après ou pile à la maturité
+        if order_date >= maturity_date:
+            return {
+                'last_coupon': maturity_date,
+                'next_coupon': maturity_date,
+                'days_accrued': 0,
+                'days_in_period': 0
+            }
 
         # Déterminer le pas de recul en mois selon la fréquence
         # Annuel = 12 mois, Semestriel = 6 mois, Trimestriel = 3 mois
@@ -23,14 +31,35 @@ class EfundService(models.Model):
 
         # On part de la maturité (le dernier coupon possible)
         next_coupon = maturity_date
+        last_coupon = next_coupon - relativedelta(months=months_step)
+
+        # 3. On recule par saut de fréquence
+        # On cherche l'intervalle tel que : last_coupon <= order_date < next_coupon
+        while last_coupon > order_date:
+            next_coupon = last_coupon
+            last_coupon = next_coupon - relativedelta(months=months_step)
+
+        # 4. Calcul final
+        # Si order_date == last_coupon, days_accrued sera exactement 0
+        days_accrued = (order_date - last_coupon).days
+        days_in_period = (next_coupon - last_coupon).days
+
+        return {
+            'last_coupon': last_coupon,
+            'next_coupon': next_coupon,
+            'days_accrued': days_accrued,
+            'days_in_period': days_in_period
+        }
+        """
 
         # On recule par saut de fréquence jusqu'à ce que next_coupon
         # soit le premier coupon JUSTE APRÈS ou ÉGAL à la date de commande
         while next_coupon > order_date:
             potential_last = next_coupon - relativedelta(months=months_step)
-            if potential_last < order_date:
-                # On a trouvé notre encadrement :
-                # potential_last < order_date <= next_coupon
+            if potential_last <= order_date:
+                # On a trouvé notre encadrement
+                last_coupon = potential_last
+                # next_coupon reste la valeur actuelle
                 break
             next_coupon = potential_last
 
@@ -46,6 +75,7 @@ class EfundService(models.Model):
             'days_accrued': days_accrued,
             'days_in_period': days_in_period
         }
+    """
 
     # Obtenir le nombre de jour ou la date du dénouement d'une opération
     def get_settlement_details(self, operation_date, days_to_add):
@@ -143,10 +173,11 @@ class EfundService(models.Model):
 
         return schedule
 
-    #Générer le tableau d'amortissement
-    def generate_amortization_schedule(self,montant,taux_annuel, frequence, date_valeur,date_maturite, base_calcul=365,type_amortissement='in_fine'):
+    # Générer le tableau d'amortissement
+    def generate_amortization_schedule(self, montant, taux_annuel, frequence, date_valeur, date_maturite,
+                                       base_calcul=365, type_amortissement='in_fine'):
 
-        freq_map = {'monthly': 12,'quarterly': 4,'semi_annual': 2,'annual': 1,}
+        freq_map = {'monthly': 12, 'quarterly': 4, 'semi_annual': 2, 'annual': 1, }
 
         if frequence not in freq_map:
             raise ValueError("Fréquence invalide")
@@ -237,22 +268,23 @@ class EfundService(models.Model):
 
     def compute_accrued_interest_precise(self, nominal, annual_rate, compute_date, maturity_date,
                                          frequency='annual', tax_rate=0.0, add_day=0):
-        #self.ensure_one()
+        # self.ensure_one()
 
-        #Taux réel annuel
+        # Taux réel annuel
+
         net_rate = (1 - (tax_rate / 100.0)) * annual_rate
         nb_periods_map = {'annual': 1, 'semi_annual': 2, 'quarterly': 4, 'monthly': 12}
         periods_per_year = nb_periods_map.get(frequency, 1)
 
-        #Obtenir les dates de coupon et le nombre de jours couru
+        # Obtenir les dates de coupon et le nombre de jours couru
         res = self.get_coupon_period(compute_date, maturity_date, periods_per_year)
         if not res:
             return {'interest_gross': 0.0, 'interest_net': 0.0}
 
         details = self.get_settlement_details(compute_date, add_day)
-        day_to_add = details.get('calendar_days',0)
+        day_to_add = details.get('calendar_days', 0)
 
-        nb_jour = res.get('days_accrued',0) + day_to_add
+        nb_jour = res.get('days_accrued', 0) + day_to_add
         year_base = res.get('days_in_period')
         if not year_base or year_base == 0:
             return {'interest_gross': 0.0, 'interest_net': 0.0}
@@ -335,13 +367,12 @@ class EfundService(models.Model):
         }
         """
 
-
-
     def build_event_payload(self, event, vehicule_id, name, date_operation, playload):
 
         event_type_id = self.env['efund.event.type'].search([('sigle', '=', event)], limit=1)
         if not event_type_id:
-            raise ValidationError(f" Le type d'évènement {event} n'est pas définir. Merci de contacter votre Administrateur")
+            raise ValidationError(
+                f" Le type d'évènement {event} n'est pas définir. Merci de contacter votre Administrateur")
 
         return {
             'event_type_id': event_type_id.id,
@@ -350,8 +381,7 @@ class EfundService(models.Model):
             'event_date': date_operation,
             'state': 'draft',
             'payload': playload,
-            }
-
+        }
 
     def generate_all_coupon_dates(self, value_date, maturity_date, coupon_frequency):
         dates = []
@@ -407,4 +437,3 @@ class EfundService(models.Model):
 
             # Le montant sera exactement le même en 2027, 2028, etc.
             coupon.amount = (nominal * taux_annuel) / periods
-
