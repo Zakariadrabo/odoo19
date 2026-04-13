@@ -73,7 +73,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
     # ----------------------------------------------------
     # Contraintes
     # ----------------------------------------------------
-    @api.onchange('yield_rate', 'execution_date', 'calculation_type')
+    @api.onchange('yield_rate', 'execution_date', 'calculation_type','executed_quantity')
     def _onchange_calculate_by_rate(self):
         """ Calcule le montant si on saisit le taux """
         for rec in self:
@@ -87,11 +87,11 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                         base = int(tcn.day_count_convention)
                         rec.discount_amount = (tcn.face_value * rec.yield_rate * duration) / (base * 100)
                         rec.purchase_price = tcn.face_value - rec.discount_amount
-                        rec.total_amount = tcn.face_value * rec.executed_quantity
-                        rec.total_amount_trade = rec.purchase_price * rec.executed_quantity
-                        rec.total_interest = rec.total_amount - rec.total_amount_trade
+                        #rec.total_amount = tcn.face_value * rec.executed_quantity
+                        rec.total_amount_trade = tcn.face_value * rec.executed_quantity
+                        rec.total_interest =rec.discount_amount *  rec.executed_quantity
 
-    @api.onchange('purchase_price', 'execution_date', 'calculation_type')
+    @api.onchange('purchase_price', 'execution_date', 'calculation_type','executed_quantity')
     def _onchange_calculate_by_price(self):
         """ Calcule le taux si on saisit le prix d'achat """
         for rec in self:
@@ -106,9 +106,9 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                         # Taux = (Escompte * Base * 100) / (Nominal * Durée)
                         rec.yield_rate = (rec.discount_amount * base * 100) / (tcn.face_value * duration)
                         rec.purchase_price = tcn.face_value - rec.discount_amount
-                        rec.total_amount = tcn.face_value * rec.executed_quantity
-                        rec.total_amount_trade = rec.purchase_price * rec.executed_quantity
-                        rec.total_interest = rec.total_amount - rec.total_amount_trade
+                        #rec.total_amount = tcn.face_value * rec.executed_quantity
+                        rec.total_amount_trade = tcn.face_value * rec.executed_quantity
+                        rec.total_interest = rec.discount_amount * rec.executed_quantity
 
 
 
@@ -149,7 +149,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
 
 
     @api.depends('execution_date','execution_price','executed_quantity','order_id.order_date', 'order_id.limit_price', 'order_id.quantity', 'order_id.deposit_amount', 'order_id.negotiated_rate', 'order_id.interest_type',
-                 'order_id.maturity_date', 'order_id.start_date', 'order_id.order_amount', 'order_id.nav', 'order_id.direction','deposit_amount', 'negotiated_rate', 'interest_type', 'order_id.units_estimated')
+                 'order_id.maturity_date', 'order_id.start_date', 'order_id.order_amount', 'order_id.nav', 'order_id.direction','deposit_amount', 'negotiated_rate', 'interest_type', 'order_id.units_estimated','yield_rate')
     def _compute_accrured_interest(self):
         for rec in self:
             tx_courtage = 0
@@ -184,6 +184,19 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                             tx_other = res.rate
 
                 # Récupération du type de l'instrument
+                if rec.order_id.instrument_id.instrument_type == 'tcn':
+                    tcn = self.env['efund.vehicule.instrument.core.treasury'].search(
+                        [('instrument_id', '=', rec.order_id.instrument_id.id), ], limit=1)
+                    rec.total_amount_trade = tcn.face_value * rec.executed_quantity
+                    if tcn:
+                        if tx_courtage > 0:
+                            rec.total_courtage = round((rec.executed_quantity * tcn.face_value * tx_courtage) / 100, )
+                        if tx_tva > 0 and tx_courtage > 0:
+                            rec.total_tva = round((rec.total_courtage * tx_tva) / 100)
+
+                    rec.total_fees = rec.total_courtage + rec.total_tva
+                    rec.total_amount = rec.total_amount_trade + rec.total_fees - rec.total_interest if rec.direction == 'buy' else rec.total_amount_trade + rec.total_fees - rec.total_interest
+
                 if rec.order_id.instrument_id.instrument_type == 'bond':
                     bond = self.env['efund.vehicule.instrument.core.bond'].search(
                         [('instrument_id', '=', rec.order_id.instrument_id.id), ])
@@ -314,11 +327,11 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
         if self.instrument_type == 'tcn':
             tcn = self.env['efund.vehicule.instrument.core.treasury'].search(
                 [('instrument_id', '=', self.order_id.instrument_id.id), ], limit=1)
-            self.negotiated_rate_net = False
             self.negotiated_rate = False
             self.interest_type = 'prepaid'
             self.execution_price = self.purchase_price
             self.maturity_date = tcn.maturity_date
+            self.negotiated_rate_net = self.yield_rate
             #self.start_date = res.get('settlement_date'),
             self.total_bvm = False
             self.total_dc = False
@@ -328,7 +341,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
             #self.tva = False
             self.total_irvm = False
             self.total_commission = False
-            self.total_fees = False
+            #self.total_fees = False
             #self.amount = False
             self.free_tax_amount = False
             self.total_interet_brut = False
@@ -357,6 +370,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                 'total_regulateur': self.total_regulateur,
                 'total_interest': self.total_interest,
                 'total_transaction': self.total_amount_trade,
+                'total_amount_trade': self.total_amount_trade,
                 'total_fees': self.total_fees,
                 'total_amount': self.total_amount,
                 'total_commission': self.total_commission,

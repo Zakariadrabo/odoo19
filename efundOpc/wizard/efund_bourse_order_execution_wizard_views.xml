@@ -31,12 +31,15 @@
                             <field name="discount_amount" readonly="1" force_save="1" string="rendement Prix / Bon"/>
                         </group>
 
-
                         <group string="Résumé">
 
                             <field name="total_amount_trade" widget="monetary" class="fw-bold text-primary"
                                    string="Montant Transaction" force_save="1"/>
                             <field name="total_interest" readonly="1" string="Intérêt Précompté"/>
+                            <field name="total_courtage" readonly="1" widget="monetary" class="fw-bold text-primary"
+                                   string="Montant Courtage" force_save="1"/>
+                            <field name="total_tva" readonly="1" widget="monetary" class="fw-bold text-primary"
+                                   string="Montant TVA" force_save="1"/>
                             <field name="total_amount" string="Montant à récevoir"/>
                         </group>
                     </group>

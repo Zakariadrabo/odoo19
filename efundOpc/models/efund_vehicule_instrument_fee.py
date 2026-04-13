@@ -21,7 +21,7 @@ class EfundInstrumentFee(models.Model):
     fee_category = fields.Selection(
         [('courtage', 'Commission de courtage'), ('vat', 'TVA'),
          ('bvmac', 'Commission Bourse Valeurs Mobilières'), ('dc', 'Commission Dépositaire Central'), ('ircm', 'IRCM / IRVM'), ('regulateur', 'Commission régulateur'),
-         ('other', 'Autres frais'), ], required=True)
+         ('other', 'Autres frais'), ],string="Catégorie de Frais", required=True)
     base_amount = fields.Monetary(string="Base de calcul")
     rate = fields.Float(string="Taux (%)")
     fee_amount = fields.Monetary(string="Montant du frais")

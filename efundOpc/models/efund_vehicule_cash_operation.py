@@ -51,6 +51,8 @@ class EfundVehiculeCashOperation(models.Model):
             'name': self.env['ir.sequence'].next_by_code('efund.vehicule.cash.move'),
             'vehicule_cash_id': vehicule_cash,
             'amount': self.total_amount,
+            'date': self.date_operation,
+            'value_date': self.date_operation,
             'move_type': 'other_out',
             'liquidity_type': 'liquid',
             'state': 'reconciled',

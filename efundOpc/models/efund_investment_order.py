@@ -1,6 +1,6 @@
 import logging
 from datetime import timedelta, date
-
+from email.policy import default
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
@@ -29,7 +29,7 @@ class EfundInvestmentOrder(models.Model):
         ], string="Type d'opération", required=True, tracking=True)
 
     order_date = fields.Date(string="Date de commande", default=fields.Date.context_today)
-    direction = fields.Selection([('buy', 'Achat'), ('sell', 'Vente')], string="Sens", )
+    direction = fields.Selection([('buy', 'Achat'), ('sell', 'Vente')], string="Sens",default="buy" )
     state = fields.Selection([('draft', 'Brouillon'), ('validated', 'Validé'), ('sent', 'Envoyé'),
                               ('partially_executed', 'Partiellement exécuté'), ('executed', 'Exécuté'),
                               ('cancelled', 'Annuler')], default='draft', string="Statut")
@@ -67,7 +67,7 @@ class EfundInvestmentOrder(models.Model):
     # les données de DAT
     deposit_amount = fields.Monetary(string="Montant à placer",  store=True)
     negotiated_rate = fields.Float(string="Taux négocié (%)", store=True)
-    interest_type = fields.Selection([('postpaid', 'Postpayé'), ('prepaid', 'Prépayé')], default='postpaid', string="Type d'intérêt", store=True)
+    interest_type = fields.Selection([('postpaid', 'Postcompté'), ('prepaid', 'Précompté')], default='postpaid', string="Type d'intérêt", store=True)
     maturity_date = fields.Date(string="Échéance prévue", store=True)
     start_date = fields.Date(string="Date de début", store=True)
 
@@ -100,9 +100,9 @@ class EfundInvestmentOrder(models.Model):
                         base = int(tcn.day_count_convention)
                         rec.discount_amount = (tcn.face_value * rec.yield_rate * duration) / (base * 100)
                         rec.purchase_price = tcn.face_value - rec.discount_amount
-                        rec.total_amount = tcn.face_value * rec.quantity
-                        rec.total_amount_trade = rec.purchase_price * rec.quantity
-                        rec.total_interest = rec.total_amount  - rec.total_amount_trade
+                        #rec.total_amount = tcn.face_value * rec.quantity
+                        rec.total_amount_trade = tcn.face_value * rec.quantity
+                        rec.total_interest = rec.discount_amount* rec.quantity
                         rec.maturity_date = tcn.maturity_date
 
 
@@ -120,10 +120,11 @@ class EfundInvestmentOrder(models.Model):
                         # Taux = (Escompte * Base * 100) / (Nominal * Durée)
                         rec.yield_rate = (rec.discount_amount * base * 100) / (tcn.face_value * duration)
                         rec.purchase_price = tcn.face_value - rec.discount_amount
-                        rec.total_amount = tcn.face_value * rec.quantity
-                        rec.total_amount_trade = rec.purchase_price * rec.quantity
-                        rec.total_interest = rec.total_amount - rec.total_amount_trade
+                        #rec.total_amount = tcn.face_value * rec.quantity
+                        rec.total_amount_trade = tcn.face_value * rec.quantity
+                        rec.total_interest = rec.discount_amount * rec.quantity
                         rec.maturity_date = tcn.maturity_date
+                        #rec.total_amount = tcn.face_value * rec.quantity
 
 
     @api.depends('instrument_id', 'operation_type')
@@ -183,9 +184,7 @@ class EfundInvestmentOrder(models.Model):
         annual_rate = float(annual_rate or 0.0)
         tax_rate = float(tax_rate or 0.0)
 
-        daily_rate = (annual_rate / 100.0) / 365.25
-
-        _logger.info(f"******daily_rate: {daily_rate}, duration : {duration_days}, nominal : {nominal}, tax_rate : {tax_rate} , annual: {annual_rate} ")
+        daily_rate = (annual_rate / 100.0) / 365
 
         total_interest_gross = nominal * daily_rate * duration_days
 
@@ -251,8 +250,6 @@ class EfundInvestmentOrder(models.Model):
             if order.operation_type == 'trade':
                 if order.instrument_id.instrument_type != 'tcn':
                     order.total_amount_trade = order.quantity * order.limit_price
-                else:
-                    order.total_amount_trade = order.purchase_price * order.quantity
             elif order.operation_type in ['subscription', 'redemption']:
                 order.total_amount_trade = order.nav * order.units_estimated
                 order.total_amount = order.nav * order.units_estimated
@@ -551,7 +548,7 @@ class EfundInvestmentOrder(models.Model):
             raise ValidationError(_("Le montant et l'échéance sont obligatoires pour un DAT."))
 
     @api.depends('order_date', 'limit_price', 'quantity', 'deposit_amount', 'negotiated_rate', 'interest_type',
-                 'maturity_date', 'start_date', 'order_amount', 'nav', 'direction', 'units_estimated','nav','discount_amount')
+                 'maturity_date', 'start_date', 'order_amount', 'nav', 'direction', 'units_estimated','nav','discount_amount','yield_rate')
     def _compute_accrured_interest(self):
         for rec in self:
             serviceEngine = self.env['efund.service']
@@ -564,9 +561,6 @@ class EfundInvestmentOrder(models.Model):
             tx_other = 0
 
             if rec.operation_type == 'trade':
-                if rec.instrument_id.instrument_type == 'tcn':
-                    rec.total_amount_trade =  rec.purchase_price * rec.quantity
-                else:
 
                     result = self.env['efund.vehicule.instrument.fee.rule'].search([
                         ('instrument_id', '=', rec.instrument_id.id),
@@ -590,16 +584,30 @@ class EfundInvestmentOrder(models.Model):
                                 tx_other = res.rate
 
                     # Récupération du type de l'instrument
+                    if rec.instrument_id.instrument_type == 'tcn':
+                        tcn = self.env['efund.vehicule.instrument.core.treasury'].search([('instrument_id', '=', rec.instrument_id.id),], limit=1)
+                        rec.total_amount_trade = rec.quantity * tcn.face_value
+                        if tcn:
+                            if tx_courtage > 0:
+                                rec.total_courtage = round((rec.quantity * tcn.face_value * tx_courtage) / 100, )
+                            if tx_tva > 0 and tx_courtage > 0:
+                                rec.total_tva = round((rec.total_courtage * tx_tva) / 100)
+
+
+                        rec.total_interest = rec.discount_amount * rec.quantity
+                        rec.total_fees = rec.total_courtage + rec.total_tva
+                        rec.total_commission = rec.total_courtage + rec.total_tva
+                        rec.total_amount_trade = rec.quantity * tcn.face_value
+                        rec.total_amount =  rec.total_amount_trade + rec.total_fees - rec.total_interest if rec.direction == 'buy' else rec.total_amount_trade + rec.total_fees - rec.total_interest
+
+
                     if rec.instrument_id.instrument_type == 'bond':
                         bond = self.env['efund.vehicule.instrument.core.bond'].search(
                             [('instrument_id', '=', rec.instrument_id.id), ])
                         if bond:
                             res = serviceEngine.compute_accrued_interest_precise(bond.face_value, bond.coupon_rate, rec.order_date, bond.maturity_date,bond.coupon_frequency, tax_rate=tx_irvm if tx_irvm > 0 else 0, add_day=0)
-
-
                             cc_brut = res.get('interest_gross')
                             cc_net = res.get('interest_net')
-                            _logger.info(f"************ interest_net: {cc_net} et interest_gross: {cc_brut}")
 
                             if tx_courtage > 0:
                                 rec.total_courtage = round((rec.quantity * bond.face_value * tx_courtage) / 100,)
@@ -691,8 +699,7 @@ class EfundInvestmentOrder(models.Model):
             raise ValidationError(_("Quantité et prix doivent être positifs."))
 
         remaining = self.quantity - self.executed_qty
-        _logger.info(
-            f"*******************selef.quantity: {self.quantity} execute_qty: {self.executed_qty} remaining {remaining} et quantity {qty}")
+
         if qty > remaining:
             raise ValidationError(_("Quantité exécutée supérieure au solde restant."))
 

@@ -1,0 +1,54 @@
+<odoo>
+    <record id="event_001" model="efundOpc.efund.event.type">
+        <field name="name">Apport de liquidité</field>
+        <field name="code">CASH_IN</field>
+        <field name="state">validated</field>
+    </record>
+    <record id="event_002" model="efundOpc.efund.event.type">
+        <field name="name">Mise en place du DAT</field>
+        <field name="sigle">DAT_EXECUTED</field>
+        <field name="state">validated</field>
+    </record>
+    <record id="event_003" model="efundOpc.efund.event.type">
+        <field name="name">Rachat Validé</field>
+        <field name="code">RED_VALIDATED</field>
+        <field name="state">validated</field>
+    </record>
+    <record id="event_004" model="efundOpc.efund.event.type">
+        <field name="name">Retrait de liquidité</field>
+        <field name="code">CASH_OUT</field>
+        <field name="state">validated</field>
+    </record>
+    <record id="event_005" model="efundOpc.efund.event.type">
+        <field name="name">Souscription OPCVM</field>
+        <field name="code">OPC_EXECUTED</field>
+        <field name="state">validated</field>
+    </record>
+    <record id="event_006" model="efundOpc.efund.event.type">
+        <field name="name">Souscription Titre</field>
+        <field name="code">TRADE_SUBSCRIPTION</field>
+        <field name="state">validated</field>
+    </record>
+    <record id="event_007" model="efundOpc.efund.event.type">
+        <field name="name">Souscription Validée</field>
+        <field name="code">SUB_VALIDATED</field>
+        <field name="state">validated</field>
+    </record>
+    <record id="event_008" model="efundOpc.efund.event.type">
+        <field name="name">Transaction Titre Dénouée</field>
+        <field name="code">TRADE_DELIVERED</field>
+        <field name="state">validated</field>
+    </record>
+    <record id="event_009" model="efundOpc.efund.event.type">
+        <field name="name">Transaction Titre Exécutée</field>
+        <field name="code">TRADE_EXECUTED</field>
+        <field name="state">validated</field>
+    </record>
+    <record id="event_010" model="efundOpc.efund.event.type">
+        <field name="name">Souscription BONS</field>
+        <field name="code">TCN_VALIDATED</field>
+        <field name="state">validated</field>
+    </record>
+</odoo>
+
+

@@ -13,10 +13,11 @@ class EfundService(models.Model):
     # récupération de la dernière VL
     # Dans votre modèle efund.service
 
-    def get_tcn_interest(self, rate, start_date,amuont,base):
+
+    def get_tcn_interest(self, rate, start_date,amount,base):
         today = datetime.date.today()
         duration = (today - start_date).days
-        return amuont * rate * duration / (base * 100)
+        return amount * rate * duration / (base * 100)
 
     def get_last_nav_value(self, fund_id, date_limit=None):
         """
