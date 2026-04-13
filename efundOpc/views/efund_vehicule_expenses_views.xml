@@ -1,7 +1,7 @@
 <odoo>
     <record id="view_fund_expense_list" model="ir.ui.view">
-        <field name="name">efund.fund.expense.list</field>
-        <field name="model">efund.fund.expense</field>
+        <field name="name">efund.vehicule.expense.list</field>
+        <field name="model">efund.vehicule.expense</field>
         <field name="arch" type="xml">
             <list decoration-muted="state == 'archived'"
                   decoration-info="state == 'draft'"
@@ -21,8 +21,8 @@
         </field>
     </record>
     <record id="view_fund_expense_form" model="ir.ui.view">
-        <field name="name">efund.fund.expense.form</field>
-        <field name="model">efund.fund.expense</field>
+        <field name="name">efund.vehicule.expense.form</field>
+        <field name="model">efund.vehicule.expense</field>
         <field name="arch" type="xml">
 
             <form string="Charge du Fonds">

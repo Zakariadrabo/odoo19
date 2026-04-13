@@ -304,6 +304,8 @@ class FundPosition(models.Model):
         Q_old = self.quantity
         PRU_old = self.avg_cost or 0.0
         self.value_date = trade.date_settlement
+        self.maturity_date = trade.maturity_date
+        self.rate = trade.negotiated_rate_net
 
         if trade.order_id.operation_type == 'deposit':
             self.last_price = trade.total_amount

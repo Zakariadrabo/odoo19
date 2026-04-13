@@ -14,6 +14,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
 
     order_id = fields.Many2one('efund.investment.order', string="Ordre de bourse", required=True, readonly=True)
     operation_type = fields.Selection(related='order_id.operation_type', default='buy', string="Type d'opération")
+    instrument_type = fields.Selection(related='order_id.instrument_id.instrument_type', string="Type d'instrument")
     currency_id = fields.Many2one(related='order_id.instrument_id.currency_id', string="Devise")
     executed_quantity = fields.Float(string="Quantité exécutée", required=True)
     execution_price = fields.Float(string="Cours d'exécution", required=True)
@@ -60,10 +61,57 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
     units_estimated = fields.Float(string="Parts estimées", store=True)
     direction_opcvm = fields.Selection([('subscription', 'Souscription'), ('redemption', 'Rachat')], string="Sens")
 
+    # BON
+    nominal_bta = fields.Monetary(string="Montant nominal BTA", readonly=True, store=True)
+    calculation_type = fields.Selection([('rate', 'Taux'), ('amount', 'Prix')], string="Mode de saisie", default='rate',
+                                        required=True)
+    yield_rate = fields.Float(string="Taux de rendement (%)", digits=(12, 6))
+    discount_amount = fields.Monetary(string="Montant de l'escompte")
+    purchase_price = fields.Monetary(string="Prix d'acquisition / Net", help="Prix après escompte")
+
 
     # ----------------------------------------------------
     # Contraintes
     # ----------------------------------------------------
+    @api.onchange('yield_rate', 'execution_date', 'calculation_type')
+    def _onchange_calculate_by_rate(self):
+        """ Calcule le montant si on saisit le taux """
+        for rec in self:
+            if rec.calculation_type == 'rate' and rec.yield_rate:
+                tcn = self.env['efund.vehicule.instrument.core.treasury'].search(
+                    [('instrument_id', '=', rec.order_id.instrument_id.id), ], limit=1)
+                if tcn:
+                    duration = (tcn.maturity_date - rec.execution_date).days
+                    if duration > 0:
+                        # Formule escompte simple : Intérêt = (Nominal * Taux * Durée) / (Base * 100)
+                        base = int(tcn.day_count_convention)
+                        rec.discount_amount = (tcn.face_value * rec.yield_rate * duration) / (base * 100)
+                        rec.purchase_price = tcn.face_value - rec.discount_amount
+                        rec.total_amount = tcn.face_value * rec.executed_quantity
+                        rec.total_amount_trade = rec.purchase_price * rec.executed_quantity
+                        rec.total_interest = rec.total_amount - rec.total_amount_trade
+
+    @api.onchange('purchase_price', 'execution_date', 'calculation_type')
+    def _onchange_calculate_by_price(self):
+        """ Calcule le taux si on saisit le prix d'achat """
+        for rec in self:
+            if rec.calculation_type == 'amount' and rec.yield_rate:
+                tcn = self.env['efund.vehicule.instrument.core.treasury'].search(
+                    [('instrument_id', '=', rec.order_id.instrument_id.id), ], limit=1)
+                if tcn:
+                    duration = (tcn.maturity_date - rec.execution_date).days
+                    if duration > 0 and tcn.face_value > 0:
+                        rec.discount_amount = tcn.face_value - rec.purchase_price
+                        base = int(tcn.day_count_convention)
+                        # Taux = (Escompte * Base * 100) / (Nominal * Durée)
+                        rec.yield_rate = (rec.discount_amount * base * 100) / (tcn.face_value * duration)
+                        rec.purchase_price = tcn.face_value - rec.discount_amount
+                        rec.total_amount = tcn.face_value * rec.executed_quantity
+                        rec.total_amount_trade = rec.purchase_price * rec.executed_quantity
+                        rec.total_interest = rec.total_amount - rec.total_amount_trade
+
+
+
     @api.onchange('amount_type', 'order_amount', 'units_estimated', 'nav')
     def _onchange_order_calculations(self):
         for rec in self:
@@ -263,6 +311,30 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
         # 1️⃣ Créer ligne d’exécution
         res = self.order_id.get_settlement_details(self.execution_date,0 if self.order_id.instrument_id.instrument_type in ('dat','opcvm') or self.order_id.instrument_id.settlement_mode !='direct' else 3)
 
+        if self.instrument_type == 'tcn':
+            tcn = self.env['efund.vehicule.instrument.core.treasury'].search(
+                [('instrument_id', '=', self.order_id.instrument_id.id), ], limit=1)
+            self.negotiated_rate_net = False
+            self.negotiated_rate = False
+            self.interest_type = 'prepaid'
+            self.execution_price = self.purchase_price
+            self.maturity_date = tcn.maturity_date
+            #self.start_date = res.get('settlement_date'),
+            self.total_bvm = False
+            self.total_dc = False
+            self.total_regulateur = False
+            self.total_other = False
+            #self.courtage = False
+            #self.tva = False
+            self.total_irvm = False
+            self.total_commission = False
+            self.total_fees = False
+            #self.amount = False
+            self.free_tax_amount = False
+            self.total_interet_brut = False
+            self.deposit_amount = False
+
+
         exec_line = self.env['efund.investment.transaction'].create({
                 'order_id': self.order_id.id,
                 'date_transaction': self.execution_date,
@@ -288,6 +360,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                 'total_fees': self.total_fees,
                 'total_amount': self.total_amount,
                 'total_commission': self.total_commission,
+                'interest_type': self.interest_type,
 
                 'move_type': 'out' if self.direction in ('souscription', 'achat') else 'in',
                 'label': f" Exécution de l'ordre N° {self.order_id.name} de {self.direction} de l'instrument {self.order_id.instrument_id.name} - Monstant : {self.free_tax_amount} francs",

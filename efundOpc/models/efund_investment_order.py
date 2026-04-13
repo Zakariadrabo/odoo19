@@ -1,6 +1,8 @@
 import calendar
 import logging
-from datetime import timedelta
+from datetime import timedelta, date
+
+from win32com import storagecon
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
@@ -26,7 +28,7 @@ class EfundInvestmentOrder(models.Model):
     currency_id = fields.Many2one(related='instrument_id.currency_id', store=True)
     operation_type = fields.Selection(
         [('trade', 'Transaction de marché'), ('opcvm', 'OPCVM'), ('deposit', 'Placement bancaire'),
-         ('maturity', 'Échéance'), ], string="Type d'opération", required=True, tracking=True)
+        ], string="Type d'opération", required=True, tracking=True)
 
     order_date = fields.Date(string="Date de commande", default=fields.Date.context_today)
     direction = fields.Selection([('buy', 'Achat'), ('sell', 'Vente')], string="Sens", )
@@ -54,7 +56,7 @@ class EfundInvestmentOrder(models.Model):
     limit_price = fields.Float(string="Prix limite", digits=(16, 6))
     validity_date = fields.Date(string="Date de validité", help="Date d'expiration de l'ordre")
     quantity = fields.Float(string="Quantité", digits=(16, 6))
-    total_amount_trade = fields.Monetary(compute='_compute_total_amount', currency_field='currency_id', string='Total HT', store=True)
+    total_amount_trade = fields.Monetary(compute='_compute_total_amount', string='Total HT',precompute=True, store=True)
 
     # les données de opcvm
     amount_type = fields.Selection([('amount', 'Montant'), ('unit', 'Nombre de parts')], string='Type',default='amount')
@@ -65,11 +67,19 @@ class EfundInvestmentOrder(models.Model):
     direction_opcvm = fields.Selection([('subscription', 'Souscription'), ('redemption', 'Rachat')], string="Sens")
 
     # les données de DAT
-    deposit_amount = fields.Monetary(string="Montant à placer", )
-    negotiated_rate = fields.Float(string="Taux négocié (%)")
-    interest_type = fields.Selection([('postpaid', 'Postpayé'), ('prepaid', 'Prépayé')], default='postpaid', string="Type d'intérêt")
-    maturity_date = fields.Date(string="Échéance prévue")
-    start_date = fields.Date(string="Date de début")
+    deposit_amount = fields.Monetary(string="Montant à placer",  store=True)
+    negotiated_rate = fields.Float(string="Taux négocié (%)", store=True)
+    interest_type = fields.Selection([('postpaid', 'Postpayé'), ('prepaid', 'Prépayé')], default='postpaid', string="Type d'intérêt", store=True)
+    maturity_date = fields.Date(string="Échéance prévue", store=True)
+    start_date = fields.Date(string="Date de début", store=True)
+
+    # BON
+    nominal_bta = fields.Monetary(string="Montant nominal BTA", readonly=True, store=True)
+    calculation_type = fields.Selection([('rate', 'Taux'), ('amount', 'Prix')], string="Mode de saisie", default='rate', required=True)
+    yield_rate = fields.Float(string="Taux de rendement (%)", digits=(12, 6))
+    discount_amount = fields.Monetary(string="Montant de l'escompte")
+    purchase_price = fields.Monetary(string="Prix d'acquisition / Net", help="Prix après escompte")
+
 
     # Suivi des exécutions
     executed_qty = fields.Float(string="Quantité exécutée", compute='_compute_execution', store=True)
@@ -78,6 +88,45 @@ class EfundInvestmentOrder(models.Model):
     # Relations avec transaction
     execution_line_ids = fields.One2many('efund.investment.transaction', 'order_id', )
     broker_id = fields.Many2one('efund.depositaire', string="Société de bourse")
+
+    @api.onchange('yield_rate',  'order_date', 'calculation_type')
+    def _onchange_calculate_by_rate(self):
+        """ Calcule le montant si on saisit le taux """
+        for rec in self:
+            if rec.calculation_type == 'rate' and rec.yield_rate:
+                tcn = self.env['efund.vehicule.instrument.core.treasury'].search([('instrument_id', '=', rec.instrument_id.id),], limit=1)
+                if tcn:
+                    duration = (tcn.maturity_date - rec.order_date).days
+                    if duration > 0:
+                        # Formule escompte simple : Intérêt = (Nominal * Taux * Durée) / (Base * 100)
+                        base = int(tcn.day_count_convention)
+                        rec.discount_amount = (tcn.face_value * rec.yield_rate * duration) / (base * 100)
+                        rec.purchase_price = tcn.face_value - rec.discount_amount
+                        rec.total_amount = tcn.face_value * rec.quantity
+                        rec.total_amount_trade = rec.purchase_price * rec.quantity
+                        rec.total_interest = rec.total_amount  - rec.total_amount_trade
+                        rec.maturity_date = tcn.maturity_date
+
+
+    @api.onchange('purchase_price', 'order_date', 'calculation_type')
+    def _onchange_calculate_by_price(self):
+        """ Calcule le taux si on saisit le prix d'achat """
+        for rec in self:
+            if rec.calculation_type == 'amount' and rec.yield_rate:
+                tcn = self.env['efund.vehicule.instrument.core.treasury'].search([('instrument_id', '=', rec.instrument_id.id),], limit=1)
+                if tcn:
+                    duration = (tcn.maturity_date - rec.order_date).days
+                    if duration > 0 and tcn.face_value > 0:
+                        rec.discount_amount = tcn.face_value - rec.purchase_price
+                        base = int(tcn.day_count_convention)
+                        # Taux = (Escompte * Base * 100) / (Nominal * Durée)
+                        rec.yield_rate = (rec.discount_amount * base * 100) / (tcn.face_value * duration)
+                        rec.purchase_price = tcn.face_value - rec.discount_amount
+                        rec.total_amount = tcn.face_value * rec.quantity
+                        rec.total_amount_trade = rec.purchase_price * rec.quantity
+                        rec.total_interest = rec.total_amount - rec.total_amount_trade
+                        rec.maturity_date = tcn.maturity_date
+
 
     @api.depends('instrument_id', 'operation_type')
     def _compute_nav(self):
@@ -108,15 +157,38 @@ class EfundInvestmentOrder(models.Model):
         - Idéal pour les DAT < 1 an.
         - Facilite le calcul lors des renouvellements.
         """
+
         # 1. Calcul de la durée exacte (Ex: 90 jours, 180 jours, ou 365 jours)
-        duration_days = (date_end - date_start).days
+        d_start = fields.Date.from_string(date_start) if isinstance(date_start, str) else date_start
+        d_end = fields.Date.from_string(date_end) if isinstance(date_end, str) else date_end
+
+        if d_start and d_end:
+            # Vérifiez que ce ne sont pas des entiers
+            if isinstance(d_start, date) and isinstance(d_end, date):
+                duration_days = (d_end - d_start).days
+            else:
+                # Si c'est déjà un entier, ne faites pas .days
+                duration_days = d_end - d_start
+        #duration_days = (date_end - date_start).days
 
         # 2. Calcul du taux journalier
         # Exemple : 6% / 360 = 0,01666% par jour
-        daily_rate = (annual_rate / 100.0) / 365,25
+
 
         # 3. Calcul de l'intérêt brut total pour la période
         # Formule : Nominal * Taux Journalier * Nombre de jours
+        if isinstance(nominal, (list, tuple)):
+            nominal = nominal[0] if nominal else 0.0
+
+            # On s'assure que tout est bien au format numérique
+        nominal = float(nominal or 0.0)
+        annual_rate = float(annual_rate or 0.0)
+        tax_rate = float(tax_rate or 0.0)
+
+        daily_rate = (annual_rate / 100.0) / 365.25
+
+        _logger.info(f"******daily_rate: {daily_rate}, duration : {duration_days}, nominal : {nominal}, tax_rate : {tax_rate} , annual: {annual_rate} ")
+
         total_interest_gross = nominal * daily_rate * duration_days
 
         # 4. Gestion de la retenue fiscale (IRCM)
@@ -179,7 +251,10 @@ class EfundInvestmentOrder(models.Model):
 
         for order in self:
             if order.operation_type == 'trade':
-                order.total_amount_trade = order.quantity * order.limit_price
+                if order.instrument_id.instrument_type != 'tcn':
+                    order.total_amount_trade = order.quantity * order.limit_price
+                else:
+                    order.total_amount_trade = order.purchase_price * order.quantity
             elif order.operation_type in ['subscription', 'redemption']:
                 order.total_amount_trade = order.nav * order.units_estimated
                 order.total_amount = order.nav * order.units_estimated
@@ -309,6 +384,14 @@ class EfundInvestmentOrder(models.Model):
                 'default_units_estimated': self.units_estimated,
                 'default_nav_date_expected': self.nav_date_expected,
                 'default_direction_opcvm': self.direction_opcvm,
+                #Bon
+                # BON
+                'default_nominal_bta': self.nominal_bta,
+                'default_calculation_type': self.calculation_type,
+                'default_yield_rate': self.yield_rate,
+                'default_discount_amount': self.discount_amount,
+                'default_purchase_price': self.purchase_price,
+                'default_instrument_type': self.instrument_type
             }
         }
 
@@ -470,7 +553,7 @@ class EfundInvestmentOrder(models.Model):
             raise ValidationError(_("Le montant et l'échéance sont obligatoires pour un DAT."))
 
     @api.depends('order_date', 'limit_price', 'quantity', 'deposit_amount', 'negotiated_rate', 'interest_type',
-                 'maturity_date', 'start_date', 'order_amount', 'nav', 'direction', 'units_estimated','nav')
+                 'maturity_date', 'start_date', 'order_amount', 'nav', 'direction', 'units_estimated','nav','discount_amount')
     def _compute_accrured_interest(self):
         for rec in self:
             serviceEngine = self.env['efund.service']
@@ -483,110 +566,116 @@ class EfundInvestmentOrder(models.Model):
             tx_other = 0
 
             if rec.operation_type == 'trade':
+                if rec.instrument_id.instrument_type == 'tcn':
+                    rec.total_amount_trade =  rec.purchase_price * rec.quantity
+                else:
 
-                result = self.env['efund.vehicule.instrument.fee.rule'].search([
-                    ('instrument_id', '=', rec.instrument_id.id),
-                ])
+                    result = self.env['efund.vehicule.instrument.fee.rule'].search([
+                        ('instrument_id', '=', rec.instrument_id.id),
+                    ])
 
-                if result:
-                    for res in result:
-                        if res.fee_category == 'courtage':
-                            tx_courtage = res.rate
-                        if res.fee_category == 'vat':
-                            tx_tva = res.rate
-                        if res.fee_category == 'bvmac':
-                            tx_bvm = res.rate
-                        if res.fee_category == 'dc':
-                            tx_dc = res.rate
-                        if res.fee_category == 'ircm':
-                            tx_irvm = res.rate
-                        if res.fee_category == 'regulateur':
-                            tx_regulateur = res.rate
-                        if res.fee_category == 'other':
-                            tx_other = res.rate
+                    if result:
+                        for res in result:
+                            if res.fee_category == 'courtage':
+                                tx_courtage = res.rate
+                            if res.fee_category == 'vat':
+                                tx_tva = res.rate
+                            if res.fee_category == 'bvmac':
+                                tx_bvm = res.rate
+                            if res.fee_category == 'dc':
+                                tx_dc = res.rate
+                            if res.fee_category == 'ircm':
+                                tx_irvm = res.rate
+                            if res.fee_category == 'regulateur':
+                                tx_regulateur = res.rate
+                            if res.fee_category == 'other':
+                                tx_other = res.rate
 
-                # Récupération du type de l'instrument
-                if rec.instrument_id.instrument_type == 'bond':
-                    bond = self.env['efund.vehicule.instrument.core.bond'].search(
-                        [('instrument_id', '=', rec.instrument_id.id), ])
-                    if bond:
-                        res = serviceEngine.compute_accrued_interest_precise(bond.face_value, bond.coupon_rate, rec.order_date, bond.maturity_date,bond.coupon_frequency, tax_rate=tx_irvm if tx_irvm > 0 else 0, add_day=0)
+                    # Récupération du type de l'instrument
+                    if rec.instrument_id.instrument_type == 'bond':
+                        bond = self.env['efund.vehicule.instrument.core.bond'].search(
+                            [('instrument_id', '=', rec.instrument_id.id), ])
+                        if bond:
+                            res = serviceEngine.compute_accrued_interest_precise(bond.face_value, bond.coupon_rate, rec.order_date, bond.maturity_date,bond.coupon_frequency, tax_rate=tx_irvm if tx_irvm > 0 else 0, add_day=0)
 
 
-                        cc_brut = res.get('interest_gross')
-                        cc_net = res.get('interest_net')
-                        _logger.info(f"************ interest_net: {cc_net} et interest_gross: {cc_brut}")
+                            cc_brut = res.get('interest_gross')
+                            cc_net = res.get('interest_net')
+                            _logger.info(f"************ interest_net: {cc_net} et interest_gross: {cc_brut}")
 
+                            if tx_courtage > 0:
+                                rec.total_courtage = round((rec.quantity * bond.face_value * tx_courtage) / 100,)
+                            # la TVA se calcul sur la commission de courtage seulement
+                            if tx_tva > 0 and tx_courtage > 0:
+                                rec.total_tva = round((rec.total_courtage * tx_tva) / 100)
+
+                            if tx_irvm > 0:
+                                rec.total_irvm = round((cc_brut * rec.quantity) - (cc_net * rec.quantity))
+
+                            total_transaction = round((rec.quantity * rec.limit_price) + (cc_net * rec.quantity))
+                            if tx_bvm > 0 and tx_courtage > 0:
+                                rec.total_bvm = round((total_transaction * tx_bvm) / 100)
+                            if tx_dc > 0 and tx_courtage > 0:
+                                rec.total_dc = round((total_transaction * tx_dc) / 100)
+                            if tx_regulateur > 0 and tx_courtage > 0:
+                                rec.total_regulateur = round((rec.total_bvm * tx_regulateur) / 100)
+                            if tx_other > 0 and tx_courtage > 0:
+                                rec.total_other = (total_transaction * tx_other) / 100
+
+                            # calcul des gros montant
+                            rec.total_interet_brut = round(cc_brut * rec.quantity)
+                            rec.total_interest = round(cc_net * rec.quantity)
+                            rec.total_transaction = round(total_transaction)
+                            rec.total_commission = rec.total_tva + rec.total_courtage
+                            rec.total_fees = rec.total_bvm + rec.total_regulateur + rec.total_dc + rec.total_commission
+                            rec.total_amount = (rec.total_transaction +  rec.total_fees if rec.direction == 'buy' else rec.total_transaction -  rec.total_fees)
+
+                    if rec.instrument_id.instrument_type == 'equity':
+                        rec.total_transaction = rec.quantity * rec.limit_price
                         if tx_courtage > 0:
-                            rec.total_courtage = round((rec.quantity * bond.face_value * tx_courtage) / 100,)
-                        # la TVA se calcul sur la commission de courtage seulement
+                            rec.total_courtage = (rec.total_transaction * tx_courtage) / 100
                         if tx_tva > 0 and tx_courtage > 0:
-                            rec.total_tva = round((rec.total_courtage * tx_tva) / 100)
-
-                        if tx_irvm > 0:
-                            rec.total_irvm = round((cc_brut * rec.quantity) - (cc_net * rec.quantity))
-
-                        total_transaction = round((rec.quantity * rec.limit_price) + (cc_net * rec.quantity))
+                            rec.total_tva = (rec.total_courtage * tx_tva) / 100
                         if tx_bvm > 0 and tx_courtage > 0:
-                            rec.total_bvm = round((total_transaction * tx_bvm) / 100)
+                            rec.total_bvm = (rec.total_transaction * tx_bvm) / 100
                         if tx_dc > 0 and tx_courtage > 0:
-                            rec.total_dc = round((total_transaction * tx_dc) / 100)
+                            rec.total_dc = (rec.total_transaction * tx_dc) / 100
                         if tx_regulateur > 0 and tx_courtage > 0:
-                            rec.total_regulateur = round((rec.total_bvm * tx_regulateur) / 100)
+                            rec.total_regulateur = (rec.total_bvm * tx_regulateur) / 100
                         if tx_other > 0 and tx_courtage > 0:
-                            rec.total_other = (total_transaction * tx_other) / 100
+                            rec.total_other = (rec.total_transaction * tx_other) / 100
 
-                        # calcul des gros montant
-                        rec.total_interet_brut = round(cc_brut * rec.quantity)
-                        rec.total_interest = round(cc_net * rec.quantity)
-                        rec.total_transaction = round(total_transaction)
-                        rec.total_commission = rec.total_tva + rec.total_courtage
+                        rec.total_commission = rec.total_courtage + rec.total_tva
                         rec.total_fees = rec.total_bvm + rec.total_regulateur + rec.total_dc + rec.total_commission
-                        rec.total_amount = (rec.total_transaction +  rec.total_fees if rec.direction == 'buy' else rec.total_transaction -  rec.total_fees)
-
-                if rec.instrument_id.instrument_type == 'equity':
-                    rec.total_transaction = rec.quantity * rec.limit_price
-                    if tx_courtage > 0:
-                        rec.total_courtage = (rec.total_transaction * tx_courtage) / 100
-                    if tx_tva > 0 and tx_courtage > 0:
-                        rec.total_tva = (rec.total_courtage * tx_tva) / 100
-                    if tx_bvm > 0 and tx_courtage > 0:
-                        rec.total_bvm = (rec.total_transaction * tx_bvm) / 100
-                    if tx_dc > 0 and tx_courtage > 0:
-                        rec.total_dc = (rec.total_transaction * tx_dc) / 100
-                    if tx_regulateur > 0 and tx_courtage > 0:
-                        rec.total_regulateur = (rec.total_bvm * tx_regulateur) / 100
-                    if tx_other > 0 and tx_courtage > 0:
-                        rec.total_other = (rec.total_transaction * tx_other) / 100
-
-                    rec.total_commission = rec.total_courtage + rec.total_tva
-                    rec.total_fees = rec.total_bvm + rec.total_regulateur + rec.total_dc + rec.total_commission
-                    rec.total_amount = (rec.total_transaction +  rec.total_fees if rec.direction == 'buy' else rec.total_transaction - rec.total_fees)
+                        rec.total_amount = (rec.total_transaction +  rec.total_fees if rec.direction == 'buy' else rec.total_transaction - rec.total_fees)
 
             if rec.operation_type == 'deposit':
                 deposit = self.env['efund.vehicule.instrument.core.dat'].search(
                     [('instrument_id', '=', rec.instrument_id.id)], limit=1)
                 if deposit:
-                    res = self.compute_dat_settlement_daily_basis(nominal=rec.deposit_amount,
-                                                                  annual_rate=rec.negotiated_rate,
-                                                                  date_start=rec.start_date, date_end=rec.maturity_date,
-                                                                  interest_type=rec.interest_type,
-                                                                  tax_rate=deposit.tax_rate)
-                    duration_days = res.get('duration_days')
-                    daily_rate = res.get('daily_rate')
-                    interest_gross = res.get('interest_gross')
-                    interest_net = res.get('interest_net')
-                    cash_out = res.get('cash_out')
+                    if rec.deposit_amount and rec.negotiated_rate and rec.start_date and rec.maturity_date and rec.interest_type:
+                        _logger.info(f"******deposit : {rec.deposit_amount}")
+                        res = self.compute_dat_settlement_daily_basis(nominal=rec.deposit_amount,
+                                                                      annual_rate=rec.negotiated_rate,
+                                                                      date_start=rec.start_date, date_end=rec.maturity_date,
+                                                                      interest_type=rec.interest_type,
+                                                                      tax_rate=deposit.tax_rate)
+                        duration_days = res.get('duration_days')
+                        daily_rate = res.get('daily_rate')
+                        interest_gross = res.get('interest_gross')
+                        interest_net = res.get('interest_net')
+                        cash_out = res.get('cash_out')
 
-                    # Champ BD
-                    self.total_interet_brut = interest_gross
-                    self.total_irvm = interest_gross - interest_net
-                    self.total_interest = interest_net
-                    self.total_amount = cash_out
+                        # Champ BD
+                        rec.total_interet_brut = interest_gross
+                        rec.total_irvm = interest_gross - interest_net
+                        rec.total_interest = interest_net
+                        rec.total_amount = cash_out
 
             if rec.operation_type == 'opcvm':
                 rec.total_amount_trade = rec.units_estimated * rec.nav
                 rec.total_amount = rec.units_estimated * rec.nav
+
 
     def action_finalize_execution(self, execution_vals):
         """

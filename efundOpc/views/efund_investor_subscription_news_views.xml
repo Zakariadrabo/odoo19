@@ -27,6 +27,7 @@
                         <group string="Identification">
                             <field name="investor_id" options="{'no_create': True}"/>
                             <field name="fund_id" string="Fonds" options="{'no_create': True}"/>
+                            <field name="vehicule_id" invisible="1" />
                         </group>
                         <group string="Dates et Comptes">
                             <field name="date_operation"/>

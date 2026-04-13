@@ -17,7 +17,7 @@ class FundAccountingSchemaLine(models.Model):
                                     ('capital_init','Souscription Exercice'),('non_distribuable','Sommes Non Distribuables'),
                                     ('res_anterieurs','Résultat Antérieur'),('res_clos','Résultat Clos'),('interest','Intérêt couru'),
                                     ('res_en_cours','Résultat En Cours'),('entry_load','Droit entrée'),('exit_load','Droit sortie'),('reliquat','Reliquat'),
-        ('capital', 'Part Capital'),('income', 'Part Revenu'),('tax', 'Taxes/Prélèvements'),], string="Source du Montant", required=True)
+        ('capital', 'Part Capital'),('income', 'Part Revenu'),('tax', 'Taxes/Prélèvements'),('quantity','Quantité')], string="Source du Montant", required=True)
     label = fields.Char(help="Libellé de la ligne")
     use_analytic = fields.Boolean(string="Utiliser l'analytique du mandat", default=True,
                                   help="Si coché, l'écriture sera marquée avec le compte analytique du mandat lié.")

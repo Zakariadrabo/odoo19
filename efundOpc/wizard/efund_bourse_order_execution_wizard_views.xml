@@ -12,13 +12,34 @@
                     <field name="reference"/>
                     <field name="remaining_quantity" invisible="operation_type not in ('trade','opcvm')"/>
                     <field name="operation_type" invisible="1"/>
+                    <field name="instrument_type" invisible="1"/>
                 </group>
 
-                <group string="Détails d'exécution" invisible="operation_type not in ('trade','opcvm')">
+                <group string="Détails d'exécution" invisible="operation_type not in ('trade','opcvm') or instrument_type =='tcn'">
                     <field name="executed_quantity" required="1"/>
                     <field name="execution_price" required="1"/>
                     <field name="execution_date" required="1"/>
                 </group>
+                <group string="Détails d'exécution" invisible="operation_type != 'trade' or instrument_type !='tcn'">
+                        <group string="Détails de la Négociation" class="oe_edit_only"
+                               style="background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
+                            <field name="calculation_type" widget="radio" options="{'horizontal': true}" string="Choix du rendement"/>
+                            <field name="execution_date" required="1"/>
+                            <field name="executed_quantity"/>
+                            <field name="yield_rate" readonly="calculation_type != 'rate'" force_save="1"  class="oe_inline" string="Rendement %"/>
+                            <field name="purchase_price" readonly="calculation_type != 'amount'" widget="monetary" class="fw-bold text-primary" string="Prix d'acquisition Nominal" force_save="1"/>
+                            <field name="discount_amount" readonly="1" force_save="1" string="rendement Prix / Bon"/>
+                        </group>
+
+
+                        <group string="Résumé">
+
+                            <field name="total_amount_trade" widget="monetary" class="fw-bold text-primary"
+                                   string="Montant Transaction" force_save="1"/>
+                            <field name="total_interest" readonly="1" string="Intérêt Précompté"/>
+                            <field name="total_amount" string="Montant à récevoir"/>
+                        </group>
+                    </group>
                 <group string="Conditions du DAT" invisible="operation_type != 'deposit'">
                     <group>
                         <field name="deposit_amount" widget="monetary"/>
@@ -60,7 +81,7 @@
                     </div>
                 </div>
 
-                <div class="border rounded p-3">
+                <div class="border rounded p-3" invisible="instrument_type =='tcn'">
                     <div class="row" invisible="operation_type not in ('deposit','trade')">
                         <div class="col-4">
                             <strong>Intérêt couru brut</strong>

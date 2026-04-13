@@ -33,9 +33,10 @@ class FundClass(models.Model):
     closure_date = fields.Date(string='Date de fermeture',help="Date de fermeture aux nouveaux investisseurs")
 
     # === Calculs et Statistiques ===
+    valuation_date = fields.Date(string="Date de VL", )
     total_shares = fields.Float(string='Total Shares Outstanding',digits=(16, 2),compute='_compute_share_statistics',store=True,help="Nombre total de parts en circulation")
     total_net_assets = fields.Float(string='Total Net Assets',compute='_compute_share_statistics',store=True,help="Actifs nets attribués à cette classe")
-    current_nav = fields.Float(string='Valeur Liquidative',compute='_compute_current_nav',help="Dernière valeur liquidative disponible", store=True)
+    current_nav = fields.Float(string='Valeur Liquidative',help="Dernière valeur liquidative disponible", )
 
     # decomposition de la VL
     vl_capital_init = fields.Float(string="VL Capital (Début Période)", digits=(12, 4))
@@ -57,14 +58,6 @@ class FundClass(models.Model):
             share_class.total_shares = 0.0
             share_class.total_net_assets = 0.0
 
-    @api.depends('total_net_assets', 'total_shares')
-    def _compute_current_nav(self):
-        """Calcule la NAV actuelle"""
-        for share_class in self:
-            if share_class.total_shares > 0:
-                share_class.current_nav = share_class.total_net_assets / share_class.total_shares
-            else:
-                share_class.current_nav = 11000 # A changer après le calcul de la VL
 
     # === Constraints ===
     @api.constrains('management_fee_rate', 'subscription_fee_rate', 'redemption_fee_rate', 'performance_fee_rate')

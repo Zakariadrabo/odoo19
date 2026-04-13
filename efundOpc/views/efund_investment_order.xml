@@ -75,7 +75,8 @@
                             <field name="direction" invisible="operation_type != 'trade'"
                                    required="operation_type == 'trade'"
                                    widget="radio" options="{'horizontal': true}"/>
-                            <field name="broker_id" invisible="operation_type != 'trade'" required="operation_type == 'trade'"/>
+                            <field name="broker_id" invisible="operation_type != 'trade'"
+                                   required="operation_type == 'trade'"/>
                             <field name="direction_opcvm" invisible="operation_type != 'opcvm'"
                                    required="operation_type == 'opcvm'"
                                    widget="radio" options="{'horizontal': true}"/>
@@ -83,19 +84,38 @@
                         </group>
                     </group>
 
-                    <group string="Détails de Marché" invisible="operation_type != 'trade'">
+                    <group string="Détails de Marché" invisible="operation_type != 'trade' or instrument_type =='tcn'">
                         <group>
                             <field name="price_type"/>
                             <field name="quantity"/>
-                            <field name="limit_price" />
+                            <field name="limit_price"/>
                         </group>
                         <group>
-                            <field name="total_amount_trade" widget="monetary" class="fw-bold text-primary"/>
+                            <field name="total_amount_trade" widget="monetary" class="fw-bold text-primary" force_save="1"/>
                             <field name="total_amount"/>
-                            <field name="total_fees" readonly="1"/>
+                            <field name="total_fees" readonly="1" invisible="instrument_type in('tcn','opcvm')"/>
                             <field name="total_interest" readonly="1" invisible="instrument_type in('equity','opcvm')"/>
                         </group>
                     </group>
+                    <group string="Détails de Marché" invisible="operation_type != 'trade' or instrument_type !='tcn'">
+                        <group string="Détails de la Négociation" class="oe_edit_only"
+                               style="background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
+                            <field name="calculation_type" widget="radio" options="{'horizontal': true}" string="Choix du rendement"/>
+                            <field name="quantity"/>
+                            <field name="yield_rate" readonly="calculation_type != 'rate'" force_save="1"  class="oe_inline" string="Rendement %"/>
+                            <field name="purchase_price" readonly="calculation_type != 'amount'" widget="monetary" class="fw-bold text-primary" string="Prix d'acquisition Nominal" force_save="1"/>
+                            <field name="discount_amount" readonly="1" force_save="1" string="rendement Prix / Bon"/>
+                        </group>
+
+
+                        <group string="Résumé">
+                            <field name="total_amount_trade" widget="monetary" class="fw-bold text-primary"
+                                   string="Montant Transaction" force_save="1"/>
+                            <field name="total_interest" readonly="1" string="Intérêt Précompté"/>
+                            <field name="total_amount" string="Montant à récevoir"/>
+                        </group>
+                    </group>
+
                     <group string="Conditions du DAT" invisible="operation_type != 'deposit'">
                         <group>
                             <field name="deposit_amount" widget="monetary"/>
@@ -105,29 +125,30 @@
                             <field name="maturity_date"/>
                         </group>
                         <group>
-                            <field name="total_interet_brut" />
-                            <field name="total_irvm" />
-                            <field name="total_interest" />
-                            <field name="total_amount" />
+                            <field name="total_interet_brut"/>
+                            <field name="total_irvm"/>
+                            <field name="total_interest"/>
+                            <field name="total_amount"/>
                         </group>
                     </group>
-                    <group string="Commission / Taxe / Intérêts courus" invisible="operation_type != 'trade'" >
+                    <group string="Commission / Taxe / Intérêts courus"
+                           invisible="operation_type != 'trade' or instrument_type =='tcn'">
                         <group>
                             <field name="instrument_type" invisible="1"/>
-                            <field name="total_interet_brut"  invisible="instrument_type == 'equity'"/>
-                            <field name="total_irvm"  invisible="instrument_type == 'equity'"/>
+                            <field name="total_interet_brut" invisible="instrument_type == 'equity'"/>
+                            <field name="total_irvm" invisible="instrument_type == 'equity'"/>
                             <field name="total_interest" invisible="instrument_type == 'equity'"/>
-                            <field name="total_amount_trade" />
-                            <field name="total_bvm" />
-                            <field name="total_dc" />
+                            <field name="total_amount_trade" force_save="1"/>
+                            <field name="total_bvm"/>
+                            <field name="total_dc"/>
 
                         </group>
                         <group>
-                            <field name="total_regulateur" />
-                            <field name="total_courtage" />
-                            <field name="total_tva" />
+                            <field name="total_regulateur"/>
+                            <field name="total_courtage"/>
+                            <field name="total_tva"/>
                             <field name="total_commission" invisible="instrument_type == 'equity'"/>
-                            <field name="total_amount" />
+                            <field name="total_amount"/>
                         </group>
                     </group>
 
@@ -141,11 +162,12 @@
                             <field name="order_amount" widget="monetary" string="Montant Brut"
                                    readonly="amount_type == 'unit'" force_save="1"/>
                             <field name="nav" string="Valeur liquidative"/>
-                             <field name="nav_date_expected"/>
-                            <field name="units_estimated" class="text-muted" readonly="amount_type == 'amount'" force_save="1"/>
+                            <field name="nav_date_expected"/>
+                            <field name="units_estimated" class="text-muted" readonly="amount_type == 'amount'"
+                                   force_save="1"/>
                         </group>
                         <group>
-                           <field name="total_amount_trade" readonly="1"/>
+                            <field name="total_amount_trade" readonly="1" force_save="1"/>
                             <field name="total_amount" readonly="1"/>
                         </group>
 
@@ -157,12 +179,12 @@
                                     <field name="date_transaction"/>
                                     <field name="quantity"/>
                                     <field name="price_unit" widget="monetary"/>
-                                    <field name="total_amount_trade" widget="monetary"/>
+                                    <field name="total_amount_trade" widget="monetary" force_save="1"/>
                                     <field name="total_fees" widget="monetary"/>
                                     <field name="total_interest" widget="monetary"/>
                                     <field name="total_amount" widget="monetary" sum="Total Net"/>
-                                           decoration-info="state == 'draft'"
-                                           decoration-success="state == 'settled'"/>
+                                    decoration-info="state == 'draft'"
+                                    decoration-success="state == 'settled'"/>
                                 </list>
                             </field>
                         </page>

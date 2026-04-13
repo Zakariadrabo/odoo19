@@ -3,23 +3,43 @@ from odoo import models, fields, api, _
 class EfundNavSession(models.Model):
     _name = 'efund.nav.session'
     _description = 'Séance de calcul de la VL'
-    _inherit = ['mail.thread']
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(string="Référence", readonly=True, default='/')
+    name = fields.Char(string="Référence", default='/')
     fund_id = fields.Many2one('efund.vehicule.fund', string="Fonds", required=True)
-    valuation_date = fields.Date(string="Date de VL", required=True, default=fields.Date.today)
+    valuation_date = fields.Date(string="Date de VL", required=True, )
 
     # Résultats globaux
-    total_assets = fields.Monetary(string="Total Actif", compute="_compute_nav")
-    total_liabilities = fields.Monetary(string="Total Passif", compute="_compute_nav")
-    net_asset_value = fields.Monetary(string="Actif Net", compute="_compute_nav")
+    total_assets = fields.Monetary(string="Total Actif", compute="_compute_nav", store=True,)
+    total_liabilities = fields.Monetary(string="Total Passif", compute="_compute_nav", store=True,)
+    net_asset_value = fields.Monetary(string="Actif Net", compute="_compute_nav", store=True,)
 
     nb_parts = fields.Float(string="Nombre de parts", digits=(16, 4))
     unit_nav = fields.Float(string="VL Unitaire", digits=(16, 4), compute="_compute_nav", store=True)
 
+    # Deflacation
+    Capital = fields.Float(string="Capital", digits=(18, 10))
+    non_distributable_sum = fields.Float(string="Somme non distribuables", digits=(18, 10))
+    previous_fiscal_year_result = fields.Float(string="Résultat exercice antérieur", digits=(18, 10))
+    closed_fiscal_year_result = fields.Float(string="Résultat exercice clos", digits=(18, 10))
+    current_fiscal_year_result = fields.Float(string="Résultat exercice en cours", digits=(18, 10))
+
+
     currency_id = fields.Many2one(related='fund_id.currency_id')
-    state = fields.Selection([('draft', 'Brouillon'), ('validated', 'Validée')], default='draft')
+    state = fields.Selection([('draft', 'Brouillon'),('verify','Vérifié'), ('validated', 'Validé')], default='draft')
     line_ids = fields.One2many('efund.nav.line', 'session_id', string="Détails de l'Inventaire")
+    fiscal_year_id = fields.Many2one('efund.fiscal.year',string="Exercice Fiscal", compute="_compute_fiscal_year", store=True)
+
+    @api.depends('valuation_date', 'fund_id')
+    def _compute_fiscal_year(self):
+        for nav in self:
+            # Recherche automatique de l'exercice correspondant à la date de la VL
+            fy = self.env['efund.fiscal.year'].search([
+                ('date_start', '<=', nav.valuation_date),
+                ('date_end', '>=', nav.valuation_date),
+                #('company_id', '=', nav.fund_id.company_id.id)
+            ], limit=1)
+            nav.fiscal_year_id = fy
 
     @api.depends('line_ids', 'nb_parts')
     def _compute_nav(self):

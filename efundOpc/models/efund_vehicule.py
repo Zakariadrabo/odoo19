@@ -44,7 +44,7 @@ class EfundVehicle(models.Model):
     ##################################################
 
     depositary_id = fields.Many2one("efund.depositaire", string="Dépositaire")
-    expenses_ids = fields.One2many('efund.fund.expense', 'vehicule_id')
+    expenses_ids = fields.One2many('efund.vehicule.expense', 'vehicule_id')
     position_ids = fields.One2many('efund.vehicule.portfolio', 'vehicule_id', string="Positions")
     vehicule_cash_move_ids = fields.One2many('efund.vehicule.cash.move', 'vehicule_id', string="Flux financiers")
     cash_operation_ids = fields.One2many('efund.vehicule.cash.operation', 'vehicule_id', string="Opérations diverses")
@@ -137,7 +137,7 @@ class EfundVehicle(models.Model):
 
             # Création du plan Comptable du Mandat
             self.env['efund.event.handler'].get_chart_account_data(company.id)
-        
+
 
         return company
 

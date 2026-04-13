@@ -1,4 +1,7 @@
 import logging
+
+from openpyxl.worksheet import related
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import float_round, float_is_zero
@@ -14,6 +17,8 @@ class FundSubscription(models.Model):
     name = fields.Char(string="Référence", required=True,
                        default=lambda self: self.env['ir.sequence'].next_by_code('efund.investor.subscription'))
     fund_id = fields.Many2one('efund.vehicule.fund', string="Fonds", required=True, index=True)
+    vehicule_id = fields.Many2one(related='fund_id.vehicule_id',store=True, )
+
 
     is_initial = fields.Boolean(string='Souscription Initiale', default=False)
     currency_id = fields.Many2one(related='fund_id.vehicule_id.currency_id')
@@ -23,9 +28,8 @@ class FundSubscription(models.Model):
     shares = fields.Float(string="Nombre de parts")
 
     allow_fractional_parts = fields.Boolean(string="Parts fractionnées", related='fund_id.allow_fractional_parts', )
-    nav = fields.Monetary(string="VL appliquée", readonly=True, compute="_compute_nav_value", store=True)
-    entry_load = fields.Float(string="Taux frais de souscription (%)", compute="_compute_nav_value",
-                              readonly=True, store=True)
+    nav = fields.Monetary(string="VL appliquée", compute="_compute_nav_value", store=True, readonly = False, )
+    entry_load = fields.Float(related="share_class_id.entry_load", string="Taux frais de souscription (%)", store=True)
 
     net_amount = fields.Monetary(string="Montant utilisé", compute="_compute_subscription", store=True)
     amount_remaining = fields.Monetary(string="Montant restitué", compute="_compute_subscription", store=True)
@@ -37,14 +41,6 @@ class FundSubscription(models.Model):
     # -----------------------------------------------------------------
     # RELATIONS
     # -----------------------------------------------------------------
-    """
-    cash_account_id = fields.Many2one('efund.investor.cash_account', string="Compte Espèces",
-                                      compute="_compute_cash_account_id",
-                                      store=True, readonly=True, precompute=True, required=True)
-    part_account_id = fields.Many2one('efund.investor.part_account', string="Compte Titre",
-                                      compute="_compute_part_account_id",
-                                      store=True, readonly=True, precompute=True, required=True)
-                                      """
     part_account_id = fields.Many2one('efund.investor.part_account', string="Compte Titres",compute="_compute_accounts",
         store=True,readonly=True, precompute=True, required=True)
     cash_account_id = fields.Many2one('efund.investor.cash_account',string="Compte Espèces", compute="_compute_accounts",
@@ -90,45 +86,11 @@ class FundSubscription(models.Model):
                 ], limit=1)
 
                 # On cherche le compte espèces
-                rec.cash_account_id = self.env['efund.investor.cash'].search([
+                rec.cash_account_id = self.env['efund.investor.cash_account'].search([
                     ('investor_id', '=', rec.investor_id.id),
                     ('vehicule_id', '=', rec.fund_id.vehicule_id.id)
                 ], limit=1)
-    """
-    @api.depends('investor_id', )
-    def _compute_cash_account_id(self):
-      
-        Sélectionne automatiquement le compte espèces de l'investisseur
-        pour le fonds sélectionné.
-       
-        if self.investor_id:
-            # On recherche le compte espèces lié à cet investisseur et ce fonds
-            cash_account = self.env['efund.investor.cash_account'].search([
-                ('investor_id', '=', self.investor_id.id),
-            ], limit=1)
 
-            if cash_account:
-                self.cash_account_id = cash_account
-            else:
-                # Optionnel : remettre à faux si aucun compte n'est trouvé
-                self.cash_account_id = False
-
-    @api.depends('investor_id', 'fund_id')
-    def _compute_part_account_id(self):
-       
-        if self.investor_id and self.fund_id:
-            # On recherche le compte espèces lié à cet investisseur et ce fonds
-            part_account = self.env['efund.investor.part_account'].search([
-                ('investor_id', '=', self.investor_id.id),
-                ('vehicule_id', '=', self.fund_id.vehicule_id.id)
-            ], limit=1)
-
-            if part_account:
-                self.part_account_id = part_account
-            else:
-                # Optionnel : remettre à faux si aucun compte n'est trouvé
-                self.part_account_id = False
-         """
 
     @api.depends('fund_id','shares')
     def _compute_get_share_class_id(self):
@@ -158,11 +120,12 @@ class FundSubscription(models.Model):
     def _compute_subscription(self):
         for sub in self:
             if sub.gross_amount:
+                nav = self.env['efund.service'].get_last_nav_value(sub.fund_id)
                 if sub.buy_choice == 'amount':
-                    result = self.calculate_shares(sub.nav, sub.allow_fractional_parts, sub.gross_amount,
+                    result = self.calculate_shares(nav, sub.allow_fractional_parts, sub.gross_amount,
                                                    sub.entry_load, sub.is_subscription_fee)
                 else:
-                    result = self.calculate_amount(sub.nav, sub.allow_fractional_parts, sub.shares,
+                    result = self.calculate_amount(nav, sub.allow_fractional_parts, sub.shares,
                                                    sub.entry_load, sub.is_subscription_fee)
 
                 # affectation des valeurs
@@ -171,6 +134,7 @@ class FundSubscription(models.Model):
                 sub.amount_remaining = result.get('amount_remaining')
                 sub.gross_amount = result.get('gross_amount')
                 sub.shares = result.get('shares')
+                sub.vehicule_id = sub.fund_id.vehicule_id
 
     # -----------------------------------------------------------------
 
@@ -183,7 +147,8 @@ class FundSubscription(models.Model):
                     ('is_default', '=', True)
                 ])
                 if share_class:
-                    sub.nav = share_class.current_nav
+                    nav = self.env['efund.service'].get_last_nav_value(sub.fund_id)
+                    sub.nav = nav
                     sub.entry_load = share_class.entry_load
                 else:
                     raise UserError("Besoin d'avoir la classe de parts par défaut pour le fonds")
@@ -202,7 +167,7 @@ class FundSubscription(models.Model):
         # 1️⃣ Calcul des frais
         if apply_subscription_fees:
             if fee_percent:
-                fees_amount = gross_amount * (fee_percent / 100.0)
+                fees_amount = gross_amount * fee_percent
             else:
                 raise UserError(f"Merci de renseigner le taux de souscription dans la classe de part.")
         else:
@@ -216,6 +181,7 @@ class FundSubscription(models.Model):
             net_amount_to_invest = 0.0
 
         # 3️⃣ Calcul théorique des parts
+
         raw_shares = net_amount_to_invest / nav if nav else 0.0
 
         # 4️⃣ Application des règles du fonds
@@ -237,6 +203,7 @@ class FundSubscription(models.Model):
         # Sécurité flottants
         if float_is_zero(amount_remaining, precision_rounding=0.01):
             amount_remaining = 0.0
+
 
         return {
             'gross_amount': gross_amount,
@@ -269,7 +236,7 @@ class FundSubscription(models.Model):
             if fee_percent >= 100:
                 return {'error': "Les frais ne peuvent pas être égaux ou supérieurs à 100%."}
 
-            gross_amount = net_amount / (1 - (fee_percent / 100.0))
+            gross_amount = net_amount / (1 - fee_percent)
             fees_amount = gross_amount - net_amount
         else:
             gross_amount = net_amount
@@ -298,20 +265,7 @@ class FundSubscription(models.Model):
 
     def action_account(self):
         for rec in self:
-
-            # Déclare varaible
             fee_id = 0
-            # A revoir pour la date valeur
-            # if rec.date_valeur < rec.date_operation:
-            #    raise UserError(_("La date de l'opération ne peut pas être supérieure à la date de valeur"))
-            """
-            total_vl_calc = (rec.vl_capital_init + rec.vl_non_distribuable +  rec.vl_res_anterieurs + rec.vl_res_clos + rec.vl_res_en_cours)
-
-            # Vérification si la somme des composantes correspond à la VL appliquée
-            if not float_is_zero(total_vl_calc - rec.nav, precision_rounding=rec.currency_id.rounding):
-                raise UserError(_("La somme des composantes VL (%s')ne correspond pas à la VL appliquée (%s).") % (total_vl_calc, rec.nav))
-            """
-
             if rec.state != 'validated':
                 raise UserError(_("La souscription doit être validée avant exécution."))
 
@@ -319,20 +273,30 @@ class FundSubscription(models.Model):
             if self.cash_account_id.balance < self.gross_amount:
                 raise UserError(_("Solde espèces insuffisant."))
 
+            # récupération des taux des droits
+            share_class = self.env['efund.fund.share.class'].search([
+                ('vehicule_fund_id', '=', rec.fund_id.id),
+                ('is_default', '=', True)
+            ])
+            entry_load = share_class.entry_load
+            nav = self.env['efund.service'].get_last_nav_value(rec.fund_id)
+
+
+
             if rec.buy_choice == 'amount':
                 result = self.calculate_shares(
-                    rec.nav,
+                    nav,
                     rec.allow_fractional_parts,
                     rec.gross_amount,
-                    rec.entry_load,
+                    entry_load,
                     rec.is_subscription_fee
                 )
             else:
                 result = self.calculate_amount(
-                    rec.nav,
+                    nav,
                     rec.allow_fractional_parts,
                     rec.shares,
-                    rec.entry_load
+                    entry_load
                 )
 
             # Utiliser les valeurs recalculées
@@ -458,6 +422,24 @@ class FundSubscription(models.Model):
                     message_type="comment",
                     subtype_xmlid="mail.mt_comment"
                 )
+            # Créer de l'évènement et comptabilisation
+            serviceEngine = self.env['efund.service']
+            payload = {
+            'gross': self.gross_amount,
+            'net': self.net_amount,
+            'capital_init': self.amount_capital,
+            'non_distribuable': self.amount_non_distribuable,
+            'res_anterieurs': self.amount_res_anterieurs,
+            'res_clos': self.amount_res_clos,
+            'res_en_cours': self.amount_income_current,
+            'entry_load': self.subscription_fee_amount,
+            'quantity': self.shares,
+            }
+            event = self.env['efund.accounting.event'].create(
+                serviceEngine.build_event_payload('SUB_VALIDATED', rec.vehicule_id.id, 'Souscription - ' + rec.name,
+                                                  rec.date_operation, payload))
+            rec.event_id = event.id
+            self.env['efund.accounting.engine'].process_event(event)
 
             # Fin de la réconciliation
             if rec.subscription_fee_amount > 0:
@@ -482,33 +464,8 @@ class FundSubscription(models.Model):
                 subtype_xmlid="mail.mt_comment"
             )
 
-            # Ajoutons l'engine ici
-            # Le Payload devient beaucoup plus riche pour l'Engine
 
-            event = self.env['efund.accounting.event'].create(rec.build_event_payload())
-            rec.event_id = event.id
-            self.env['efund.accounting.engine'].process_event(event)
 
-    def build_event_payload(self):
-        self.ensure_one()
-        return {
-            'event_type': ('SUB_VALIDATED'),
-            'vehicule_id': self.fund_id.vehicule_id.id,
-            'reference': self.name,
-            'event_date': self.date_operation,
-            'state': 'draft',
-
-            'payload': {
-                'gross': self.gross_amount,
-                'capital_init': self.amount_capital,
-                'non_distribuable': self.amount_non_distribuable,
-                'res_anterieurs': self.amount_res_anterieurs,
-                'res_clos': self.amount_res_clos,
-                'res_en_cours': self.amount_income_current,
-                'entry_load': self.subscription_fee_amount,
-                'reliquat': self.amount_remaining,
-            }
-        }
 
 
     def action_validate_subscription(self):

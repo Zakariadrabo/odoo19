@@ -1,7 +1,7 @@
 # efund_vehicule_instrument_core_price.py
 import calendar
+import datetime
 import logging
-from email.policy import default
 from math import ceil
 
 from odoo import models, fields, api, _
@@ -72,6 +72,12 @@ class FundInstrumentPrice(models.Model):
             # --- CAS 1 : LES DAT (Calcul par intérêts courus) ---
             if pos.instrument_id.instrument_type == 'dat':
                 self._generate_dat_price(pos, today)
+
+            elif pos.instrument_id.instrument_type == 'tcn':
+                today = datetime.date.today()
+                accrual = self.env['efund.service'].get_tcn_interest(pos.rate, pos.value_date,pos.quantity * pos.first_price,360)
+                self._update_or_create_price(pos.instrument_id,pos.vehicule_id,today,pos.first_price,accrual,'internal')
+
 
             # --- CAS 2 : LES BONDS LISTÉS (Mise à jour automatique) ---
             elif pos.instrument_id.instrument_type == 'bond' and pos.instrument_id.valuation_method == 'listed':

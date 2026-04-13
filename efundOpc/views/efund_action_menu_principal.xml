@@ -179,11 +179,13 @@
             </p>
         </field>
     </record>
+    <!--
     <record id="action_efund_fund_expenses" model="ir.actions.act_window">
         <field name="name">Charge du fonds</field>
         <field name="res_model">efund.fund.expense</field>
         <field name="view_mode">list,form</field>
     </record>
+    -->
 
     <!-- =========================
          3. CLIENTS / PORTEURS
@@ -280,6 +282,18 @@
         <field name="res_model">efund.vehicule.instrument.core.bond</field>
         <field name="view_mode">list,form,kanban</field>
         <field name="context">{'default_instrument_type': 'bond'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer et gérer votre premier instrument financier.
+            </p>
+        </field>
+    </record>
+    <!-- Bon du trésor -->
+    <record id="action_efund_instrument_core_treasury" model="ir.actions.act_window">
+        <field name="name">Bon</field>
+        <field name="res_model">efund.vehicule.instrument.core.treasury</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="context">{'default_instrument_type': 'tcn'}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Créer et gérer votre premier instrument financier.

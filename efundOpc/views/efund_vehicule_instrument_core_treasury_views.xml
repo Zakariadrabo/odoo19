@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_efund_instrument_treasury_tree" model="ir.ui.view">
+        <field name="name">efund.vehicule.instrument.core.treasury.list</field>
+        <field name="model">efund.vehicule.instrument.core.treasury</field>
+        <field name="arch" type="xml">
+            <list string="Bons du Trésor et Titres de Créances">
+                <field name="name" string="Libellé"/>
+                <field name="issuer_id"/>
+                <field name="issue_date"/>
+                <field name="maturity_date"/>
+                <field name="face_value" sum="Total Nominal"/>
+                <field name="yield_rate" widget="percentage" avg="Moyenne Rendement"/>
+                <field name="purchase_price" sum="Total Investi"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'"
+                       decoration-success="state == 'validated'"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_efund_instrument_treasury_form" model="ir.ui.view">
+        <field name="name">efund.vehicule.instrument.core.treasury.form</field>
+        <field name="model">efund.vehicule.instrument.core.treasury</field>
+        <field name="arch" type="xml">
+            <form string="Instrument de Trésorerie">
+                <header>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h2>
+                                    <label for="name" string="Libellé"/>
+                                    <field name="name" placeholder="ex: BTA - Cameroun - 91J"/>
+                                </h2>
+                            </div>
+                            <div class="col-md-4">
+                                <h2>
+                                    <label for="asset_class_id" string="Classe d'actif"/>
+                                    <field name="asset_class_id"/>
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    <group>
+                        <group string="Caractéristiques de l'Émission">
+                            <field name="isin"/>
+                            <field name="issuer_id" options="{'no_create': True}"/>
+                            <field name="day_count_convention"/>
+
+                        </group>
+                        <group string="Dates Clés">
+                            <field name="face_value"/>
+                            <field name="issue_date"/>
+                            <field name="maturity_date"/>
+                        </group>
+                    </group>
+
+
+                    <notebook>
+                        <page string="Simulation">
+                            <group string="Détails de la Négociation" class="oe_edit_only"
+                                   style="background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
+                                <field name="calculation_type" widget="radio" options="{'horizontal': true}"/>
+                            </group>
+
+                            <group>
+                                <group string="Rendement">
+                                    <label for="yield_rate"/>
+                                    <div class="o_row">
+                                        <field name="yield_rate"
+                                               readonly="calculation_type != 'rate'"
+                                               force_save="1"
+                                               class="oe_inline"/>
+                                        <span>%</span>
+                                    </div>
+                                    <field name="discount_amount" readonly="1" force_save="1"/>
+                                </group>
+                                <group string="Valorisation">
+                                    <field name="purchase_price"
+                                           readonly="calculation_type != 'amount'"
+                                           force_save="1"/>
+                                    <p class="text-muted" invisible="calculation_type != 'amount'">
+                                        <i>Le taux de rendement sera recalculé selon ce prix.</i>
+                                    </p>
+                                    <p class="text-muted" invisible="calculation_type != 'rate'">
+                                        <i>Le prix sera calculé selon le taux saisi.</i>
+                                    </p>
+                                </group>
+                            </group>
+
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter>
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="kanban_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </chatter>
+            </form>
+        </field>
+    </record>
+</odoo>

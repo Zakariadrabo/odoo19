@@ -18,7 +18,7 @@ class FundOperation(models.AbstractModel):
 
     ], default='draft', tracking=True)
 
-    vehicule_id = fields.Many2one('efund.vehicule', string="Véhicule", required=True, tracking=True)
+    vehicule_id = fields.Many2one('efund.vehicule', string="Véhicule", tracking=True)
     investor_id = fields.Many2one('efund.investor', string="Investisseur", required=True, tracking=True)
     company_id = fields.Many2one('res.company',related='vehicule_id.company_id',store=True)
 

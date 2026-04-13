@@ -1,21 +1,19 @@
 from odoo import models, fields, api, _
 
 class FundExpense(models.Model):
-    _name = "efund.fund.expense"
+    _name = "efund.vehicule.expense"
     _description = "Charge du Fonds"
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
     ##################################################
     ## RELATIONS
     ##################################################
-    fund_id = fields.Many2one('efund.fund', ondelete='cascade')
     vehicule_id = fields.Many2one('efund.vehicule', required=True, ondelete='cascade')
-    currency_id = fields.Many2one(related="fund_id.currency_id", string='Devise')
+    currency_id = fields.Many2one(related="vehicule_id.currency_id", string='Devise')
 
     name = fields.Char(required=True, string='Nom de la charge')
     expense_type = fields.Selection([('bank', 'Frais bancaires'),('regulator', 'Redevance du régulateur'),
-        ('auditor', 'Commissaire aux comptes'),('custodian', 'Dépositaire'),
-        ('management', 'Frais de gestion'),('other', 'Autres charges'),
+        ('auditor', 'Commissaire aux comptes'),('custodian', 'Dépositaire'), ('management', 'Frais de gestion'),('other', 'Autres charges'),
     ], required=True, string='Type de charge')
     partner_id = fields.Many2one('efund.debit.partner', string="Bénéficiaire")
     frequency = fields.Selection([('daily', 'Quotidienne'),('monthly', 'Mensuelle'),('quarterly', 'Trimestrielle'),

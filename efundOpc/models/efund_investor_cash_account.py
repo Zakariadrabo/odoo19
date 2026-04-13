@@ -19,7 +19,7 @@ class EfundAccountCash(models.Model):
     state = fields.Selection([('draft', 'Non Activé'),('active', 'Activé'),('suspended', 'Désactivé'),], string="Status", default='draft', )
 
     _account_number_fund_uniq = models.Constraint(
-            'unique(account_number, vehicule_id)',
+            'unique(account_number, vehicule_id, investor_id)',
             'Numéro de compte espèces déjà utilisé pour ce fonds'
         )
 

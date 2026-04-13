@@ -47,16 +47,27 @@
                         <group string="Identité &amp; Classification">
                             <field name="isin" placeholder="ex: QS000..."/>
                             <field name="fund_type_id" string="Classe d'OPCVM"/>
+                            <field name="management_company_id" options="{'no_create': True}"/>
                         </group>
                         <group string="Gestion &amp; Dates">
-                            <field name="management_company_id" options="{'no_create': True}"/>
+                            <field name="depositary_id"/>
                             <field name="created_date"/>
                             <field name="start_date"/>
                         </group>
                     </group>
 
                     <notebook>
-                        <page string="Politique d'Investissement" name="policy">
+                        <page string="Informations Générales">
+                            <group>
+                                <field name="nav_frequency" />
+                                <field name="origin_nav" placeholder="Sasir la VL initiale ..."/>
+                            </group>
+                            <group>
+                                <field name="cutoff_time" placeholder="Heure de calcul de la VL..."/>
+                                <field name="allow_fractional_parts" placeholder="Autoriser parts fractionnées ?"/>
+                            </group>
+                        </page>
+                        <page string="Politique d'Investissement" name="policy" invisible="1">
                             <div class="o_horizontal_separator text-primary mt-3 mb-3"
                                  style="font-weight: bold; font-size: 1.2em;">
                                 Objectifs du Fonds
@@ -65,6 +76,7 @@
                                 <!-- <field name="investment_objective" nolabel="1" placeholder="Décrivez ici la stratégie du fonds..."/> -->
                             </group>
                         </page>
+
                         <page string="Catégorie de parts">
                             <field name="share_class_ids">
                                 <list>
@@ -81,7 +93,7 @@
                                 </list>
                             </field>
                         </page>
-                        <page string="Positions">
+                        <page string="Portefeuilles">
                             <header>
                                 <button name="action_revalue_positions"
                                         string="Actualiser la Valorisation"
@@ -101,6 +113,21 @@
                                     <field name="unrealized_pl" sum="Total PV Latente"
                                            decoration-success="unrealized_pl &gt; 0"
                                            decoration-danger="unrealized_pl &lt; 0"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Charges du fond">
+                            <field name="expenses_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="expense_type"/>
+                                    <field name="partner_id"/>
+                                    <field name="frequency"/>
+                                    <field name="calculation_method"/>
+                                    <field name="amount"/>
+                                    <field name="rate"/>
+                                    <field name="start_date"/>
+                                    <field name="end_date"/>
                                 </list>
                             </field>
                         </page>

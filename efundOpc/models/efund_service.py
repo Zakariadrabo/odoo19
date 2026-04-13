@@ -1,5 +1,7 @@
 import datetime
 from dateutil.relativedelta import relativedelta
+
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 
@@ -7,6 +9,45 @@ from odoo.exceptions import UserError, ValidationError
 class EfundService(models.Model):
     _name = 'efund.service'
     _description = 'Service for Efund'
+
+    # récupération de la dernière VL
+    # Dans votre modèle efund.service
+
+    def get_tcn_interest(self, rate, start_date,amuont,base):
+        today = datetime.date.today()
+        duration = (today - start_date).days
+        return amuont * rate * duration / (base * 100)
+
+    def get_last_nav_value(self, fund_id, date_limit=None):
+        """
+        Récupère la dernière VL validée pour un fonds donné.
+        :param fund_id: ID ou recordset du fonds
+        :param date_limit: Optionnel, date maximum à ne pas dépasser (ex: VL à une date T)
+        :return: float (VL Unitaire) ou 0.0
+        """
+        if not fund_id:
+            return 0.0
+
+        # Conversion de l'ID en entier si c'est un recordset
+        f_id = fund_id.id if hasattr(fund_id, 'id') else fund_id
+
+        domain = [
+            ('fund_id', '=', f_id),
+            ('state', '=', 'validated')  # On ne prend que les VL officielles
+        ]
+
+        # Si on cherche la VL précédant une date spécifique
+        if date_limit:
+            domain.append(('valuation_date', '<', date_limit))
+
+        # Recherche de la VL la plus récente
+        last_nav = self.env['efund.nav.session'].search(
+            domain,
+            limit=1,
+            order='valuation_date desc'
+        )
+
+        return last_nav.unit_nav if last_nav else 0.0
 
     # Obtenir le dernier coupon
     def get_coupon_period(self, order_date, maturity_date, frequency=1):
@@ -76,6 +117,38 @@ class EfundService(models.Model):
             'days_in_period': days_in_period
         }
     """
+    def create_first_nav(self, fund):
+        """
+        Crée la première NAV pour un fond donné.
+        """
+        vals = {
+            'name': 'VL du ' + fund.start_date.strftime('%d/%m/%Y'),
+            'fund_id': fund.id,
+            'valuation_date': fund.start_date,
+            'unit_nav': fund.origin_nav,
+            'nb_parts':0,
+            'Capital': fund.origin_nav,
+            'non_distributable_sum': 0,
+            'previous_fiscal_year_result': 0,
+            'closed_fiscal_year_result': 0,
+            'current_fiscal_year_result': 0,
+            'state':'validated'
+        }
+        res = self.env['efund.nav.session'].create(vals)
+        if res:
+            share_class = self.env['efund.nav.share'].search([('vehicule_fund_id', '=', res.get('fund_id'))],limit=1)
+            if share_class:
+                share_class.write({
+                    'current_nav': res.get('fund_id'),
+                    'vl_capital_init': res.get('Capital'),
+                    'vl_non_distribuable': res.get('non_distributable_sum'),
+                    'vl_res_anterieurs': res.get('previous_fiscal_year_result'),
+                    'vl_res_clos': res.get('closed_fiscal_year_result'),
+                    'vl_res_en_cours': res.get('current_fiscal_year_result'),
+                    'valuation_date': res.get('valuation_date'),
+                })
+        return res
+
 
     # Obtenir le nombre de jour ou la date du dénouement d'une opération
     def get_settlement_details(self, operation_date, days_to_add):

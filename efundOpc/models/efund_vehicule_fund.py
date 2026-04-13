@@ -18,9 +18,9 @@ class Fund(models.Model):
     vehicle_type = fields.Selection(related='vehicule_id.vehicle_type', default='fund', store=True, readonly=False,required=True, string="Type")
     isin = fields.Char(string='Code Isin')
     nav_frequency = fields.Selection([('daily', 'Journalière'), ('weekly', 'Hebdomaire'), ('monthly', 'Mensuelle'), ], string="Périodicité calcul VL", default='daily')
-    cutoff_time = fields.Float(string="Heure de cut-off", default=16.0, help="Heure limite de réception des ordres (format décimal).\nExemples : 14.0 = 14h00, 14.5 = 14h30, 16.75 = 16h45.")
-    allow_fractional_parts = fields.Boolean(string="Autoriser les parts fractionnées", default=False,  help="Si décoché, les souscriptions sont arrondies à l'entier inférieur.")
-    origin_nav = fields.Char(string="VL d'origine")
+    cutoff_time = fields.Float(string="Heure de cut-off",digits=(4, 2), default=16.0, help="Heure limite de réception des ordres (format décimal).\nExemples : 14.0 = 14h00, 14.5 = 14h30, 16.75 = 16h45.")
+    allow_fractional_parts = fields.Boolean(string="Autoriser parts fractionnées ?", default=False,  help="Si décoché, les souscriptions sont arrondies à l'entier inférieur.")
+    origin_nav = fields.Char(string="VL initiale", required=True)
 
     ##################################################
     ## RELATIONS
@@ -33,14 +33,17 @@ class Fund(models.Model):
     # ACTION METHODS
     # ------------------------------------------------------------
     def action_activate(self):
-        for record in self:
-            if not record.start_date:
+        for rec in self:
+            if not rec.start_date:
                 raise ValidationError(_("Merci de saisir la date d'opération."))
-
-            if record.company_id:
-                record.setup_fund_accounting(record.company_id.id)
-                record.state = 'active'
-                record.message_post(body=_("Le fond a été activé."))
+            if rec.company_id:
+                rec.setup_fund_accounting(rec.company_id.id)
+                # appel au service pour la création du premier VL
+                res = self.env['efund.service'].create_first_nav(rec)
+                if not res:
+                    raise ValidationError(_("Erreur lors de la création du premier VL."))
+                rec.state = 'active'
+                rec.message_post(body=_("Le fond a été activé."))
             else:
                 raise ValidationError(_("Merci de sélectionner une société."))
 

@@ -75,6 +75,19 @@ class EfundInvestorCashOperation(models.Model):
                 subtype_xmlid="mail.mt_comment"
             )
 
+
+
+
+           # Création de Event
+            serviceEngine = self.env['efund.service']
+            payload = {'gross': rec.amount, }
+            event = self.env['efund.accounting.event'].create(
+                serviceEngine.build_event_payload('CASH_IN' if self.type == 'deposit' else 'CASH_OUT', rec.vehicule_id.id, 'Apport Liquidité - ' + rec.name,
+                                                  rec.date_operation, payload))
+            rec.event_id = event.id
+            self.env['efund.accounting.engine'].process_event(event)
+
+            # Chagement de status après comptabilisation
             rec.write({
                 'investor_cash_move_id': investor_cash_move.id,
                 'state': 'reconciled',
@@ -87,42 +100,6 @@ class EfundInvestorCashOperation(models.Model):
                 message_type="comment",
                 subtype_xmlid="mail.mt_comment"
             )
-
-            event = self.env['efund.accounting.event'].create(rec.build_event_payload())
-            rec.event_id = event.id
-            self.env['efund.accounting.engine'].process_event(event)
-
-            #Appel de accounting engine
-            #l'idéal : def cron_process_events(self): self.env['efund.accounting.engine'].process_pending_events(limit=500)
-            """
-                def process_pending_events(self, limit=100):
-                    events = self.env['efund.accounting.event'].search([('processed','=',False),('state','=','pending')], limit=limit)
-                    for event in events:
-                        try:
-                            self.process_event(event)
-                        except Exception as e:
-                            event.state = 'failed'
-
-            """
-
-
-    def build_event_payload(self):
-
-        self.ensure_one()
-
-        return {
-            'event_type': ('CASH_IN' if self.type == 'deposit' else 'CASH_OUT'),
-            'vehicule_id': self.vehicule_id.id,
-            'reference': self.name,
-            'event_date': self.date_operation,
-            'state': 'draft',
-
-            'payload': {
-                'gross': self.amount,
-                'net': self.amount - self.fee_amount,
-                'fees': self.fee_amount,
-            }
-        }
 
     def write(self, vals):
         for record in self:

@@ -11,7 +11,7 @@ class FundInstrument(models.Model):
     # Identification
     name = fields.Char(required=True, string='Nom instrument')
     isin = fields.Char(index=True,string="Code ISIN")
-    instrument_type = fields.Selection([('equity', 'Action'), ('bond', 'Obligation'),('dat', 'DAT'), ('opcvm', 'OPCVM'),], required=True)
+    instrument_type = fields.Selection([('equity', 'Action'), ('bond', 'Obligation'),('dat', 'DAT'), ('opcvm', 'OPCVM'),('tcn','Bon')], required=True)
     currency_id = fields.Many2one('res.currency')
     issuer_id = fields.Many2one('efund.vehicule.instrument.issuer', string="Émetteur")
     asset_class_id = fields.Many2one('efund.asset.class', required=True, string="Classe d'actif")

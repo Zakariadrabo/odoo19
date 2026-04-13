@@ -102,6 +102,9 @@ class FundAccountingEngine(models.AbstractModel):
         # target_company = event.vehicule_id.company_id
         target_company = self.env['res.company'].search([('id', '=', idcompany_id.id)], limit=1)
 
+        #log info schema utilisé
+        _logger.info(f"***** Schéma comptable : {lines}")
+
         move = self.env['account.move'].sudo().with_company(target_company).create({
             'journal_id': schema.journal_id.id,
             'company_id': idcompany_id.id,

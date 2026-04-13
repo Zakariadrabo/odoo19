@@ -157,6 +157,12 @@ class EfundInvestmentTransaction(models.Model):
                     event = self.env['efund.accounting.event'].create(
                         serviceEngine.build_event_payload('OPC_EXECUTED_OUT', rec.vehicule_id.id, rec.name,
                                                                 rec.date_transaction, payload))
+            elif rec.instrument_id.instrument_type == 'tcn':
+                payload = {'instrument_id': rec.instrument_id.id, 'net': rec.total_amount, 'qte': rec.quantity,'interest': rec.total_interest,'gross': self.total_amount_trade, }
+                event = self.env['efund.accounting.event'].create(
+                    serviceEngine.build_event_payload('TCN_VALIDATED', rec.vehicule_id.id, rec.name,
+                                                      rec.date_transaction, payload))
+
 
             if event:
                 rec.event_id = event.id

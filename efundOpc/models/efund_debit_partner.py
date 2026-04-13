@@ -8,6 +8,7 @@ class FundDepositaire(models.Model):
     name = fields.Char(string="Bénéficiaire", required=True)
     sigle = fields.Char(string="Sigle du fond")
     forme_juridique = fields.Selection([
+        ('ps', 'Société publique'),
         ('sa', 'Société anonyme'),
         ('sas','Société anonyme simplifiée'),
         ('sarl', 'Société à responsabilité limitée'),

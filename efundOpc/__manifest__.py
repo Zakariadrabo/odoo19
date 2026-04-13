@@ -51,6 +51,7 @@
         # 'views/view_efund_initial_valuation_investor_line_form.xml',
         # 'views/fund_initial_valuation_wizard_views.xml',
         # 'views/efund_share_class_views.xml',
+        'views/efund_vehicule_instrument_core_treasury_views.xml',
         'views/efund_view_compliance_policy_tree.xml',
         'views/efund_views_valuation.xml',
         'reports/efund_kyc_report.xml',
@@ -77,7 +78,7 @@
         'views/efund_instrument_core_views.xml',
         'reports/efund_investor_kyc.xml',
         'views/efund_vehicule_fund_views.xml',
-        'views/efund_fund_expenses_views.xml',
+        'views/efund_vehicule_expenses_views.xml',
 
         'views/efund_fund_instrument_equity_views.xml',
         'views/efund_investment_order.xml',

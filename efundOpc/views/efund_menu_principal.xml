@@ -29,6 +29,8 @@
     <menuitem id="menu_instr_bond" name="Obligations" parent="menu_universe_sub" action="action_efund_instrument_core_bond" sequence="10"/>
 
     <menuitem id="menu_instr_equity" name="Actions" parent="menu_universe_sub" action="action_efund_instrument_core_equity" sequence="20"/>
+    <menuitem id="menu_instr_tcn" name="BAT / BTA " parent="menu_universe_sub" action="action_efund_instrument_core_treasury" sequence="25"/>
+
     <menuitem id="menu_instr_dat" name="Dépôts à Terme (DAT)" parent="menu_universe_sub" action="action_efund_instrument_core_dat" sequence="30"/>
     <menuitem id="menu_instr_opcvm" name="Part OPC" parent="menu_universe_sub" action="action_efund_instrument_core_opcvm" sequence="40"/>
 
