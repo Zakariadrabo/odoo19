@@ -1,8 +1,6 @@
-import calendar
 import logging
 from datetime import timedelta, date
 
-from win32com import storagecon
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
