@@ -19,6 +19,7 @@ class EfundAccountCashMove(models.Model):
     label = fields.Char(string="Libellé",)
     amount = fields.Monetary(required=True, currency_field='currency_id')
     date = fields.Datetime(default=fields.Datetime.now)
+    value_date = fields.Datetime(default=fields.Datetime.now)
     state = fields.Selection([('accounted', 'Comptabilisé'), ('reconciled', 'Reconcilié')], default='accounted')
 
     # reconcilie investor cash move with fund cash move

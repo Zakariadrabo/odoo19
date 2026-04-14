@@ -57,10 +57,12 @@ class BondAmortization(models.Model):
                         'liquidity_type': 'liquid',
                         'label': f" Versement du coupon N° {rec.installment_number} de l'instrument {rec.bond_id.instrument_id.name}",
                         'state': 'reconciled',
+                        'date': rec.due_date,
+                        'value_date': rec.due_date,
                         'instrument_id': rec.bond_id.instrument_id.id,
                     })
 
-                    vehicule_cash.vehicule_id.message_post(
+                    rec.bond_id.message_post(
                         body=_("Crédit du compte du véhicule au montant de %s francs pour verement de coupon") % (coupon_value),
                         subject="comptabilisation de la transaction",
                         message_type="comment",
@@ -76,10 +78,12 @@ class BondAmortization(models.Model):
                             'liquidity_type': 'liquid',
                             'label': f" Remboursement du principal N° {rec.installment_number} de l'instrument {rec.bond_id.instrument_id.name}",
                             'state': 'reconciled',
+                            'date': rec.due_date,
+                            'value_date': rec.due_date,
                             'instrument_id': rec.bond_id.instrument_id.id,
                         })
 
-                        vehicule_cash.vehicule_id.message_post(
+                        rec.bond_id.message_post(
                             body=_("Crédit du compte du véhicule au montant de %s francs pour verement de coupon") % (
                                 principal_value),
                             subject="comptabilisation de Coupon / principal",

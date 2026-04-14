@@ -44,6 +44,29 @@ class EfundMandateCoupon(models.Model):
                 'amount': rec.montant,
                 'state': 'reconciled',
             })
+
+            # Débiter le compte cash du véhicule
+
+            # récupérer ID du compte cash du fond
+            vehicule_cash_id = self.env['efund.vehicule.cash'].get_vehicule_cash_id_by_vehicule_id(rec.mandate_id.vehicule_id.id)
+            if vehicule_cash_id > 0:
+                # mouvement du compte investisseur vers le compte mandat
+                fund_move = self.env['efund.vehicule.cash.move'].create({
+                    'name': self.env['ir.sequence'].next_by_code('efund.vehicule.cash.move'),
+                    'vehicule_cash_id': vehicule_cash_id,
+                    'amount': rec.montant,
+                    'label': f"Paiement de {rec.montant} francs CFA au compte du coupon du mandant",
+                    'move_type': 'coupon_out',
+                    'liquidity_type': 'liquid',
+                    'date': rec.date_paiement,
+                    'value_date': rec.date_paiement,
+                    'state': 'reconciled',
+                    'investor_id': rec.mandate_id.investor_id.id,
+                    'vehicule_id': rec.mandate_id.vehicule_id.id,
+                })
+
+
+
             if mvt_cash:
                 rec.mandate_id.message_post(body=_(f"Paiement du coupon N° %s de %s .") % (rec.coupon_number, rec.montant))
             else:

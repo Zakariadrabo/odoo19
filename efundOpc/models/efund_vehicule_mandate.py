@@ -167,6 +167,8 @@ class Mandate(models.Model):
                 'label': f"Transfert de {balance} du compte investisseur vers le compte du mandat {self.name}",
                 'move_type': 'deposit_out',
                 'amount': balance,
+                'date': rec.amount_received_date,
+                'value_date': rec.amount_received_date,
                 'state': 'reconciled'
             })
             rec.message_post(
@@ -181,6 +183,8 @@ class Mandate(models.Model):
                 'move_type': 'deposit_in',
                 'liquidity_type': 'liquid',
                 'state': 'reconciled',
+                'date': rec.amount_received_date,
+                'value_date': rec.amount_received_date,
                 'investor_id': rec.investor_id.id,
                 'vehicule_id': rec.vehicule_id.id,
             })

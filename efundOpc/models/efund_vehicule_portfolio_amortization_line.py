@@ -19,7 +19,7 @@ class PortfolioAmortizationLine(models.Model):
         """
         self.ensure_one()
         return {
-            'name': _("Détail de la Position : %s") % self.instrument_id.name,
+            'name': _("Détail de la Position : %s") % self.portfolio_id.instrument_id.name,
             'type': 'ir.actions.act_window',
             'view_mode': 'form',
             'res_model': 'efund.vehicule.portfolio',

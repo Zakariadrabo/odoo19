@@ -208,6 +208,8 @@
                                     <field name="date_operation"/>
                                     <field name="operation_type"/>
                                     <field name="total_amount" widget="monetary"/>
+                                    <button name="action_validate" type="object" class="btn-secondary"
+                                            icon="fa-refresh" string="Validé ?" invisible="state != 'draft'"/>
                                     <field name="state" widget="badge"
                                            options="{'success': 'validated', 'info': 'draft', 'danger': 'cancelled'}"/>
                                 </list>
@@ -227,11 +229,10 @@
                                     <field name="date_debut" options="{'numeric': true}"/>
                                     <field name="date_fin" options="{'numeric': true}"/>
                                     <field name="date_paiement" options="{'numeric': true}"/>
-                                    <field name="nb_jours"/>
                                     <field name="montant"/>
                                     <field name="state"/>
                                     <button name="update_coupon_state" type="object" class="btn-secondary"
-                                            icon="fa-refresh" string="payé ?" invisible="state != 'draft'"/>
+                                            icon="fa-refresh" string="Encaisser?" invisible="state != 'draft'"/>
 
                                 </list>
                             </field>
