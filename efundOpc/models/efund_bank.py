@@ -6,7 +6,7 @@ class FundBank(models.Model):
     _order = "name"
 
     name = fields.Char(string="Nom", required=True,)
-    sigle = fields.Char(string="Sigle")
+    sigle = fields.Char(string="Code")
     country_id = fields.Many2one("res.country", string="Pays")
     state = fields.Selection([('draft', 'Draft'), ('validated', 'Validé'), ('archived', 'Archivé'),], default='draft')
 
