@@ -70,7 +70,9 @@ class FundAccountingEngine(models.AbstractModel):
             elif rule.account_resolution_type == 'instrument':
 
                 # RÉSOLUTION : On va chercher dans le dictionnaire payload
+
                 instrument_id = event.payload.get('instrument_id')
+
 
                 if not instrument_id:
                     raise UserError(_("L'ID de l'instrument est manquant dans le payload de l'événement."))
@@ -79,7 +81,8 @@ class FundAccountingEngine(models.AbstractModel):
                 instrument = self.env['efund.vehicule.instrument.core'].browse(instrument_id)
 
                 # On utilise la méthode de mapping chronologique
-                target_account = instrument.get_or_create_accounting_mapping(idcompany_id)
+
+                target_account = self.env["efund.service"].get_or_create_accounting_mapping(instrument ,event.vehicule_id )
 
             elif rule.account_resolution_type == 'liquidity':
                 # On récupère le compte de trésorerie lié au fonds/véhicule

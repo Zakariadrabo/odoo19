@@ -1,8 +1,13 @@
+import calendar
 import datetime
+import logging
+from math import ceil
+
 from dateutil.relativedelta import relativedelta
 
+_logger = logging.getLogger(__name__)
 
-from odoo import models, fields, api, _
+from odoo import models, _
 from odoo.exceptions import UserError, ValidationError
 
 
@@ -13,8 +18,104 @@ class EfundService(models.Model):
     # récupération de la dernière VL
     # Dans votre modèle efund.service
 
+    def get_account_root(self, instrument_type):
+        """ Définit la racine SYSCOHADA selon le type d'instrument """
+        mapping = {
+            'bond': '211',
+            'tcn': '212',
+            'equity': '213',
+            'opcvm': '214',
+            'dat': '215',
 
-    def get_tcn_interest(self, rate, start_date,amount,base):
+        }
+        return mapping.get(instrument_type, '218')
+
+    def get_or_create_accounting_mapping(self, instrument, vehicule):
+        """
+        Retourne le compte comptable associé.
+        Le crée s'il n'existe pas encore pour cette société.
+        """
+
+        # Le véhicule définit la société (le fonds a sa propre company,
+        # les mandats partagent la company de gestion)
+        # 1. Récupérer la compagnie 'MANDATS'
+
+        if vehicule.company_id:
+            company = vehicule.company_id
+        else:
+            company = self.env['res.company'].search([('company_code', '=', 'MANDATS')], limit=1)
+
+        mapping_obj = self.env['efund.instrument.account']
+        mapping = mapping_obj.search([
+            ('instrument_id', '=', instrument.id),
+            ('company_id', '=', company.id)
+        ], limit=1)
+
+        if not mapping:
+            # Appel de la création chronologique
+            new_account = self.create_chronological_account(company, instrument)
+            mapping = mapping_obj.create({
+                'instrument_id': instrument.id,
+                'company_id': company.id,
+                'account_id': new_account.id
+            })
+
+        return mapping.account_id
+
+    def create_chronological_account(self, company, instrument):
+        """
+        Génère un compte comptable chronologique compatible Odoo 19+.
+        Format : Racine + Séquence 5 chiffres (ex: 21100001).
+        """
+
+        target_company = self.env['res.company'].browse(company.id)
+        AccountObj = self.env['account.account'].sudo().with_company(target_company)
+        root = self.get_account_root(instrument.instrument_type)
+        company_id = str(company.id)
+
+        last_account = AccountObj.search([
+            ('code', '=like', f"{root}%")
+        ], order='code desc', limit=1)
+
+        if last_account:
+            last_code = last_account.code
+            _logger.info(f"Dernier code trouvé : {last_code}")
+
+            # 3. Logique d'incrémentation
+            # On tente de transformer le code en entier pour ajouter 1
+            try:
+                # On transforme en int, on ajoute 1, puis on repasse en string
+                new_code_int = int(last_code) + 1
+                new_code = str(new_code_int)
+            except ValueError:
+                # Sécurité au cas où le code contient des lettres (ex: 211000A)
+                raise UserError(
+                    _("Le format du compte %s n'est pas purement numérique et ne peut pas être incrémenté automatiquement.") % last_code)
+        else:
+            # 4. Premier compte de la série (si aucun n'existe)
+            # On définit un format standard, par exemple Racine + 5 chiffres
+            new_code = f"{root}001"
+            _logger.info(f"Création du premier compte de la série : {new_code}")
+
+        # 5. Création effective du compte
+        return AccountObj.create({
+            'name': f"Titres {instrument.name}",
+            'code': new_code,
+            'account_type': 'asset_fixed',
+            'code_store': f'"{company_id}": "{new_code}"',
+        })
+
+        # 4. Création du compte
+        # Utiliser with_company(company) est crucial pour que Odoo
+        # injecte le code dans la bonne clé du dictionnaire JSON 'code_store'
+        return AccountObj.create({
+            'name': f"Titres {self.name}",
+            'code': new_code,
+            'account_type': 'asset_fixed',
+            'code_store': f'"{company_id}": "{new_code}"',
+        })
+
+    def get_tcn_interest(self, rate, start_date, amount, base):
         today = datetime.date.today()
         duration = (today - start_date).days
         return amount * rate * duration / (base * 100)
@@ -118,6 +219,7 @@ class EfundService(models.Model):
             'days_in_period': days_in_period
         }
     """
+
     def create_first_nav(self, fund):
         """
         Crée la première NAV pour un fond donné.
@@ -127,17 +229,17 @@ class EfundService(models.Model):
             'fund_id': fund.id,
             'valuation_date': fund.start_date,
             'unit_nav': fund.origin_nav,
-            'nb_parts':0,
+            'nb_parts': 0,
             'Capital': fund.origin_nav,
             'non_distributable_sum': 0,
             'previous_fiscal_year_result': 0,
             'closed_fiscal_year_result': 0,
             'current_fiscal_year_result': 0,
-            'state':'validated'
+            'state': 'validated'
         }
         res = self.env['efund.nav.session'].create(vals)
         if res:
-            share_class = self.env['efund.nav.share'].search([('vehicule_fund_id', '=', res.get('fund_id'))],limit=1)
+            share_class = self.env['efund.nav.share'].search([('vehicule_fund_id', '=', res.get('fund_id'))], limit=1)
             if share_class:
                 share_class.write({
                     'current_nav': res.get('fund_id'),
@@ -149,7 +251,6 @@ class EfundService(models.Model):
                     'valuation_date': res.get('valuation_date'),
                 })
         return res
-
 
     # Obtenir le nombre de jour ou la date du dénouement d'une opération
     def get_settlement_details(self, operation_date, days_to_add):
@@ -342,8 +443,6 @@ class EfundService(models.Model):
 
     def compute_accrued_interest_precise(self, nominal, annual_rate, compute_date, maturity_date,
                                          frequency='annual', tax_rate=0.0, add_day=0):
-        # self.ensure_one()
-
         # Taux réel annuel
 
         net_rate = (1 - (tax_rate / 100.0)) * annual_rate
@@ -360,6 +459,7 @@ class EfundService(models.Model):
 
         nb_jour = res.get('days_accrued', 0) + day_to_add
         year_base = res.get('days_in_period')
+
         if not year_base or year_base == 0:
             return {'interest_gross': 0.0, 'interest_net': 0.0}
 
@@ -372,74 +472,6 @@ class EfundService(models.Model):
             'interest_gross': interest_gross,
             'interest_net': interest_net,
         }
-        """
-        #Obtenir le nombre jour en tenant compte de la date de dénouement
-        days = 0 if (self.instrument_id.instrument_type in ('dat','opcvm') or self.instrument_id.settlement_mode == 'direct') else 3
-        details = self.get_settlement_details(settlement_date, days)
-        final_settlement_date = details['settlement_date']       
-        Calcule l'intérêt couru avec une base dynamique (Dernier Coupon - Prochain Coupon)
-        
-        # 1. Détermination du prochain coupon pour calculer la base de la période
-        freq_map = {
-            'annual': relativedelta(years=1),
-            'semi_annual': relativedelta(months=6),
-            'quarterly': relativedelta(months=3),
-            'monthly': relativedelta(months=1),
-        }
-        nb_periods_map = {'annual': 1, 'semi_annual': 2, 'quarterly': 4, 'monthly': 12}
-
-        delta = freq_map.get(frequency, relativedelta(years=1))
-        next_coupon_date = last_coupon_date + delta
-        periods_per_year = nb_periods_map.get(frequency, 1)
-
-        # 2. Calcul des jours courus avec dénouement (J+3 ouvré)
-        # Note: On part de la date de l'ordre, settlement_details nous donne la date de valeur
-        days = 0 if (self.instrument_id.instrument_type in ('dat', 'opcvm') or self.instrument_id.settlement_mode == 'direct') else 3
-        details = self.get_settlement_details(settlement_date, days)
-        final_settlement_date = details['settlement_date']
-
-        # Nombre de jours entre le dernier coupon et la date de valeur réelle
-        days_accrued = (settlement_date - last_coupon_date).days
-
-        # 3. Calcul de la base de la période (Le dénominateur précis)
-        days_in_period = 0
-        if day_count == 'act/act':
-            # Nombre de jours réels dans la période de coupon actuelle
-            days_in_period = (next_coupon_date - last_coupon_date).days
-            # La base annuelle devient : Jours de la période * Nombre de périodes par an
-            year_base = days_in_period  # * periods_per_year
-        elif day_count == '30/360':
-            year_base = 360
-            # (Logique 30/360 simplifiée pour l'exemple)
-        else:
-            year_base = 365 if day_count == 'act/365' else 360
-
-        # 4. Calcul de l'intérêt BRUT
-        # Formule : Nominal * Taux Annuel * (Jours Courus / Base Dynamique)
-        nbjour_denouement = self.get_settlement_details(settlement_date,0 if self.instrument_id.instrument_type in ('dat','opcvm') or self.instrument_id.settlement_mode !='direct' else 3)
-        nb_days_to_add = nbjour_denouement['calendar_days']
-
-        taux_reel = (1 - (tax_rate / 100.0)) * annual_rate
-        nb_jour = days_accrued + nb_days_to_add
-
-        interet_period = taux_reel / periods_per_year
-
-        interest_gross = nb_jour / year_base * (annual_rate / periods_per_year) * nominal / 100
-
-        # 5. Application de la fiscalité (IRVM/IRCM)
-        interest_net = nb_jour / year_base * interet_period * nominal / 100
-
-        return {
-            'interet_period': interet_period,
-            'last_coupon_date': last_coupon_date,
-            'next_coupon_date': next_coupon_date,
-            'settlement_date_final': final_settlement_date,
-            'days_accrued': days_accrued,
-            'days_in_period': days_in_period if day_count == 'act/act' else year_base,
-            'interest_gross': round(interest_gross, 8),
-            'interest_net': round(interest_net, 8),
-        }
-        """
 
     def build_event_payload(self, event, vehicule_id, name, date_operation, playload):
 
@@ -511,3 +543,282 @@ class EfundService(models.Model):
 
             # Le montant sera exactement le même en 2027, 2028, etc.
             coupon.amount = (nominal * taux_annuel) / periods
+
+    def get_net_asset_value(self, vehicule, date_target):
+        """
+        Calcule l'Actif Net du véhicule à une date précise.
+        NAV = Somme(Positions Titres à date) + Somme(Soldes Espèces à date)
+        """
+
+        total_portfolio_value = 0.0
+        total_cash_balance = 0.0
+
+        # 1. Valorisation du Portefeuille (Titres)
+        # On récupère les positions du véhicule
+        positions = self.env['efund.vehicule.portfolio'].search([
+            ('vehicule_id', '=', vehicule.id),
+            ('first_price_date', '<=', date_target)
+        ])
+
+        for pos in positions:
+            # On récupère la quantité à date (via les ordres exécutés avant date_target)
+            # Note : Vous devrez peut-être adapter selon votre modèle d'ordres
+            orders = self.env['efund.investment.transaction'].search([
+                ('vehicule_id', '=', vehicule.id),
+                ('instrument_id', '=', pos.instrument_id.id),
+                ('date_transaction', '<=', date_target),
+                ('state', '=', 'settled')
+            ])
+
+            qty_at_date = sum(o.quantity if o.move_type == 'in' else -o.quantity for o in orders)
+
+            # On récupère le cours à la date cible (ou le plus proche avant)
+            last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+                ('instrument_id', '=', pos.instrument_id.id),
+                ('vehicule_id', '=', vehicule.id),
+                ('is_validated', '=', True),
+                ('date', '=', date_target)
+            ], order='date desc', limit=1)
+
+            # 2. Repli (Fallback) : Cours global (ex: Action BRVM)
+            if not last_price_rec:
+                last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+                    ('instrument_id', '=', pos.instrument_id.id),
+                    ('vehicule_id', '=', False),
+                    ('is_validated', '=', True),
+                    ('date', '=', date_target),
+                ], order='date desc', limit=1)
+
+            if not last_price_rec:
+                if pos.instrument_id.instrument_type == 'bond':
+                    last_price_rec = self.generate_bond_price(pos, date_target)
+                elif pos.instrument_id.instrument_type == 'tcn':
+                    last_price_rec = self.generate_tcn_price(pos, date_target)
+                elif pos.instrument_id.instrument_type == 'dat':
+                    last_price_rec = self.generate_dat_price(pos, date_target)
+                elif pos.instrument_id.instrument_type == 'opcvm':
+                    last_price_rec = self.generate_cash_price(pos, date_target)
+                elif pos.instrument_id.instrument_type == 'equity':
+                    raise UserError(_("Merci de saisir le cours à date"))
+                else:
+                    raise UserError(_("Le type d'instrument n'est pas pris en charge"))
+
+            if last_price_rec:
+                price = last_price_rec.price
+            else:  # Appel du calcul de prix
+                pass
+
+            total_portfolio_value += (qty_at_date * price) + last_price_rec.interest if last_price_rec else 0
+
+        # 2. Valorisation du Cash (Soldes Espèces)
+        # On récupère tous les comptes espèces du véhicule
+        cash_accounts = self.env['efund.vehicule.cash'].search([
+            ('vehicule_id', '=', vehicule.id)
+        ])
+
+        for cash in cash_accounts:
+            # On calcule le solde roulant SQL à la date cible
+            # C'est ici qu'on applique votre logique balance_running
+            moves = self.env['efund.vehicule.cash.move'].search([
+                ('vehicule_cash_id', '=', cash.id),
+                ('date', '<=', date_target)
+            ])
+
+            balance_at_date = sum(m.amount if '_in' in m.move_type else -m.amount for m in moves)
+            total_cash_balance += balance_at_date
+
+        # 3. Résultat Final
+        net_asset_value = total_portfolio_value + total_cash_balance
+
+        return {
+            'date': date_target,
+            'portfolio_value': total_portfolio_value,
+            'cash_value': total_cash_balance,
+            'total_nav': net_asset_value,
+        }
+
+    # Cours lissé
+    def compute_linear_actuariat_value_at_date(self, compute_date, buyed_price, buyed_date, nominal_price,
+                                               maturity_date):
+
+        if not compute_date or not buyed_price or not nominal_price or not maturity_date:
+            raise UserError(_("Veuillez renseigner tous les champs obligatoires."))
+        else:
+            if compute_date <= buyed_date:
+                return buyed_price
+
+            if compute_date >= maturity_date:
+                return nominal_price
+
+            total_days = (maturity_date - buyed_date).days
+            if total_days <= 0:
+                return buyed_price
+
+            # Linéaire
+            daily_accretion = (nominal_price - buyed_price) / total_days
+            days_elapsed = (compute_date - buyed_date).days
+
+            linear_value = buyed_price + daily_accretion * days_elapsed
+
+            # Actuariat
+            yield_rate = ((nominal_price / buyed_price) ** (365 / total_days) - 1)
+            base = 366 if calendar.isleap(compute_date.year) else 365
+
+            return linear_value
+
+    def update_or_create_price(self, instrument, vehicule, date, val, interest, source):
+
+        price_rec = self.env["efund.vehicule.instrument.core.price"].search([
+            ('instrument_id', '=', instrument.id),
+            ('vehicule_id', '=', vehicule.id),
+            ('date', '=', date)
+        ], limit=1)
+
+        vals = {
+            'instrument_id': instrument.id,
+            'vehicule_id': vehicule.id,
+            'date': date,
+            'price': val,
+            'interest': ceil(interest),
+            'source': source,
+            'is_validated': True,
+            'price_type': 'close'
+        }
+
+        if price_rec:
+            price_rec.write(vals)
+        else:
+            price_rec = self.create(vals)
+        return price_rec
+
+    def generate_dat_price(self, position, target_date):
+        """ Calcule le cours du DAT : Valeur nominale + intérêts linéarisés """
+        # On récupère les détails du DAT (taux, date début)
+
+        if target_date < position.value_date:
+            raise ValidationError(
+                f"La date de calcul {target_date} est antérieure à la date de début du DAT{position.value_date}")
+        if target_date > position.maturity_date:
+            raise ValidationError(
+                f"La date de calcul {target_date} est postérieure à la date de maturité du DAT{position.maturity_date}")
+
+        if position and position.value_date and position.rate:
+            days = (target_date - position.value_date).days
+            if days < 0: days = 0
+
+            computed_factor = (position.rate / 100.0 * days / 365)
+            interest_value = computed_factor * position.last_price if position.last_price else position.first_price
+            result = self.update_or_create_price(position.instrument, position.vehicule, target_date,
+                                                 position.first_price, interest_value, 'internal')
+
+            return result
+
+    def generate_tcn_price(self, position, target_date):
+        accrual = self.env['efund.service'].get_tcn_interest(position.rate, position.value_date,
+                                                             position.quantity * position.first_price, 360)
+        result = self.update_or_create_price(position.instrument_id, position.vehicule_id, target_date,
+                                             position.first_price, accrual, 'internal')
+        return result
+
+    def generate_bond_price(self, position, target_date):
+        bond = self.env['efund.vehicule.instrument.core.bond'].search([
+            ('instrument_id', '=', position.instrument_id.id)
+        ], limit=1)
+        if bond.instrument_id.is_listed:
+            if bond.instrument_id.valuation_method == 'listed':
+               last_price = self.compute_linear_actuariat_value_at_date(target_date, position.first_price,position.first_price_date, bond.face_value, bond.maturity_date)
+            else:
+                raise ValidationError(f"Merci de saisir manuellement le cours")
+
+            # l'instrument n'est pas coté alors on reprend le prix d'achat
+        else:
+            # On cherche le dernier prix validé
+            last_price_obj = self.env["efund.vehicule.instrument.core.price"].search([
+                ('instrument_id', '=', position.instrument_id.id),
+                ('vehicule_id', '=', position.vehicule_id.id),
+                ('is_validated', '=', True),
+                ('date', '<', target_date)
+            ], order='date desc', limit=1)
+            if last_price_obj:
+                last_price = last_price_obj.price
+            else:
+                last_price = position.first_price
+
+        res = self.compute_accrued_interest_precise(bond.face_value, bond.rate_net, target_date, bond.maturity_date, bond.coupon_frequency, tax_rate=0.0, add_day=0)
+        interest = res.get('interest_net') * position.quantity
+        result = self.update_or_create_price(position.instrument_id, position.vehicule_id, target_date, last_price, interest, 'internal')
+        return result
+
+    def generate_opcvm_price (self, position, target_date):
+        raise ValidationError(f"Merci de saisir manuellement le cours")
+
+
+    """ Revnir terminer la procédure
+    def get_valuation_price_at_date(self, position, valuation_date):
+        
+        Calcule le prix théorique ou récupère le prix de marché d'un instrument
+        à une date donnée selon sa nature.
+       
+
+        # 1. Cas des Titres de Créances / Bons / DAT (Valorisation par amortissement/intérêts)
+        # 1. Aller chercher le dernier prix VALIDÉ pour cet instrument
+        last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+            ('instrument_id', '=', position.instrument_id.id),
+            ('vehicule_id', '=', position.vehicule_id.id),
+            ('is_validated', '=', True),
+            ('date', '=', valuation_date)
+        ], order='date desc', limit=1)
+
+        # 2. Repli (Fallback) : Cours global (ex: Action BRVM)
+        if not last_price_rec:
+            last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+                ('instrument_id', '=', position.instrument_id.id),
+                ('vehicule_id', '=', False),
+                ('is_validated', '=', True),
+                ('date', '=', valuation_date)
+            ], order='date desc', limit=1)
+
+        if not last_price_rec:
+            if position.instrument_id.instrument_type == 'bond':
+                # On récupère les infos d'émission (Nominal, Date émission, Maturité)
+                # Selon votre modèle, ces infos sont dans le modèle spécifique lié
+                bond_data = self.env['efund.vehicule.instrument.core.bond'].search([
+                    ('instrument_id', '=', position.instrument_id.id)
+                ], limit=1)
+
+                if bond_data:
+                    # Si l'instrument utilise une valorisation linéaire (Lissage)
+                    # On utilise votre fonction 'compute_linear_actuariat_value_at_date'
+                    if bond_data.instrument_id.is_listed:
+                        if bond_data.instrument_id.valuation_method == 'listed':
+                            return self.compute_linear_actuariat_value_at_date(
+                                valuation_date=valuation_date,
+                                buyed_price=position.first_price,
+                                buyed_date=position.first_price_date,
+                                nominal_price=bond_data.face_value,
+                                maturity_date=bond_data.maturity_date
+                            )
+
+                        # Si c'est un calcul d'intérêts courus (DAT / TCN)
+                        elif instrument.valuation_method == 'accrued_interest':
+                            # Formule simplifiée : Nominal * Taux * (Jours courus / Base)
+                            days_accrued = (valuation_date - bond_data.issue_date).days
+                            # On assume une base 360 pour les TCN/DAT (à adapter selon vos conventions)
+                            interest = bond_data.face_value * (bond_data.coupon_rate / 100) * (days_accrued / 360.0)
+                            return bond_data.face_value + interest
+
+            # 2. Cas des Actions / OPCVM (Valorisation par le dernier cours de marché)
+            # On cherche le prix validé le plus proche (inférieur ou égal) à la date cible
+            market_price = self.env['efund.vehicule.instrument.core.price'].search([
+                ('instrument_id', '=', instrument.id),
+                ('date', '<=', valuation_date),
+                ('is_validated', '=', True)
+            ], order='date desc', limit=1)
+
+            if market_price:
+                return market_price.price
+
+            # 3. Fallback : Si aucun prix n'est trouvé, on retourne le coût moyen ou le prix d'émission
+            return instrument.last_validated_price or 0.0
+            
+        """

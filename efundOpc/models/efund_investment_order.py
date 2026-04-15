@@ -45,7 +45,7 @@ class EfundInvestmentOrder(models.Model):
     total_other = fields.Monetary(string="Autres commissions", compute='_compute_accrured_interest',inverse='_inverse_nav', store=True)
     total_commission = fields.Monetary(string="Total commissions", compute='_compute_accrured_interest',inverse='_inverse_nav', store=True)
     total_transaction = fields.Monetary(string="Total Transaction", compute='_compute_accrured_interest',inverse='_inverse_nav', store=True)
-    total_fees = fields.Monetary(string="Total Frais courtage", compute='_compute_accrured_interest', inverse='_inverse_nav', store=True)
+    total_fees = fields.Monetary(string="Total Frais", compute='_compute_accrured_interest', inverse='_inverse_nav', store=True)
     total_interest = fields.Monetary(string="Intérêts courus net", compute='_compute_accrured_interest',inverse='_inverse_nav', store=True)
     total_amount = fields.Monetary(string="Total TTC", compute='_compute_accrured_interest',inverse='_inverse_nav', store=True)
 
@@ -316,79 +316,80 @@ class EfundInvestmentOrder(models.Model):
 
 
     def action_execute(self):
-        self.ensure_one()
-        remaining_quantity = 0
-        executed_quantity = 0
-        price = 0
-        broker = 0
-        tob = 0
-        interest = 0
-        if self.operation_type == 'trade':
-            remaining_quantity = self.quantity - self.executed_qty
-            executed_quantity = self.quantity
-            price = self.limit_price
-            broker = self.total_courtage
-            tob = self.total_tva
-            interest = self.total_interest
+        for rec in self:
+            #self.ensure_one()
+            remaining_quantity = 0
+            executed_quantity = 0
+            price = 0
+            broker = 0
+            tob = 0
+            interest = 0
+            if rec.operation_type == 'trade':
+                remaining_quantity = rec.quantity - rec.executed_qty
+                executed_quantity = rec.quantity
+                price = rec.limit_price
+                broker = rec.total_courtage
+                tob = rec.total_tva
+                interest = rec.total_interest
 
-        elif self.operation_type == 'opcvm':
-            remaining_quantity = self.units_estimated - self.executed_qty
-            executed_quantity = self.units_estimated
-            price = self.nav
-        elif self.operation_type == 'deposit':
-            remaining_quantity = self.units_estimated - self.executed_qty
-        else:
-            raise ValidationError(_("Type inexistant"))
+            elif rec.operation_type == 'opcvm':
+                remaining_quantity = rec.units_estimated - rec.executed_qty
+                executed_quantity = rec.units_estimated
+                price = rec.nav
+            elif rec.operation_type == 'deposit':
+                remaining_quantity = rec.units_estimated - rec.executed_qty
+            else:
+                raise ValidationError(_("Type inexistant"))
 
-        return {
-            'type': 'ir.actions.act_window',
-            'name': 'Exécution de l’ordre',
-            'res_model': 'efund.bourse.order.execution.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_order_id': self.id,
-                'default_remaining_quantity': remaining_quantity,
-                'default_executed_quantity': remaining_quantity,
-                'default_execution_date': self.order_date,
-                'default_execution_price': price,
-                'default_total_courtage': self.total_courtage,
-                'default_total_tva': self.total_tva,
-                'default_total_dc': self.total_dc,
-                'default_total_irvm': self.total_irvm,
-                'default_total_other': self.total_other,
-                'default_total_bvm': self.total_bvm,
-                'default_total_interet_brut': self.total_interet_brut,
-                'default_total_regulateur': self.total_regulateur,
-                'default_total_interest': self.total_interest,
-                'default_total_transaction': self.total_amount_trade,
-                'default_total_amount_trade': self.total_amount_trade,
-                'default_total_fees': self.total_fees,
-                'default_total_amount': self.total_amount,
-                # DAT
-                'default_deposit_amount': self.deposit_amount,
-                'default_negotiated_rate': self.negotiated_rate,
-                'default_interest_type': self.interest_type,
-                'default_start_date': self.start_date,
-                'default_maturity_date': self.maturity_date,
-                'default_operation_type': self.operation_type,
-                # OPCVM
-                'default_order_amount': self.order_amount,
-                'default_nav': self.nav,
-                'default_amount_type': self.amount_type,
-                'default_units_estimated': self.units_estimated,
-                'default_nav_date_expected': self.nav_date_expected,
-                'default_direction_opcvm': self.direction_opcvm,
-                #Bon
-                # BON
-                'default_nominal_bta': self.nominal_bta,
-                'default_calculation_type': self.calculation_type,
-                'default_yield_rate': self.yield_rate,
-                'default_discount_amount': self.discount_amount,
-                'default_purchase_price': self.purchase_price,
-                'default_instrument_type': self.instrument_type
+            return {
+                'type': 'ir.actions.act_window',
+                'name': 'Exécution de l’ordre',
+                'res_model': 'efund.bourse.order.execution.wizard',
+                'view_mode': 'form',
+                'target': 'new',
+                'context': {
+                    'default_order_id': rec.id,
+                    'default_remaining_quantity': remaining_quantity,
+                    'default_executed_quantity': remaining_quantity,
+                    'default_execution_date': rec.order_date,
+                    'default_execution_price': price,
+                    'default_total_courtage': rec.total_courtage,
+                    'default_total_tva': rec.total_tva,
+                    'default_total_dc': rec.total_dc,
+                    'default_total_irvm': rec.total_irvm,
+                    'default_total_other': rec.total_other,
+                    'default_total_bvm': rec.total_bvm,
+                    'default_total_interet_brut': rec.total_interet_brut,
+                    'default_total_regulateur': rec.total_regulateur,
+                    'default_total_interest': rec.total_interest,
+                    'default_total_transaction': rec.total_amount_trade,
+                    'default_total_amount_trade': rec.total_amount_trade,
+                    'default_total_fees': rec.total_fees,
+                    'default_total_amount': rec.total_amount,
+                    # DAT
+                    'default_deposit_amount': rec.deposit_amount,
+                    'default_negotiated_rate': rec.negotiated_rate,
+                    'default_interest_type': rec.interest_type,
+                    'default_start_date': rec.start_date,
+                    'default_maturity_date': rec.maturity_date,
+                    'default_operation_type': rec.operation_type,
+                    # OPCVM
+                    'default_order_amount': rec.order_amount,
+                    'default_nav': rec.nav,
+                    'default_amount_type': rec.amount_type,
+                    'default_units_estimated': rec.units_estimated,
+                    'default_nav_date_expected': rec.nav_date_expected,
+                    'default_direction_opcvm': rec.direction_opcvm,
+                    #Bon
+                    # BON
+                    'default_nominal_bta': rec.nominal_bta,
+                    'default_calculation_type': rec.calculation_type,
+                    'default_yield_rate': rec.yield_rate,
+                    'default_discount_amount': rec.discount_amount,
+                    'default_purchase_price': rec.purchase_price,
+                    'default_instrument_type': rec.instrument_type
+                }
             }
-        }
 
     def action_send(self):
         for order in self:
@@ -634,7 +635,7 @@ class EfundInvestmentOrder(models.Model):
                             rec.total_transaction = round(total_transaction)
                             rec.total_commission = rec.total_tva + rec.total_courtage
                             rec.total_fees = rec.total_bvm + rec.total_regulateur + rec.total_dc + rec.total_commission
-                            rec.total_amount = (rec.total_transaction +  rec.total_fees if rec.direction == 'buy' else rec.total_transaction -  rec.total_fees)
+                            rec.total_amount = rec.total_transaction +  rec.total_fees if rec.direction == 'buy' else rec.total_transaction -  rec.total_fees
 
                     if rec.instrument_id.instrument_type == 'equity':
                         rec.total_transaction = rec.quantity * rec.limit_price
@@ -660,7 +661,6 @@ class EfundInvestmentOrder(models.Model):
                     [('instrument_id', '=', rec.instrument_id.id)], limit=1)
                 if deposit:
                     if rec.deposit_amount and rec.negotiated_rate and rec.start_date and rec.maturity_date and rec.interest_type:
-                        _logger.info(f"******deposit : {rec.deposit_amount}")
                         res = self.compute_dat_settlement_daily_basis(nominal=rec.deposit_amount,
                                                                       annual_rate=rec.negotiated_rate,
                                                                       date_start=rec.start_date, date_end=rec.maturity_date,
@@ -677,6 +677,7 @@ class EfundInvestmentOrder(models.Model):
                         rec.total_irvm = interest_gross - interest_net
                         rec.total_interest = interest_net
                         rec.total_amount = cash_out
+
 
             if rec.operation_type == 'opcvm':
                 rec.total_amount_trade = rec.units_estimated * rec.nav

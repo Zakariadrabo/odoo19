@@ -18,7 +18,7 @@ class FundInstrumentBond(models.Model):
 
     instrument_id = fields.Many2one('efund.vehicule.instrument.core', required=True,ondelete='cascade')
 
-    bond_type = fields.Selection([ ('ota', 'OTA'),('bta', 'BTA'),('op', 'Obligation Privée')], string="Type d'obligation")
+    bond_type = fields.Selection([ ('monetary', 'Monétaire'),('financial', 'Financier'),('private', 'Privée')], default='monetary', string="Type marché")
     currency_id = fields.Many2one(related='instrument_id.currency_id')
     issue_amount = fields.Monetary(string='Montant Emission', tracking=True, help="Montant total émis par l'émetteur")
     face_value = fields.Monetary(string="Valeur nominale")

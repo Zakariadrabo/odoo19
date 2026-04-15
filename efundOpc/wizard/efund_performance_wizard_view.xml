@@ -1,0 +1,48 @@
+<odoo>
+    <record id="view_efund_performance_wizard_form" model="ir.ui.view">
+    <field name="name">efund.performance.wizard.form</field>
+    <field name="model">efund.performance.wizard</field>
+    <field name="arch" type="xml">
+        <form string="Analyse de Performance">
+            <sheet>
+                <group string="Paramètres de l'analyse">
+                    <group>
+                        <field name="vehicule_id" options="{'no_create': True}"/>
+                        <field name="target_rate" widget="percentage"/>
+                    </group>
+                    <group>
+                        <field name="date_t"/>
+                        <field name="date_t1"/>
+                    </group>
+                    <group>
+                        <button name="action_confirm_execution"
+                            string="Valider l’exécution"
+                            type="object"
+                            class="btn-primary"/>
+                    <button string="Annuler"
+                            special="cancel"
+                            class="btn-secondary"/>
+                    </group>
+                </group>
+
+                <group string="Résultats du calcul" class="mt32">
+                    <group>
+                        <field name="valuation_t" decoration-info="1"/>
+                        <field name="valuation_t1" decoration-info="1"/>
+                        <field name="performance" widget="monetary" decoration-bf="1"
+                               decoration-success="performance > 0" decoration-danger="performance &lt; 0"/>
+                    </group>
+                    <group>
+                        <field name="accrued_coupon_client" widget="monetary"/>
+                        <field name="superperformance" widget="monetary" decoration-bf="1"
+                               decoration-success="superperformance > 0" decoration-danger="superperformance &lt; 0"/>
+                    </group>
+                </group>
+            </sheet>
+            <footer>
+                <button string="Fermer" class="btn-secondary" special="cancel"/>
+            </footer>
+        </form>
+    </field>
+</record>
+</odoo>

@@ -31,7 +31,8 @@
             <field name="market_value" widget="monetary" string="Valeur Marché" sum="Total Valeur"/>
 
             <field name="unrealized_pl" widget="monetary" string="Différence d'estimation" sum="Total P&amp;L"/>
-            <field name="unrealized_pl_percent" widget="percentage" string="%"/>
+
+            <field name="unrealized_pl_percent" widget="percentage" digits="[16, 2]" string="%"/>
 
             <field name="state" widget="badge" decoration-info="state=='active'"  decoration-danger="state=='closed'"/>
         </list>

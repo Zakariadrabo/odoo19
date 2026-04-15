@@ -29,7 +29,7 @@
                     <field name="quantity" string="Quantité"/>
                     <field name="price_unit" string="Prix Unitaire"/>
                     <field name="total_amount_trade" string="Montant HT"/>
-                <!-- Frais -->
+                    <!-- Frais -->
                     <field name="total_fees" string="Frais"/>
                     <field name="total_interest" string="Taxes"/>
                     <!-- Montants -->
@@ -82,15 +82,20 @@
 
                             <group string="Détails Financiers">
                                 <!-- Quantité et Prix -->
-                                <field name="quantity" string="Quantité exécutée" invisible="operation_type  == 'deposit'"/>
-                                <field name="price_unit" string="Prix d'exécution" invisible="operation_type  == 'deposit'"/>
-                                <field name="deposit_amount" string="Montant DAT" invisible="operation_type  != 'deposit'"/>
-                                <field name="negotiated_rate" string="taux DAT" invisible="operation_type  != 'deposit'"/>
+                                <field name="quantity" string="Quantité exécutée"
+                                       invisible="operation_type  == 'deposit'"/>
+                                <field name="price_unit" string="Prix d'exécution"
+                                       invisible="operation_type  == 'deposit'"/>
+                                <field name="deposit_amount" string="Montant DAT"
+                                       invisible="operation_type  != 'deposit'"/>
+                                <field name="negotiated_rate" string="taux DAT"
+                                       invisible="operation_type  != 'deposit'"/>
                                 <field name="start_date" string="Début" invisible="operation_type  != 'deposit'"/>
                                 <field name="maturity_date" string="Maturité" invisible="operation_type  != 'deposit'"/>
 
                                 <!-- Frais -->
-                                <field name="total_amount_trade" string="Total transaction" invisible="operation_type  == 'deposit'"/>
+                                <field name="total_amount_trade" string="Total transaction"
+                                       invisible="operation_type  == 'deposit'"/>
                                 <field name="total_amount" string="Montant Net" readonly="1"/>
 
                                 <!-- Courtier -->
@@ -102,38 +107,61 @@
                         <span class="text-muted">Détail calcul</span>
                         <hr/>
                         <div class="border rounded p-3">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <strong>Montant Brut :</strong>
-                                        <span class="float-end">
-                                            <field name="total_amount_trade"/>
-                                        </span>
-                                    </div>
-                                    <div class="col-6" invisible="operation_type == 'opcvm'">
-                                        <strong>Frais totaux :</strong>
-                                        <span class="float-end"><strong> Intérêt Brut : </strong><field name="total_interet_brut" string="Intérêt brut"/></span>
-                                             <span class="float-end"><strong>IVRM : </strong><field name="total_irvm" string="IRVM"/></span>
-                                             <span class="float-end"><strong>Intérêt Net: </strong><field name="total_interest" string="Intérêt net"/></span>
-                                            <span class="float-end"><strong>Bourse: </strong><field name="total_bvm" string="Bourse"/></span>
-                                            <span class="float-end"><strong>Dépositaire Central: </strong><field name="total_dc" string="Dépositaire"/></span>
-                                            <span class="float-end"><strong>Régulateur: </strong><field name="total_regulateur" string="Régulateur"/></span>
-                                            <span class="float-end"><strong>Courtage: </strong><field name="total_courtage" string="Courtage"/></span>
-                                            <span class="float-end"><strong>Tva: </strong><field name="total_tva" string="TVA"/></span>
-
-                                    </div>
+                            <div class="row">
+                                <div class="col-6" style="background-color: gray;">
+                                    <strong>Montant Brut :</strong>
+                                    <span>
+                                        <field name="total_amount_trade"/>
+                                    </span>
                                 </div>
-                                <hr/>
-                                <div class="row">
-                                    <div class="col-12">
-                                        <strong>Montant Net :</strong>
-                                        <span class="float-end">
-                                            <field name="total_amount"/>
-                                        </span>
-                                    </div>
+                                <div class="col-6">
+                                    <strong>Montant Net :</strong>
+                                    <span>
+                                        <field name="total_amount"/>
+                                    </span>
                                 </div>
                             </div>
-
-
+                            <div class="row">
+                                <div class="col-3">
+                                    <strong>Intérêt Brut :</strong>
+                                    <field name="total_interet_brut" string="Intérêt brut"/>
+                                </div>
+                                <div class="col-3">
+                                    <strong>IVRM :</strong>
+                                    <field name="total_irvm" string="IRVM"/>
+                                </div>
+                                <div class="col-3">
+                                    <strong>Intérêt Net : </strong>
+                                    <field name="total_interest" string="Intérêt net"/>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-2">
+                                    <strong>Bourse : </strong>
+                                    <field name="total_bvm" string="Bourse"/>
+                                </div>
+                                <div class="col-2">
+                                    <strong>Dépositaire : </strong>
+                                    <field name="total_dc" string="Dépositaire"/>
+                                </div>
+                                <div class="col-2">
+                                    <strong>Régulateur : </strong>
+                                    <field name="total_regulateur" string="Régulateur"/>
+                                </div>
+                                <div class="col-2">
+                                    <strong>Courtage : </strong>
+                                    <field name="total_courtage" string="Courtage"/>
+                                </div>
+                                <div class="col-2">
+                                    <strong>Tva : </strong>
+                                    <field name="total_tva" string="TVA"/>
+                                </div>
+                                <div class="col-2">
+                                    <strong>Total Frais : </strong>
+                                    <field name="total_fees" string="Total Frais"/>
+                                </div>
+                            </div>
+                        </div>
                     </sheet>
                 </form>
             </field>

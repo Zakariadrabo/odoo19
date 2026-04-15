@@ -164,7 +164,7 @@
                             <strong>Total Commissions &amp; Taxes:
                             </strong>
                             <br/>
-                            <field name="free_tax_amount" widget="monetary"
+                            <field name="total_fees" widget="monetary"
                                    options="{'currency_field': 'currency_id'}"
                                    readonly="1"/>
                         </div>

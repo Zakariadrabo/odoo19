@@ -93,7 +93,7 @@
                         <group>
                             <field name="total_amount_trade" widget="monetary" class="fw-bold text-primary" force_save="1"/>
                             <field name="total_amount"/>
-                            <field name="total_fees" readonly="1" invisible="instrument_type in('tcn','opcvm')"/>
+                            <field name="total_fees" invisible="instrument_type in('tcn','opcvm')"/>
                             <field name="total_interest" readonly="1" invisible="instrument_type in('equity','opcvm')"/>
                         </group>
                     </group>

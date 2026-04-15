@@ -61,75 +61,6 @@ class EfundInvestmentTransaction(models.Model):
         [('draft', 'Provisoire'), ('confirmed', 'Confirmé'), ('settled', 'Dénoué (R/L)'), ('cancelled', 'Annulé')
          ], default='draft')
 
-    def build_event_payload_bond(self):
-
-        self.ensure_one()
-        montant_operation = self.quantity * self.price_unit
-        type_execution = ''
-        if self.instrument_id.instrument_type == 'bond':
-            if self.instrument_id.settlement_mode == 'direct':
-                type_execution = 'DIRECT_INVESTMENT_EXECUTED'
-            else:
-                type_execution = 'MARKET_TRADE_EXECUTED'
-
-        event_name = 'TRADE_SUBSCRIPTION' if type_execution == 'DIRECT_INVESTMENT_EXECUTED' else 'TRADE_EXECUTED'
-        event_type_id = self.env['efund.event.type'].search([('sigle', '=', event_name)], limit=1)
-
-        return {
-            'event_type_id': event_type_id.id,
-            'vehicule_id': self.vehicule_id.id,
-            'reference': self.name,
-            'event_date': self.date_transaction,
-            'state': 'draft',
-
-            'payload': {
-                'instrument_id': self.instrument_id.id,
-                'gross': self.total_amount_trade,
-                'net': self.total_amount,
-                'fees': self.total_commission,
-                'interest': self.total_interest if self.instrument_id.instrument_type == 'bond' else 0,
-                'qte': self.quantity,
-            }
-        }
-
-    def build_event_payload_dat(self):
-
-        self.ensure_one()
-
-        event_type_id = self.env['efund.event.type'].search([('sigle', '=', 'DAT_EXECUTED')], limit=1)
-
-        return {
-            'event_type_id': event_type_id.id,
-            'vehicule_id': self.vehicule_id.id,
-            'reference': self.name,
-            'event_date': self.date_transaction,
-            'state': 'draft',
-
-            'payload': {
-                'instrument_id': self.instrument_id.id,
-                'gross': self.total_amount,
-            }
-        }
-
-    def build_event_payload_opcvm(self):
-
-        self.ensure_one()
-
-        event_type_id = self.env['efund.event.type'].search([('sigle', '=', 'OPC_EXECUTED')], limit=1)
-
-        return {
-            'event_type_id': event_type_id.id,
-            'vehicule_id': self.vehicule_id.id,
-            'reference': self.name,
-            'event_date': self.date_transaction,
-            'state': 'draft',
-
-            'payload': {
-                'instrument_id': self.instrument_id.id,
-                'gross': self.total_amount,
-                'qte': self.quantity,
-            }
-        }
 
     def action_confirm_settlement(self):
         """Déclencheur principal du dénouement"""
@@ -144,9 +75,14 @@ class EfundInvestmentTransaction(models.Model):
 
             # 2. Création d'évenement et écriture comptable
             if rec.instrument_id.instrument_type == 'bond':
-                event = self.env['efund.accounting.event'].create(rec.build_event_payload_bond())
+                payload =  {'instrument_id': self.instrument_id.id, 'gross': self.total_amount_trade,  'net': self.total_amount, 'fees': self.total_fees,'interest': self.total_interest, 'qte': self.quantity,}
+                event_name = 'TRADE_SUBSCRIPTION' if rec.instrument_id.settlement_mode == 'direct' else 'TRADE_EXECUTED'
+                event = self.env['efund.accounting.event'].create(serviceEngine.build_event_payload(event_name, rec.vehicule_id.id, rec.name, rec.date_transaction, payload))
+
             elif rec.instrument_id.instrument_type == 'dat':
-                event = self.env['efund.accounting.event'].create(rec.build_event_payload_dat())
+                payload = {'instrument_id': self.instrument_id.id, 'gross': self.total_amount,'net': rec.total_amount_trade , 'interest': rec.total_interest,}
+                event = self.env['efund.accounting.event'].create(serviceEngine.build_event_payload('DAT_EXECUTED', rec.vehicule_id.id, rec.name, rec.date_transaction, payload))
+
             elif rec.instrument_id.instrument_type == 'opcvm':
                 payload = {'instrument_id': rec.instrument_id.id, 'net': rec.total_amount, 'qte': rec.quantity, }
                 if rec.move_type == 'in':
@@ -208,6 +144,8 @@ class EfundInvestmentTransaction(models.Model):
                 'liquidity_type': 'liquid',
                 'label': rec.label,
                 'state': 'reconciled',
+                'date': rec.date_transaction,
+                'value_date': rec.date_transaction,
                 'trade_id': rec.id,
                 'instrument_id': rec.order_id.instrument_id.id,
             })
@@ -231,6 +169,8 @@ class EfundInvestmentTransaction(models.Model):
                     'liquidity_type': 'liquid',
                     'state': 'reconciled',
                     'label': 'Frais de courtage',
+                    'date': rec.date_transaction,
+                    'value_date': rec.date_transaction,
                     'trade_id': rec.id,
                     'instrument_id': rec.order_id.instrument_id.id,
                 })
@@ -252,6 +192,8 @@ class EfundInvestmentTransaction(models.Model):
                     'liquidity_type': 'liquid',
                     'state': 'reconciled',
                     'label': 'Intérêt couru',
+                    'date': rec.date_transaction,
+                    'value_date': rec.date_transaction,
                     'trade_id': rec.id,
                     'instrument_id': rec.order_id.instrument_id.id,
                 })

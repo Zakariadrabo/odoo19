@@ -195,6 +195,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                             rec.total_tva = round((rec.total_courtage * tx_tva) / 100)
 
                     rec.total_fees = rec.total_courtage + rec.total_tva
+                    rec.total_commission = rec.total_courtage + rec.total_tva
                     rec.total_amount = rec.total_amount_trade + rec.total_fees - rec.total_interest if rec.direction == 'buy' else rec.total_amount_trade + rec.total_fees - rec.total_interest
 
                 if rec.order_id.instrument_id.instrument_type == 'bond':
@@ -239,6 +240,9 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                         rec.total_fees = rec.total_bvm + rec.total_regulateur + rec.total_dc + rec.total_commission
                         rec.total_amount = (total_transaction + rec.total_fees if rec.order_id.direction == 'buy' else total_transaction - rec.total_fees)
 
+                        self.maturity_date = bond.maturity_date
+                        self.negotiated_rate = bond.rate_net
+
                 if rec.order_id.instrument_id.instrument_type == 'equity':
                     rec.total_transaction = rec.executed_quantity * rec.execution_price
                     if tx_courtage > 0:
@@ -256,7 +260,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
 
                     rec.total_commission = rec.total_courtage + rec.total_tva
                     rec.total_fees = rec.total_bvm + rec.total_regulateur + rec.total_dc + rec.total_commission
-                    rec.total_amount = (rec.total_transaction + rec.total_fees if rec.order_id.direction == 'buy' else rec.total_transaction - rec.total_fees)
+                    rec.total_amount = rec.total_transaction + rec.total_fees if rec.order_id.direction == 'buy' else rec.total_transaction - rec.total_fees
 
             if rec.order_id.operation_type == 'deposit':
                 deposit = self.env['efund.vehicule.instrument.core.dat'].search(
@@ -278,6 +282,8 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                     self.total_irvm = interest_gross - interest_net
                     self.total_interest = interest_net
                     self.total_amount = cash_out
+                    self.maturity_date = rec.maturity_date
+                    self.negotiated_rate = rec.negotiated_rate
 
             if rec.order_id.operation_type == 'opcvm':
                 rec.total_amount_trade = rec.executed_quantity * rec.execution_price
@@ -332,20 +338,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
             self.execution_price = self.purchase_price
             self.maturity_date = tcn.maturity_date
             self.negotiated_rate_net = self.yield_rate
-            #self.start_date = res.get('settlement_date'),
-            self.total_bvm = False
-            self.total_dc = False
-            self.total_regulateur = False
-            self.total_other = False
-            #self.courtage = False
-            #self.tva = False
-            self.total_irvm = False
-            self.total_commission = False
-            #self.total_fees = False
-            #self.amount = False
-            self.free_tax_amount = False
-            self.total_interet_brut = False
-            self.deposit_amount = False
+
 
 
         exec_line = self.env['efund.investment.transaction'].create({

@@ -87,7 +87,7 @@ class FundInstrumentPrice(models.Model):
 
                 bond = self.env['efund.vehicule.instrument.core.bond'].search([ ('instrument_id', '=', pos.instrument_id.id),], limit=1)
                 if trans_details:
-                    self._generate_listed_bond_price(trans_details,bond, today)
+                    self._generate_listed_bond_price(trans_details,bond,pos, today)
 
     def _generate_dat_price(self, position, target_date):
         """ Calcule le cours du DAT : Valeur nominale + intérêts linéarisés """
@@ -110,7 +110,7 @@ class FundInstrumentPrice(models.Model):
 
             self._update_or_create_price(position.instrument_id,position.vehicule_id, target_date, position.last_price, interest_value,'internal')
 
-    def _generate_listed_bond_price(self,trans_details, bond, target_date):
+    def _generate_listed_bond_price(self,trans_details, bond,pos, target_date):
         """ Pour les bonds listés, si pas de prix aujourd'hui, on reprend le dernier connu """
         # On vérifie si un prix existe déjà pour aujourd'hui
 
@@ -150,14 +150,11 @@ class FundInstrumentPrice(models.Model):
 
 
         if last_price:
-            last_coupon = trans_details.order_id._get_actual_last_coupon_date(bond.coupon_frequency, bond.value_date,
-                                                            target_date)
 
-            res = trans_details.order_id.compute_accrued_interest_precise(bond.face_value, bond.coupon_rate, last_coupon,
-                                                        target_date, bond.coupon_frequency, 'act/act',
-                                                        bond.rate_net if bond.rate_net > 0 else 0)
+            res = self.env["efund.service"].compute_accrued_interest_precise(bond.face_value, bond.rate_net, target_date, bond.maturity_date,
+                                             bond.coupon_frequency, tax_rate=0.0, add_day=0)
 
-            interest = res.get("interest_net") * trans_details.quantity
+            interest = res.get('interest_net') * pos.quantity
             self._update_or_create_price(trans_details.instrument_id,trans_details.vehicule_id, target_date, last_price,interest, 'internal')
 
     def _update_or_create_price(self, instrument,vehicule, date, val,interest, source):

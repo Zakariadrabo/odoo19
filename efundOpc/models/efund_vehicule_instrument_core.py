@@ -57,7 +57,7 @@ class FundInstrument(models.Model):
         """ Définit la racine SYSCOHADA selon le type d'instrument """
         mapping = {
             'bond': '211',
-            'btp': '212',
+            'tcn': '212',
             'equity': '213',
             'opcvm': '214',
             'dat': '215',
@@ -128,6 +128,7 @@ class FundInstrument(models.Model):
         # Le véhicule définit la société (le fonds a sa propre company,
         # les mandats partagent la company de gestion)
         # 1. Récupérer la compagnie 'MANDATS'
+
         if self.vehicule_id.company_id:
             company = self.vehicule_id.company_id
         else:
@@ -138,7 +139,8 @@ class FundInstrument(models.Model):
             ('instrument_id', '=', self.instrument_id.id),
             ('company_id', '=', company.id)
         ], limit=1)
-        _logger.info(f"************** mapping = {mapping}")
+        _logger.info(f"********** mapping {mapping}")
+
 
         if not mapping:
             # Appel de la création chronologique

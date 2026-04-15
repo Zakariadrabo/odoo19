@@ -26,7 +26,7 @@ class EfundFundCashMove(models.Model):
     ], string="Statut", default='draft')
     note = fields.Text()
     # Nouveau champ pour le solde circulant
-    balance_running = fields.Monetary(string="Solde circulant",compute='_compute_balance_running',store=True,)
+    balance_running = fields.Monetary(string="Solde circulant",compute='_compute_balance_running',)
 
     # État de liquidité
     liquidity_type = fields.Selection([
@@ -52,20 +52,31 @@ class EfundFundCashMove(models.Model):
     account_move_id = fields.Many2one('account.move', string="Écriture Comptable")
 
     # Champs calculés
-    is_incoming = fields.Boolean(string="Entrant", compute='_compute_direction', store=True)
-    balance_after = fields.Monetary(string="Solde Après", compute='_compute_balances')
+    #is_incoming = fields.Boolean(string="Entrant", compute='_compute_direction',)
+    #balance_after = fields.Monetary(string="Solde Après", compute='_compute_balance_running', store=True)
 
-    @api.depends('amount', 'vehicule_cash_id', 'date', 'create_date')
+    @api.depends('amount', 'date', 'vehicule_cash_id')
     def _compute_balance_running(self):
-        for move in self:
-            # On cherche tous les mouvements du même compte cash antérieurs ou égaux à celui-ci
-            # On trie par date et par ID pour garantir un ordre constant
-            previous_moves = self.search([
-                ('vehicule_cash_id', '=', move.vehicule_cash_id.id),
-                '|', ('date', '<', move.date),
-                '&', ('date', '=', move.date), ('id', '<=', move.id)
-            ])
-            # Somme de tous les montants (positifs et négatifs)
-            move.balance_running = sum(m.amount if '_in' in m.move_type else -m.amount
-                for m in previous_moves
-            )
+        # On regroupe les mouvements par compte cash pour ne faire qu'un search par compte présent à l'écran
+        cash_ids = self.mapped('vehicule_cash_id')
+
+        for cash in cash_ids:
+            # Un seul search pour récupérer l'historique complet du compte
+            all_moves = self.search([
+                ('vehicule_cash_id', '=', cash.id)
+            ], order='date asc, id asc')
+
+            running_balance = 0.0
+            # On crée un dictionnaire des soldes pour ce compte
+            balances = {}
+            for m in all_moves:
+                if '_in' in (m.move_type or ''):
+                    running_balance += m.amount
+                else:
+                    running_balance -= m.amount
+                balances[m.id] = running_balance
+
+            # On assigne les valeurs aux records de "self" qui appartiennent à ce compte
+            for record in self.filtered(lambda r: r.vehicule_cash_id == cash):
+                record.balance_running = balances.get(record.id, 0.0)
+                #record.balance_after = balances.get(record.id, 0.0)

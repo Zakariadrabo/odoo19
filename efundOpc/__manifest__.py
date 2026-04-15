@@ -97,6 +97,7 @@
         'data/sequence.xml',
         'wizard/bond_simulation_wizard_view.xml',
         'wizard/efund_vehicule_mandat_deposit_wizard_views.xml',
+        'wizard/efund_performance_wizard_view.xml',
         #'data/opcvm_complete_chart_template.xml',
 
     ],
