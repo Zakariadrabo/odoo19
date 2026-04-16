@@ -367,6 +367,7 @@ class EfundInvestmentOrder(models.Model):
                     'default_total_amount_trade': rec.total_amount_trade,
                     'default_total_fees': rec.total_fees,
                     'default_total_amount': rec.total_amount,
+                    'default_direction': rec.direction,
                     # DAT
                     'default_deposit_amount': rec.deposit_amount,
                     'default_negotiated_rate': rec.negotiated_rate,
@@ -554,7 +555,7 @@ class EfundInvestmentOrder(models.Model):
     def _compute_accrured_interest(self):
         for rec in self:
             serviceEngine = self.env['efund.service']
-            rec.rate = 0
+            #rec.rate = 0
             tx_tva = 0
             tx_regulateur = 0
             tx_bvm = 0

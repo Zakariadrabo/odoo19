@@ -22,7 +22,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
     execution_date = fields.Date(string="Date d'exécution", required=True)
     remaining_quantity = fields.Float(string="Quantité restante", readonly=True)
     reference = fields.Char(string="Référence SGI / Marché")
-    direction = fields.Char(string="Direction")
+    direction = fields.Selection([('buy', 'Achat'), ('sell', 'Vente')], string="Sens",default="buy" )
 
 
     formulas_accured_interest = fields.Text(string='Formules Interet Couru',compute='_compute_accrured_interest', store=True)
@@ -339,6 +339,11 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
             self.maturity_date = tcn.maturity_date
             self.negotiated_rate_net = self.yield_rate
 
+        sens = 'in'
+        if self.instrument_type == 'opcvm':
+            sens = 'in' if self.direction_opcvm == 'subscription' else 'out'
+        if self.instrument_type in ('tcn','bond'):
+            sens = 'in' if self.direction == 'buy' else 'out'
 
 
         exec_line = self.env['efund.investment.transaction'].create({
@@ -369,8 +374,8 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                 'total_commission': self.total_commission,
                 'interest_type': self.interest_type,
 
-                'move_type': 'out' if self.direction in ('souscription', 'achat') else 'in',
-                'label': f" Exécution de l'ordre N° {self.order_id.name} de {self.direction} de l'instrument {self.order_id.instrument_id.name} - Monstant : {self.free_tax_amount} francs",
+                'move_type': sens,
+                'label': f" Exécution de l'ordre N° {self.order_id.name} de {'Achat' if sens == 'in' else 'Vente'} de l'instrument {self.order_id.instrument_id.name} - Monstant : {self.total_amount} francs",
                 'state': 'confirmed'
 
             })
