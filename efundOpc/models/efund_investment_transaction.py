@@ -75,9 +75,15 @@ class EfundInvestmentTransaction(models.Model):
 
             # 2. Création d'évenement et écriture comptable
             if rec.instrument_id.instrument_type == 'bond':
-                payload =  {'instrument_id': self.instrument_id.id, 'gross': self.total_amount_trade,  'net': self.total_amount, 'fees': self.total_fees,'interest': self.total_interest, 'qte': self.quantity,}
-                event_name = 'TRADE_SUBSCRIPTION' if rec.instrument_id.settlement_mode == 'direct' else 'TRADE_EXECUTED'
-                event = self.env['efund.accounting.event'].create(serviceEngine.build_event_payload(event_name, rec.vehicule_id.id, rec.name, rec.date_transaction, payload))
+                if rec.move_type =='in':
+                    payload =  {'instrument_id': self.instrument_id.id, 'gross': self.total_amount_trade,  'net': self.total_amount, 'fees': self.total_fees,'interest': self.total_interest, 'qte': self.quantity,}
+                    event_name = 'TRADE_SUBSCRIPTION' if rec.instrument_id.settlement_mode == 'direct' else 'TRADE_EXECUTED'
+                    event = self.env['efund.accounting.event'].create(serviceEngine.build_event_payload(event_name, rec.vehicule_id.id, rec.name, rec.date_transaction, payload))
+                else:
+                    
+                    payload =  {'instrument_id': self.instrument_id.id, 'gross': self.total_amount_trade,  'net': self.total_amount, 'fees': self.total_fees,'interest': self.total_interest, 'qte': self.quantity,}
+                    event_name = 'TRADE_EXECUTED_OUT'
+                    event = self.env['efund.accounting.event'].create(serviceEngine.build_event_payload(event_name, rec.vehicule_id.id, rec.name, rec.date_transaction, payload))
 
             elif rec.instrument_id.instrument_type == 'dat':
                 payload = {'instrument_id': self.instrument_id.id, 'gross': self.total_amount,'net': rec.total_amount_trade , 'interest': rec.total_interest,}

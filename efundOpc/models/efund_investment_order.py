@@ -34,6 +34,7 @@ class EfundInvestmentOrder(models.Model):
                               ('partially_executed', 'Partiellement exécuté'), ('executed', 'Exécuté'),
                               ('cancelled', 'Annuler')], default='draft', string="Statut")
     broker_tax = fields.Float(string="Commission courtier")
+    rate = fields.Float(string="Taux de courtage", digits=(12, 6), store=True)
 
     total_courtage = fields.Monetary(string="Courtage", compute='_compute_accrured_interest',inverse='_inverse_nav', store=True)
     total_tva = fields.Monetary(string="TVA", compute='_compute_accrured_interest',inverse='_inverse_nav', store=True)
@@ -549,11 +550,11 @@ class EfundInvestmentOrder(models.Model):
             raise ValidationError(_("Le montant et l'échéance sont obligatoires pour un DAT."))
 
     @api.depends('order_date', 'limit_price', 'quantity', 'deposit_amount', 'negotiated_rate', 'interest_type',
-                 'maturity_date', 'start_date', 'order_amount', 'nav', 'direction', 'units_estimated','nav','discount_amount','yield_rate')
+                 'maturity_date', 'start_date', 'order_amount', 'nav', 'direction', 'units_estimated','nav','discount_amount','yield_rate','rate')
     def _compute_accrured_interest(self):
         for rec in self:
             serviceEngine = self.env['efund.service']
-            tx_courtage = 0
+            rec.rate = 0
             tx_tva = 0
             tx_regulateur = 0
             tx_bvm = 0
@@ -570,7 +571,7 @@ class EfundInvestmentOrder(models.Model):
                     if result:
                         for res in result:
                             if res.fee_category == 'courtage':
-                                tx_courtage = res.rate
+                                tx_courtage = rec.rate
                             if res.fee_category == 'vat':
                                 tx_tva = res.rate
                             if res.fee_category == 'bvmac':
@@ -589,9 +590,9 @@ class EfundInvestmentOrder(models.Model):
                         tcn = self.env['efund.vehicule.instrument.core.treasury'].search([('instrument_id', '=', rec.instrument_id.id),], limit=1)
                         rec.total_amount_trade = rec.quantity * tcn.face_value
                         if tcn:
-                            if tx_courtage > 0:
-                                rec.total_courtage = round((rec.quantity * tcn.face_value * tx_courtage) / 100, )
-                            if tx_tva > 0 and tx_courtage > 0:
+                            if rec.rate > 0:
+                                rec.total_courtage = round((rec.quantity * tcn.face_value * rec.rate) / 100, )
+                            if tx_tva > 0 and rec.rate > 0:
                                 rec.total_tva = round((rec.total_courtage * tx_tva) / 100)
 
 
@@ -610,23 +611,23 @@ class EfundInvestmentOrder(models.Model):
                             cc_brut = res.get('interest_gross')
                             cc_net = res.get('interest_net')
 
-                            if tx_courtage > 0:
-                                rec.total_courtage = round((rec.quantity * bond.face_value * tx_courtage) / 100,)
+                            if rec.rate > 0:
+                                rec.total_courtage = round((rec.quantity * bond.face_value * rec.rate) / 100,)
                             # la TVA se calcul sur la commission de courtage seulement
-                            if tx_tva > 0 and tx_courtage > 0:
+                            if tx_tva > 0 and rec.rate > 0:
                                 rec.total_tva = round((rec.total_courtage * tx_tva) / 100)
 
                             if tx_irvm > 0:
                                 rec.total_irvm = round((cc_brut * rec.quantity) - (cc_net * rec.quantity))
 
                             total_transaction = round((rec.quantity * rec.limit_price) + (cc_net * rec.quantity))
-                            if tx_bvm > 0 and tx_courtage > 0:
+                            if tx_bvm > 0 and rec.rate > 0:
                                 rec.total_bvm = round((total_transaction * tx_bvm) / 100)
-                            if tx_dc > 0 and tx_courtage > 0:
+                            if tx_dc > 0 and rec.rate > 0:
                                 rec.total_dc = round((total_transaction * tx_dc) / 100)
-                            if tx_regulateur > 0 and tx_courtage > 0:
+                            if tx_regulateur > 0 and rec.rate > 0:
                                 rec.total_regulateur = round((rec.total_bvm * tx_regulateur) / 100)
-                            if tx_other > 0 and tx_courtage > 0:
+                            if tx_other > 0 and rec.rate > 0:
                                 rec.total_other = (total_transaction * tx_other) / 100
 
                             # calcul des gros montant

@@ -4,22 +4,20 @@ from odoo.exceptions import UserError
 class EfundMandatePerformance(models.Model):
     _name = 'efund.vehicule.mandate.performance.history'
     _description = 'Historique de performance annuelle'
-    _order = 'year desc'
+    _order = 'start_date desc'
 
     mandat_id = fields.Many2one('efund.vehicule.mandate', string="Mandat", required=True, ondelete='cascade')
-    year = fields.Integer(string="Année", required=True)
-    anniversary_date = fields.Date(string="Date Anniversaire")
+    start_date= fields.Date(string="Date début (T)", required=True, default=fields.Date.today)
+    end_date = fields.Date(string="Date fin (T1)", required=True, default=fields.Date.today)
+    target_rate = fields.Float(string="Taux Objectif (%)", digits=(16, 4), help="Taux annuel attendu")
 
-    # Taux réalisé (TWR ou MWR selon votre méthode)
-    realized_rate = fields.Float(string="Taux Réalisé (%)", digits=(16, 2))
+    # --- Résultats (Calculés) ---
+    start_date_valuation = fields.Monetary(string="Valorisation Début", )
+    end_date_valuation = fields.Monetary(string="Valorisation Fin", )
+    performance = fields.Monetary(string="Performance brute", )
 
-    # Comparaison
-    previous_year_rate = fields.Float(string="Taux Année N-1 (%)", readonly=True)
-    variation = fields.Float(string="Variation (bps)", compute="_compute_variation", store=True)
+    accrued_coupon_client = fields.Monetary(string="Coupon Couru Client", )
+    superperformance = fields.Monetary(string="Super performance", )
+    currency_id = fields.Many2one(related='mandat_id.vehicule_id.currency_id')
 
-    @api.depends('realized_rate', 'previous_year_rate')
-    def _compute_variation(self):
-        for rec in self:
-            # Calcul en points de base (bps)
-            rec.variation = (rec.realized_rate - rec.previous_year_rate) * 100
 

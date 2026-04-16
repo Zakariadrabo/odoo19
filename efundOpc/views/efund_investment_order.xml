@@ -80,6 +80,7 @@
                             <field name="direction_opcvm" invisible="operation_type != 'opcvm'"
                                    required="operation_type == 'opcvm'"
                                    widget="radio" options="{'horizontal': true}"/>
+                            <field name="rate" invisible="operation_type not in ( 'trade', 'opcvm')"/>
 
                         </group>
                     </group>

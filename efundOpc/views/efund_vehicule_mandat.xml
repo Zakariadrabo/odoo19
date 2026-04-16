@@ -170,21 +170,21 @@
                         </page>
                         <page string="Performance Annuelle">
                             <header>
-                                <button name="action_generate_performance_line"
-                                        string="Générer Performance Annuelle"
-                                        type="object"
-                                        class="btn-primary"
-                                        icon="fa-refresh"/>
+                                <button name="action_compute_superperformance" type="object"
+                                    string="Calculer la performance" class="btn-success" />
                             </header>
 
                             <group>
                                 <field name="performance_ids" nolabel="1">
-                                    <list decoration-success="variation &gt; 0" decoration-danger="variation &lt; 0">
-                                        <field name="year"/>
-                                        <field name="anniversary_date"/>
-                                        <field name="realized_rate" widget="float" string="Taux Réalisé (%)"/>
-                                        <field name="previous_year_rate" widget="float" string="Taux N-1 (%)"/>
-                                        <field name="variation" widget="badge" string="Écart (bps)"/>
+                                    <list create="0" edit="0" decoration-success="target_rate &gt; 0" decoration-danger="target_rate &lt; 0">
+                                        <field name="start_date"/>
+                                        <field name="end_date"/>
+                                        <field name="start_date_valuation"/>
+                                        <field name="end_date_valuation"/>
+                                        <field name="target_rate" widget="float" string="Taux Réalisé (%)"/>
+                                        <field name="performance" />
+                                        <field name="accrued_coupon_client" />
+                                        <field name="superperformance" />
                                     </list>
                                 </field>
                             </group>

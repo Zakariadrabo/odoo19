@@ -560,55 +560,67 @@ class EfundService(models.Model):
             ('first_price_date', '<=', date_target)
         ])
 
-        for pos in positions:
-            # On récupère la quantité à date (via les ordres exécutés avant date_target)
-            # Note : Vous devrez peut-être adapter selon votre modèle d'ordres
-            orders = self.env['efund.investment.transaction'].search([
-                ('vehicule_id', '=', vehicule.id),
-                ('instrument_id', '=', pos.instrument_id.id),
-                ('date_transaction', '<=', date_target),
-                ('state', '=', 'settled')
-            ])
+        if positions:
+            for pos in positions:
+                # On récupère la quantité à date (via les ordres exécutés avant date_target)
+                # Note : Vous devrez peut-être adapter selon votre modèle d'ordres
+                orders = self.env['efund.investment.transaction'].search([
+                    ('vehicule_id', '=', vehicule.id),
+                    ('instrument_id', '=', pos.instrument_id.id),
+                    ('date_transaction', '<=', date_target),
+                    ('state', '=', 'settled')
+                ])
 
-            qty_at_date = sum(o.quantity if o.move_type == 'in' else -o.quantity for o in orders)
 
-            # On récupère le cours à la date cible (ou le plus proche avant)
-            last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
-                ('instrument_id', '=', pos.instrument_id.id),
-                ('vehicule_id', '=', vehicule.id),
-                ('is_validated', '=', True),
-                ('date', '=', date_target)
-            ], order='date desc', limit=1)
 
-            # 2. Repli (Fallback) : Cours global (ex: Action BRVM)
-            if not last_price_rec:
+                qty_at_date = sum(o.quantity if o.move_type == 'in' else -o.quantity for o in orders)
+
+                # On récupère le cours à la date cible (ou le plus proche avant)
                 last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
                     ('instrument_id', '=', pos.instrument_id.id),
-                    ('vehicule_id', '=', False),
+                    ('vehicule_id', '=', vehicule.id),
                     ('is_validated', '=', True),
-                    ('date', '=', date_target),
+                    ('date', '=', date_target)
                 ], order='date desc', limit=1)
 
-            if not last_price_rec:
-                if pos.instrument_id.instrument_type == 'bond':
-                    last_price_rec = self.generate_bond_price(pos, date_target)
-                elif pos.instrument_id.instrument_type == 'tcn':
-                    last_price_rec = self.generate_tcn_price(pos, date_target)
-                elif pos.instrument_id.instrument_type == 'dat':
-                    last_price_rec = self.generate_dat_price(pos, date_target)
-                elif pos.instrument_id.instrument_type == 'opcvm':
-                    last_price_rec = self.generate_cash_price(pos, date_target)
-                elif pos.instrument_id.instrument_type == 'equity':
-                    raise UserError(_("Merci de saisir le cours à date"))
-                else:
-                    raise UserError(_("Le type d'instrument n'est pas pris en charge"))
+                # 2. Repli (Fallback) : Cours global (ex: Action BRVM)
+                if not last_price_rec:
+                    last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+                        ('instrument_id', '=', pos.instrument_id.id),
+                        ('vehicule_id', '=', False),
+                        ('is_validated', '=', True),
+                        ('date', '=', date_target),
+                    ], order='date desc', limit=1)
 
-            if last_price_rec:
-                price = last_price_rec.price
-            else:  # Appel du calcul de prix
-                pass
 
-            total_portfolio_value += (qty_at_date * price) + last_price_rec.interest if last_price_rec else 0
+                if not last_price_rec:
+                    if pos.instrument_id.instrument_type == 'bond':
+                        _logger.info(f" les conditions date achat: {pos.first_price_date} date de recherche: {date_target} date maturité : {pos.maturity_date} ")
+                        if pos.first_price_date < date_target and date_target < pos.maturity_date:
+                            last_price_rec = self.generate_bond_price(pos, date_target)
+                            _logger.info(f" j'ai trouvé le prix : {last_price_rec.price} ")
+                        else:
+                            last_price_rec.price = 0
+                    elif pos.instrument_id.instrument_type == 'tcn':
+                        last_price_rec = self.generate_tcn_price(pos, date_target)
+                    elif pos.instrument_id.instrument_type == 'dat':
+                        last_price_rec = self.generate_dat_price(pos, date_target)
+                    elif pos.instrument_id.instrument_type == 'opcvm':
+                        if pos.first_price_date < date_target and pos.quantity > 0:
+                            last_price_rec = self.generate_opcvm_price(pos, date_target)
+                        else:
+                            last_price_rec.price = 0
+                    elif pos.instrument_id.instrument_type == 'equity':
+                        raise UserError(_("Merci de saisir le cours à date"))
+                    else:
+                        raise UserError(_("Le type d'instrument n'est pas pris en charge"))
+
+                if last_price_rec:
+                    price = last_price_rec.price
+                else:  # Appel du calcul de prix
+                    pass
+
+                total_portfolio_value += (qty_at_date * price) + last_price_rec.interest if last_price_rec else 0
 
         # 2. Valorisation du Cash (Soldes Espèces)
         # On récupère tous les comptes espèces du véhicule
@@ -684,11 +696,12 @@ class EfundService(models.Model):
             'is_validated': True,
             'price_type': 'close'
         }
+        _logger.info(f"************update_or_create_price : {vals}")
 
         if price_rec:
             price_rec.write(vals)
         else:
-            price_rec = self.create(vals)
+            price_rec = self.env['efund.vehicule.instrument.core.price'].create(vals)
         return price_rec
 
     def generate_dat_price(self, position, target_date):
@@ -724,8 +737,11 @@ class EfundService(models.Model):
         bond = self.env['efund.vehicule.instrument.core.bond'].search([
             ('instrument_id', '=', position.instrument_id.id)
         ], limit=1)
+        _logger.info(f"************ generate_bond_price : {bond}")
         if bond.instrument_id.is_listed:
+            _logger.info(f"***************** le titre est coté")
             if bond.instrument_id.valuation_method == 'listed':
+               _logger.info(f"***************** le titre est lissé")
                last_price = self.compute_linear_actuariat_value_at_date(target_date, position.first_price,position.first_price_date, bond.face_value, bond.maturity_date)
             else:
                 raise ValidationError(f"Merci de saisir manuellement le cours")
@@ -751,6 +767,14 @@ class EfundService(models.Model):
 
     def generate_opcvm_price (self, position, target_date):
         raise ValidationError(f"Merci de saisir manuellement le cours")
+
+    def get_instrument_avg_price(self, intrument, vehicule):
+        pos = self.env['efund.vehicule.portfolio'].search([
+            ('instrument_id', '=', intrument.id),
+            ('vehicule_id', '=', vehicule.id),
+        ])
+        return pos.avg_cost if pos else 0
+
 
 
     """ Revnir terminer la procédure

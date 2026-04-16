@@ -566,3 +566,22 @@ class Mandate(models.Model):
             })
 
         return True
+
+    def action_compute_superperformance(self):
+        self.ensure_one()
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Calculer la performance',
+            'res_model': 'efund.performance.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'active_id': self.id,
+                'active_ids': [self.id],
+                'default_vehicule_id': self.vehicule_id.id,
+                'default_mandat_id': self.id
+
+            },
+        }
+
