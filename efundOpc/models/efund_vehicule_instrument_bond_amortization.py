@@ -42,8 +42,8 @@ class BondAmortization(models.Model):
             instrument = self.env['efund.vehicule.portfolio'].get_vehicles_by_instrument(rec.bond_id.instrument_id.id)
             if instrument:
                 for inst in instrument:
-                    coupon_value = rec.coupon_amount * inst.get('quantity') * rec.bond_id.face_value / rec.bond_id.issue_amount
-                    principal_value = rec.principal_repayment * inst.get('quantity') * rec.bond_id.face_value / rec.bond_id.issue_amount
+                    coupon_value = rec.coupon_amount * inst.get('quantity')
+                    principal_value = rec.principal_repayment * inst.get('quantity')
                     vehicule_cash = self.env['efund.vehicule.cash'].search([('vehicule_id', '=', inst.get('vehicule_id'))], limit=1)
 
                     if not vehicule_cash:

@@ -232,16 +232,6 @@ class EfundInvestmentOrder(models.Model):
         for order in self:
             order.executed_qty = sum(order.execution_line_ids.mapped('quantity'))
 
-    # --- CALCUL DES DIRECTIONS ---
-    @api.depends('instrument_id')
-    def _compute_instrument_ids(self):
-        for rec in self:
-            if rec.instrument_id.instrument_type == 'equity':
-                rec.operation_type = False
-                rec.operation_type = 'trade'
-                rec.sous_categorie = False  # Réinitialise la valeur si le type change
-                return {'domain': {'sous_categorie': [('id', 'in', self._get_transaction_direction())]},
-                        'selection': self._get_transaction_direction()}
 
     """ Calcule le montant financier théorique de l'ordre selon son type """
 
@@ -269,7 +259,7 @@ class EfundInvestmentOrder(models.Model):
                     "État actuel : %s"
                 ) % dict(self._fields['state'].selection).get(order.state))
 
-            # Vérifications supplémentaires
+            # Vérifications supplémentaires et des ratio
             if order.operation_type == 'trade':
                 if not order.quantity > 0:
                     raise ValidationError(_("La quantité doit être positive."))
@@ -333,6 +323,15 @@ class EfundInvestmentOrder(models.Model):
                 broker = rec.total_courtage
                 tob = rec.total_tva
                 interest = rec.total_interest
+                if rec.instrument_type == "bond":
+                    bond = self.env['efund.vehicule.instrument.core.bond'].search(
+                        [('instrument_id', '=', rec.instrument_id.id), ])
+                    rec.maturity_date = bond.maturity_date
+                elif rec.interest_type == "tcn":
+                    tcn = self.env['efund.vehicule.instrument.core.treasury'].search(
+                        [('instrument_id', '=', rec.instrument_id.id), ], limit=1)
+                    rec.maturity_date = tcn.maturity_date
+
 
             elif rec.operation_type == 'opcvm':
                 remaining_quantity = rec.units_estimated - rec.executed_qty
