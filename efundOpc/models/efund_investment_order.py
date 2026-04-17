@@ -34,7 +34,8 @@ class EfundInvestmentOrder(models.Model):
                               ('partially_executed', 'Partiellement exécuté'), ('executed', 'Exécuté'),
                               ('cancelled', 'Annuler')], default='draft', string="Statut")
     broker_tax = fields.Float(string="Commission courtier")
-    rate = fields.Float(string="Taux de courtage", digits=(12, 6), store=True)
+    rate = fields.Float(string="Taux de courtage (%)", digits=(12, 6), store=True)
+    tva_rate = fields.Float(string="Taux de TVA (%)", digits=(12, 6), store=True)
 
     total_courtage = fields.Monetary(string="Courtage", compute='_compute_accrured_interest',inverse='_inverse_nav', store=True)
     total_tva = fields.Monetary(string="TVA", compute='_compute_accrured_interest',inverse='_inverse_nav', store=True)
@@ -556,7 +557,7 @@ class EfundInvestmentOrder(models.Model):
         for rec in self:
             serviceEngine = self.env['efund.service']
             #rec.rate = 0
-            tx_tva = 0
+            #tx_tva = 0
             tx_regulateur = 0
             tx_bvm = 0
             tx_dc = 0
@@ -574,7 +575,7 @@ class EfundInvestmentOrder(models.Model):
                             if res.fee_category == 'courtage':
                                 tx_courtage = rec.rate
                             if res.fee_category == 'vat':
-                                tx_tva = res.rate
+                                tx_tva = rec.tva_rate
                             if res.fee_category == 'bvmac':
                                 tx_bvm = res.rate
                             if res.fee_category == 'dc':

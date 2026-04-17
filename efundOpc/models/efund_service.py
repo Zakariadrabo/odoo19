@@ -429,6 +429,76 @@ class EfundService(models.Model):
 
         return schedule
 
+    # Tableau d'amortissemnt à partir de la date de maturité
+    def generate_amortization_schedule_from_maturity(self, montant, taux_annuel, frequence, date_maturite,
+                                                     date_acquisition, base_calcul=365, type_amortissement='in_fine'):
+
+        freq_map = {'monthly': 12, 'quarterly': 4, 'semi_annual': 2, 'annual': 1}
+        months_step = int(12 / freq_map[frequence])
+        taux_periodique = taux_annuel / 100 / freq_map[frequence]
+
+        # --- ÉTAPE 1 : RETROUVER LES DATES ---
+        # On remonte depuis la maturité pour trouver les dates de coupon
+        coupon_dates = [date_maturite]
+        current_back_date = date_maturite
+
+        # On remonte jusqu'à trouver une date antérieure à la date d'acquisition
+        while current_back_date > date_acquisition:
+            current_back_date -= relativedelta(months=months_step)
+            coupon_dates.insert(0, current_back_date)
+
+        # La date de début de notre tableau est le coupon juste avant l'acquisition
+        # (C'est la date de départ pour le calcul du coupon couru)
+        date_depart_tableau = coupon_dates[0]
+
+        # --- ÉTAPE 2 : CALCUL DES PÉRIODES ---
+        # Le nombre de périodes restantes est la taille de la liste moins 1
+        total_periods_restantes = len(coupon_dates) - 1
+
+        capital_restant = montant
+        schedule = []
+
+        # Calcul de l'annuité si besoin (basé sur le restant)
+        annuite = 0
+        if type_amortissement == 'annuite_constante':
+            annuite = (montant * taux_periodique / (1 - (1 + taux_periodique) ** -total_periods_restantes))
+
+        capital_constant = montant / total_periods_restantes if type_amortissement == 'capital_constant' else 0
+
+        # --- ÉTAPE 3 : GÉNÉRATION DU TABLEAU ---
+        for i in range(total_periods_restantes):
+            date_debut = coupon_dates[i]
+            date_fin = coupon_dates[i + 1]
+
+            interet = capital_restant * taux_periodique
+
+            if type_amortissement == 'in_fine':
+                amortissement = montant if (i == total_periods_restantes - 1) else 0
+                annuite_period = interet + amortissement
+            elif type_amortissement == 'annuite_constante':
+                amortissement = annuite - interet
+                annuite_period = annuite
+            elif type_amortissement == 'capital_constant':
+                amortissement = capital_constant
+                annuite_period = interet + amortissement
+
+            cap_initial = capital_restant
+            capital_restant -= amortissement
+
+            schedule.append({
+                'periode': i + 1,
+                'date_debut': date_debut,
+                'date_fin': date_fin,
+                'capital_initial': round(cap_initial, 2),
+                'interet': round(interet, 2),
+                'amortissement': round(amortissement, 2),
+                'annuite': round(annuite_period, 2),
+                'capital_restant': round(max(capital_restant, 0), 2),
+                'is_accrued_period': date_debut < date_acquisition < date_fin  # Marqueur pour le coupon couru
+            })
+
+        return schedule
+
     def get_taux_by_frequency(self, annual_rate, frequency):
         if frequency == 'annual':
             return annual_rate

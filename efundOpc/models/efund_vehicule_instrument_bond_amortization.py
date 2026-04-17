@@ -13,7 +13,7 @@ class BondAmortization(models.Model):
 
     installment_number = fields.Integer(string="N°.", )
     due_date = fields.Date(string="Date",)
-    opening_principal = fields.Monetary(string="Capital", )
+    opening_principal = fields.Monetary(string="Nominal", )
     coupon_amount = fields.Monetary(string="Intérêt", )
     principal_repayment = fields.Monetary(string="Remboursement", )
     annuite = fields.Monetary(string="Annuité", )

@@ -7,17 +7,17 @@ class EfundMandatePerformance(models.Model):
     _order = 'start_date desc'
 
     mandat_id = fields.Many2one('efund.vehicule.mandate', string="Mandat", required=True, ondelete='cascade')
-    start_date= fields.Date(string="Date début (T)", required=True, default=fields.Date.today)
-    end_date = fields.Date(string="Date fin (T1)", required=True, default=fields.Date.today)
-    target_rate = fields.Float(string="Taux Objectif (%)", digits=(16, 4), help="Taux annuel attendu")
+    start_date= fields.Date(string="Date début", required=True, default=fields.Date.today)
+    end_date = fields.Date(string="Date fin", required=True, default=fields.Date.today)
+    target_rate = fields.Float(string="Taux réalisé", digits=(16, 4), help="Taux annuel attendu")
 
     # --- Résultats (Calculés) ---
     start_date_valuation = fields.Monetary(string="Valorisation Début", )
     end_date_valuation = fields.Monetary(string="Valorisation Fin", )
-    performance = fields.Monetary(string="Performance brute", )
+    performance = fields.Monetary(string="Montant généré", )
 
     accrued_coupon_client = fields.Monetary(string="Coupon Couru Client", )
-    superperformance = fields.Monetary(string="Super performance", )
+    superperformance = fields.Monetary(string="Profit réalisé", )
     currency_id = fields.Many2one(related='mandat_id.vehicule_id.currency_id')
 
 

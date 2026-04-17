@@ -181,10 +181,10 @@
                                         <field name="end_date"/>
                                         <field name="start_date_valuation"/>
                                         <field name="end_date_valuation"/>
-                                        <field name="target_rate" widget="float" string="Taux Réalisé (%)"/>
-                                        <field name="performance" />
                                         <field name="accrued_coupon_client" />
+                                        <field name="performance" />
                                         <field name="superperformance" />
+                                        <field name="target_rate" widget="float" string="Taux Réalisé (%)"/>
                                     </list>
                                 </field>
                             </group>

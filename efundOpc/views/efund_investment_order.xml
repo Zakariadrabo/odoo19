@@ -81,6 +81,7 @@
                                    required="operation_type == 'opcvm'"
                                    widget="radio" options="{'horizontal': true}"/>
                             <field name="rate" invisible="operation_type not in ( 'trade', 'opcvm')"/>
+                            <field name="tva_rate" invisible="operation_type not in ( 'trade', 'opcvm')"/>
 
                         </group>
                     </group>

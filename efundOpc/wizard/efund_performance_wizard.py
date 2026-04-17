@@ -19,10 +19,10 @@ class EfundPerformanceWizard(models.TransientModel):
     # --- Résultats (Calculés) ---
     valuation_t = fields.Monetary(string="Valorisation T", )
     valuation_t1 = fields.Monetary(string="Valorisation T1", )
-    performance = fields.Monetary(string="Performance brute", )
+    performance = fields.Monetary(string="Montant Généré", )
 
     accrued_coupon_client = fields.Monetary(string="Coupon Couru Client", )
-    superperformance = fields.Monetary(string="Superperformance", )
+    superperformance = fields.Monetary(string="Profit réalisé", )
 
     currency_id = fields.Many2one(related='vehicule_id.currency_id')
 
@@ -66,7 +66,7 @@ class EfundPerformanceWizard(models.TransientModel):
             if rec.date_t and rec.date_t1:
                 days = (rec.date_t1 - rec.date_t).days
                 # On utilise la valorisation à T comme "Montant misé"
-                rec.accrued_coupon_client = (days / 365.0) * (rec.target_rate / 100.0) * rec.mandat_id.initial_amount
+                rec.accrued_coupon_client = (days / 365.0) * (rec.mandat_id.target_return_rate / 100.0) * rec.mandat_id.initial_amount
             else:
                 rec.accrued_coupon_client = 0.0
 

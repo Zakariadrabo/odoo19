@@ -236,6 +236,7 @@ class FundInstrumentBond(models.Model):
         self.bond_amortization_ids.unlink()
 
         # 2. Appel du générateur
+        """
         amortization_data = service.generate_amortization_schedule(
             self.issue_amount,
             self.coupon_rate,
@@ -245,6 +246,17 @@ class FundInstrumentBond(models.Model):
             int(self.calculeted_base),
             self.amortization_type
         )
+        """
+        amortization_data = service.generate_amortization_schedule_from_maturity(
+            self.face_value,
+            self.coupon_rate,
+            self.coupon_frequency,
+            self.maturity_date,
+            self.value_date,
+            int(self.calculeted_base),
+            self.amortization_type)
+
+
         # 3. Création des enregistrements
         vals_list = []
 
@@ -252,7 +264,7 @@ class FundInstrumentBond(models.Model):
             vals_list.append({
                 'bond_id': self.id,
                 'installment_number': i,
-                'due_date': line.get('next_date'),
+                'due_date': line.get('date_fin'),
                 'opening_principal': line.get('capital_initial'),
                 'coupon_amount': line.get('interet'),
                 'principal_repayment': line.get('amortissement'),
