@@ -68,6 +68,7 @@ class FundPosition(models.Model):
         for rec in self:
             bond = self.env['efund.vehicule.instrument.core.bond'].search(
                 [('instrument_id', '=', rec.instrument_id.id), ])
+            """
             vals = self.env['efund.service'].generate_amortization_schedule(
                 montant=rec.quantity * bond.face_value,
                 taux_annuel=bond.coupon_rate,
@@ -75,6 +76,10 @@ class FundPosition(models.Model):
                 date_valeur=rec.value_date,
                 date_maturite=bond.maturity_date,
             )
+            """
+
+            vals = self.env['efund.service'].generate_amortization_schedule_from_maturity(rec.quantity * bond.face_value,bond.coupon_rate,
+                bond.coupon_frequency,bond.maturity_date,rec.value_date,365,'in_fine')
 
             # On crée les lignes liées à CETTE position
             for line in vals:

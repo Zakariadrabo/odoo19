@@ -594,8 +594,8 @@ class EfundInvestmentOrder(models.Model):
                         if tcn:
                             if rec.rate > 0:
                                 rec.total_courtage = round((rec.quantity * tcn.face_value * rec.rate) / 100, )
-                            if tx_tva > 0 and rec.rate > 0:
-                                rec.total_tva = round((rec.total_courtage * tx_tva) / 100)
+                            if rec.tva_rate > 0 and rec.rate > 0:
+                                rec.total_tva = round((rec.total_courtage * rec.tva_rate) / 100)
 
 
                         rec.total_interest = rec.discount_amount * rec.quantity
@@ -616,8 +616,8 @@ class EfundInvestmentOrder(models.Model):
                             if rec.rate > 0:
                                 rec.total_courtage = round((rec.quantity * bond.face_value * rec.rate) / 100,)
                             # la TVA se calcul sur la commission de courtage seulement
-                            if tx_tva > 0 and rec.rate > 0:
-                                rec.total_tva = round((rec.total_courtage * tx_tva) / 100)
+                            if rec.tva_rate > 0 and rec.rate > 0:
+                                rec.total_tva = round((rec.total_courtage * rec.tva_rate) / 100)
 
                             if tx_irvm > 0:
                                 rec.total_irvm = round((cc_brut * rec.quantity) - (cc_net * rec.quantity))
@@ -644,8 +644,8 @@ class EfundInvestmentOrder(models.Model):
                         rec.total_transaction = rec.quantity * rec.limit_price
                         if tx_courtage > 0:
                             rec.total_courtage = (rec.total_transaction * tx_courtage) / 100
-                        if tx_tva > 0 and tx_courtage > 0:
-                            rec.total_tva = (rec.total_courtage * tx_tva) / 100
+                        if rec.tva_rate > 0 and tx_courtage > 0:
+                            rec.total_tva = (rec.total_courtage * rec.tva_rate) / 100
                         if tx_bvm > 0 and tx_courtage > 0:
                             rec.total_bvm = (rec.total_transaction * tx_bvm) / 100
                         if tx_dc > 0 and tx_courtage > 0:
