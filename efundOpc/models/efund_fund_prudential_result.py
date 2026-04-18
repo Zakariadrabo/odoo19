@@ -4,7 +4,7 @@ class FundPrudentialResult(models.Model):
     _name = 'efund.fund.prudential.result'
     _description = 'Résultat ratio prudentiel'
 
-    fund_id = fields.Many2one('efund.fund', string="Fonds", required=True)
+    fund_id = fields.Many2one('efund.vehicule', string="Fonds", required=True)
     ratio_id = fields.Many2one('efund.fund.prudential.ratio',string="Ratio",required=True)
 
     date = fields.Date(required=True, string="Date")

@@ -15,7 +15,7 @@ class EfundFundRegulatoryReport(models.Model):
     )
 
     fund_id = fields.Many2one(
-        'efund.fund',
+        'efund.vehicule',
         string="Fonds",
         required=True
     )

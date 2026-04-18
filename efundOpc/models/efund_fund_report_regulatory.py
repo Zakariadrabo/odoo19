@@ -12,7 +12,7 @@ class FundReportRegulatory(models.Model):
     _order = 'report_date desc'
 
     name = fields.Char(string="Report Reference", required=True, copy=False, default=lambda self: _('New'))
-    fund_id = fields.Many2one('efund.fund', string="Fund", required=True, ondelete='cascade')
+    fund_id = fields.Many2one('efund.vehicule', string="Fund", required=True, ondelete='cascade')
     company_id = fields.Many2one('res.company', string="Management Company", required=True, default=lambda self: self.env.company)
     report_type = fields.Selection([
         ('mensuel', 'Monthly Report'),

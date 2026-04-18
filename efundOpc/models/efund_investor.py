@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import re
 from logging import setLoggerClass
 
@@ -151,8 +150,7 @@ class FundInvestor(models.Model):
 
     active = fields.Boolean(default=True)
 
-    fund_investor_ids = fields.One2many('efund.fund.investor', 'investor_id', string="Fonds")
-    mandate_investor_ids = fields.One2many('efund.mandate.investor', 'investor_id', string="Mandats")
+    #mandate_investor_ids = fields.One2many('efund.mandate.investor', 'investor_id', string="Mandats")
 
     cash_account_ids = fields.One2many('efund.investor.cash_account', 'investor_id', string="Comptes espèces")
     part_account_ids = fields.One2many('efund.investor.part_account', 'investor_id', string="Comptes titres")
@@ -212,8 +210,8 @@ class FundInvestor(models.Model):
     violation = fields.Selection([('Yes', 'Oui'), ('No', 'Non')], string="Antécédents")
 
     # Accounts relations
-    account_part_ids = fields.One2many('efund.investor.part', 'investor_id', string='Comptes Parts / Actions')
-    account_cash_ids = fields.One2many('efund.investor.cash', 'investor_id', string='Comptes Espèces')
+    #account_part_ids = fields.One2many('efund.investor.part', 'investor_id', string='Comptes Parts / Actions')
+    account_cash_ids = fields.One2many('efund.investor.cash_account', 'investor_id', string='Comptes Espèces')
 
     # computed helper: available cash (sum of active cash accounts balances)
     available_cash = fields.Monetary(

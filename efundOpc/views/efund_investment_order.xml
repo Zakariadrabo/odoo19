@@ -97,6 +97,10 @@
                             <field name="total_amount"/>
                             <field name="total_fees" invisible="instrument_type in('tcn','opcvm')"/>
                             <field name="total_interest" readonly="1" invisible="instrument_type in('equity','opcvm')"/>
+                            <field name="msg_solde"
+                                   invisible="not msg_solde"
+                                   class="text-danger fw-bold"
+                                   string="Solde Insuffisant"/>
                         </group>
                     </group>
                     <group string="Détails de Marché" invisible="operation_type != 'trade' or instrument_type !='tcn'">

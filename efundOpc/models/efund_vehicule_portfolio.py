@@ -45,7 +45,7 @@ class FundPosition(models.Model):
                              string="Statut", default='active', required=True)
     notes = fields.Text(string="Notes")
     display_name = fields.Char(string="Nom", compute='_compute_display_name', store=True)
-    adjustment_ids = fields.One2many('efund.position.adjustment', 'position_id', string="Ajustements")
+    #adjustment_ids = fields.One2many('efund.position.adjustment', 'position_id', string="Ajustements")
     cashflow_ids = fields.One2many('efund.vehicule.cashflow', 'position_id', string="Flux de trésorerie prévus")
 
     # --- Nouveaux champs de valorisation détaillée ---

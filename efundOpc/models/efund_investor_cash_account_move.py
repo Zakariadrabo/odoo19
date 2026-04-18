@@ -23,9 +23,9 @@ class EfundAccountCashMove(models.Model):
     state = fields.Selection([('accounted', 'Comptabilisé'), ('reconciled', 'Reconcilié')], default='accounted')
 
     # reconcilie investor cash move with fund cash move
-    fund_cash_move_id = fields.Many2one('efund.fund.cash.move', string="Mouvement fund cash")
-    subscription_id = fields.Many2one('efund.investor.subscription', string="Ordre de Souscription")
-    redemption_id = fields.Many2one('efund.investor.redemption', string="Ordre de Rachat")
-    deposit_id = fields.Many2one('efund.investor.deposit', string="Déposit")
-    withdraw_id = fields.Many2one('efund.investor.withdraw', string="Retrait")
+    fund_cash_move_id = fields.Many2one('efund.vehicule.cash.move', string="Mouvement fund cash")
+    #subscription_id = fields.Many2one('efund.investor.subscription', string="Ordre de Souscription")
+    #redemption_id = fields.Many2one('efund.investor.redemption', string="Ordre de Rachat")
+    cash_operation_id = fields.Many2one('efund.investor.cash.operation', string="Opération cash")
+
 

@@ -66,7 +66,7 @@
         <field name="context">{'default_fund_id': active_id}</field>
     </record>
 
-
+    <!--
     <record id="action_efund_fund" model="ir.actions.act_window">
         <field name="name">Fonds</field>
         <field name="res_model">efund.fund</field>
@@ -80,6 +80,7 @@
             </p>
         </field>
     </record>
+    -->
 
     <!-- Véhicule Fond -->
     <record id="action_efund_vehicule_fund" model="ir.actions.act_window">
@@ -110,7 +111,7 @@
         </field>
     </record>
 
-    <!-- Action Mandat -->
+    <!-- Action Mandat
     <record id="action_efund_mandat" model="ir.actions.act_window">
         <field name="name">Mandats</field>
         <field name="res_model">efund.mandate</field>
@@ -124,6 +125,7 @@
             </p>
         </field>
     </record>
+    -->
 
     <!-- Action VEHICULE Mandat -->
     <record id="action_efund_vehicule_mandat" model="ir.actions.act_window">
@@ -158,7 +160,7 @@
             </p>
         </field>
     </record>
-    <!-- Investisseur dans le fond -->
+    <!-- Investisseur dans le fond
     <record id="action_efund_fund_investor" model="ir.actions.act_window">
         <field name="name">Investisseurs du fonds</field>
         <field name="res_model">efund.fund.investor</field>
@@ -169,6 +171,7 @@
             </p>
         </field>
     </record>
+    -->
     <record id="action_efund_fund_type" model="ir.actions.act_window">
         <field name="name">Types de fonds</field>
         <field name="res_model">efund.fund.type</field>
@@ -237,17 +240,20 @@
         <field name="view_mode">list,form</field>
     </record>
 
+    <!--
     <record id="action_investor_redemption" model="ir.actions.act_window">
         <field name="name">Rachats</field>
         <field name="res_model">efund.investor.redemption</field>
         <field name="view_mode">list,form</field>
     </record>
 
+
     <record id="action_investor_withdraw" model="ir.actions.act_window">
         <field name="name">Rétrait Rachat</field>
         <field name="res_model">efund.investor.withdraw</field>
         <field name="view_mode">list,form</field>
     </record>
+
 
     <record id="action_fund_arbitrage_list" model="ir.actions.act_window">
         <field name="name">Arbitrages</field>
@@ -260,11 +266,12 @@
         <field name="res_model">efund.fund.distribution</field>
         <field name="view_mode">list,form</field>
     </record>
+    -->
 
     <!-- =========================
          5. PORTFEUILLE
     ========================== -->
-    <!-- Instrument -->
+    <!-- Instrument
     <record id="action_efund_fund_instrument" model="ir.actions.act_window">
         <field name="name">Instrument</field>
         <field name="res_model">efund.fund.instrument</field>
@@ -275,6 +282,7 @@
             </p>
         </field>
     </record>
+    -->
 
     <!-- Obligations -->
     <record id="action_efund_instrument_core_bond" model="ir.actions.act_window">
@@ -367,7 +375,7 @@
         <field name="view_mode">list,form,graph</field>
     </record>
 
-    <!-- order de bourse -->
+    <!-- order de bourse
     <record id="action_efund_bourse_order" model="ir.actions.act_window">
         <field name="name">Ordres de Bourse</field>
         <field name="res_model">efund.bourse.order</field>
@@ -378,6 +386,7 @@
             </p>
         </field>
     </record>
+    -->
 
     <!-- order de bourse -->
     <record id="action_efund_investment_order" model="ir.actions.act_window">
@@ -404,7 +413,7 @@
         </field>
     </record>-->
 
-    <!-- Événements sur Instruments -->
+    <!-- Événements sur Instruments
     <record id="action_efund_fund_instrument_event" model="ir.actions.act_window">
         <field name="name">Événements sur Instruments</field>
         <field name="res_model">efund.fund.instrument.event</field>
@@ -415,7 +424,9 @@
             </p>
         </field>
     </record>
-    <!-- Ajustement Événements sur Instruments -->
+    -->
+
+    <!-- Ajustement Événements sur Instruments
     <record id="action_efund_position_adjustment" model="ir.actions.act_window">
         <field name="name">Ajustement Événements sur Instruments</field>
         <field name="res_model">efund.position.adjustment</field>
@@ -426,6 +437,7 @@
             </p>
         </field>
     </record>
+    -->
 
 
     <!-- Emetteur -->
@@ -464,7 +476,7 @@
         </field>
     </record>
 
-    <!-- Classe d'actif  -->
+    <!-- Classe d'actif
     <record id="action_efund_instrument_trasaction" model="ir.actions.act_window">
         <field name="name">Transaction</field>
         <field name="res_model">efund.bourse.order.execution.line</field>
@@ -475,19 +487,18 @@
             </p>
         </field>
     </record>
+    -->
 
-
-    action_efund_accounting_schema
 
     <!-- =========================
          6. VALEUR LIQUIDATIVE
-    ========================== -->
+    ==========================
     <record id="action_fund_nav_list" model="ir.actions.act_window">
         <field name="name">Valeurs Liquidatives</field>
         <field name="res_model">efund.fund.nav</field>
         <field name="view_mode">list,form,graph</field>
     </record>
-
+-->
     <!-- =========================
          7. COMPTABILITÉ
     ========================== -->
@@ -630,13 +641,14 @@
     </record>
 
     <!-- Action isolée -->
-    <!-- Action générer le tableau d'amortissement -->
+    <!-- Action générer le tableau d'amortissement
     <record id="action_generate_bond_amortization" model="ir.actions.act_window">
         <field name="name">Générer Tableau d'Amortissement</field>
         <field name="res_model">efund.bond.amortization.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
     </record>
+    -->
 
     <record id="action_efund_vehicule_instrument_fee_rule" model="ir.actions.act_window">
         <field name="name">charge sur les instruments</field>

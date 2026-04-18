@@ -13,7 +13,7 @@ class FundValuation(models.Model):
     _rec_name = "name"
 
     name = fields.Char(string="Reference", readonly=True, default="/")
-    fund_id = fields.Many2one("efund.fund", string="Fund", required=True, ondelete="cascade")
+    fund_id = fields.Many2one("efund.vehicule", string="Fund", required=True, ondelete="cascade")
     company_id = fields.Many2one(related="fund_id.company_id", store=True, readonly=True)
     valuation_date = fields.Date(string="Valuation Date", required=True, default=fields.Date.context_today)
     state = fields.Selection([
@@ -38,9 +38,9 @@ class FundValuation(models.Model):
     total_shares = fields.Float(string="Total Outstanding Shares", required=True, default=1.0)
     currency_id = fields.Many2one(related='fund_id.currency_id', store=True, readonly=True)
 
-    valuation_line_ids = fields.One2many("efund.fund.valuation.line", "valuation_id", string="Valuation Lines")
+    #valuation_line_ids = fields.One2many("efund.fund.valuation.line", "valuation_id", string="Valuation Lines")
     fee_line_ids = fields.One2many("efund.fund.valuation.fee", "valuation_id", string="Fees")
-    log_ids = fields.One2many("efund.fund.valuation.log", "valuation_id", string="Valuation Logs")
+    #log_ids = fields.One2many("efund.fund.valuation.log", "valuation_id", string="Valuation Logs")
 
     computed_by = fields.Many2one("res.users", string="Computed By")
     validated_by = fields.Many2one("res.users", string="Validated By")

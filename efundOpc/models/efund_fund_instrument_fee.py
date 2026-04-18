@@ -12,7 +12,7 @@ class EfundInstrumentFee(models.Model):
 
     name = fields.Char(string="Référence", required=True,
                        default=lambda self: self.env['ir.sequence'].next_by_code('efund.fund.instrument.fee'))
-    fund_id = fields.Many2one('efund.fund', required=True)
+    #fund_id = fields.Many2one('efund.fund', required=True)
     instrument_id = fields.Many2one('efund.fund.instrument', required=True)
     transaction_type = fields.Selection([('buy', 'Achat'),('sell', 'Vente'),], string="Type transaction", required=True)
     trade_id = fields.Many2one('efund.bourse.order.execution.line',string="Transaction instrument")
@@ -24,7 +24,7 @@ class EfundInstrumentFee(models.Model):
     rate = fields.Float(string="Taux (%)")
     fee_amount = fields.Monetary(string="Montant du frais")
     currency_id = fields.Many2one(related='fund_id.currency_id', store=True)
-    fund_cash_move_id = fields.Many2one('efund.fund.cash.move',string="Impact cash fonds",readonly=True)
+    #fund_cash_move_id = fields.Many2one('efund.fund.cash.move',string="Impact cash fonds",readonly=True)
     state = fields.Selection([('draft', 'Brouillon'),('reconciled', 'Réconcilié')], string="État", default='draft')
 
     #journal_entry_id = fields.Many2one('account.move',string="Écriture comptable",readonly=True)

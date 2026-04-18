@@ -89,6 +89,10 @@ class EfundInvestmentOrder(models.Model):
     execution_line_ids = fields.One2many('efund.investment.transaction', 'order_id', )
     broker_id = fields.Many2one('efund.depositaire', string="Société de bourse")
 
+    # Données de contrôle
+    solde = fields.Monetary(string="Solde", compute='_compute_accrured_interest',inverse='_inverse_nav', store=True)
+    msg_solde = fields.Char(string="Message", compute='_compute_accrured_interest',inverse='_inverse_nav', store=True)
+
     @api.onchange('yield_rate',  'order_date', 'calculation_type')
     def _onchange_calculate_by_rate(self):
         """ Calcule le montant si on saisit le taux """
@@ -562,6 +566,7 @@ class EfundInvestmentOrder(models.Model):
             tx_dc = 0
             tx_irvm = 0
             tx_other = 0
+            solde = self.env["efund.vehicule.cash"].get_balance_by_vehicule_id(rec.vehicule_id.id)
 
             if rec.operation_type == 'trade':
 
@@ -602,6 +607,10 @@ class EfundInvestmentOrder(models.Model):
                         rec.total_commission = rec.total_courtage + rec.total_tva
                         rec.total_amount_trade = rec.quantity * tcn.face_value
                         rec.total_amount =  rec.total_amount_trade + rec.total_fees - rec.total_interest if rec.direction == 'buy' else rec.total_amount_trade + rec.total_fees - rec.total_interest
+                        solde = self.env["efund.vehicule.cash"].get_balance_by_vehicule_id(rec.vehicule_id.id)
+                        if rec.total_amount > solde:
+                            rec.msg_solde = f"Le solde du véhicule {rec.vehicule_id.name} est insuffisant pour effectuer cette opération. Solde disponible : {solde}."
+
 
 
                     if rec.instrument_id.instrument_type == 'bond':
@@ -685,6 +694,10 @@ class EfundInvestmentOrder(models.Model):
                 rec.total_amount_trade = rec.units_estimated * rec.nav
                 rec.total_amount = rec.units_estimated * rec.nav
 
+            if rec.total_amount > rec.solde:
+                rec.msg_solde = f"Le solde du véhicule {rec.vehicule_id.name} est insuffisant pour effectuer cette opération. Solde disponible : {solde}."
+            else:
+                rec.msg_solde = False
 
     def action_finalize_execution(self, execution_vals):
         """

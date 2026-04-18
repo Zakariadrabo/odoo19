@@ -19,8 +19,8 @@ class EfundFeeType(models.Model):
     investor_id = fields.Many2one('efund.investor')
 
     # Récociliation Opération
-    subscription_id = fields.Many2one('efund.investor.subscription', string="Ordre de Souscription")
-    redemption_id = fields.Many2one('efund.investor.redemption', string="Ordre de Rachat")
+    #subscription_id = fields.Many2one('efund.investor.subscription', string="Ordre de Souscription")
+    cash_operation_id = fields.Many2one('efund.vehicule.cash.operation', string="Ordre de Rachat")
 
 
     base_amount = fields.Monetary()
