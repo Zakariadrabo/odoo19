@@ -7,6 +7,7 @@ class EfundMandatePerformance(models.Model):
     _order = 'start_date desc'
 
     mandat_id = fields.Many2one('efund.vehicule.mandate', string="Mandat", required=True, ondelete='cascade')
+    rate_mandate = fields.Monetary(related = 'mandat_id.target_return_rate', string="Taux Objectif", )
     start_date= fields.Date(string="Date début", required=True, default=fields.Date.today)
     end_date = fields.Date(string="Date fin", required=True, default=fields.Date.today)
     target_rate = fields.Float(string="Taux réalisé", digits=(16, 4), help="Taux annuel attendu")

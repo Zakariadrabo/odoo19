@@ -184,7 +184,8 @@
                                         <field name="accrued_coupon_client" />
                                         <field name="performance" />
                                         <field name="superperformance" />
-                                        <field name="target_rate" widget="float" string="Taux Réalisé (%)"/>
+                                        <field name="rate_mandate" widget="percentage" />
+                                        <field name="target_rate" widget="percentage" string="Taux Réalisé (%)"/>
                                     </list>
                                 </field>
                             </group>

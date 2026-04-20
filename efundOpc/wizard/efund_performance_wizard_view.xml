@@ -8,7 +8,7 @@
                 <group string="Paramètres de l'analyse">
                     <group>
                         <field name="vehicule_id" options="{'no_create': True}"/>
-                        <field name="target_rate" widget="percentage"/>
+                        <field name="rate_mandate" widget="percentage"/>
                     </group>
                     <group>
                         <field name="date_t"/>
@@ -29,11 +29,13 @@
                     <group>
                         <field name="valuation_t" decoration-info="1"/>
                         <field name="valuation_t1" decoration-info="1"/>
-                        <field name="performance" widget="monetary" decoration-bf="1"
-                               decoration-success="performance > 0" decoration-danger="performance &lt; 0"/>
+                        <field name="accrued_coupon_client" widget="monetary"/>
+
                     </group>
                     <group>
-                        <field name="accrued_coupon_client" widget="monetary"/>
+                        <field name="performance" widget="monetary" decoration-bf="1"
+                               decoration-success="performance > 0" decoration-danger="performance &lt; 0"/>
+                        <field name="target_rate" widget="percentage"/>
                         <field name="superperformance" widget="monetary" decoration-bf="1"
                                decoration-success="superperformance > 0" decoration-danger="superperformance &lt; 0"/>
                     </group>
