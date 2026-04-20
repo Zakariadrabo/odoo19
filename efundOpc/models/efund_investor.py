@@ -223,10 +223,10 @@ class FundInvestor(models.Model):
     company_currency_id = fields.Many2one('res.currency', related='company_id.currency_id', store=True, readonly=True)
 
     ## Objet de smart bouton
-    subscription_count = fields.Integer(compute='_compute_subscription_count', string="Souscriptions")
-    deposit_count = fields.Integer(compute='_compute_deposit_count', string="Déposit")
-    redemption_count = fields.Integer(compute='_compute_redemption_count', string="Rachat")
-    withdraw_count = fields.Integer(compute='_compute_withdraw_count', string="Retrait Cash")
+    subscription_count = fields.Integer( string="Souscriptions", compute='_compute_subscription_count',)
+    deposit_count = fields.Integer( string="Déposit", compute='_compute_deposit_count',)
+    redemption_count = fields.Integer(string="Rachat", compute='_compute_redemption_count',)
+    withdraw_count = fields.Integer( string="Retrait Cash", compute='_compute_withdraw_count',)
 
     # image
     image = fields.Binary(string="Photo / Logo",
@@ -615,7 +615,7 @@ class FundInvestor(models.Model):
                 ('state', '!=', 'accounted')
 
             ])
-
+    """
     def _compute_deposit_count(self):
         Deposit = self.env['efund.investor.deposit']
         for investor in self:
@@ -624,6 +624,7 @@ class FundInvestor(models.Model):
                 ('state', '!=', 'accounted')
 
             ])
+    """
 
     def _compute_redemption_count(self):
         Redemption = self.env['efund.investor.redemption']
@@ -634,6 +635,7 @@ class FundInvestor(models.Model):
 
             ])
 
+    """
     def _compute_withdraw_count(self):
         Withdraw = self.env['efund.investor.withdraw']
         for investor in self:
@@ -642,6 +644,7 @@ class FundInvestor(models.Model):
                 ('state', '!=', 'accounted')
 
             ])
+    """
 
     def action_open_subscriptions(self):
         self.ensure_one()
@@ -658,6 +661,7 @@ class FundInvestor(models.Model):
             }
         }
 
+    """
     def action_open_deposit(self):
         self.ensure_one()
 
@@ -672,6 +676,7 @@ class FundInvestor(models.Model):
                 'search_default_investor_id': self.id,
             }
         }
+    """
 
     def action_open_redemption(self):
         self.ensure_one()
@@ -688,6 +693,7 @@ class FundInvestor(models.Model):
             }
         }
 
+    """
     def action_open_withdraw(self):
         self.ensure_one()
 
@@ -702,6 +708,7 @@ class FundInvestor(models.Model):
                 'search_default_investor_id': self.id,
             }
         }
+    """
 
     def action_print(self):
         return (self.env.ref('efundOpc.action_report_investor').report_action(self))

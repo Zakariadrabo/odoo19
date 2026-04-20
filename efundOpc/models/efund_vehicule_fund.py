@@ -133,3 +133,134 @@ class Fund(models.Model):
                 else:
                     last_price_rec.cron_generate_daily_prices()
                     # self.action_refresh_valuation()
+
+    def generate_excel(self):
+        # Créer le fichier Excel en mémoire
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+        ws_mandat = workbook.add_worksheet('Mandat')
+        bolth = workbook.add_format({'bold': 1, 'align': 'left', 'fg_color': '#f2ba2c', 'border': 1})
+        titrestation = workbook.add_format({'bold': 1, 'align': 'center', 'font_size': 18})
+        boltdg = workbook.add_format({'border': 1, 'bold': 1})
+        boltd = workbook.add_format({'border': 1, 'align': 'right', })
+        titre = workbook.add_format(
+            {'bold': 1, 'align': 'center', 'valign': 'vcenter', 'fg_color': '#f2ba2c', 'font_size': 24})
+        sous_type = workbook.add_format(
+            {'bold': 1, 'align': 'center', 'valign': 'vcenter', 'fg_color': '#f2ba2c', 'font_size': 14})
+
+        ws_mandat.set_column(0, 0, 10)
+        ws_mandat.set_column(1, 1, 25)
+        ws_mandat.set_column(2, 2, 15)
+        ws_mandat.set_column(3, 3, 10)
+        ws_mandat.set_column(4, 4, 10)
+        ws_mandat.set_column(5, 5, 10)
+        ws_mandat.set_column(6, 6, 10)
+
+        position = self.position_ids.filtered(lambda p: p.state == 'active')
+        mvt_cash = self.vehicule_cash_move_ids.filtered(lambda m: m.state == 'reconciled')
+
+        rw = 0
+        col = 0
+        ws_mandat.merge_range(1, 0, 2, 6,
+                              f"Point sur la situation du mandat à la date du {fields.Date.today().strftime('%d-%m-%Y')}",
+                              titre)
+
+        ws_mandat.write(rw + 4, col + 1, 'Titre', bolth)
+        ws_mandat.write(rw + 4, col + 2, self.name, boltd)
+        ws_mandat.write(rw + 5, col + 1, 'Montant', bolth)
+        ws_mandat.write(rw + 5, col + 2, self.initial_amount, boltd)
+        ws_mandat.write(rw + 6, col + 1, 'Taux objectif', bolth)
+        ws_mandat.write(rw + 6, col + 2, self.target_return_rate, boltd)
+        ws_mandat.write(rw + 7, col + 1, 'Taux réalisé', bolth)
+        ws_mandat.write(rw + 7, col + 2, self.realized_return_rate, boltd)
+        ws_mandat.write(rw + 8, col + 1, 'Durée du mandat (ans)', bolth)
+        ws_mandat.write(rw + 8, col + 2, self.duration_months / 12, boltd)
+        ws_mandat.write(rw + 9, col + 1, 'Date d\'effet', bolth)
+        ws_mandat.write(rw + 9, col + 2, self.start_date.strftime('%d-%m-%Y'), boltd)
+        ws_mandat.write(rw + 10, col + 1, 'Date d\'échéance', bolth)
+        ws_mandat.write(rw + 10, col + 2, self.maturity_date.strftime('%d-%m-%Y'), boltd)
+        ws_mandat.write(rw + 11, col + 1, 'Date Coridor 14 jours', bolth)
+        ws_mandat.write(rw + 11, col + 2, (self.maturity_date + timedelta(self.days_corridor)).strftime('%d-%m-%Y'),
+                        boltd)
+        ws_mandat.write(rw + 12, col + 1, 'Coupon', bolth)
+        ws_mandat.write(rw + 12, col + 2, (self.initial_amount * self.target_return_rate) / 100, boltd)
+        ws_mandat.write(rw + 13, col + 1, 'Principal + intérêt annuel', bolth)
+        ws_mandat.write(rw + 13, col + 2, self.initial_amount + (self.initial_amount * self.target_return_rate) / 100,
+                        boltd)
+
+        ws_mandat.merge_range(15, 0, 15, 6, f"Titres détenus", sous_type)
+
+        rwstation = rw + 16
+        colstation = col
+        if position:
+            ws_mandat.write(rwstation, colstation, 'S/N', bolth)
+            ws_mandat.write(rwstation, colstation + 1, 'Code Isin', bolth)
+            ws_mandat.write(rwstation, colstation + 2, 'Type', bolth)
+            ws_mandat.write(rwstation, colstation + 3, 'Sous type', bolth)
+            ws_mandat.write(rwstation, colstation + 4, 'Pays', bolth)
+            ws_mandat.write(rwstation, colstation + 5, 'Montant Nominal', bolth)
+            ws_mandat.write(rwstation, colstation + 6, 'Quantité', bolth)
+
+            rwstation += 1
+
+            for i, pos in enumerate(position):
+                ws_mandat.write(rwstation, colstation, i + 1, boltd)
+                ws_mandat.write(rwstation, colstation + 1, pos.instrument_id.isin, boltd)
+                ws_mandat.write(rwstation, colstation + 2, pos.instrument_id.instrument_type, boltd)
+                if pos.instrument_id.instrument_type == 'bond':
+                    bond = self.env['efund.vehicule.instrument.core.bond'].search(
+                        [('instrument_id', '=', pos.instrument_id.id)])
+                    if bond:
+                        ws_mandat.write(rwstation, colstation + 3, bond.bond_type, boltd)
+                    else:
+                        ws_mandat.write(rwstation, colstation + 3, '', boltd)
+                ws_mandat.write(rwstation, colstation + 4, pos.instrument_id.issuer_id.country_id.name or '', boltd)
+                ws_mandat.write(rwstation, colstation + 5, pos.quantity * pos.avg_cost, boltd)
+                ws_mandat.write(rwstation, colstation + 6, pos.quantity, boltd)
+
+                rwstation += 1
+
+        # Mouvement cash
+        ws_flux = rwstation + 2
+        ws_mandat.merge_range(ws_flux, 0, ws_flux, 4, f"Flux de Trésorerie", sous_type)
+        ws_flux += 2
+        if mvt_cash:
+            ws_mandat.write(ws_flux, colstation, 'Date', bolth)
+            ws_mandat.write(ws_flux, colstation + 1, 'Opération', bolth)
+            ws_mandat.write(ws_flux, colstation + 2, 'Débit', bolth)
+            ws_mandat.write(ws_flux, colstation + 3, 'Crédit', bolth)
+            ws_mandat.write(ws_flux, colstation + 4, 'Solde', bolth)
+
+            ws_flux += 1
+
+            for mvt in mvt_cash:
+                ws_mandat.write(ws_flux, colstation, mvt.date.strftime('%d-%m-%Y'), boltd)
+                ws_mandat.write(ws_flux, colstation + 1, f"{mvt.label}", boltd)
+                ws_mandat.write(ws_flux, colstation + 2, mvt.amount,
+                                boltd) if '_out' in mvt.move_type else ws_mandat.write(ws_flux, colstation + 2, '',
+                                                                                       boltd)
+                ws_mandat.write(ws_flux, colstation + 3, mvt.amount,
+                                boltd) if '_in' in mvt.move_type else ws_mandat.write(ws_flux, colstation + 3, '',
+                                                                                      boltd)
+                ws_mandat.write(ws_flux, colstation + 4, mvt.balance_running, boltd)
+
+                ws_flux += 1
+
+        workbook.close()
+        output.seek(0)
+        excel_file = base64.b64encode(output.read())
+        attachment = self.env['ir.attachment'].create({
+            'name': 'situation_mandat.xlsx',
+            'datas': excel_file,
+            'db_datas': 'export_excel.xlsx',
+            'res_model': 'efund.vehicule.mandate',  # Mettez le nom de votre modèle ici
+            'res_id': self.id,
+        })
+
+        # Retourner une action pour télécharger le fichier
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/web/content/%s?download=true' % (attachment.id),
+            'target': 'new',
+            'nodestroy': True,
+        }

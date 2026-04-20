@@ -51,6 +51,7 @@
                   decoration-success="state == 'validated'">
                 <field name="date_operation"/>
                 <field name="name"/>
+                <field name="vehicule_id" />
                 <field name="investor_id"/>
                 <field name="type" widget="badge" decoration-warning="type == 'withdraw'"
                        decoration-info="type == 'deposit'"/>

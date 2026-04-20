@@ -131,6 +131,77 @@
                                 </list>
                             </field>
                         </page>
+                        <page string="Flux de trésorerie">
+                            <header>
+                                <button name="generate_excel"
+                                        type="object"
+                                        class="btn-primary"
+                                        icon="fa-calculator"
+                                        string="Export sous excel"/>
+                            </header>
+                            <field name="vehicule_cash_move_ids" readonly="1">
+                                <list>
+                                    <field name="date" string="Date"/>
+                                    <field name="label" string="Opération"/>
+                                    <field name="amount" string="Débit" invisible="'_in' in move_type "/>
+                                    <field name="amount" string="Crédit" invisible="'_out' in move_type "/>
+                                    <field name="balance_running" string="Solde"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Echéanciers">
+                            <field name="cashflow_ids" readonly="1">
+                                <list>
+                                    <field name="date_scheduled" string="Date prévue"/>
+                                    <field name="amount_expected" string="Montant attendu"/>
+                                    <field name="flow_type" string="Type de flux"/>
+                                    <field name="state" string="État"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Calendrier des Flux à venir" name="cashflow_projection">
+                            <field name="all_portfolio_cashflows" readonly="1">
+                                <list decoration-success="principal > 0"
+                                      decoration-bf="date &lt;= context_today() + relativedelta(days=7)">
+                                    <field name="date"/>
+                                    <field name="portfolio_id" string="Titre"/>
+                                    <field name="interet" string="Coupon Attendu" sum="Total Coupons"/>
+                                    <field name="principal" string="Remboursement Cap." sum="Total Capital"/>
+                                    <field name="annuite" string="Total à percevoir" sum="Total Général"
+                                           class="fw-bold"/>
+                                    <button name="get_position_form" type="object" icon="fa-search-plus"
+                                            title="Détail Position"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Positions">
+                            <header>
+                                <button name="action_revalue_positions"
+                                        string="Actualiser la Valorisation"
+                                        type="object"
+                                        icon="fa-refresh"
+                                        class="btn-secondary mb-2"/>
+                            </header>
+                            <field name="position_ids" readonly="1">
+                                <list string="Inventaire des Titres">
+                                    <field name="instrument_id"/>
+                                    <field name="last_price_date"/>
+                                    <field name="quantity"/>
+                                    <field name="last_price"/>
+                                    <field name="avg_cost" string="CMUP"/>
+                                    <field name="first_price"/>
+                                    <field name="market_value" sum="Total"/>
+                                    <field name="unrealized_pl" sum="Total PV Latente"
+                                           decoration-success="unrealized_pl &gt; 0"
+                                           decoration-danger="unrealized_pl &lt; 0"/>
+                                    <button name="action_generate_specific_amortization"
+                                            type="object"
+                                            string="Générer Échéancier"
+                                            icon="fa-cogs"
+                                            class="btn-secondary"/>
+                                </list>
+                            </field>
+                        </page>
 
                         <page string="Configuration Comptable" name="accounting" groups="account.group_account_manager">
                             <div class="p-3 mb-2 border-left border-info bg-light">

@@ -14,7 +14,7 @@ class EfundAccountPartMove(models.Model):
     investor_id = fields.Many2one('efund.investor',store=True)
     move_type = fields.Selection([('subscription','Souscription'),('redemption','Rachat')], required=True)
     shares = fields.Float(required=True)
-    date_move = fields.Datetime(default=fields.Datetime.now)
+    date = fields.Datetime(default=fields.Datetime.now)
     value_date = fields.Datetime(string="Date comptable")
     state = fields.Selection(
         [('draft', 'Brouillon'), ('pending', 'En Attente'), ('posted', 'Validé'), ('cancelled', 'Annulé'),('reconciled', 'Réconcilié'),

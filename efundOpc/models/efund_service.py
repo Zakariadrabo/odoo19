@@ -230,7 +230,7 @@ class EfundService(models.Model):
             'valuation_date': fund.start_date,
             'unit_nav': fund.origin_nav,
             'nb_parts': 0,
-            'Capital': fund.origin_nav,
+            'capital': fund.origin_nav,
             'non_distributable_sum': 0,
             'previous_fiscal_year_result': 0,
             'closed_fiscal_year_result': 0,
@@ -239,16 +239,16 @@ class EfundService(models.Model):
         }
         res = self.env['efund.nav.session'].create(vals)
         if res:
-            share_class = self.env['efund.nav.share'].search([('vehicule_fund_id', '=', res.get('fund_id'))], limit=1)
+            share_class = self.env['efund.fund.share.class'].search([('vehicule_fund_id', '=', res.fund_id.id)], limit=1)
             if share_class:
                 share_class.write({
-                    'current_nav': res.get('fund_id'),
-                    'vl_capital_init': res.get('Capital'),
-                    'vl_non_distribuable': res.get('non_distributable_sum'),
-                    'vl_res_anterieurs': res.get('previous_fiscal_year_result'),
-                    'vl_res_clos': res.get('closed_fiscal_year_result'),
-                    'vl_res_en_cours': res.get('current_fiscal_year_result'),
-                    'valuation_date': res.get('valuation_date'),
+                    'current_nav': res.unit_nav,
+                    'vl_capital_init': res.capital,
+                    'vl_non_distribuable': res.non_distributable_sum,
+                    'vl_res_anterieurs': res.previous_fiscal_year_result,
+                    'vl_res_clos': res.closed_fiscal_year_result,
+                    'vl_res_en_cours': res.current_fiscal_year_result,
+                    'valuation_date': res.valuation_date,
                 })
         return res
 
@@ -718,6 +718,122 @@ class EfundService(models.Model):
             'cash_value': total_cash_balance,
             'total_nav': net_asset_value,
         }
+
+    def get_portfolio_asset_value(self, vehicule, date_target):
+        """
+        Calcule l'Actif Net du véhicule à une date précise.
+        NAV = Somme(Positions Titres à date) + Somme(Soldes Espèces à date)
+        """
+
+        total_portfolio_value = 0.0
+        total_cash_balance = 0.0
+
+        # 1. Valorisation du Portefeuille (Titres)
+        # On récupère les positions du véhicule
+        positions = self.env['efund.vehicule.portfolio'].search([
+            ('vehicule_id', '=', vehicule.id),
+            ('first_price_date', '<=', date_target),
+            ('quantity', '>', 0)
+        ])
+
+        portfolio_at_date = []
+
+        if positions:
+            for pos in positions:
+                # On récupère la quantité à date (via les ordres exécutés avant date_target)
+                # Note : Vous devrez peut-être adapter selon votre modèle d'ordres
+                orders = self.env['efund.investment.transaction'].search([
+                    ('vehicule_id', '=', vehicule.id),
+                    ('instrument_id', '=', pos.instrument_id.id),
+                    ('date_transaction', '<=', date_target),
+                    ('state', '=', 'settled')
+                ])
+
+                qty_at_date = sum(o.quantity if o.move_type == 'in' else -o.quantity for o in orders)
+
+                # On récupère le cours à la date cible (ou le plus proche avant)
+                last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+                    ('instrument_id', '=', pos.instrument_id.id),
+                    ('vehicule_id', '=', vehicule.id),
+                    ('is_validated', '=', True),
+                    ('date', '=', date_target)
+                ], order='date desc', limit=1)
+
+                # 2. Repli (Fallback) : Cours global (ex: Action BRVM)
+                if not last_price_rec:
+                    last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+                        ('instrument_id', '=', pos.instrument_id.id),
+                        ('vehicule_id', '=', False),
+                        ('is_validated', '=', True),
+                        ('date', '=', date_target),
+                    ], order='date desc', limit=1)
+
+                if not last_price_rec:
+                    if pos.instrument_id.instrument_type == 'bond':
+                        _logger.info(
+                            f" les conditions date achat: {pos.first_price_date} date de recherche: {date_target} date maturité : {pos.maturity_date} ")
+                        if pos.first_price_date < date_target and date_target < pos.maturity_date:
+                            last_price_rec = self.generate_bond_price(pos, date_target)
+                            _logger.info(f" j'ai trouvé le prix : {last_price_rec.price} ")
+                        else:
+                            last_price_rec.price = 0
+                    elif pos.instrument_id.instrument_type == 'tcn':
+                        last_price_rec = self.generate_tcn_price(pos, date_target)
+                    elif pos.instrument_id.instrument_type == 'dat':
+                        last_price_rec = self.generate_dat_price(pos, date_target)
+                    elif pos.instrument_id.instrument_type == 'opcvm':
+                        if pos.first_price_date < date_target and pos.quantity > 0:
+                            last_price_rec = self.generate_opcvm_price(pos, date_target)
+                        else:
+                            last_price_rec.price = 0
+                    elif pos.instrument_id.instrument_type == 'equity':
+                        raise UserError(_("Merci de saisir le cours à date"))
+                    else:
+                        raise UserError(_("Le type d'instrument n'est pas pris en charge"))
+
+                if last_price_rec:
+                    price = last_price_rec.price
+                else:  # Appel du calcul de prix
+                    pass
+
+                portfolio_at_date.append({
+                    'instrument': pos.instrument_id,
+                    'date': date_target,
+                    'quantity': qty_at_date,
+                    'price': last_price_rec.price,
+                    'interest': last_price_rec.interest if last_price_rec else 0,
+                    'total_amount': qty_at_date * price + last_price_rec.interest if last_price_rec else 0,
+                })
+                #_logger.info(f"Portfolio at date {date_target}: {portfolio_at_date} : {}")
+
+
+        # 2. Valorisation du Cash (Soldes Espèces)
+        # On récupère tous les comptes espèces du véhicule
+        cash_accounts = self.env['efund.vehicule.cash'].search([
+            ('vehicule_id', '=', vehicule.id)
+        ])
+
+        for cash in cash_accounts:
+            # On calcule le solde roulant SQL à la date cible
+            # C'est ici qu'on applique votre logique balance_running
+            moves = self.env['efund.vehicule.cash.move'].search([
+                ('vehicule_cash_id', '=', cash.id),
+                ('date', '<=', date_target)
+            ])
+
+            balance_at_date = sum(m.amount if '_in' in m.move_type else -m.amount for m in moves)
+            total_cash_balance += balance_at_date
+
+        portfolio_at_date.append({
+            'intrument': False,
+            'date': date_target,
+            'quantity': 1,
+            'price': total_cash_balance,
+            'interest': 0,
+            'total_amount': total_cash_balance,
+        })
+
+        return portfolio_at_date
 
     # Cours lissé
     def compute_linear_actuariat_value_at_date(self, compute_date, buyed_price, buyed_date, nominal_price,

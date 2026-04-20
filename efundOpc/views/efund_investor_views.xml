@@ -66,6 +66,7 @@
                     <!-- Smart buttons avec statistiques -->
                     <div class="oe_button_box">
                         <div class="row g-2">
+                            <!--
                             <div class="col-3">
                                 <button class="oe_stat_button w-100 h-100" name="action_open_deposit" type="object">
                                     <div class="d-flex align-items-center">
@@ -79,6 +80,7 @@
                                     </div>
                                 </button>
                             </div>
+                            -->
                             <div class="col-3">
                                 <button class="oe_stat_button w-100 h-100" name="action_open_subscriptions"
                                         type="object">
@@ -106,6 +108,7 @@
                                     </div>
                                 </button>
                             </div>
+                            <!--
                             <div class="col-3">
                                 <button class="oe_stat_button w-100 h-100" name="action_open_withdraw" type="object">
                                     <div class="d-flex align-items-center">
@@ -119,6 +122,7 @@
                                     </div>
                                 </button>
                             </div>
+                            -->
                         </div>
                     </div>
 

@@ -1,0 +1,119 @@
+<odoo>
+    <record id="view_efund_nav_session_form" model="ir.ui.view">
+        <field name="name">efund.nav.session.form</field>
+        <field name="model">efund.nav.session</field>
+        <field name="arch" type="xml">
+            <form string="Séance de Valeur Liquidative">
+                <header>
+                    <button name="action_compute_nav_lines" string="Calculer l'Inventaire"
+                            type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_validate" string="Valider la VL"
+                            type="object" class="btn-success" invisible="state != 'draft'"/>
+                    <button name="action_cancel" string="Annuler"
+                            type="object" invisible="state == 'cancel'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,validated"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_journal_entries" type="object" class="oe_stat_button" icon="fa-book"
+                                string="Écritures"/>
+                    </div>
+
+                    <widget name="web_ribbon" title="Validée" bg_color="bg-success" invisible="state != 'validated'"/>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="fund_id" options="{'no_create': True}"/>
+                            <field name="valuation_date"/>
+                        </group>
+                        <group>
+                            <field name="nb_parts"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <div class="row text-center mt-4 mb-4"
+                         style="background-color: #f8f9fa; padding: 20px; border-radius: 5px;">
+                        <div class="col-3">
+                            <label for="total_assets" class="fw-bold"/>
+                            <div class="h3 text-info">
+                                <field name="total_assets" widget="monetary"/>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <label for="total_liabilities" class="fw-bold"/>
+                            <div class="h3 text-danger">
+                                <field name="total_liabilities" widget="monetary"/>
+                            </div>
+                        </div>
+                        <div class="col-3" style="border-left: 1px solid #dee2e6;">
+                            <label for="net_asset_value" class="fw-bold"/>
+                            <div class="h2 text-primary">
+                                <field name="net_asset_value" widget="monetary"/>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <label for="unit_nav" class="fw-bold"/>
+                            <div class="h2 text-success">
+                                <field name="unit_nav" widget="float" options="{'digits': [16, 4]}"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <notebook>
+
+                        <page string="Inventaire Détaillé" name="inventory">
+                            <field name="line_ids" readonly="state == 'validated'">
+                                <list editable="bottom" decoration-info="type == 'asset'"
+                                      decoration-danger="type == 'liability'">
+                                    <field name="date" />
+                                    <field name="type"/>
+                                    <field name="name"/>
+                                    <field name="quantity"/>
+                                    <field name="price"/>
+                                    <field name="interest"/>
+                                    <field name="total_amount" sum="Total"/>
+
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Analyse &amp; Déflation" name="analysis">
+                            <group>
+                                <group string="Composition du Capital">
+                                    <field name="capital"/>
+                                    <field name="non_distributable_sum"/>
+                                    <field name="previous_fiscal_year_result"/>
+                                </group>
+                                <group string="Indicateurs de Performance">
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="view_efund_nav_session_tree" model="ir.ui.view">
+        <field name="name">efund.nav.session.list</field>
+        <field name="model">efund.nav.session</field>
+        <field name="arch" type="xml">
+            <list string="Sessions VL" decoration-muted="state == 'cancel'" decoration-success="state == 'validated'">
+                <field name="valuation_date"/>
+                <field name="fund_id"/>
+                <field name="total_assets" sum="Total Actifs"/>
+                <field name="total_liabilities" sum="Total Passifs"/>
+                <field name="net_asset_value" decoration-bf="1"/>
+                <field name="unit_nav" widget="float" options="{'digits': [16, 4]}"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'"
+                       decoration-success="state == 'validated'"/>
+            </list>
+        </field>
+    </record>
+</odoo>

@@ -1,4 +1,8 @@
+import logging
+
 from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
+_logger = logging.getLogger(__name__)
 
 class EfundNavSession(models.Model):
     _name = 'efund.nav.session'
@@ -18,7 +22,7 @@ class EfundNavSession(models.Model):
     unit_nav = fields.Float(string="VL Unitaire", digits=(16, 4), compute="_compute_nav", store=True)
 
     # Deflacation
-    Capital = fields.Float(string="Capital", digits=(18, 10))
+    capital = fields.Float(string="Capital", digits=(18, 10))
     non_distributable_sum = fields.Float(string="Somme non distribuables", digits=(18, 10))
     previous_fiscal_year_result = fields.Float(string="Résultat exercice antérieur", digits=(18, 10))
     closed_fiscal_year_result = fields.Float(string="Résultat exercice clos", digits=(18, 10))
@@ -44,8 +48,8 @@ class EfundNavSession(models.Model):
     @api.depends('line_ids', 'nb_parts')
     def _compute_nav(self):
         for rec in self:
-            assets = sum(rec.line_ids.filtered(lambda l: l.type == 'asset').mapped('amount'))
-            liabilities = sum(rec.line_ids.filtered(lambda l: l.type == 'liability').mapped('amount'))
+            assets = sum(rec.line_ids.filtered(lambda l: l.type == 'asset').mapped('total_amount'))
+            liabilities = sum(rec.line_ids.filtered(lambda l: l.type == 'liability').mapped('total_amount'))
             rec.total_assets = assets
             rec.total_liabilities = liabilities
             rec.net_asset_value = assets - liabilities
@@ -103,3 +107,62 @@ class EfundNavSession(models.Model):
 
         self.write({'line_ids': lines_vals})
         return True
+
+    def action_compute_nav_lines(self):
+        self.ensure_one()
+        # 1. Nettoyage de l'ancien inventaire
+        self.line_ids.unlink()
+
+        lines_vals = []
+
+        # Valorisation du Portefeuille (Titres)
+        # On utilise le service centralisé pour chaque instrument
+        result = self.env['efund.service'].get_portfolio_asset_value(self.fund_id.vehicule_id, self.valuation_date,)
+        if result:
+            _logger.info(f"************ result : {result}")
+            for res in result:
+                lines_vals.append((0, 0, {
+                    'name': f"Titre : {res.get('instrument').name if res.get('instrument') else 'Solde Dispobilité'}",
+                    'type': 'asset',
+                    'quantity': res.get('quantity'),
+                    'price': res.get('price'),
+                    'interest': res.get('interest'),
+                    'total_amount': res.get('total_amount'),
+                }))
+
+        # Injection des lignes dans la session
+        self.write({'line_ids': lines_vals})
+        return True
+
+    def action_validate(self):
+        for record in self:
+            if not record.line_ids:
+                raise ValidationError(_("Impossible de valider une séance sans inventaire."))
+
+            # Ici, on pourrait générer les écritures de réévaluation comptable
+            # record._generate_accounting_entries()
+
+            record.write({
+                'state': 'validated',
+                'name': self.env['ir.sequence'].next_by_code('efund.nav.session') or _('VL/%s') % record.valuation_date
+            })
+
+    def action_cancel(self):
+        for record in self:
+            if record.state == 'validated':
+                # Optionnel : Vérifier si des écritures comptables liées existent
+                pass
+            record.write({'state': 'cancel'})
+
+    def action_view_journal_entries(self):
+        self.ensure_one()
+        # On cherche les écritures (account.move) qui ont cette session comme source
+        # (Nécessite d'avoir ajouté un champ nav_session_id sur account.move)
+        return {
+            'name': _('Écritures Comptables'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'account.move',
+            'view_mode': 'list,form',
+            'domain': [('ref', 'ilike', self.name)],  # Ou un champ Many2one dédié
+            'context': {'create': False},
+        }

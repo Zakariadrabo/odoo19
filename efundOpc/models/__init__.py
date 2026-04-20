@@ -1,6 +1,6 @@
 from . import confirmable_mixin, res_company, forme_juridique, statut_operationnel, type_fonds, secteur_activite, \
     efund_ManagementCompany, efund_vehicule_fund_share_class, efund_investor, efund_kyc_document, efund_kyc_check, \
-    efund_aml_rule, efund_aml_alert, efund_investor_cash_account,efund_fund_valuation, efund_fund_valuation_fee, \
+    efund_aml_rule, efund_aml_alert, efund_investor_cash_account,efund_fund_valuation, efund_fund_valuation_fee,efund_nav_session, efund_nav_line, \
     efund_fund_report_regulatory, res_partner, efund_investor_cash_account_move,  efund_compliance_policy, efund_vehicule_instrument_issuer, \
     efund_vehicule_instrument_bond_amortization, efund_vehicule_instrument_bond_coupon, \
     efund_vehicule_instrument_core_price, efund_config_import_price, efund_depositaire, \
@@ -20,4 +20,4 @@ from . import confirmable_mixin, res_company, forme_juridique, statut_operationn
     efund_event_type, efund_vehicule_mandate_performance_history, efund_vehicule_portfolio_history, \
     efund_vehicule_instrument_issuer_rating, efund_market_fee_config, efund_public_holiday, efund_instrument_account, \
     efund_vehicule_portfolio_history_line, efund_vehicule_portfolio_amortization_line, efund_fiscal_year, \
-    efund_nav_session, efund_nav_line, efund_vehicule_instrument_core_treasury
+    efund_vehicule_instrument_core_treasury, efund_investor_redemption

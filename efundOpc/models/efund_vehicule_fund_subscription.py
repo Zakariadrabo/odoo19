@@ -1,7 +1,5 @@
 import logging
 
-from openpyxl.worksheet import related
-
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import float_round, float_is_zero
@@ -331,6 +329,8 @@ class FundSubscription(models.Model):
                 'cash_account_id': rec.cash_account_id.id,
                 'move_type': 'subscription',
                 'amount': gross_amount,
+                'date_valeur': rec.date_valeur,
+                'value_date': rec.date_valeur,
                 'state': 'reconciled',
             })
             rec.message_post(
@@ -357,6 +357,8 @@ class FundSubscription(models.Model):
                 'move_type': 'subscription_in',
                 'liquidity_type': 'liquid',
                 'state': 'reconciled',
+                'date': rec.date_valeur,
+                'value_date': rec.date_valeur,
                 'investor_cash_move_id': investor_cash_move.id,
                 'investor_id': rec.investor_id.id,
                 'vehicule_id': rec.fund_id.vehicule_id.id,
@@ -380,6 +382,8 @@ class FundSubscription(models.Model):
                     'subscription_id': rec.id,
                     'gross_amount': rec.gross_amount,
                     'base_amount': rec.net_amount,
+                    'date': rec.date_valeur,
+                    'value_date': rec.date_valeur,
                     'fee_rate': rec.entry_load,
                     'fee_amount': rec.subscription_fee_amount,
                 })
@@ -397,6 +401,8 @@ class FundSubscription(models.Model):
                 'move_type': 'subscription',
                 'shares': shares,
                 'state': 'reconciled',
+                'date': rec.date_valeur,
+                'value_date': rec.date_valeur,
             })
             rec.message_post(
                 body=_("Crédit du compte titre de l'investisseur au montant de %s part(s).") % (rec.shares),
@@ -414,6 +420,8 @@ class FundSubscription(models.Model):
                     'amount': rec.amount_remaining,
                     'subscription_id': rec.id,
                     'state': 'reconciled',
+                    'date': rec.date_valeur,
+                    'value_date': rec.date_valeur,
                 })
                 rec.message_post(
                     body=_("Crédit du compte investisseur du réliquat de la souscription au montant de %s francs") % (
@@ -463,9 +471,6 @@ class FundSubscription(models.Model):
                 message_type="comment",
                 subtype_xmlid="mail.mt_comment"
             )
-
-
-
 
 
     def action_validate_subscription(self):

@@ -77,7 +77,7 @@ class EfundInvestmentTransaction(models.Model):
             if rec.instrument_id.instrument_type == 'bond':
                 if rec.move_type =='in':
                     payload =  {'instrument_id': self.instrument_id.id, 'gross': self.total_amount_trade,  'net': self.total_amount, 'fees': self.total_fees,'interest': self.total_interest, 'qte': self.quantity,}
-                    event_name = 'TRADE_SUBSCRIPTION' if rec.instrument_id.settlement_mode == 'direct' else 'TRADE_EXECUTED'
+                    event_name = 'TRADE_SUBSCRIPTION_IN' if rec.instrument_id.settlement_mode == 'direct' else 'TRADE_EXECUTED_IN'
                     event = self.env['efund.accounting.event'].create(serviceEngine.build_event_payload(event_name, rec.vehicule_id.id, rec.name, rec.date_transaction, payload))
                 else:
                     

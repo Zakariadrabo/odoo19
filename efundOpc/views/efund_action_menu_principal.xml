@@ -240,14 +240,14 @@
         <field name="view_mode">list,form</field>
     </record>
 
-    <!--
+
     <record id="action_investor_redemption" model="ir.actions.act_window">
         <field name="name">Rachats</field>
         <field name="res_model">efund.investor.redemption</field>
         <field name="view_mode">list,form</field>
     </record>
 
-
+    <!--
     <record id="action_investor_withdraw" model="ir.actions.act_window">
         <field name="name">Rétrait Rachat</field>
         <field name="res_model">efund.investor.withdraw</field>
@@ -492,13 +492,13 @@
 
     <!-- =========================
          6. VALEUR LIQUIDATIVE
-    ==========================
+    ==========================-->
     <record id="action_fund_nav_list" model="ir.actions.act_window">
         <field name="name">Valeurs Liquidatives</field>
-        <field name="res_model">efund.fund.nav</field>
+        <field name="res_model">efund.nav.session</field>
         <field name="view_mode">list,form,graph</field>
     </record>
--->
+
     <!-- =========================
          7. COMPTABILITÉ
     ========================== -->

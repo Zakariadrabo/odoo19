@@ -12,6 +12,8 @@ class EfundFeeType(models.Model):
     vehicule_id = fields.Many2one('efund.vehicule', required=True)
     company_id = fields.Many2one('res.company', related='vehicule_id.company_id', store=True, index=True, readonly=True)
     currency_id = fields.Many2one(related='vehicule_id.currency_id')
+    date = fields.Datetime(default=fields.Datetime.now)
+    value_date = fields.Datetime(default=fields.Datetime.now)
 
     # Reconciliation
     investor_cash_move_id = fields.Many2one('efund.investor.cash_account.move', string="Cash Investisseur", readonly=True)

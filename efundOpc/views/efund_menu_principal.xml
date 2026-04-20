@@ -46,7 +46,7 @@
     <menuitem id="menu_sub" name="Souscriptions" parent="menu_flows_root" action="action_investor_subscription" sequence="20"/>
     <menuitem id="menu_red" name="Rachats" parent="menu_flows_root" action="action_investor_redemption" sequence="30"/>
     <menuitem id="menu_nav_calc" name="Calcul des VL" parent="menu_flows_root" action="action_fund_nav_list" sequence="40"/>
-    <menuitem id="menu_events" name="OST / Évènements" parent="menu_flows_root" action="action_efund_fund_instrument_event" sequence="50"/>
+    <!-- <menuitem id="menu_events" name="OST / Évènements" parent="menu_flows_root" action="action_efund_fund_instrument_event" sequence="50"/> -->
 
      <!-- Comptabilité   -->
     <menuitem id="menu_account_root" name="Comptabilité" parent="menu_fund_management_root" sequence="50"/>
