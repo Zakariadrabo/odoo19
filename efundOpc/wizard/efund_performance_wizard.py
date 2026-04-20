@@ -12,6 +12,7 @@ class EfundPerformanceWizard(models.TransientModel):
     # --- Entrées ---
     vehicule_id = fields.Many2one('efund.vehicule', string="Véhicule", required=True)
     mandat_id = fields.Many2one('efund.vehicule.mandate', string="Mandate", required=True)
+    target_return_rate = fields.Float(related='mandat_id.target_return_rate', string="Taux Objectif", )
     date_t = fields.Date(string="Date début (T)", required=True, default=fields.Date.today)
     date_t1 = fields.Date(string="Date fin (T1)", required=True, default=fields.Date.today)
     target_rate = fields.Float(string="Taux Objectif (%)", digits=(16, 4), help="Taux annuel attendu")

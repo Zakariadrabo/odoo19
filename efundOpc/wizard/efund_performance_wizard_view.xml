@@ -8,7 +8,7 @@
                 <group string="Paramètres de l'analyse">
                     <group>
                         <field name="vehicule_id" options="{'no_create': True}"/>
-                        <field name="rate_mandate" widget="percentage"/>
+                        <field name="target_return_rate" widget="percentage"/>
                     </group>
                     <group>
                         <field name="date_t"/>
