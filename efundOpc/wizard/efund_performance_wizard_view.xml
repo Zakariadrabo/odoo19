@@ -8,7 +8,7 @@
                 <group string="Paramètres de l'analyse">
                     <group>
                         <field name="vehicule_id" options="{'no_create': True}"/>
-                        <field name="target_return_rate" widget="percentage"/>
+                        <field name="target_return_rate" />
                     </group>
                     <group>
                         <field name="date_t"/>
@@ -35,7 +35,7 @@
                     <group>
                         <field name="performance" widget="monetary" decoration-bf="1"
                                decoration-success="performance > 0" decoration-danger="performance &lt; 0"/>
-                        <field name="target_rate" widget="percentage"/>
+                        <field name="target_rate" widget="percentage" string="Performance"/>
                         <field name="superperformance" widget="monetary" decoration-bf="1"
                                decoration-success="superperformance > 0" decoration-danger="superperformance &lt; 0"/>
                     </group>

@@ -26,10 +26,7 @@ class FundInstrumentIssuer(models.Model):
         ('corporate', 'Société'),
     ], string='Type Emetteur', )
 
-    instrument_count = fields.Integer(
-        string="Nombre d'instruments",
-        compute="_compute_instrument_count"
-    )
+    #instrument_count = fields.Integer(string="Nombre d'instruments", compute="_compute_instrument_count")
     rating = fields.Char("Notation (S&P / Moody’s / Bloomfield / Fitch)")
     rating_ids = fields.One2many('efund.vehicule.instrument.issuer.rating', 'issuer_id', string="Historique des Notations")
 

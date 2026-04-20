@@ -23,10 +23,12 @@
                                 <field name="rating"/>
                             </div>
                             <div class="mt-2">
+                                <!--
                                 <span>
                                     <field name="instrument_count"/>
                                     instruments
                                 </span>
+                                -->
                             </div>
                         </div>
                     </t>
@@ -45,7 +47,7 @@
                 <field name="country_id"/>
                 <field name="industry"/>
                 <field name="current_rating"/>
-                <field name="instrument_count"/>
+                <!-- <field name="instrument_count"/> -->
             </list>
         </field>
     </record>
@@ -88,7 +90,7 @@
                         </page>
 
                         <page string="Instruments émis">
-                            <field name="instrument_count" readonly="1" string="Nombre d'instrument émis par l'Emetteur "/>
+                           <!-- <field name="instrument_count" readonly="1" string="Nombre d'instrument émis par l'Emetteur "/> -->
                             <button name="action_open_instruments"
                                     type="object"
                                     string="Voir les instruments"

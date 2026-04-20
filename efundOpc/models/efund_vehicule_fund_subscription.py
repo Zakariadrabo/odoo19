@@ -329,7 +329,7 @@ class FundSubscription(models.Model):
                 'cash_account_id': rec.cash_account_id.id,
                 'move_type': 'subscription',
                 'amount': gross_amount,
-                'date_valeur': rec.date_valeur,
+                'date': rec.date_valeur,
                 'value_date': rec.date_valeur,
                 'state': 'reconciled',
             })

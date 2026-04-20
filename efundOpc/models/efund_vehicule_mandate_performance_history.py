@@ -10,7 +10,7 @@ class EfundMandatePerformance(models.Model):
     target_return_rate = fields.Float(related='mandat_id.target_return_rate', string="Taux Objectif", )
     start_date= fields.Date(string="Date début", required=True, default=fields.Date.today)
     end_date = fields.Date(string="Date fin", required=True, default=fields.Date.today)
-    target_rate = fields.Float(string="Taux réalisé", digits=(16, 4), help="Taux annuel attendu")
+    target_rate = fields.Float(string="Performance", digits=(16, 4), help="Taux annuel attendu")
 
     # --- Résultats (Calculés) ---
     start_date_valuation = fields.Monetary(string="Valorisation Début", )
