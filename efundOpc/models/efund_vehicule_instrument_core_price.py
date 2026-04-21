@@ -75,7 +75,8 @@ class FundInstrumentPrice(models.Model):
 
             elif pos.instrument_id.instrument_type == 'tcn':
                 today = datetime.date.today()
-                accrual = self.env['efund.service'].get_tcn_interest(pos.rate, pos.value_date,pos.quantity * pos.first_price,360)
+                accrual = self.env['efund.service'].generate_tcn_price_new(pos, today)
+                # get_tcn_interest(pos.rate, pos.value_date,pos.quantity * pos.first_price,360))
                 self._update_or_create_price(pos.instrument_id,pos.vehicule_id,today,pos.first_price,accrual,'internal')
 
 

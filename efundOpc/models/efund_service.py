@@ -116,6 +116,7 @@ class EfundService(models.Model):
         })
 
     def get_tcn_interest(self, rate, start_date, amount, base):
+
         today = datetime.date.today()
         duration = (today - start_date).days
         return amount * rate * duration / (base * 100)
@@ -915,8 +916,8 @@ class EfundService(models.Model):
             return result
 
     def generate_tcn_price(self, position, target_date):
-        accrual = self.env['efund.service'].get_tcn_interest(position.rate, position.value_date,
-                                                             position.quantity * position.first_price, 360)
+        accrual = self.env['efund.service'].generate_tcn_price_new(position, target_date)
+        #self.env['efund.service'].get_tcn_interest(position.rate, position.value_date,position.quantity * position.first_price, 360))
         result = self.update_or_create_price(position.instrument_id, position.vehicule_id, target_date,
                                              position.first_price, accrual, 'internal')
         return result
@@ -962,7 +963,52 @@ class EfundService(models.Model):
         ])
         return pos.avg_cost if pos else 0
 
+    def generate_tcn_price_new(self, position, target_date):
+        """
+        Valorisation TCN par lissage de l'intérêt précompté (Amortissement linéaire)
+        """
+        instrument = position.instrument_id
+        # On suppose que first_price est le prix d'acquisition unitaire
+        purchase_value_total = position.quantity * position.first_price
 
+        # 2. Récupération des dates clés depuis l'instrument
+        # Assurez-vous que ces champs existent sur votre modèle d'instrument
+        date_achat = position.value_date
+        date_echeance = position.maturity_date
+        valeur_nominale_totale = position.quantity * position.face_value
+
+        if not date_echeance or not date_achat:
+            return False
+
+        # 3. Calcul de la période
+        total_days = (date_echeance - date_achat).days
+        days_elapsed = (target_date - date_achat).days
+
+        # Sécurité : si on est avant la date d'achat ou après l'échéance
+        days_elapsed = max(0, min(days_elapsed, total_days))
+
+        if total_days > 0:
+            # 4. Calcul de l'intérêt total (Le gain précompté)
+            total_discount = valeur_nominale_totale - purchase_value_total
+
+            # 5. Lissage (Amortissement linéaire)
+            accrued_interest = (total_discount / total_days) * days_elapsed
+        else:
+            accrued_interest = 0
+
+        # 6. Mise à jour du prix
+        # Le prix reste le prix d'achat (flat), c'est l'accrued_interest qui porte la valorisation
+        """
+        result = self.update_or_create_price(
+            instrument,
+            position.vehicule_id,
+            target_date,
+            position.first_price,
+            accrued_interest,
+            'internal'
+        )
+        """
+        return accrued_interest
 
     """ Revnir terminer la procédure
     def get_valuation_price_at_date(self, position, valuation_date):
