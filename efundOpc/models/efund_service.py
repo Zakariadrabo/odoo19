@@ -545,7 +545,7 @@ class EfundService(models.Model):
 
     def build_event_payload(self, event, vehicule_id, name, date_operation, playload):
 
-        event_type_id = self.env['efund.event.type'].search([('sigle', '=', event)], limit=1)
+        event_type_id = self.env['efund.event.type.new'].search([('sigle', '=', event)], limit=1)
         if not event_type_id:
             raise ValidationError(
                 f" Le type d'évènement {event} n'est pas définir. Merci de contacter votre Administrateur")
