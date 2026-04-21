@@ -1,0 +1,71 @@
+<odoo>
+    <data>
+        <record id="schema_subscription_default" model="efund.accounting.schema.new">
+            <field name="name">FCP SOUSCRIPTION OPCVM</field>
+            <field name="event_type_id" ref="event_005"/>
+            <field name="journal_code">SEC</field>
+            <field name="line_ids" eval="[
+                (0, 0, {
+                    'sequence': 10,
+                    'account_resolution_type': 'instrument',
+                    'side': 'debit',
+                    'amount_type': 'net',
+                    'account_selection_type': 'always',
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 20,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type': 'net',
+                    'account_selection_type': 'always',
+                    'account_code': '111001',
+                    'use_analytic': True,
+                })
+            ]"/>
+        </record>
+
+        <record id="schema_subscription_obligation" model="efund.accounting.schema.new">
+            <field name="name">FCP SOUSCRIPTION OBLIGATION</field>
+            <field name="event_type_id" ref="event_006"/>
+            <field name="journal_code">SEC</field>
+            <field name="line_ids">
+                <record id="line_ob_1" model="efund.accounting.schema.line.new">
+                    <field name="sequence">10</field>
+                    <field name="account_resolution_type">instrument</field>
+                    <field name="side">debit</field>
+                    <field name="amount_type">gross</field>
+                    <field name="account_selection_type">always</field>
+                    <field name="use_analytic">True</field>
+                </record>
+                <record id="line_ob_2" model="efund.accounting.schema.line.new">
+                    <field name="sequence">20</field>
+                    <field name="account_resolution_type">fixed</field>
+                    <field name="side">debit</field>
+                    <field name="amount_type">fees</field>
+                    <field name="account_selection_type">always</field>
+                    <field name="account_code">553200</field>
+                    <field name="use_analytic">True</field>
+                </record>
+                <record id="line_ob_3" model="efund.accounting.schema.line.new">
+                    <field name="sequence">30</field>
+                    <field name="account_resolution_type">fixed</field>
+                    <field name="side">debit</field>
+                    <field name="amount_type">interest</field>
+                    <field name="account_selection_type">always</field>
+                    <field name="account_code">217100</field>
+                    <field name="use_analytic">True</field>
+                </record>
+                <record id="line_ob_4" model="efund.accounting.schema.line.new">
+                    <field name="sequence">40</field>
+                    <field name="account_resolution_type">fixed</field>
+                    <field name="side">credit</field>
+                    <field name="amount_type">net</field>
+                    <field name="account_selection_type">always</field>
+                    <field name="account_code">111001</field>
+                    <field name="use_analytic">True</field>
+                </record>
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -30,6 +30,7 @@ class FundPosition(models.Model):
     first_price = fields.Float(string="Premier cours", digits=(16, 4), store=True, )
     first_price_date = fields.Date(string="Date premier cours", default=fields.Date.today, store=True, )
 
+
     # ========== CALCULS DE PERFORMANCE ==========
     unrealized_pl = fields.Monetary(string="Différence d'estimation", currency_field='currency_id',
                                     compute='_compute_market_value', store=True, )
@@ -59,6 +60,7 @@ class FundPosition(models.Model):
     days_to_maturity = fields.Integer(string="Jours à échéance", compute="_compute_days_to_maturity")
     value_date = fields.Date(string="Date de valeur", store=True, index=True)
     rate = fields.Float(string="Taux", store=True, index=True)
+    face_value = fields.Monetary(string="Valeur nominale")
     is_amortized = fields.Boolean(string="Amortissement")
     amortization_line_ids = fields.One2many('efund.portfolio.amortization.line', 'portfolio_id',
                                             string="Tableau d'Amortissement Spécifique")
@@ -108,6 +110,7 @@ class FundPosition(models.Model):
     def action_refresh_valuation(self):
         for record in self:
             # 1. Aller chercher le dernier prix VALIDÉ pour cet instrument
+            _logger.info(f"*********** instrument_id : {record.instrument_id.name}")
             last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
                 ('instrument_id', '=', record.instrument_id.id),
                 ('vehicule_id', '=', record.vehicule_id.id),
@@ -152,6 +155,7 @@ class FundPosition(models.Model):
                 # Correction : l'appel du cron doit se faire sur l'instrument
                 # car last_price_rec est vide ici
                 # record.instrument_id.cron_generate_daily_prices()
+                _logger.info(f"*********** je vais le chercher")
                 last_price_rec.cron_generate_daily_prices()
 
                 """
@@ -312,6 +316,15 @@ class FundPosition(models.Model):
         self.value_date = trade.date_settlement
         self.maturity_date = trade.maturity_date
         self.rate = trade.negotiated_rate_net
+
+        if trade.instrument_id.instrument_type == 'bond':
+            bond = self.env['efund.vehicule.instrument.core.bond'].search([('instrument_id', '=', trade.instrument_id.id)])
+            if bond:
+                self.face_value = bond.face_value
+        if trade.instrument_id.instrument_type == 'tcn':
+            tcn = self.env['efund.vehicule.instrument.core.tcn'].search([('instrument_id', '=', trade.instrument_id.id)])
+            if tcn:
+                self.face_value = tcn.face_value
 
         if trade.order_id.operation_type == 'deposit':
             self.last_price = trade.total_amount

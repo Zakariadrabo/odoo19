@@ -30,14 +30,30 @@ class FundAccountingEngine(models.AbstractModel):
         else:
             idcompany_id = event.vehicule_id.company_id
 
-        schema = self.env['efund.accounting.schema'].search([
+        schema = self.env['efund.accounting.schema.new'].search([
             ('event_type_id', '=', event.event_type_id.id),
-            ('company_id', '=', idcompany_id.id),
-            # ('active', '=', True)
+            #('company_id', '=', idcompany_id.id),
+            ('active', '=', True)
         ], limit=1)
 
+
         if not schema:
-            raise UserError(_("Aucun schema pour %s") % event.event_type_id)
+            raise UserError(_("Aucun schéma comptable trouvé pour %s") % event.event_type_id.name)
+
+        # Récupération du journal
+        journal_code = schema.journal_code
+        _logger.info(f"******** Code Journal {journal_code} et compagnie {idcompany_id.name}")
+
+        target_journal = self.env['account.journal'].with_company(idcompany_id).search([
+            ('code', '=', journal_code),
+            ('company_id', '=', idcompany_id.id)
+        ], limit=1)
+
+        if not target_journal:
+            raise UserError(_("Journal '%s' non trouvé pour la société %s") % (journal_code, journal_code.name))
+
+        _logger.info(f"**************Afficher le journal {target_journal.name}")
+
 
         lines = []
 
@@ -65,7 +81,12 @@ class FundAccountingEngine(models.AbstractModel):
             target_account = False
 
             if rule.account_resolution_type == 'fixed':
-                target_account = rule.account_id
+                #target_account = rule.account_id
+                target_code = rule.account_code
+                if target_code : #and target_account.company_id != idcompany_id
+                    target_account = self.env['account.account'].sudo().with_company(idcompany_id).search([
+                        ('code', '=', target_code),
+                    ], order='code desc', limit=1)
 
             elif rule.account_resolution_type == 'instrument':
 
@@ -109,7 +130,7 @@ class FundAccountingEngine(models.AbstractModel):
         _logger.info(f"***** Schéma comptable : {lines}")
 
         move = self.env['account.move'].sudo().with_company(target_company).create({
-            'journal_id': schema.journal_id.id,
+            'journal_id': target_journal.id,
             'company_id': idcompany_id.id,
             'ref': event.reference,
             'line_ids': lines,

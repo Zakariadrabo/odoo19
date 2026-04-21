@@ -5,19 +5,17 @@ from odoo.exceptions import UserError, ValidationError
 _logger = logging.getLogger(__name__)
 
 class FundAccountingSchema(models.Model):
-    _name = "efund.accounting.schema"
+    _name = "efund.accounting.schema.new"
     _description = "Mapping comptable des fonds"
 
     _rec_name = "name"
 
     name = fields.Char(string="Nom", required=True)
 
-    event_type_id = fields.Many2one('efund.event.type', string="Type d'Événement", required=True)
-    company_id = fields.Many2one('res.company', required=True, index=True)
-    company_code = fields.Char(related='company_id.company_code', string="Code société",)
-    journal_id = fields.Many2one('account.journal', string="Journal", required=False,)
+    event_type_id = fields.Many2one('efund.event.type.new', string="Type d'Événement", required=True)
+    journal_code = fields.Selection([('BNK','Banque'),('SUB','Souscriptions investisseurs'),('RED','Rachats investisseurs'),('SEC','Opérations sur titres'),('NAV','Valorisation / Valeur liquidative'),('EXP','Frais'),])
     active = fields.Boolean(default=True)
-    line_ids = fields.One2many('efund.accounting.schema.line', 'schema_id', string="Lignes comptables")
+    line_ids = fields.One2many('efund.accounting.schema.line.new', 'schema_id', string="Lignes comptables")
 
 
     @api.onchange('company_id')

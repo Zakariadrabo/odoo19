@@ -78,7 +78,7 @@
                         </page>
 
                         <page string="Catégorie de parts">
-                            <field name="share_class_ids">
+                            <field name="share_class_ids" context="{'default_vehicule_fund_id': id}">
                                 <list>
                                     <field name="name"/>
                                     <field name="management_fee_rate"/>

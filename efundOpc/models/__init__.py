@@ -15,9 +15,9 @@ from . import confirmable_mixin, res_company, forme_juridique, statut_operationn
     efund_vehicule, efund_vehicule_fund, efund_vehicule_mandate, efund_investment_order, efund_investment_transaction, \
     efund_opcvm_type, efund_bank, efund_service, efund_country_zone, efund_vehicule_mandat_rule, efund_vehicule_cash, \
     efund_vehicule_cash_move, efund_vehicule_portfolio, efund_vehicule_cash_operation, efund_vehicule_cashflow, \
-    efund_accounting_schema, efund_accounting_schema_line, efund_accounting_event, efund_accounting_engine, \
+    efund_accounting_schema, efund_accounting_schema_line,efund_accounting_schema_new, efund_accounting_schema_line_new, efund_accounting_event, efund_accounting_engine, \
     efund_investor_cash_operation, efund_codification_numero_compte, efund_investor_part_account, efund_event_handler, \
-    efund_event_type, efund_vehicule_mandate_performance_history, efund_vehicule_portfolio_history, \
+    efund_event_type, efund_event_type_new, efund_vehicule_mandate_performance_history, efund_vehicule_portfolio_history, \
     efund_vehicule_instrument_issuer_rating, efund_market_fee_config, efund_public_holiday, efund_instrument_account, \
     efund_vehicule_portfolio_history_line, efund_vehicule_portfolio_amortization_line, efund_fiscal_year, \
     efund_vehicule_instrument_core_treasury, efund_investor_redemption

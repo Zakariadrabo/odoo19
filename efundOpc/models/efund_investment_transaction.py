@@ -87,7 +87,7 @@ class EfundInvestmentTransaction(models.Model):
 
             elif rec.instrument_id.instrument_type == 'dat':
                 payload = {'instrument_id': self.instrument_id.id, 'gross': self.total_amount,'net': rec.total_amount_trade , 'interest': rec.total_interest,}
-                event = self.env['efund.accounting.event'].create(serviceEngine.build_event_payload('DAT_EXECUTED', rec.vehicule_id.id, rec.name, rec.date_transaction, payload))
+                event = self.env['efund.accounting.event'].create(serviceEngine.build_event_payload('DAT_EXECUTED_IN', rec.vehicule_id.id, rec.name, rec.date_transaction, payload))
 
             elif rec.instrument_id.instrument_type == 'opcvm':
                 payload = {'instrument_id': rec.instrument_id.id, 'net': rec.total_amount, 'qte': rec.quantity, }
@@ -102,7 +102,7 @@ class EfundInvestmentTransaction(models.Model):
             elif rec.instrument_id.instrument_type == 'tcn':
                 payload = {'instrument_id': rec.instrument_id.id, 'net': rec.total_amount, 'qte': rec.quantity,'interest': rec.total_interest,'gross': self.total_amount_trade, 'fees': rec.total_fees, }
                 event = self.env['efund.accounting.event'].create(
-                    serviceEngine.build_event_payload('TCN_VALIDATED', rec.vehicule_id.id, rec.name,
+                    serviceEngine.build_event_payload('TCN_VALIDATED_IN', rec.vehicule_id.id, rec.name,
                                                       rec.date_transaction, payload))
 
 
@@ -189,7 +189,7 @@ class EfundInvestmentTransaction(models.Model):
                 )
 
             vehicule_move_interest = self.env['efund.vehicule.cash.move']
-            if rec.total_interest > 0 and rec.order_id.instrument_type != 'deposit':
+            if rec.total_interest > 0 and rec.order_id.instrument_type not in ('deposit','tcn'):
                 vehicule_move_broker.create({
                     'name': self.env['ir.sequence'].next_by_code('efund.vehicule.cash.move'),
                     'vehicule_cash_id': vehicule_cash.id,

@@ -163,7 +163,8 @@ class EfundMandatHandler(models.AbstractModel):
         """ Trouve le dernier compte 211xxx et crée le suivant """
         radical = "211"
         # 1. Rechercher le dernier compte créé commençant par 211
-        last_account = self.env['account.account'].search([
+        company = vehicule_id.company_id
+        last_account = self.env['account.account'].sudo().with_company(company).search([
             ('code', '=like', radical + '%')
         ], order='code desc', limit=1)
 
@@ -183,7 +184,7 @@ class EfundMandatHandler(models.AbstractModel):
         # 3. Création effective du compte dans le plan comptable Odoo
         return self.env['account.account'].create({
             'code': new_code,
-            'name': _("Titre : %s") % instrument_name,
+            'name': _("Titre : %s") % instrument_id.name,
             'user_type_id': self.env.ref('account.data_account_type_non_current_assets').id,  # Type Actif Immobilisé
             'reconcile': True,
         })

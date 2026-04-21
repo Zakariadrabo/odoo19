@@ -510,7 +510,7 @@
 
     <record id="action_efund_accounting_schema" model="ir.actions.act_window">
         <field name="name">Configuration Schéma Comptable</field>
-        <field name="res_model">efund.accounting.schema</field>
+        <field name="res_model">efund.accounting.schema.new</field>
         <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -600,7 +600,7 @@
     </record>
     <record id="action_efund_event_type" model="ir.actions.act_window">
     <field name="name">Types d'Événements</field>
-    <field name="res_model">efund.event.type</field>
+    <field name="res_model">efund.event.type.new</field>
     <field name="view_mode">list,form</field>
     <field name="help" type="html">
         <p class="o_view_nocontent_smiling_face">

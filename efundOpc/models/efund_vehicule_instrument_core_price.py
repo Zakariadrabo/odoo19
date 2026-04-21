@@ -80,7 +80,7 @@ class FundInstrumentPrice(models.Model):
 
 
             # --- CAS 2 : LES BONDS LISTÉS (Mise à jour automatique) ---
-            elif pos.instrument_id.instrument_type == 'bond' and pos.instrument_id.valuation_method == 'listed':
+            elif pos.instrument_id.instrument_type == 'bond': #and pos.instrument_id.valuation_method == 'listed':
                 trans_details = self.env['efund.investment.transaction'].search([
                     ('instrument_id', '=', pos.instrument_id.id),
                     ('vehicule_id', '=', pos.vehicule_id.id)], limit=1)
@@ -147,6 +147,9 @@ class FundInstrumentPrice(models.Model):
                 ], order='date desc', limit=1)
                 if last_price_obj:
                     last_price = last_price_obj.price
+                else:
+                    last_price = pos.face_value if pos.face_value else bond.face_value
+
 
 
         if last_price:

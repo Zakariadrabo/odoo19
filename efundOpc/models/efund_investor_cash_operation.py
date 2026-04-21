@@ -82,7 +82,7 @@ class EfundInvestorCashOperation(models.Model):
             serviceEngine = self.env['efund.service']
             payload = {'gross': rec.amount, }
             event = self.env['efund.accounting.event'].create(
-                serviceEngine.build_event_payload('CASH_IN' if self.type == 'deposit' else 'CASH_OUT', rec.vehicule_id.id, 'Apport Liquidité - ' + rec.name,
+                serviceEngine.build_event_payload('INV_CASH_IN' if self.type == 'deposit' else 'INV_CASH_OUT', rec.vehicule_id.id, 'Apport Liquidité - ' + rec.name,
                                                   rec.date_operation, payload))
             rec.event_id = event.id
             self.env['efund.accounting.engine'].process_event(event)

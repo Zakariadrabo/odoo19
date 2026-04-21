@@ -196,7 +196,7 @@ class Mandate(models.Model):
             # Création de Event
             serviceEngine = self.env['efund.service']
             payload = {'gross': rec.initial_amount,}
-            event = self.env['efund.accounting.event'].create(serviceEngine.build_event_payload('CASH_IN', rec.vehicule_id.id, 'Apport Liquidité - ' + rec.name,
+            event = self.env['efund.accounting.event'].create(serviceEngine.build_event_payload('MDT_CASH_IN', rec.vehicule_id.id, 'Apport Liquidité - ' + rec.name,
                                                             rec.start_date, payload))
             # rec.event_id = event.id
             self.env['efund.accounting.engine'].process_event(event)

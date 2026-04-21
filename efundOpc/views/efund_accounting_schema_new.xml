@@ -1,33 +1,27 @@
 <odoo>
     <record id="view_efund_accounting_schema_form" model="ir.ui.view">
         <field name="name">efund.accounting.schema.form</field>
-        <field name="model">efund.accounting.schema</field>
+        <field name="model">efund.accounting.schema.new</field>
         <field name="arch" type="xml">
             <form string="Schéma Comptable de Fonds">
                 <sheet>
                     <div class="oe_title">
-
                             <group>
                                 <field name="name" class="text-primary" string="Nom"/>
-                                <field name="company_id" options="{'no_create': True}"
-                                       domain="['|', ('is_funder', '=', True), ('company_code', '=', 'MANDATS')]"
-                                       placeholder='FCP...' class="text-success"   string="Fond"/>
                             </group>
-
                     </div>
-                    <group invisible="not company_id">*
+                    <group>
                         <group>
-                            <field name="journal_id" domain="[('company_id', '=', company_id)]" options="{'no_create': True}"/>
                             <field name="journal_code" placeholder="Ex SUB" />
                             <field name="event_type_id" placeholder="Type d'évènement ..."/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Configuration des Lignes" name="lines" invisible="not company_id">
+                        <page string="Configuration des Lignes" name="lines" >
                             <field name="line_ids">
                                 <list editable="bottom">
                                     <field name="account_resolution_type" string="Type de Résolution"/>
-                                    <field name="account_id" options="{'no_create': True}" invisible="account_resolution_type != 'fixed'" required="account_resolution_type == 'fixed'"/>
+                                    <field name="account_code" options="{'no_create': True}" invisible="account_resolution_type != 'fixed'" required="account_resolution_type == 'fixed'"/>
                                     <field name="account_selection_type"/>
                                     <field name="side"/>
                                     <field name="use_analytic"/>
@@ -42,13 +36,12 @@
     </record>
     <record id="view_efund_accounting_schema_tree" model="ir.ui.view">
         <field name="name">efund.accounting.schema.list</field>
-        <field name="model">efund.accounting.schema</field>
+        <field name="model">efund.accounting.schema.new</field>
         <field name="arch" type="xml">
             <list string="Schémas Comptables">
                 <field name="name" />
                 <field name="event_type_id"/>
-                <field name="journal_id"/>
-                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="journal_code"/>
             </list>
         </field>
     </record>

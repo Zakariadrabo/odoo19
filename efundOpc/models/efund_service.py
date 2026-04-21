@@ -768,15 +768,17 @@ class EfundService(models.Model):
                         ('date', '=', date_target),
                     ], order='date desc', limit=1)
 
+                _logger.info(f"*********** le type instrument: {pos.instrument_id.instrument_type}, la valeur prix {last_price_rec} ")
+
                 if not last_price_rec:
                     if pos.instrument_id.instrument_type == 'bond':
                         _logger.info(
                             f" les conditions date achat: {pos.first_price_date} date de recherche: {date_target} date maturité : {pos.maturity_date} ")
-                        if pos.first_price_date < date_target and date_target < pos.maturity_date:
+                        if pos.first_price_date <= date_target and date_target <= pos.maturity_date:
                             last_price_rec = self.generate_bond_price(pos, date_target)
                             _logger.info(f" j'ai trouvé le prix : {last_price_rec.price} ")
                         else:
-                            last_price_rec.price = 0
+                            raise ValidationError(f"Une erreur est survenue lors de la recherche du prix du bond : {pos.instrument_id.name}")
                     elif pos.instrument_id.instrument_type == 'tcn':
                         last_price_rec = self.generate_tcn_price(pos, date_target)
                     elif pos.instrument_id.instrument_type == 'dat':
@@ -923,7 +925,6 @@ class EfundService(models.Model):
         bond = self.env['efund.vehicule.instrument.core.bond'].search([
             ('instrument_id', '=', position.instrument_id.id)
         ], limit=1)
-        _logger.info(f"************ generate_bond_price : {bond}")
         if bond.instrument_id.is_listed:
             _logger.info(f"***************** le titre est coté")
             if bond.instrument_id.valuation_method == 'listed':
@@ -944,7 +945,7 @@ class EfundService(models.Model):
             if last_price_obj:
                 last_price = last_price_obj.price
             else:
-                last_price = position.first_price
+                last_price = position.face_value if position.face_value else bond.face_value
 
         res = self.compute_accrued_interest_precise(bond.face_value, bond.rate_net, target_date, bond.maturity_date, bond.coupon_frequency, tax_rate=0.0, add_day=0)
         interest = res.get('interest_net') * position.quantity

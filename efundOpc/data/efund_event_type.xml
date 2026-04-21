@@ -1,59 +1,66 @@
 <odoo>
-    <record id="event_001" model="efund.event.type">
-        <field name="name">Apport de liquidité</field>
-        <field name="sigle">CASH_IN</field>
-        <field name="state">validated</field>
-    </record>
-    <record id="event_002" model="efund.event.type">
-        <field name="name">Mise en place du DAT</field>
-        <field name="sigle">DAT_EXECUTED</field>
-        <field name="state">validated</field>
-    </record>
-    <record id="event_003" model="efund.event.type">
-        <field name="name">Rachat Validé</field>
-        <field name="sigle">RED_VALIDATED</field>
-        <field name="state">validated</field>
-    </record>
-    <record id="event_004" model="efund.event.type">
-        <field name="name">Retrait de liquidité</field>
-        <field name="sigle">CASH_OUT</field>
-        <field name="state">validated</field>
-    </record>
-    <record id="event_005" model="efund.event.type">
-        <field name="name">Souscription Titre OPCVM</field>
-        <field name="sigle">TRADE_OPC_EXECUTED_IN</field>
-        <field name="state">validated</field>
-    </record>
-    <record id="event_006" model="efund.event.type">
-        <field name="name">Souscription Titre</field>
-        <field name="sigle">TRADE_SUBSCRIPTION</field>
-        <field name="state">validated</field>
-    </record>
-    <record id="event_007" model="efund.event.type">
-        <field name="name">Souscription Validée</field>
-        <field name="sigle">SUB_VALIDATED</field>
-        <field name="state">validated</field>
-    </record>
-    <record id="event_008" model="efund.event.type">
-        <field name="name">Transaction Titre Dénouée</field>
-        <field name="sigle">TRADE_DELIVERED</field>
-        <field name="state">validated</field>
-    </record>
-    <record id="event_009" model="efund.event.type">
-        <field name="name">Transaction Titre Exécutée</field>
-        <field name="sigle">TRADE_EXECUTED</field>
-        <field name="state">validated</field>
-    </record>
-    <record id="event_010" model="efund.event.type">
-        <field name="name">Souscription BONS</field>
-        <field name="sigle">TCN_VALIDATED</field>
-        <field name="state">validated</field>
-    </record>
-    <record id="event_011" model="efund.event.type">
-        <field name="name">Vente Titre OPCVM</field>
-        <field name="sigle">TRADE_OPC_EXECUTED_OUT</field>
-        <field name="state">validated</field>
-    </record>
+    <data>
+        <record id="event_001" model="efund.event.type.new">
+            <field name="name">Apport de liquidité - Mandat</field>
+            <field name="sigle">MDT_CASH_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_002" model="efund.event.type.new">
+            <field name="name">Mise en place du DAT</field>
+            <field name="sigle">DAT_EXECUTED_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_003" model="efund.event.type.new">
+            <field name="name">Rachat Validé</field>
+            <field name="sigle">RED_VALIDATED</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_004" model="efund.event.type.new">
+            <field name="name">Retrait de liquidité - Mandat</field>
+            <field name="sigle">MDT_CASH_OUT</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_005" model="efund.event.type.new">
+            <field name="name">Souscription Titre OPCVM</field>
+            <field name="sigle">OPC_EXECUTED_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_006" model="efund.event.type.new">
+            <field name="name">Souscription Titre</field>
+            <field name="sigle">TRADE_SUBSCRIPTION_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_007" model="efund.event.type.new">
+            <field name="name">Souscription Part OPC</field>
+            <field name="sigle">SUB_VALIDATED</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_008" model="efund.event.type.new">
+            <field name="name">Transaction Titre - Vente</field>
+            <field name="sigle">TRADE_EXECUTED_OUT</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_009" model="efund.event.type.new">
+            <field name="name">Transaction Titre - Achat</field>
+            <field name="sigle">TRADE_EXECUTED_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_010" model="efund.event.type.new">
+            <field name="name">Souscription BONS</field>
+            <field name="sigle">TCN_VALIDATED_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_011" model="efund.event.type.new">
+            <field name="name">Vente Titre OPCVM</field>
+            <field name="sigle">OPC_EXECUTED_OUT</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_012" model="efund.event.type.new">
+            <field name="name">Fin en place du DAT</field>
+            <field name="sigle">DAT_EXECUTED_OUT</field>
+            <field name="state">validated</field>
+        </record>
+    </data>
 </odoo>
 
 

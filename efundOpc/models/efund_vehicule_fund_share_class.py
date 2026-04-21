@@ -10,6 +10,7 @@ class FundClass(models.Model):
     # === Fields ===
     name = fields.Char(string='Classe de Parts',required=True,help="Nom de la classe de parts (ex: 'Class A EUR Acc', 'Class I USD Dist')")
     sequence = fields.Integer(string='Sequence',default=10,help="Ordre d'affichage dans les listes")
+
     # === Relations ===
     vehicule_fund_id = fields.Many2one('efund.vehicule.fund', required=True, ondelete='cascade')
 

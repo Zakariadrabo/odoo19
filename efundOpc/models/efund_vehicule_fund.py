@@ -26,6 +26,7 @@ class Fund(models.Model):
     ## RELATIONS
     ##################################################
     share_class_ids = fields.One2many('efund.fund.share.class', 'vehicule_fund_id', string='Share Classes')
+   
     depositary_id = fields.Many2one("efund.depositaire", string="Dépositaire")
     fund_type_id = fields.Many2one('efund.fund.type', string="Classe de fonds", required=True)
 

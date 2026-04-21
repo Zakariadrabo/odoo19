@@ -1,0 +1,24 @@
+from odoo import api, fields, models, _
+from datetime import datetime
+
+class FundAccountingSchemaLine(models.Model):
+    _name = "efund.accounting.schema.line.new"
+    _description = "Accounting Schema Line"
+    _order = "sequence, id"
+
+    schema_id = fields.Many2one('efund.accounting.schema.new',required=True,ondelete='cascade')
+    sequence = fields.Integer(default=10, string="Ordre")
+    account_resolution_type = fields.Selection([('fixed', 'Compte Fixe'),('instrument', 'Compte lié à l\'Instrument'), ('liquidity', 'Compte Liquidité du Véhicule')
+    ], default='fixed')
+    account_code = fields.Selection([('111001','Compte espèce'),('553200', 'Frais sur Titre'),('727110','Interet couru')], string="Compte")
+    account_selection_type = fields.Selection([('always', 'Toujours ce compte'), ('if_positive', 'Uniquement si Positif'), ('if_negative', 'Uniquement si Négatif'), ], required=True, default='always', string="Condition de signe")
+    side = fields.Selection([('debit', 'Debit'),('credit', 'Credit')], string="Sens", required=True)
+    amount_type = fields.Selection([('gross', 'Montant Brut'),('net', 'Montant Net'),('fees', 'Frais/Commissions'),
+                                    ('capital_init','Souscription Exercice'),('non_distribuable','Sommes Non Distribuables'),
+                                    ('res_anterieurs','Résultat Antérieur'),('res_clos','Résultat Clos'),('interest','Intérêt couru'),
+                                    ('res_en_cours','Résultat En Cours'),('entry_load','Droit entrée'),('exit_load','Droit sortie'),('reliquat','Reliquat'),
+        ('capital', 'Part Capital'),('income', 'Revenu'),('tax', 'Taxes/Prélèvements'),('quantity','Quantité')], string="Source du Montant", required=True)
+    label = fields.Char(help="Libellé de la ligne")
+    use_analytic = fields.Boolean(string="Utiliser l'analytique du mandat", default=True,
+                                  help="Si coché, l'écriture sera marquée avec le compte analytique du mandat lié.")
+
