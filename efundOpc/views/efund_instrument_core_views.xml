@@ -141,7 +141,7 @@
                         </page>
 
                         <!-- Onglet 2 : Paramètres Coupons -->
-                        <page string="Coupons">
+                        <page string="Coupons" invisible="1">
                             <div>
                                 <button name="action_compute_coupons" string="Générer les coupons" type="object"
                                         class="btn-primary mt-2"/>
@@ -252,6 +252,5 @@
             </form>
         </field>
     </record>
-
 
 </odoo>

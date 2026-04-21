@@ -412,22 +412,9 @@ class FundPosition(models.Model):
 
     # ========== MÉTHODES D'ACTION ==========
     def action_update_position(self):
-        """Mettre à jour une position existante"""
-        self.ensure_one()
-        return {
-            'name': _('Mettre à jour la position'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'efund.position.update.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_position_id': self.id,
-                'default_vehicule_id': self.vehicule_id.id,
-                'default_instrument_id': self.instrument_id.id,
-                'default_current_quantity': self.quantity,
-                'default_current_avg_cost': self.avg_cost,
-            }
-        }
+
+        raise ValidationError(f"Désolé, mon implémentation est en cours")
+
 
     def action_close_position(self):
         """Clôturer une position"""
