@@ -10,7 +10,11 @@ class FundAccountingSchemaLine(models.Model):
     sequence = fields.Integer(default=10, string="Ordre")
     account_resolution_type = fields.Selection([('fixed', 'Compte Fixe'),('instrument', 'Compte lié à l\'Instrument'), ('liquidity', 'Compte Liquidité du Véhicule')
     ], default='fixed')
-    account_code = fields.Selection([('111001','Compte espèce'),('553200', 'Frais sur Titre'),('727110','Interet couru')], string="Compte")
+    account_code = fields.Selection([
+        ('111001','Compte espèce'),('553200', 'Frais sur Titre'),('727110','Interet couru obl'),
+        ('121001', 'Compte courant'), ('371200', 'Clients, compte espèces'), ('389008', 'Coupon à récevoir'),
+        ('710200', 'Révenu Obligation'), ('141710', 'Interet couru / placement monetaire'), ('551801', 'plus value obl'),
+    ], string="Compte")
     account_selection_type = fields.Selection([('always', 'Toujours ce compte'), ('if_positive', 'Uniquement si Positif'), ('if_negative', 'Uniquement si Négatif'), ], required=True, default='always', string="Condition de signe")
     side = fields.Selection([('debit', 'Debit'),('credit', 'Credit')], string="Sens", required=True)
     amount_type = fields.Selection([('gross', 'Montant Brut'),('net', 'Montant Net'),('fees', 'Frais/Commissions'),
