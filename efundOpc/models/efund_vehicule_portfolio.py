@@ -322,7 +322,7 @@ class FundPosition(models.Model):
             if bond:
                 self.face_value = bond.face_value
         if trade.instrument_id.instrument_type == 'tcn':
-            tcn = self.env['efund.vehicule.instrument.core.tcn'].search([('instrument_id', '=', trade.instrument_id.id)])
+            tcn = self.env['efund.vehicule.instrument.core.treasury'].search([('instrument_id', '=', trade.instrument_id.id)])
             if tcn:
                 self.face_value = tcn.face_value
 
