@@ -218,11 +218,12 @@
                         </page>
 
                         <page string="Coupon">
-                            <button name="generate_coupon_schedule"
+                            <!-- <button name="generate_coupon_schedule"
                                     type="object"
                                     class="btn-primary"
                                     icon="fa-calculator"
                                     string="Générer le calendrier des coupons"/>
+                                    -->
 
                             <field name="coupon_ids" readonly="state =='draft'">
                                 <list decoration-info="state == 'active'" decoration-warning="state == 'draft'">
@@ -311,11 +312,13 @@
                                     <field name="unrealized_pl" sum="Total PV Latente"
                                            decoration-success="unrealized_pl &gt; 0"
                                            decoration-danger="unrealized_pl &lt; 0"/>
+                                    <!--
                                     <button name="action_generate_specific_amortization"
                                             type="object"
                                             string="Générer Échéancier"
                                             icon="fa-cogs"
                                             class="btn-secondary"/>
+                                           -->
                                 </list>
                             </field>
                         </page>

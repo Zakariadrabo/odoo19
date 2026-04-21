@@ -74,7 +74,7 @@
         'views/efund_fund_share_class.xml',
         #'views/efund_fund_instrument_transactions_views.xml',
         'views/efund_investment_transaction.xml',
-        #'views/efund_fund_instrument_dat_views.xml',
+        'views/efund_fund_instrument_dat_views.xml',
         'views/efund_instrument_core_views.xml',
         'reports/efund_investor_kyc.xml',
         'views/efund_vehicule_fund_views.xml',

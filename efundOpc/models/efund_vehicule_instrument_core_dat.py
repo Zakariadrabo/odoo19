@@ -45,7 +45,6 @@ class FundInstrumentDAT(models.Model):
 
     # Suivi
     last_calculation_date = fields.Date(string="Dernier calcul", readonly=True)
-    transaction_count = fields.Integer(string="Transactions", compute="_compute_transaction_count")
 
 
     capitalization_frequency = fields.Selection(
