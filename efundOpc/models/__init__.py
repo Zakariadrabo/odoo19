@@ -20,4 +20,4 @@ from . import confirmable_mixin, res_company, forme_juridique, statut_operationn
     efund_event_type, efund_event_type_new, efund_vehicule_mandate_performance_history, efund_vehicule_portfolio_history, \
     efund_vehicule_instrument_issuer_rating, efund_market_fee_config, efund_public_holiday, efund_instrument_account, \
     efund_vehicule_portfolio_history_line, efund_vehicule_portfolio_amortization_line, efund_fiscal_year, \
-    efund_vehicule_instrument_core_treasury, efund_investor_redemption
+    efund_vehicule_instrument_core_treasury, efund_investor_redemption, efund_account_template

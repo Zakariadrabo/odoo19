@@ -14,6 +14,7 @@ class FundAccountingSchemaLine(models.Model):
         ('111001','Compte espèce'),('553200', 'Frais sur Titre'),('727110','Interet couru obl'),
         ('121001', 'Compte courant'), ('371200', 'Clients, compte espèces'), ('389008', 'Coupon à récevoir'),
         ('710200', 'Révenu Obligation'), ('141710', 'Interet couru / placement monetaire'), ('551801', 'plus value obl'),
+        ('581300', 'résultat antérieur'), ('591110', 'Résultat clos'), ('770000', 'résultat encours'),('572100', 'Souscription exercice'), ('389951', 'droit entré'),
     ], string="Compte")
     account_selection_type = fields.Selection([('always', 'Toujours ce compte'), ('if_positive', 'Uniquement si Positif'), ('if_negative', 'Uniquement si Négatif'), ], required=True, default='always', string="Condition de signe")
     side = fields.Selection([('debit', 'Debit'),('credit', 'Credit')], string="Sens", required=True)
