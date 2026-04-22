@@ -283,6 +283,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                     rec.total_amount = rec.deposit_amount + rec.total_interest if rec.interest_type == 'postpaid' else rec.deposit_amount - rec.total_interest
 
 
+
             if rec.order_id.operation_type == 'opcvm':
                 rec.total_amount_trade = rec.executed_quantity * rec.execution_price
                 rec.total_amount = rec.total_amount_trade
