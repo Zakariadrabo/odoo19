@@ -279,36 +279,9 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                     rec.total_interest = result.get('accrued_interest')
                     rec.total_irvm = rec.total_interet_brut - rec.total_interest
                     rec.total_interest = result.get('accrued_interest')
-                    rec.total_amount = rec.deposit_amount + rec.total_interest
+                    rec.total_amount_trade = rec.deposit_amount
+                    rec.total_amount = rec.deposit_amount + rec.total_interest if rec.interest_type == 'postpaid' else rec.deposit_amount - rec.total_interest
 
-                    """
-                    # Champ BD
-                    self.total_interet_brut = interest_gross
-                    self.total_irvm = interest_gross - interest_net
-                    self.total_interest = interest_net
-                    self.total_amount = cash_out
-                    self.maturity_date = rec.maturity_date
-                    self.negotiated_rate = rec.negotiated_rate
-
-                    res = self.order_id.compute_dat_settlement_daily_basis(nominal=rec.deposit_amount,
-                                                                  annual_rate=rec.negotiated_rate,
-                                                                  date_start=rec.start_date, date_end=rec.maturity_date,
-                                                                  interest_type=rec.interest_type,
-                                                                  tax_rate=deposit.tax_rate)
-                    duration_days = res.get('duration_days')
-                    daily_rate = res.get('daily_rate')
-                    interest_gross = res.get('interest_gross')
-                    interest_net = res.get('interest_net')
-                    cash_out = res.get('cash_out')
-
-                    # Champ BD
-                    self.total_interet_brut = interest_gross
-                    self.total_irvm = interest_gross - interest_net
-                    self.total_interest = interest_net
-                    self.total_amount = cash_out
-                    self.maturity_date = rec.maturity_date
-                    self.negotiated_rate = rec.negotiated_rate
-                    """
 
             if rec.order_id.operation_type == 'opcvm':
                 rec.total_amount_trade = rec.executed_quantity * rec.execution_price
