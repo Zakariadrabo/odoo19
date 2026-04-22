@@ -686,6 +686,7 @@ class EfundInvestmentOrder(models.Model):
                         rec.total_interest = result.get('accrued_interest')
                         rec.total_amount = rec.deposit_amount
                         rec.total_amount = rec.deposit_amount + rec.total_interest if rec.interest_type == 'postpaid' else rec.deposit_amount - rec.total_interest
+                        _logger.info(f"************* Total Interet Brut : {rec.total_interet_brut} Total Interet : {rec.total_interest} Total Interet Net : {rec.total_irvm} Total Amount : {rec.total_amount}")
 
             if rec.operation_type == 'opcvm':
                 rec.total_amount_trade = rec.units_estimated * rec.nav
