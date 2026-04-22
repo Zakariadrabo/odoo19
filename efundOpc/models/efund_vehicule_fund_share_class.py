@@ -90,7 +90,7 @@ class FundClass(models.Model):
     # === Actions ===
     def action_activate(self):
         """Active la classe de parts"""
-        self.write({'state': 'active'})
+        self.write({'state': 'validate'})
 
     def action_suspend(self):
         """Suspend la classe de parts"""
@@ -106,7 +106,7 @@ class FundClass(models.Model):
     def action_reopen(self):
         """Rouvre la classe de parts"""
         self.write({
-            'state': 'active',
+            'state': 'validate',
             'closure_date': False
         })
 

@@ -29,10 +29,9 @@ class FundSubscription(models.Model):
     nav = fields.Monetary(string="VL appliquée", compute="_compute_nav_value", store=True, readonly = False, )
     entry_load = fields.Float(related="share_class_id.entry_load", string="Taux frais de souscription (%)", store=True)
 
-    net_amount = fields.Monetary(string="Montant utilisé", compute="_compute_subscription", store=True)
-    amount_remaining = fields.Monetary(string="Montant restitué", compute="_compute_subscription", store=True)
-    subscription_fee_amount = fields.Monetary(string="Frais de souscription", compute="_compute_subscription",
-                                              store=True)
+    net_amount = fields.Monetary(string="Montant utilisé", compute="_compute_subscription", store=True, readonly=False)
+    amount_remaining = fields.Monetary(string="Montant restitué", compute="_compute_subscription", store=True, readonly=False)
+    subscription_fee_amount = fields.Monetary(string="Frais de souscription", compute="_compute_subscription", store=True, readonly=False)
     buy_choice = fields.Selection([('amount', 'Montant'), ('share', 'Part')], string="Choix d'achat", default='amount')
     is_subscription_fee = fields.Boolean(string="Appliquer Frais de souscription", default=True, store=True)
 
@@ -40,9 +39,9 @@ class FundSubscription(models.Model):
     # RELATIONS
     # -----------------------------------------------------------------
     part_account_id = fields.Many2one('efund.investor.part_account', string="Compte Titres",compute="_compute_accounts",
-        store=True,readonly=True, precompute=True, required=True)
+        store=True,readonly=False, precompute=True, )
     cash_account_id = fields.Many2one('efund.investor.cash_account',string="Compte Espèces", compute="_compute_accounts",
-        store=True, readonly=True, precompute=True, required=True)
+        store=True, readonly=False, precompute=True, )
 
     balance = fields.Float(string="Solde", related="cash_account_id.balance", readonly=True)
 
@@ -88,6 +87,13 @@ class FundSubscription(models.Model):
                     ('investor_id', '=', rec.investor_id.id),
                     ('vehicule_id', '=', rec.fund_id.vehicule_id.id)
                 ], limit=1)
+
+                # Afficher la dernière valeur liquidative du fond
+                nav = self.env['efund.service'].get_last_nav_value(rec.fund_id)
+                if nav:
+                    rec.nav = nav
+                else:
+                    raise ValidationError('Impossible de trouver la valeur liquidative du fond.')
 
 
     @api.depends('fund_id','shares')
@@ -414,7 +420,7 @@ class FundSubscription(models.Model):
             # 5- Retour du reliquat après souscription
             if rec.amount_remaining > 0:
                 # Enregistrement des frais de souscription
-                self.env['efund.investor.cash.move'].create({
+                self.env['efund.investor.cash_account.move'].create({
                     'cash_account_id': rec.cash_account_id.id,
                     'move_type': 'refund',
                     'amount': rec.amount_remaining,
@@ -433,15 +439,15 @@ class FundSubscription(models.Model):
             # Créer de l'évènement et comptabilisation
             serviceEngine = self.env['efund.service']
             payload = {
-            'gross': self.gross_amount,
-            'net': self.net_amount,
-            'capital_init': self.amount_capital,
-            'non_distribuable': self.amount_non_distribuable,
-            'res_anterieurs': self.amount_res_anterieurs,
-            'res_clos': self.amount_res_clos,
-            'res_en_cours': self.amount_income_current,
-            'entry_load': self.subscription_fee_amount,
-            'quantity': self.shares,
+            'gross': rec.gross_amount,
+            'net': rec.net_amount + rec.subscription_fee_amount,
+            'capital_init': rec.amount_capital,
+            'non_distribuable': rec.amount_non_distribuable,
+            'res_anterieurs': rec.amount_res_anterieurs,
+            'res_clos': rec.amount_res_clos,
+            'res_en_cours': rec.amount_income_current,
+            'entry_load': rec.subscription_fee_amount,
+            'quantity': rec.shares,
             }
             event = self.env['efund.accounting.event'].create(
                 serviceEngine.build_event_payload('SUB_VALIDATED', rec.vehicule_id.id, 'Souscription - ' + rec.name,

@@ -21,7 +21,7 @@ class EfundInvestorCashOperation(models.Model):
 
     # Le domaine dynamique limite les comptes à ceux de l'investisseur choisi
     cash_account_id = fields.Many2one('efund.investor.cash_account', string="Compte Espèces",
-                                      compute="_compute_accounts",store=True, readonly=True, precompute=True, required=True)
+                                      compute="_compute_accounts",store=True, readonly=True, precompute=True,)
     balance = fields.Float(string="Solde", related="cash_account_id.balance", readonly=True)
 
     currency_id = fields.Many2one(related='cash_account_id.vehicule_id.currency_id', string="Devise", store=True)

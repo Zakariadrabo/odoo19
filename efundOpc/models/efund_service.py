@@ -105,16 +105,6 @@ class EfundService(models.Model):
             'code_store': f'"{company_id}": "{new_code}"',
         })
 
-        # 4. Création du compte
-        # Utiliser with_company(company) est crucial pour que Odoo
-        # injecte le code dans la bonne clé du dictionnaire JSON 'code_store'
-        return AccountObj.create({
-            'name': f"Titres {self.name}",
-            'code': new_code,
-            'account_type': 'asset_fixed',
-            'code_store': f'"{company_id}": "{new_code}"',
-        })
-
     def get_tcn_interest(self, rate, start_date, amount, base):
 
         today = datetime.date.today()
@@ -152,7 +142,7 @@ class EfundService(models.Model):
 
         return last_nav.unit_nav if last_nav else 0.0
 
-    # Obtenir le dernier coupon
+
     def get_coupon_period(self, order_date, maturity_date, frequency=1):
         """
         Calcule les dates de coupon entourant la commande.
@@ -194,32 +184,7 @@ class EfundService(models.Model):
             'days_accrued': days_accrued,
             'days_in_period': days_in_period
         }
-        """
 
-        # On recule par saut de fréquence jusqu'à ce que next_coupon
-        # soit le premier coupon JUSTE APRÈS ou ÉGAL à la date de commande
-        while next_coupon > order_date:
-            potential_last = next_coupon - relativedelta(months=months_step)
-            if potential_last <= order_date:
-                # On a trouvé notre encadrement
-                last_coupon = potential_last
-                # next_coupon reste la valeur actuelle
-                break
-            next_coupon = potential_last
-
-        last_coupon = next_coupon - relativedelta(months=months_step)
-
-        # Calcul des deltas
-        days_accrued = (order_date - last_coupon).days
-        days_in_period = (next_coupon - last_coupon).days
-
-        return {
-            'last_coupon': last_coupon,
-            'next_coupon': next_coupon,
-            'days_accrued': days_accrued,
-            'days_in_period': days_in_period
-        }
-    """
 
     def create_first_nav(self, fund):
         """
@@ -250,6 +215,19 @@ class EfundService(models.Model):
                     'vl_res_clos': res.closed_fiscal_year_result,
                     'vl_res_en_cours': res.current_fiscal_year_result,
                     'valuation_date': res.valuation_date,
+                })
+            else:
+                share_class.create({
+                    'name': 'Classe par défaut',
+                    'vehicule_fund_id': fund.id,
+                    'current_nav': fund.origin_nav,
+                    'vl_capital_init': fund.origin_nav,
+                    'is_default': True,
+                    'vl_non_distribuable': res.non_distributable_sum,
+                    'vl_res_anterieurs': res.previous_fiscal_year_result,
+                    'vl_res_clos': res.closed_fiscal_year_result,
+                    'vl_res_en_cours': res.current_fiscal_year_result,
+                    'valuation_date': fund.start_date,
                 })
         return res
 
@@ -915,6 +893,106 @@ class EfundService(models.Model):
 
             return result
 
+
+    def get_interest_valuation_json(self, amount, rate, tax_rate, date_start, date_maturity, target_date, base_year, interest_type):
+        """
+        Calcule l'intérêt lissé et retourne le détail au format JSON.
+        :param amount: Montant nominal ou d'investissement
+        :param rate: Taux annuel (ex: 0.05 pour 5%)
+        :param date_start: Date de début (valeur)
+        :param date_maturity: Date d'échéance
+        :param target_date: Date de calcul (Date de VL)
+        :param interest_type: 'pre' pour précompté, 'post' pour postcompté
+        :return: JSON string avec le détail du calcul
+        """
+        if not (date_start and date_maturity and target_date):
+            raise ValidationError('Merci de vérifier les dates')
+
+        # 1. Calcul des durées
+        total_duration = (date_maturity - date_start).days
+        days_elapsed = (target_date - date_start).days
+        days_elapsed = max(0, min(days_elapsed, total_duration))
+
+        if total_duration <= 0:
+            raise ValidationError('Merci de vérifier les dates')
+
+        total_interest = 0.0
+        accrued_interest = 0.0
+        valuation_at_date = 0.0
+        base_year = int(base_year)
+        rate = rate / 100
+        day_rate = rate / base_year
+
+        # --- LOGIQUE POSTCOMPTÉ ---
+        # L'intérêt s'ajoute au montant initial
+        if interest_type == 'postpaid':
+            total_interest = amount * rate * (total_duration / base_year)
+            accrued_interest = (total_interest / total_duration) * days_elapsed
+            valuation_at_date = amount + accrued_interest
+        elif interest_type == 'prepaid':
+            total_interest = amount * rate * (total_duration / base_year)
+            interet = (total_interest / total_duration) * days_elapsed
+            accrued_interest = interet * ((1 + day_rate) ** -days_elapsed)
+            valuation_at_date = amount - accrued_interest
+
+        tax_en_decimal = tax_rate/100
+        interet_total = accrued_interest * (1 - tax_en_decimal)
+
+
+        # 3. Construction du résultat JSON
+        result = {
+            'method': 'Précompté' if interest_type == 'pre' else 'Postcompté',
+            'basis': 'ACT/360',
+            'durations': {
+                'total_days': total_duration,
+                'days_elapsed': days_elapsed,
+                'days_remaining': total_duration - days_elapsed
+            },
+            'financials': {
+                'nominal_amount': amount,
+                'annual_rate': rate,
+                'total_period_interest': round(total_interest, 2),
+                'accrued_interest_at_date': round(accrued_interest, 2),
+                'total_valuation': round(valuation_at_date, 2)
+            },
+            'progress_percentage': round((days_elapsed / total_duration) * 100, 2) if total_duration > 0 else 0
+        }
+
+        return {'interet_brut': accrued_interest, 'accrued_interest': interet_total, 'total_valuation': valuation_at_date}
+
+    def get_dat_precompte_interest(self, amount, rate, date_start, date_maturity, target_date):
+        """
+        Calcule l'intérêt lissé d'un DAT précompté.
+        :param amount: Montant nominal du DAT
+        :param rate: Taux annuel (ex: 0.05 pour 5%)
+        :param date_start: Date de mise en place
+        :param date_maturity: Date d'échéance
+        :param target_date: Date à laquelle on souhaite la valorisation (ex: date de VL)
+        :return: Montant des intérêts courus lissés
+        """
+        if not (date_start and date_maturity and target_date):
+            return 0.0
+
+        # 1. Calcul de la durée totale du DAT (en jours)
+        total_duration = (date_maturity - date_start).days
+        if total_duration <= 0:
+            return 0.0
+
+        # 2. Calcul des jours déjà courus à la date cible
+        # On sature entre 0 et la durée totale pour éviter les erreurs hors période
+        days_elapsed = (target_date - date_start).days
+        days_elapsed = max(0, min(days_elapsed, total_duration))
+
+        # 3. Calcul de l'intérêt total sur toute la période (Base 360)
+        # Formule : Nominal * Taux * (Jours / 360)
+        total_interest = amount * rate * (total_duration / 365.0)
+
+        # 4. Lissage linéaire (Amortissement)
+        # L'intérêt acquis est proportionnel au temps passé
+        accrued_interest = (total_interest / total_duration) * days_elapsed
+
+        return accrued_interest
+
     def generate_tcn_price(self, position, target_date):
         accrual = self.env['efund.service'].generate_tcn_price_new(position, target_date)
         #self.env['efund.service'].get_tcn_interest(position.rate, position.value_date,position.quantity * position.first_price, 360))
@@ -1010,72 +1088,3 @@ class EfundService(models.Model):
         """
         return accrued_interest
 
-    """ Revnir terminer la procédure
-    def get_valuation_price_at_date(self, position, valuation_date):
-        
-        Calcule le prix théorique ou récupère le prix de marché d'un instrument
-        à une date donnée selon sa nature.
-       
-
-        # 1. Cas des Titres de Créances / Bons / DAT (Valorisation par amortissement/intérêts)
-        # 1. Aller chercher le dernier prix VALIDÉ pour cet instrument
-        last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
-            ('instrument_id', '=', position.instrument_id.id),
-            ('vehicule_id', '=', position.vehicule_id.id),
-            ('is_validated', '=', True),
-            ('date', '=', valuation_date)
-        ], order='date desc', limit=1)
-
-        # 2. Repli (Fallback) : Cours global (ex: Action BRVM)
-        if not last_price_rec:
-            last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
-                ('instrument_id', '=', position.instrument_id.id),
-                ('vehicule_id', '=', False),
-                ('is_validated', '=', True),
-                ('date', '=', valuation_date)
-            ], order='date desc', limit=1)
-
-        if not last_price_rec:
-            if position.instrument_id.instrument_type == 'bond':
-                # On récupère les infos d'émission (Nominal, Date émission, Maturité)
-                # Selon votre modèle, ces infos sont dans le modèle spécifique lié
-                bond_data = self.env['efund.vehicule.instrument.core.bond'].search([
-                    ('instrument_id', '=', position.instrument_id.id)
-                ], limit=1)
-
-                if bond_data:
-                    # Si l'instrument utilise une valorisation linéaire (Lissage)
-                    # On utilise votre fonction 'compute_linear_actuariat_value_at_date'
-                    if bond_data.instrument_id.is_listed:
-                        if bond_data.instrument_id.valuation_method == 'listed':
-                            return self.compute_linear_actuariat_value_at_date(
-                                valuation_date=valuation_date,
-                                buyed_price=position.first_price,
-                                buyed_date=position.first_price_date,
-                                nominal_price=bond_data.face_value,
-                                maturity_date=bond_data.maturity_date
-                            )
-
-                        # Si c'est un calcul d'intérêts courus (DAT / TCN)
-                        elif instrument.valuation_method == 'accrued_interest':
-                            # Formule simplifiée : Nominal * Taux * (Jours courus / Base)
-                            days_accrued = (valuation_date - bond_data.issue_date).days
-                            # On assume une base 360 pour les TCN/DAT (à adapter selon vos conventions)
-                            interest = bond_data.face_value * (bond_data.coupon_rate / 100) * (days_accrued / 360.0)
-                            return bond_data.face_value + interest
-
-            # 2. Cas des Actions / OPCVM (Valorisation par le dernier cours de marché)
-            # On cherche le prix validé le plus proche (inférieur ou égal) à la date cible
-            market_price = self.env['efund.vehicule.instrument.core.price'].search([
-                ('instrument_id', '=', instrument.id),
-                ('date', '<=', valuation_date),
-                ('is_validated', '=', True)
-            ], order='date desc', limit=1)
-
-            if market_price:
-                return market_price.price
-
-            # 3. Fallback : Si aucun prix n'est trouvé, on retourne le coût moyen ou le prix d'émission
-            return instrument.last_validated_price or 0.0
-            
-        """

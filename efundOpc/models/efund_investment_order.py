@@ -558,6 +558,7 @@ class EfundInvestmentOrder(models.Model):
     @api.depends('order_date', 'limit_price', 'quantity', 'deposit_amount', 'negotiated_rate', 'interest_type',
                  'maturity_date', 'start_date', 'order_amount', 'nav', 'direction', 'units_estimated','nav','discount_amount','yield_rate','rate')
     def _compute_accrured_interest(self):
+        _logger.info("**********************************Computing accrued interest")
         for rec in self:
             serviceEngine = self.env['efund.service']
             #rec.rate = 0
@@ -671,25 +672,19 @@ class EfundInvestmentOrder(models.Model):
             if rec.operation_type == 'deposit':
                 deposit = self.env['efund.vehicule.instrument.core.dat'].search(
                     [('instrument_id', '=', rec.instrument_id.id)], limit=1)
+
                 if deposit:
                     if rec.deposit_amount and rec.negotiated_rate and rec.start_date and rec.maturity_date and rec.interest_type:
-                        res = self.compute_dat_settlement_daily_basis(nominal=rec.deposit_amount,
-                                                                      annual_rate=rec.negotiated_rate,
-                                                                      date_start=rec.start_date, date_end=rec.maturity_date,
-                                                                      interest_type=rec.interest_type,
-                                                                      tax_rate=deposit.tax_rate)
-                        duration_days = res.get('duration_days')
-                        daily_rate = res.get('daily_rate')
-                        interest_gross = res.get('interest_gross')
-                        interest_net = res.get('interest_net')
-                        cash_out = res.get('cash_out')
+
+                        result = self.env["efund.service"].get_interest_valuation_json(rec.deposit_amount, rec.negotiated_rate, deposit.tax_rate, rec.start_date, rec.maturity_date,
+                                    rec.order_date, deposit.interest_calculation_type, rec.interest_type)
 
                         # Champ BD
-                        rec.total_interet_brut = interest_gross
-                        rec.total_irvm = interest_gross - interest_net
-                        rec.total_interest = interest_net
-                        rec.total_amount = cash_out
-
+                        rec.total_interet_brut = result.get('interet_brut')
+                        rec.total_interest = result.get('accrued_interest')
+                        rec.total_irvm = rec.total_interet_brut - rec.total_interest
+                        rec.total_interest = result.get('accrued_interest')
+                        rec.total_amount = rec.deposit_amount + rec.total_interest
 
             if rec.operation_type == 'opcvm':
                 rec.total_amount_trade = rec.units_estimated * rec.nav

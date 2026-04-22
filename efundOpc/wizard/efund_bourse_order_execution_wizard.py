@@ -49,7 +49,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
     deposit_amount = fields.Monetary(string="Montant à placer", )
     negotiated_rate = fields.Float(string="Taux négocié (%)")
     negotiated_rate_net = fields.Float(string="Taux négocié net (%)", compute='_compute_negotiated_rate_net', store=True)
-    interest_type = fields.Selection([('postpaid', 'Postpayé'), ('prepaid', 'Prépayé')], default='postpaid', string="Type d'intérêt")
+    interest_type = fields.Selection([('postpaid', 'Postcompté'), ('prepaid', 'Précompté')], default='postpaid', string="Type d'intérêt")
     maturity_date = fields.Date(string="Échéance prévue")
     start_date = fields.Date(string="Date de début")
 
@@ -266,6 +266,30 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                 deposit = self.env['efund.vehicule.instrument.core.dat'].search(
                     [('instrument_id', '=', rec.order_id.instrument_id.id)], limit=1)
                 if deposit:
+                    result = self.env["efund.service"].get_interest_valuation_json(rec.deposit_amount,
+                                                                                   rec.negotiated_rate,
+                                                                                   deposit.tax_rate, rec.start_date,
+                                                                                   rec.maturity_date,
+                                                                                   rec.execution_date,
+                                                                                   deposit.interest_calculation_type,
+                                                                                   rec.interest_type)
+
+                    # Champ BD
+                    rec.total_interet_brut = result.get('interet_brut')
+                    rec.total_interest = result.get('accrued_interest')
+                    rec.total_irvm = rec.total_interet_brut - rec.total_interest
+                    rec.total_interest = result.get('accrued_interest')
+                    rec.total_amount = rec.deposit_amount + rec.total_interest
+
+                    """
+                    # Champ BD
+                    self.total_interet_brut = interest_gross
+                    self.total_irvm = interest_gross - interest_net
+                    self.total_interest = interest_net
+                    self.total_amount = cash_out
+                    self.maturity_date = rec.maturity_date
+                    self.negotiated_rate = rec.negotiated_rate
+
                     res = self.order_id.compute_dat_settlement_daily_basis(nominal=rec.deposit_amount,
                                                                   annual_rate=rec.negotiated_rate,
                                                                   date_start=rec.start_date, date_end=rec.maturity_date,
@@ -284,6 +308,7 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                     self.total_amount = cash_out
                     self.maturity_date = rec.maturity_date
                     self.negotiated_rate = rec.negotiated_rate
+                    """
 
             if rec.order_id.operation_type == 'opcvm':
                 rec.total_amount_trade = rec.executed_quantity * rec.execution_price

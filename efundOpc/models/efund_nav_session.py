@@ -19,7 +19,7 @@ class EfundNavSession(models.Model):
     net_asset_value = fields.Monetary(string="Actif Net", compute="_compute_nav", store=True,)
 
     nb_parts = fields.Float(string="Nombre de parts", digits=(16, 4))
-    unit_nav = fields.Float(string="VL Unitaire", digits=(16, 4), compute="_compute_nav", store=True)
+    unit_nav = fields.Float(string="VL Unitaire", digits=(16, 4), store=True)
 
     # Deflacation
     capital = fields.Float(string="Capital", digits=(18, 10))
@@ -53,7 +53,7 @@ class EfundNavSession(models.Model):
             rec.total_assets = assets
             rec.total_liabilities = liabilities
             rec.net_asset_value = assets - liabilities
-            rec.unit_nav = rec.net_asset_value / rec.nb_parts if rec.nb_parts else 0
+            #rec.unit_nav = rec.net_asset_value / rec.nb_parts if rec.nb_parts else 0
 
     def action_generate_lines(self):
         self.ensure_one()
@@ -119,7 +119,6 @@ class EfundNavSession(models.Model):
         # On utilise le service centralisé pour chaque instrument
         result = self.env['efund.service'].get_portfolio_asset_value(self.fund_id.vehicule_id, self.valuation_date,)
         if result:
-            _logger.info(f"************ result : {result}")
             for res in result:
                 lines_vals.append((0, 0, {
                     'name': f"Titre : {res.get('instrument').name if res.get('instrument') else 'Solde Dispobilité'}",

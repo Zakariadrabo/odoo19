@@ -2,7 +2,7 @@ import logging
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
-
+_logger = logging.getLogger(__name__)
 
 class FundInstrumentDAT(models.Model):
     _name = "efund.vehicule.instrument.core.dat"
@@ -68,26 +68,7 @@ class FundInstrumentDAT(models.Model):
         for rec in self:
             rec.rate_vat = rec.interest_rate * (1 - rec.tax_rate / 100)
 
-    @api.depends('start_date', 'end_date')
-    def _compute_duration(self):
-        for dat in self:
-            if dat.start_date and dat.end_date:
-                dat.duration_days = (dat.end_date - dat.start_date).days
 
-    """
-    def _compute_dat_interests(self):
-        
-        today = fields.Date.today()
-        for dat in self:
-            if dat.start_date and today > dat.start_date:
-                # On ne calcule des intérêts que jusqu'à l'échéance
-                calculation_date = min(today, dat.end_date)
-                days_elapsed = (calculation_date - dat.start_date).days
-                base = int(dat.interest_calculation_type)
-                dat.accrued_interest = (dat.amount_deposit * (dat.interest_rate / 100) * days_elapsed) / base
-            else:
-                dat.accrued_interest = 0.0
-    """
 
 
     def action_view_interest_details(self):
@@ -130,13 +111,25 @@ class FundInstrumentDAT(models.Model):
         for dat in self:
             dat.estimated_value = dat.amount_deposit + dat.accrued_interest
 
-    @api.depends('interest_calculation_type','start_date', 'end_date','amount_deposit','interest_rate')
+    @api.depends('interest_calculation_type','start_date', 'end_date','amount_deposit','interest_rate', 'interest_type')
     def _compute_dat_interests(self):
         """Calcul quotidien des intérêts courus pour la VL"""
+
         today = fields.Date.today()
+
+
         for dat in self:
             if dat.start_date and today > dat.start_date:
-                # On ne calcule des intérêts que jusqu'à l'échéance
+            # On ne calcule des intérêts que jusqu'à l'échéance
+                res = self.env["efund.service"].get_interest_valuation_json(dat.amount_deposit, dat.interest_rate, dat.tax_rate, dat.start_date, dat.end_date,
+                                                                            today, dat.interest_calculation_type, dat.interest_type)
+                dat.accrued_interest = res.get("accrued_interest")
+
+                _logger.info(f"******* intéret total {res.get("total_interest")}, intéret couru {res.get("accrued_interest")} Evaluation à date {res.get('valuation_at_date')}")
+
+
+            """
+
 
                 calculation_date = min(today, dat.end_date) if dat.end_date else today
                 days_elapsed = (calculation_date - dat.start_date).days
@@ -145,6 +138,7 @@ class FundInstrumentDAT(models.Model):
                 dat.last_calculation_date = today
             else:
                 dat.accrued_interest = 0.0
+            """
 
 
 
