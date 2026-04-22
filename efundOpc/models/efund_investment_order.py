@@ -678,15 +678,15 @@ class EfundInvestmentOrder(models.Model):
 
                         result = self.env["efund.service"].get_interest_valuation_json(rec.deposit_amount, rec.negotiated_rate, deposit.tax_rate, rec.start_date, rec.maturity_date,
                                     rec.order_date, deposit.interest_calculation_type, rec.interest_type)
+                        _logger.info(f"*********** result : {result}")
 
                         # Champ BD
                         rec.total_interet_brut = result.get('interet_brut')
-                        rec.total_interest = result.get('accrued_interest')
+                        rec.total_interest = result.get('interet_total_net')
                         rec.total_irvm = rec.total_interet_brut - rec.total_interest
-                        rec.total_interest = result.get('accrued_interest')
+                        #rec.total_interest = result.get('accrued_interest')
                         rec.total_amount = rec.deposit_amount
                         rec.total_amount = rec.deposit_amount + rec.total_interest if rec.interest_type == 'postpaid' else rec.deposit_amount - rec.total_interest
-                        _logger.info(f"************* Total Interet Brut : {rec.total_interet_brut} Total Interet : {rec.total_interest} Total Interet Net : {rec.total_irvm} Total Amount : {rec.total_amount}")
 
             if rec.operation_type == 'opcvm':
                 rec.total_amount_trade = rec.units_estimated * rec.nav

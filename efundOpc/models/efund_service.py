@@ -929,36 +929,18 @@ class EfundService(models.Model):
             total_interest = amount * rate * (total_duration / base_year)
             accrued_interest = (total_interest / total_duration) * days_elapsed
             valuation_at_date = amount + accrued_interest
+            _logger.info(f"************total_interest : {total_interest} accrued_interest : {accrued_interest} valuation_at_date : {valuation_at_date} ")
         elif interest_type == 'prepaid':
             total_interest = amount * rate * (total_duration / base_year)
-            interet = (total_interest / total_duration) * days_elapsed
-            accrued_interest = interet * ((1 + day_rate) ** -days_elapsed)
+            #interet = (total_interest / total_duration) * days_elapsed
+            total_interest = total_interest * ((1 + day_rate) ** -total_duration)
             valuation_at_date = amount - accrued_interest
 
         tax_en_decimal = tax_rate/100
-        interet_total = accrued_interest * (1 - tax_en_decimal)
+        interet_total_net = 0.0
+        interet_total_net = total_interest * (1 - tax_en_decimal)
 
-
-        # 3. Construction du résultat JSON
-        result = {
-            'method': 'Précompté' if interest_type == 'pre' else 'Postcompté',
-            'basis': 'ACT/360',
-            'durations': {
-                'total_days': total_duration,
-                'days_elapsed': days_elapsed,
-                'days_remaining': total_duration - days_elapsed
-            },
-            'financials': {
-                'nominal_amount': amount,
-                'annual_rate': rate,
-                'total_period_interest': round(total_interest, 2),
-                'accrued_interest_at_date': round(accrued_interest, 2),
-                'total_valuation': round(valuation_at_date, 2)
-            },
-            'progress_percentage': round((days_elapsed / total_duration) * 100, 2) if total_duration > 0 else 0
-        }
-
-        return {'interet_brut': accrued_interest, 'accrued_interest': interet_total, 'total_valuation': valuation_at_date}
+        return {'interet_brut': total_interest, 'interet_total_net': interet_total_net, 'accrued_interest': accrued_interest, 'total_valuation': valuation_at_date}
 
     def get_dat_precompte_interest(self, amount, rate, date_start, date_maturity, target_date):
         """
