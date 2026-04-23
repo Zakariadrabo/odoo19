@@ -4,7 +4,7 @@ from datetime import date
 from odoo.exceptions import ValidationError
 import base64
 import io
-from openpyxl import Workbook
+
 
 class FundReportRegulatory(models.Model):
     _name = 'efund.fund.report.regulatory'

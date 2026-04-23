@@ -883,13 +883,14 @@ class EfundService(models.Model):
                 f"La date de calcul {target_date} est postérieure à la date de maturité du DAT{position.maturity_date}")
 
         if position and position.value_date and position.rate:
-            days = (target_date - position.value_date).days
-            if days < 0: days = 0
+            interest_value = self.generate_dat_price_new(position, target_date)
 
-            computed_factor = (position.rate / 100.0 * days / 365)
-            interest_value = computed_factor * position.last_price if position.last_price else position.first_price
-            result = self.update_or_create_price(position.instrument, position.vehicule, target_date,
-                                                 position.first_price, interest_value, 'internal')
+            #days = (target_date - position.value_date).days
+            #if days < 0: days = 0
+            #computed_factor = (position.rate / 100.0 * days / 365)
+            #interest_value = computed_factor * position.last_price if position.last_price else position.first_price
+            result = self.update_or_create_price(position.instrument_id, position.vehicule_id, target_date,
+                                                 position.face_value, interest_value, 'internal')
 
             return result
 
@@ -1068,6 +1069,36 @@ class EfundService(models.Model):
             'internal'
         )
         """
+        return accrued_interest
+
+    def generate_dat_price_new(self, position, target_date):
+        """
+        Valorisation TCN par lissage de l'intérêt précompté (Amortissement linéaire)
+        """
+        instrument = position.instrument_id
+
+        date_achat = position.value_date
+        date_echeance = position.maturity_date
+
+
+        if not date_echeance or not date_achat:
+            return False
+
+        # 3. Calcul de la période
+        total_days = (date_echeance - date_achat).days
+        days_elapsed = (target_date - date_achat).days
+
+        # Sécurité : si on est avant la date d'achat ou après l'échéance
+        days_elapsed = max(0, min(days_elapsed, total_days))
+
+        if total_days > 0:
+
+            # 5. Lissage (Amortissement linéaire)
+            accrued_interest = (position.bond_dat_interest / total_days) * days_elapsed
+        else:
+            accrued_interest = 0
+
+
         return accrued_interest
 
 

@@ -249,7 +249,7 @@ class FundPosition(models.Model):
                 f"********Market value for {rec.id}: {rec.last_price_date} - {rec.last_price} - {rec.accrued_interest}")
             if rec.instrument_id.instrument_type == 'dat':
                 # Pour le DAT : Valeur = Capital (quantity) + Intérêts cumulés
-                market_value = rec.last_price + (rec.accrued_interest or 0.0)
+                market_value = rec.face_value + (rec.accrued_interest or 0.0)
 
             # Sécurité : si market_value n'est pas encore calculé, on fait un calcul simple
             if rec.instrument_id.instrument_type != 'dat':
@@ -419,8 +419,10 @@ class FundPosition(models.Model):
 
     # ========== MÉTHODES D'ACTION ==========
     def action_update_position(self):
+        for rec in self:
+            today = fields.Date.today()
+            self.env["efund.service"].generate_dat_price(rec, today)
 
-        raise ValidationError(f"Désolé, mon implémentation est en cours")
 
 
     def action_close_position(self):
