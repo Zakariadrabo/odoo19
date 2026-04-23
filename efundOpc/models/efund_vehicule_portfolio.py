@@ -61,6 +61,7 @@ class FundPosition(models.Model):
     value_date = fields.Date(string="Date de valeur", store=True, index=True)
     rate = fields.Float(string="Taux", store=True, index=True)
     face_value = fields.Monetary(string="Valeur nominale")
+    bond_dat_interest = fields.Monetary(string="Intérêts Courus", store=True,help="Coupons courus non échus à la date de valorisation")
     is_amortized = fields.Boolean(string="Amortissement")
     amortization_line_ids = fields.One2many('efund.portfolio.amortization.line', 'portfolio_id',
                                             string="Tableau d'Amortissement Spécifique")
@@ -321,15 +322,20 @@ class FundPosition(models.Model):
             bond = self.env['efund.vehicule.instrument.core.bond'].search([('instrument_id', '=', trade.instrument_id.id)])
             if bond:
                 self.face_value = bond.face_value
+
         if trade.instrument_id.instrument_type == 'tcn':
             tcn = self.env['efund.vehicule.instrument.core.treasury'].search([('instrument_id', '=', trade.instrument_id.id)])
             if tcn:
                 self.face_value = tcn.face_value
+                self.bond_dat_interest = bond.total_interest
 
         if trade.order_id.operation_type == 'deposit':
             self.last_price = trade.total_amount
             self.maturity_date = trade.maturity_date
             self.rate = trade.negotiated_rate_net
+            self.quantity = 1
+            self.avg_cost = trade.total_amount
+            self.bond_dat_interest = bond.total_interest
 
         if trade.move_type == 'in':
             cost_old = Q_old * PRU_old

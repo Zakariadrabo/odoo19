@@ -87,7 +87,7 @@ class EfundInvestmentTransaction(models.Model):
 
             elif rec.instrument_id.instrument_type == 'dat':
 
-                payload = {'instrument_id': self.instrument_id.id, 'gross': self.total_amount,'net': rec.total_amount_trade , 'interest': rec.total_interest,}
+                payload = {'instrument_id': self.instrument_id.id, 'gross': rec.total_amount_trade,'net': self.total_amount , 'interest': rec.total_interest,}
                 event = self.env['efund.accounting.event'].create(serviceEngine.build_event_payload('DAT_EXECUTED_IN', rec.vehicule_id.id, rec.name, rec.date_transaction, payload))
 
             elif rec.instrument_id.instrument_type == 'opcvm':

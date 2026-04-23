@@ -250,8 +250,7 @@ class EfundInvestmentOrder(models.Model):
                 order.total_amount_trade = order.nav * order.units_estimated
                 order.total_amount = order.nav * order.units_estimated
             elif order.operation_type == 'deposit':
-                # Le montant du placement est le total
-                pass
+                order.total_amount_trade = order.deposit_amount
 
     # --- LOGIQUE DE VALIDATION (ACTION VALIDATE) ---
     def action_validate(self):
@@ -678,14 +677,12 @@ class EfundInvestmentOrder(models.Model):
 
                         result = self.env["efund.service"].get_interest_valuation_json(rec.deposit_amount, rec.negotiated_rate, deposit.tax_rate, rec.start_date, rec.maturity_date,
                                     rec.order_date, deposit.interest_calculation_type, rec.interest_type)
-                        _logger.info(f"*********** result : {result}")
 
                         # Champ BD
                         rec.total_interet_brut = result.get('interet_brut')
                         rec.total_interest = result.get('interet_total_net')
                         rec.total_irvm = rec.total_interet_brut - rec.total_interest
-                        #rec.total_interest = result.get('accrued_interest')
-                        rec.total_amount = rec.deposit_amount
+                        rec.total_amount_trade = rec.deposit_amount
                         rec.total_amount = rec.deposit_amount + rec.total_interest if rec.interest_type == 'postpaid' else rec.deposit_amount - rec.total_interest
 
             if rec.operation_type == 'opcvm':

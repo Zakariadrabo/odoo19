@@ -94,20 +94,27 @@ class FundInstrumentPrice(models.Model):
         """ Calcule le cours du DAT : Valeur nominale + intérêts linéarisés """
         # On récupère les détails du DAT (taux, date début)
 
+        dat = self.env['efund.vehicule.instrument.core.dat'].search([('instrument_id', '=', position.instrument_id.id), ],
+                                                                      limit=1)
+
         if target_date < position.value_date:
             raise ValidationError(f"La date de calcul {target_date} est antérieure à la date de début du DAT{position.value_date}")
         if target_date > position.maturity_date:
             raise ValidationError(f"La date de calcul {target_date} est postérieure à la date de maturité du DAT{position.maturity_date}")
 
-        if position and position.value_date and position.rate:
-            days = (target_date - position.value_date).days
-            if days < 0: days = 0
+        if dat.interest_type =='prepaid':
+            interest_value = 0 #self.env["efund.service"].get_dat_precompte_interest(position.bond_dat_interest, position.rate, target_date, position.maturity_date, target_date)
 
-            # Calcul du facteur de prix (Base 1)
-            # Formule UMOA classique : 1 + (Taux * Jours / 360)
-            computed_factor = (position.rate / 100.0 * days / 365)
-            #price_value = computed_factor * position.last_price
-            interest_value = computed_factor * position.last_price
+        else:
+            if position and position.value_date and position.rate:
+                days = (target_date - position.value_date).days
+                if days < 0: days = 0
+
+                # Calcul du facteur de prix (Base 1)
+                # Formule UMOA classique : 1 + (Taux * Jours / 360)
+                computed_factor = (position.rate / 100.0 * days / 365)
+                #price_value = computed_factor * position.last_price
+                interest_value = computed_factor * position.last_price
 
             self._update_or_create_price(position.instrument_id,position.vehicule_id, target_date, position.last_price, interest_value,'internal')
 

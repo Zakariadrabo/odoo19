@@ -274,15 +274,11 @@ class EfundBourseOrderExecutionWizard(models.TransientModel):
                                                                                    deposit.interest_calculation_type,
                                                                                    rec.interest_type)
 
-                    # Champ BD
                     rec.total_interet_brut = result.get('interet_brut')
-                    rec.total_interest = result.get('accrued_interest')
+                    rec.total_interest = result.get('interet_total_net')
                     rec.total_irvm = rec.total_interet_brut - rec.total_interest
-                    rec.total_interest = result.get('accrued_interest')
                     rec.total_amount_trade = rec.deposit_amount
                     rec.total_amount = rec.deposit_amount + rec.total_interest if rec.interest_type == 'postpaid' else rec.deposit_amount - rec.total_interest
-
-
 
             if rec.order_id.operation_type == 'opcvm':
                 rec.total_amount_trade = rec.executed_quantity * rec.execution_price

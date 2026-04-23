@@ -46,13 +46,13 @@
                     </group>
 
                     <notebook>
-                        <page string="Trigger Details">
+                        <page string="Détail du déclencheur">
                             <field name="trigger" nolabel="1"/>
                         </page>
-                        <page string="Matched Transactions">
+                        <page string="les transactions flagées">
                             <field name="matched_transactions" widget="many2many_tags"/>
                         </page>
-                        <page string="Resolution">
+                        <page string="Résolutions">
                             <field name="resolution_notes" nolabel="1"/>
                             <field name="document_ids" widget="many2many_binary" filename="name"/>
                         </page>
