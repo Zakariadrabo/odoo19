@@ -747,15 +747,11 @@ class EfundService(models.Model):
                         ('date', '=', date_target),
                     ], order='date desc', limit=1)
 
-                _logger.info(f"*********** le type instrument: {pos.instrument_id.instrument_type}, la valeur prix {last_price_rec} ")
 
                 if not last_price_rec:
                     if pos.instrument_id.instrument_type == 'bond':
-                        _logger.info(
-                            f" les conditions date achat: {pos.first_price_date} date de recherche: {date_target} date maturité : {pos.maturity_date} ")
                         if pos.first_price_date <= date_target and date_target <= pos.maturity_date:
                             last_price_rec = self.generate_bond_price(pos, date_target)
-                            _logger.info(f" j'ai trouvé le prix : {last_price_rec.price} ")
                         else:
                             raise ValidationError(f"Une erreur est survenue lors de la recherche du prix du bond : {pos.instrument_id.name}")
                     elif pos.instrument_id.instrument_type == 'tcn':
@@ -977,10 +973,9 @@ class EfundService(models.Model):
         return accrued_interest
 
     def generate_tcn_price(self, position, target_date):
-        accrual = self.env['efund.service'].generate_tcn_price_new(position, target_date)
-        #self.env['efund.service'].get_tcn_interest(position.rate, position.value_date,position.quantity * position.first_price, 360))
+        accrual = self.env['efund.service'].generate_tcn_price_new(position.bond_dat_interest, position.value_date, position.maturity_date, target_date)
         result = self.update_or_create_price(position.instrument_id, position.vehicule_id, target_date,
-                                             position.first_price, accrual, 'internal')
+                                             position.face_value, accrual, 'internal')
         return result
 
     def generate_bond_price(self, position, target_date):
@@ -1024,19 +1019,14 @@ class EfundService(models.Model):
         ])
         return pos.avg_cost if pos else 0
 
-    def generate_tcn_price_new(self, position, target_date):
+    def generate_tcn_price_new(self, amount, start_date, end_date, target_date):
         """
-        Valorisation TCN par lissage de l'intérêt précompté (Amortissement linéaire)
+        Valorisation TCN ou dat par lissage de l'intérêt précompté (Amortissement linéaire)
         """
-        instrument = position.instrument_id
-        # On suppose que first_price est le prix d'acquisition unitaire
-        purchase_value_total = position.quantity * position.first_price
 
-        # 2. Récupération des dates clés depuis l'instrument
-        # Assurez-vous que ces champs existent sur votre modèle d'instrument
-        date_achat = position.value_date
-        date_echeance = position.maturity_date
-        valeur_nominale_totale = position.quantity * position.face_value
+        date_achat = start_date
+        date_echeance = end_date
+
 
         if not date_echeance or not date_achat:
             return False
@@ -1049,11 +1039,8 @@ class EfundService(models.Model):
         days_elapsed = max(0, min(days_elapsed, total_days))
 
         if total_days > 0:
-            # 4. Calcul de l'intérêt total (Le gain précompté)
-            total_discount = valeur_nominale_totale - purchase_value_total
 
-            # 5. Lissage (Amortissement linéaire)
-            accrued_interest = (total_discount / total_days) * days_elapsed
+            accrued_interest = (amount / total_days) * days_elapsed
         else:
             accrued_interest = 0
 

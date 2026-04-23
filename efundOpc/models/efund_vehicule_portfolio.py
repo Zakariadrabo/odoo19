@@ -30,7 +30,6 @@ class FundPosition(models.Model):
     first_price = fields.Float(string="Premier cours", digits=(16, 4), store=True, )
     first_price_date = fields.Date(string="Date premier cours", default=fields.Date.today, store=True, )
 
-
     # ========== CALCULS DE PERFORMANCE ==========
     unrealized_pl = fields.Monetary(string="Différence d'estimation", currency_field='currency_id',
                                     compute='_compute_market_value', store=True, )
@@ -46,7 +45,7 @@ class FundPosition(models.Model):
                              string="Statut", default='active', required=True)
     notes = fields.Text(string="Notes")
     display_name = fields.Char(string="Nom", compute='_compute_display_name', store=True)
-    #adjustment_ids = fields.One2many('efund.position.adjustment', 'position_id', string="Ajustements")
+    # adjustment_ids = fields.One2many('efund.position.adjustment', 'position_id', string="Ajustements")
     cashflow_ids = fields.One2many('efund.vehicule.cashflow', 'position_id', string="Flux de trésorerie prévus")
 
     # --- Nouveaux champs de valorisation détaillée ---
@@ -61,11 +60,11 @@ class FundPosition(models.Model):
     value_date = fields.Date(string="Date de valeur", store=True, index=True)
     rate = fields.Float(string="Taux", store=True, index=True)
     face_value = fields.Monetary(string="Valeur nominale")
-    bond_dat_interest = fields.Monetary(string="Intérêts Courus", store=True,help="Coupons courus non échus à la date de valorisation")
+    bond_dat_interest = fields.Monetary(string="Intérêts Courus", store=True,
+                                        help="Coupons courus non échus à la date de valorisation")
     is_amortized = fields.Boolean(string="Amortissement")
     amortization_line_ids = fields.One2many('efund.portfolio.amortization.line', 'portfolio_id',
                                             string="Tableau d'Amortissement Spécifique")
-
 
     def action_generate_specific_amortization(self):
         for rec in self:
@@ -81,19 +80,20 @@ class FundPosition(models.Model):
             )
             """
 
-            vals = self.env['efund.service'].generate_amortization_schedule_from_maturity(rec.quantity * bond.face_value,bond.coupon_rate,
-                bond.coupon_frequency,bond.maturity_date,rec.value_date,365,'in_fine')
+            vals = self.env['efund.service'].generate_amortization_schedule_from_maturity(
+                rec.quantity * bond.face_value, bond.coupon_rate,
+                bond.coupon_frequency, bond.maturity_date, rec.value_date, 365, 'in_fine')
 
             # On crée les lignes liées à CETTE position
             for line in vals:
                 amort_lines = {
-                    'portfolio_id' : rec.id,
-                    'date' : line['date_fin'],
-                    'capital_debut' : line['capital_initial'],
-                    'principal' : line['amortissement'],
-                    'interet' : line['interet'],
-                    'annuite' : line['annuite'],
-                    'capital_fin' : line['capital_restant']
+                    'portfolio_id': rec.id,
+                    'date': line['date_fin'],
+                    'capital_debut': line['capital_initial'],
+                    'principal': line['amortissement'],
+                    'interet': line['interet'],
+                    'annuite': line['annuite'],
+                    'capital_fin': line['capital_restant']
                 }
 
                 self.env['efund.portfolio.amortization.line'].create(amort_lines)
@@ -250,15 +250,19 @@ class FundPosition(models.Model):
             if rec.instrument_id.instrument_type == 'dat':
                 # Pour le DAT : Valeur = Capital (quantity) + Intérêts cumulés
                 market_value = rec.face_value + (rec.accrued_interest or 0.0)
+                rec.clean_value = rec.face_value
+            if rec.instrument_id.instrument_type == 'tcn':
+                market_value = rec.face_value * rec.quantity
+                rec.clean_value = rec.face_value * rec.quantity
 
             # Sécurité : si market_value n'est pas encore calculé, on fait un calcul simple
-            if rec.instrument_id.instrument_type != 'dat':
+            if rec.instrument_id.instrument_type not in ('dat','tcn'):
                 market_value = rec.quantity * rec.last_price + rec.accrued_interest
                 rec.market_value = market_value
 
             # 2. Calcul du coût de revient total
             cost_basis = rec.quantity * (
-                        rec.avg_cost or 0.0) if rec.instrument_id.instrument_type != 'dat' else rec.last_price
+                    rec.avg_cost or 0.0) if rec.instrument_id.instrument_type != 'dat' else rec.last_price
 
             # 3. Calcul de la plus-value latente (Unrealized P&L)
             if cost_basis > 0:
@@ -319,12 +323,14 @@ class FundPosition(models.Model):
         self.rate = trade.negotiated_rate_net
 
         if trade.instrument_id.instrument_type == 'bond':
-            bond = self.env['efund.vehicule.instrument.core.bond'].search([('instrument_id', '=', trade.instrument_id.id)])
+            bond = self.env['efund.vehicule.instrument.core.bond'].search(
+                [('instrument_id', '=', trade.instrument_id.id)])
             if bond:
                 self.face_value = bond.face_value
 
         if trade.instrument_id.instrument_type == 'tcn':
-            tcn = self.env['efund.vehicule.instrument.core.treasury'].search([('instrument_id', '=', trade.instrument_id.id)])
+            tcn = self.env['efund.vehicule.instrument.core.treasury'].search(
+                [('instrument_id', '=', trade.instrument_id.id)])
             if tcn:
                 self.face_value = tcn.face_value
                 self.bond_dat_interest = trade.total_interest
@@ -420,10 +426,67 @@ class FundPosition(models.Model):
     # ========== MÉTHODES D'ACTION ==========
     def action_update_position(self):
         for rec in self:
-            today = fields.Date.today()
-            self.env["efund.service"].generate_dat_price(rec, today)
+            last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+                ('instrument_id', '=', rec.instrument_id.id),
+                ('vehicule_id', '=', rec.vehicule_id.id),
+                ('is_validated', '=', True),
+                ('date', '=', fields.Date.today())
+            ], order='date desc', limit=1)
 
+            # 2. Repli (Fallback) : Cours global (ex: Action BRVM)
+            if not last_price_rec:
+                last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+                    ('instrument_id', '=', rec.instrument_id.id),
+                    ('vehicule_id', '=', False),
+                    ('is_validated', '=', True),
+                    ('date', '=', fields.Date.today())
+                ], order='date desc', limit=1)
 
+            if last_price_rec:
+                instr_type = rec.instrument_id.instrument_type
+                # Calcul du Coût (Cost Basis)
+                cost_basis = rec.quantity * (rec.avg_cost or 0.0)
+                if instr_type == 'dat':
+                    # Pour un DAT, le coût est généralement le nominal (quantity)
+                    cost_basis = rec.last_price
+                    market_value = rec.last_price + last_price_rec.interest
+                else:
+                    market_value = (rec.quantity * last_price_rec.price) + last_price_rec.interest
+
+                # Calcul de la Plus-value latente (P/L)
+                unrealized_pl = market_value - cost_basis
+                pl_percent = (unrealized_pl / cost_basis) if cost_basis != 0 else 0.0
+
+                # 2. Mise à jour de la position
+                rec.write({
+                    'last_price': last_price_rec.price,
+                    'last_price_date': last_price_rec.date,
+                    'accrued_interest': last_price_rec.interest,
+                    'market_value': market_value,
+                    'unrealized_pl': unrealized_pl,
+                    'unrealized_pl_percent': pl_percent,
+                })
+            else:
+                date_target = fields.Date.today()
+                if rec.instrument_id.instrument_type == 'bond':
+                    if rec.first_price_date <= date_target and date_target <= rec.maturity_date:
+                        self.env["efund.service"].generate_bond_price(rec, date_target)
+                    else:
+                        raise ValidationError(
+                            f"Une erreur est survenue lors de la recherche du prix du bond : {rec.instrument_id.name}")
+                elif rec.instrument_id.instrument_type == 'tcn':
+                    self.env["efund.service"].generate_tcn_price(rec, date_target)
+                elif rec.instrument_id.instrument_type == 'dat':
+                    self.env["efund.service"].generate_dat_price(rec, date_target)
+                elif rec.instrument_id.instrument_type == 'opcvm':
+                    if rec.first_price_date < date_target and rec.quantity > 0:
+                        self.env["efund.service"].generate_opcvm_price(rec, date_target)
+                    else:
+                        last_price_rec.price = 0
+                elif rec.instrument_id.instrument_type == 'equity':
+                    raise UserError(_("Merci de saisir le cours à date"))
+                else:
+                    raise UserError(_("Le type d'instrument n'est pas pris en charge"))
 
     def action_close_position(self):
         """Clôturer une position"""
