@@ -327,15 +327,16 @@ class FundPosition(models.Model):
             tcn = self.env['efund.vehicule.instrument.core.treasury'].search([('instrument_id', '=', trade.instrument_id.id)])
             if tcn:
                 self.face_value = tcn.face_value
-                self.bond_dat_interest = bond.total_interest
+                self.bond_dat_interest = trade.total_interest
 
         if trade.order_id.operation_type == 'deposit':
+            self.face_value = trade.total_amount_trade
             self.last_price = trade.total_amount
             self.maturity_date = trade.maturity_date
             self.rate = trade.negotiated_rate_net
             self.quantity = 1
             self.avg_cost = trade.total_amount
-            self.bond_dat_interest = bond.total_interest
+            self.bond_dat_interest = trade.total_interest
 
         if trade.move_type == 'in':
             cost_old = Q_old * PRU_old
