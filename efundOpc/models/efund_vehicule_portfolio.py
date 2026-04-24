@@ -109,42 +109,50 @@ class FundPosition(models.Model):
                 rec.days_to_maturity = 0
 
     def action_refresh_valuation(self):
-        for record in self:
+        for pos in self:
+            # 0 - Eliminer les instruments non actives
+            if pos.state != 'active':
+                continue
+
             # 1. Aller chercher le dernier prix VALIDÉ pour cet instrument
-            _logger.info(f"*********** instrument_id : {record.instrument_id.name}")
+            today = fields.Date.today()
+            self.env["efund.service"].compute_and_update_price(pos,today)
+
+            # 2- récupérer le cours dans la tablea cours
             last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
-                ('instrument_id', '=', record.instrument_id.id),
-                ('vehicule_id', '=', record.vehicule_id.id),
+                ('instrument_id', '=', pos.instrument_id.id),
+                ('vehicule_id', '=', pos.vehicule_id.id),
                 ('is_validated', '=', True),
-                ('date', '=', fields.Date.today())
+                ('date', '=',today )
             ], order='date desc', limit=1)
 
             # 2. Repli (Fallback) : Cours global (ex: Action BRVM)
             if not last_price_rec:
                 last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
-                    ('instrument_id', '=', record.instrument_id.id),
+                    ('instrument_id', '=', pos.instrument_id.id),
                     ('vehicule_id', '=', False),
                     ('is_validated', '=', True),
-                    ('date', '=', fields.Date.today())
+                    ('date', '=', today)
                 ], order='date desc', limit=1)
 
+            # 3- Mise à jour du portefeuille
             if last_price_rec:
-                instr_type = record.instrument_id.instrument_type
+                instr_type = pos.instrument_id.instrument_type
                 # Calcul du Coût (Cost Basis)
-                cost_basis = record.quantity * (record.avg_cost or 0.0)
+                cost_basis = pos.quantity * (pos.avg_cost or 0.0)
                 if instr_type == 'dat':
                     # Pour un DAT, le coût est généralement le nominal (quantity)
-                    cost_basis = record.last_price
-                    market_value = record.last_price + last_price_rec.interest
+                    cost_basis = pos.face_value
+                    market_value = pos.face_value + last_price_rec.interest
                 else:
-                    market_value = (record.quantity * last_price_rec.price) + last_price_rec.interest
+                    market_value = (pos.quantity * last_price_rec.price) + last_price_rec.interest
 
                 # Calcul de la Plus-value latente (P/L)
                 unrealized_pl = market_value - cost_basis
                 pl_percent = (unrealized_pl / cost_basis) if cost_basis != 0 else 0.0
 
                 # 2. Mise à jour de la position
-                record.write({
+                pos.write({
                     'last_price': last_price_rec.price,
                     'last_price_date': last_price_rec.date,
                     'accrued_interest': last_price_rec.interest,
@@ -152,32 +160,7 @@ class FundPosition(models.Model):
                     'unrealized_pl': unrealized_pl,
                     'unrealized_pl_percent': pl_percent,
                 })
-            else:
-                # Correction : l'appel du cron doit se faire sur l'instrument
-                # car last_price_rec est vide ici
-                # record.instrument_id.cron_generate_daily_prices()
-                _logger.info(f"*********** je vais le chercher")
-                last_price_rec.cron_generate_daily_prices()
 
-                """
-                
-                
-                # 2. Mettre à jour la position avec le prix officiel
-                cost_basis = record.quantity * (record.avg_cost or 0.0) if last_price_rec.instrument_id.instrument_type != 'dat' else last_price_rec.price
-                market_value = last_price_rec.price + last_price_rec.interest if last_price_rec.instrument_id.instrument_type == 'dat' else record.quantity * last_price_rec.price + last_price_rec.interest,
-                unrealized_pl = market_value - cost_basis
-                record.write({
-                    'last_price': last_price_rec.price,
-                    'last_price_date': last_price_rec.date,
-                    'accrued_interest': last_price_rec.interest,
-                    'market_value': last_price_rec.price + last_price_rec.interest if record.instrument_id.instrument_type == 'dat' else record.quantity * last_price_rec.price + last_price_rec.interest
-                    'unrealized_pl' : unrealized_pl,
-                    'unrealized_pl_percent': unrealized_pl / cost_basis if cost_basis != 0 else 0.0,
-                })
-            else:
-                last_price_rec.cron_generate_daily_prices()
-                
-                """
 
     @api.depends('quantity', 'last_price', 'instrument_id', 'last_price_date')
     def _compute_valuation_details(self):
@@ -259,6 +242,7 @@ class FundPosition(models.Model):
             if rec.instrument_id.instrument_type not in ('dat','tcn'):
                 market_value = rec.quantity * rec.last_price + rec.accrued_interest
                 rec.market_value = market_value
+                rec.clean_value = rec.quantity * rec.last_price
 
             # 2. Calcul du coût de revient total
             cost_basis = rec.quantity * (
@@ -425,40 +409,50 @@ class FundPosition(models.Model):
 
     # ========== MÉTHODES D'ACTION ==========
     def action_update_position(self):
-        for rec in self:
+        for pos in self:
+            # 0 - Eliminer les instruments non actives
+            if pos.state != 'active':
+                continue
+
+            # 1. Aller chercher le dernier prix VALIDÉ pour cet instrument
+            today = fields.Date.today()
+            self.env["efund.service"].compute_and_update_price(pos, today)
+
+            # 2- récupérer le cours dans la tablea cours
             last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
-                ('instrument_id', '=', rec.instrument_id.id),
-                ('vehicule_id', '=', rec.vehicule_id.id),
+                ('instrument_id', '=', pos.instrument_id.id),
+                ('vehicule_id', '=', pos.vehicule_id.id),
                 ('is_validated', '=', True),
-                ('date', '=', fields.Date.today())
+                ('date', '=', today)
             ], order='date desc', limit=1)
 
             # 2. Repli (Fallback) : Cours global (ex: Action BRVM)
             if not last_price_rec:
                 last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
-                    ('instrument_id', '=', rec.instrument_id.id),
+                    ('instrument_id', '=', pos.instrument_id.id),
                     ('vehicule_id', '=', False),
                     ('is_validated', '=', True),
-                    ('date', '=', fields.Date.today())
+                    ('date', '=', today)
                 ], order='date desc', limit=1)
 
+            # 3- Mise à jour du portefeuille
             if last_price_rec:
-                instr_type = rec.instrument_id.instrument_type
+                instr_type = pos.instrument_id.instrument_type
                 # Calcul du Coût (Cost Basis)
-                cost_basis = rec.quantity * (rec.avg_cost or 0.0)
+                cost_basis = pos.quantity * (pos.avg_cost or 0.0)
                 if instr_type == 'dat':
                     # Pour un DAT, le coût est généralement le nominal (quantity)
-                    cost_basis = rec.last_price
-                    market_value = rec.last_price + last_price_rec.interest
+                    cost_basis = pos.face_value
+                    market_value = pos.face_value + last_price_rec.interest
                 else:
-                    market_value = (rec.quantity * last_price_rec.price) + last_price_rec.interest
+                    market_value = (pos.quantity * last_price_rec.price) + last_price_rec.interest
 
                 # Calcul de la Plus-value latente (P/L)
                 unrealized_pl = market_value - cost_basis
                 pl_percent = (unrealized_pl / cost_basis) if cost_basis != 0 else 0.0
 
                 # 2. Mise à jour de la position
-                rec.write({
+                pos.write({
                     'last_price': last_price_rec.price,
                     'last_price_date': last_price_rec.date,
                     'accrued_interest': last_price_rec.interest,
@@ -466,27 +460,6 @@ class FundPosition(models.Model):
                     'unrealized_pl': unrealized_pl,
                     'unrealized_pl_percent': pl_percent,
                 })
-            else:
-                date_target = fields.Date.today()
-                if rec.instrument_id.instrument_type == 'bond':
-                    if rec.first_price_date <= date_target and date_target <= rec.maturity_date:
-                        self.env["efund.service"].generate_bond_price(rec, date_target)
-                    else:
-                        raise ValidationError(
-                            f"Une erreur est survenue lors de la recherche du prix du bond : {rec.instrument_id.name}")
-                elif rec.instrument_id.instrument_type == 'tcn':
-                    self.env["efund.service"].generate_tcn_price(rec, date_target)
-                elif rec.instrument_id.instrument_type == 'dat':
-                    self.env["efund.service"].generate_dat_price(rec, date_target)
-                elif rec.instrument_id.instrument_type == 'opcvm':
-                    if rec.first_price_date < date_target and rec.quantity > 0:
-                        self.env["efund.service"].generate_opcvm_price(rec, date_target)
-                    else:
-                        last_price_rec.price = 0
-                elif rec.instrument_id.instrument_type == 'equity':
-                    raise UserError(_("Merci de saisir le cours à date"))
-                else:
-                    raise UserError(_("Le type d'instrument n'est pas pris en charge"))
 
     def action_close_position(self):
         """Clôturer une position"""

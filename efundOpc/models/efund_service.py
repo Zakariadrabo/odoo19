@@ -653,7 +653,7 @@ class EfundService(models.Model):
                     elif pos.instrument_id.instrument_type == 'tcn':
                         last_price_rec = self.generate_tcn_price(pos, date_target)
                     elif pos.instrument_id.instrument_type == 'dat':
-                        last_price_rec = self.generate_dat_price(pos, date_target)
+                        last_price_rec = self.generate_dat_tcn_price(pos, date_target)
                     elif pos.instrument_id.instrument_type == 'opcvm':
                         if pos.first_price_date < date_target and pos.quantity > 0:
                             last_price_rec = self.generate_opcvm_price(pos, date_target)
@@ -757,7 +757,7 @@ class EfundService(models.Model):
                     elif pos.instrument_id.instrument_type == 'tcn':
                         last_price_rec = self.generate_tcn_price(pos, date_target)
                     elif pos.instrument_id.instrument_type == 'dat':
-                        last_price_rec = self.generate_dat_price(pos, date_target)
+                        last_price_rec = self.generate_dat_tcn_price(pos, date_target)
                     elif pos.instrument_id.instrument_type == 'opcvm':
                         if pos.first_price_date < date_target and pos.quantity > 0:
                             last_price_rec = self.generate_opcvm_price(pos, date_target)
@@ -859,7 +859,6 @@ class EfundService(models.Model):
             'is_validated': True,
             'price_type': 'close'
         }
-        _logger.info(f"************update_or_create_price : {vals}")
 
         if price_rec:
             price_rec.write(vals)
@@ -867,10 +866,7 @@ class EfundService(models.Model):
             price_rec = self.env['efund.vehicule.instrument.core.price'].create(vals)
         return price_rec
 
-    def generate_dat_price(self, position, target_date):
-        """ Calcule le cours du DAT : Valeur nominale + intérêts linéarisés """
-        # On récupère les détails du DAT (taux, date début)
-
+    def generate_dat_tcn_price(self, position, target_date):
         if target_date < position.value_date:
             raise ValidationError(
                 f"La date de calcul {target_date} est antérieure à la date de début du DAT{position.value_date}")
@@ -878,18 +874,47 @@ class EfundService(models.Model):
             raise ValidationError(
                 f"La date de calcul {target_date} est postérieure à la date de maturité du DAT{position.maturity_date}")
 
-        if position and position.value_date and position.rate:
-            interest_value = self.generate_dat_price_new(position, target_date)
 
-            #days = (target_date - position.value_date).days
-            #if days < 0: days = 0
-            #computed_factor = (position.rate / 100.0 * days / 365)
-            #interest_value = computed_factor * position.last_price if position.last_price else position.first_price
-            result = self.update_or_create_price(position.instrument_id, position.vehicule_id, target_date,
+        interest_value = self.generate_lenear_amount_value(position.bond_dat_interest, position.value_date, position.maturity_date, target_date)
+        result = self.update_or_create_price(position.instrument_id, position.vehicule_id, target_date,
                                                  position.face_value, interest_value, 'internal')
+        return result
 
-            return result
 
+
+    def generate_bond_price(self, position, target_date):
+        bond = self.env['efund.vehicule.instrument.core.bond'].search([
+            ('instrument_id', '=', position.instrument_id.id)
+        ], limit=1)
+        if bond.instrument_id.is_listed:
+            _logger.info(f"***************** le titre est coté")
+            if bond.instrument_id.valuation_method == 'listed':
+               _logger.info(f"***************** le titre est lissé")
+               last_price = self.compute_linear_actuariat_value_at_date(target_date, position.first_price,position.first_price_date, bond.face_value, bond.maturity_date)
+            else:
+                raise ValidationError(f"Merci de saisir manuellement le cours")
+
+            # l'instrument n'est pas coté alors on reprend le prix d'achat
+        else:
+            # On cherche le dernier prix validé
+            last_price_obj = self.env["efund.vehicule.instrument.core.price"].search([
+                ('instrument_id', '=', position.instrument_id.id),
+                ('vehicule_id', '=', position.vehicule_id.id),
+                ('is_validated', '=', True),
+                ('date', '<', target_date)
+            ], order='date desc', limit=1)
+            if last_price_obj:
+                last_price = last_price_obj.price
+            else:
+                last_price = position.face_value if position.face_value else bond.face_value
+
+        res = self.compute_accrued_interest_precise(bond.face_value, bond.rate_net, target_date, bond.maturity_date, bond.coupon_frequency, tax_rate=0.0, add_day=0)
+        interest = res.get('interest_net') * position.quantity
+        result = self.update_or_create_price(position.instrument_id, position.vehicule_id, target_date, last_price, interest, 'internal')
+        return result
+
+    def generate_opcvm_price (self, position, target_date):
+        raise ValidationError(f"Merci de saisir manuellement le cours")
 
     def get_interest_valuation_json(self, amount, rate, tax_rate, date_start, date_maturity, target_date, base_year, interest_type):
         """
@@ -939,79 +964,6 @@ class EfundService(models.Model):
 
         return {'interet_brut': total_interest, 'interet_total_net': interet_total_net, 'accrued_interest': accrued_interest, 'total_valuation': valuation_at_date}
 
-    def get_dat_precompte_interest(self, amount, rate, date_start, date_maturity, target_date):
-        """
-        Calcule l'intérêt lissé d'un DAT précompté.
-        :param amount: Montant nominal du DAT
-        :param rate: Taux annuel (ex: 0.05 pour 5%)
-        :param date_start: Date de mise en place
-        :param date_maturity: Date d'échéance
-        :param target_date: Date à laquelle on souhaite la valorisation (ex: date de VL)
-        :return: Montant des intérêts courus lissés
-        """
-        if not (date_start and date_maturity and target_date):
-            return 0.0
-
-        # 1. Calcul de la durée totale du DAT (en jours)
-        total_duration = (date_maturity - date_start).days
-        if total_duration <= 0:
-            return 0.0
-
-        # 2. Calcul des jours déjà courus à la date cible
-        # On sature entre 0 et la durée totale pour éviter les erreurs hors période
-        days_elapsed = (target_date - date_start).days
-        days_elapsed = max(0, min(days_elapsed, total_duration))
-
-        # 3. Calcul de l'intérêt total sur toute la période (Base 360)
-        # Formule : Nominal * Taux * (Jours / 360)
-        total_interest = amount * rate * (total_duration / 365.0)
-
-        # 4. Lissage linéaire (Amortissement)
-        # L'intérêt acquis est proportionnel au temps passé
-        accrued_interest = (total_interest / total_duration) * days_elapsed
-
-        return accrued_interest
-
-    def generate_tcn_price(self, position, target_date):
-        accrual = self.env['efund.service'].generate_tcn_price_new(position.bond_dat_interest, position.value_date, position.maturity_date, target_date)
-        result = self.update_or_create_price(position.instrument_id, position.vehicule_id, target_date,
-                                             position.face_value, accrual, 'internal')
-        return result
-
-    def generate_bond_price(self, position, target_date):
-        bond = self.env['efund.vehicule.instrument.core.bond'].search([
-            ('instrument_id', '=', position.instrument_id.id)
-        ], limit=1)
-        if bond.instrument_id.is_listed:
-            _logger.info(f"***************** le titre est coté")
-            if bond.instrument_id.valuation_method == 'listed':
-               _logger.info(f"***************** le titre est lissé")
-               last_price = self.compute_linear_actuariat_value_at_date(target_date, position.first_price,position.first_price_date, bond.face_value, bond.maturity_date)
-            else:
-                raise ValidationError(f"Merci de saisir manuellement le cours")
-
-            # l'instrument n'est pas coté alors on reprend le prix d'achat
-        else:
-            # On cherche le dernier prix validé
-            last_price_obj = self.env["efund.vehicule.instrument.core.price"].search([
-                ('instrument_id', '=', position.instrument_id.id),
-                ('vehicule_id', '=', position.vehicule_id.id),
-                ('is_validated', '=', True),
-                ('date', '<', target_date)
-            ], order='date desc', limit=1)
-            if last_price_obj:
-                last_price = last_price_obj.price
-            else:
-                last_price = position.face_value if position.face_value else bond.face_value
-
-        res = self.compute_accrued_interest_precise(bond.face_value, bond.rate_net, target_date, bond.maturity_date, bond.coupon_frequency, tax_rate=0.0, add_day=0)
-        interest = res.get('interest_net') * position.quantity
-        result = self.update_or_create_price(position.instrument_id, position.vehicule_id, target_date, last_price, interest, 'internal')
-        return result
-
-    def generate_opcvm_price (self, position, target_date):
-        raise ValidationError(f"Merci de saisir manuellement le cours")
-
     def get_instrument_avg_price(self, intrument, vehicule):
         pos = self.env['efund.vehicule.portfolio'].search([
             ('instrument_id', '=', intrument.id),
@@ -1019,7 +971,7 @@ class EfundService(models.Model):
         ])
         return pos.avg_cost if pos else 0
 
-    def generate_tcn_price_new(self, amount, start_date, end_date, target_date):
+    def generate_lenear_amount_value(self, amount, start_date, end_date, target_date):
         """
         Valorisation TCN ou dat par lissage de l'intérêt précompté (Amortissement linéaire)
         """
@@ -1058,35 +1010,44 @@ class EfundService(models.Model):
         """
         return accrued_interest
 
-    def generate_dat_price_new(self, position, target_date):
-        """
-        Valorisation TCN par lissage de l'intérêt précompté (Amortissement linéaire)
-        """
-        instrument = position.instrument_id
+    def compute_and_update_price(self,pos, date_target):
+        # On récupère le cours à la date cible (ou le plus proche avant)
+        last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+            ('instrument_id', '=', pos.instrument_id.id),
+            ('vehicule_id', '=', pos.vehicule_id.id),
+            ('is_validated', '=', True),
+            ('date', '=', date_target)
+        ], order='date desc', limit=1)
 
-        date_achat = position.value_date
-        date_echeance = position.maturity_date
+        # 2. Repli (Fallback) : Cours global (ex: Action BRVM)
+        if not last_price_rec:
+            last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+                ('instrument_id', '=', pos.instrument_id.id),
+                ('vehicule_id', '=', False),
+                ('is_validated', '=', True),
+                ('date', '=', date_target),
+            ], order='date desc', limit=1)
+
+        if not last_price_rec:
+            if pos.instrument_id.instrument_type == 'bond':
+                if pos.first_price_date <= date_target and date_target <= pos.maturity_date:
+                    last_price_rec = self.generate_bond_price(pos, date_target)
+                else:
+                    raise ValidationError(
+                        f"Une erreur est survenue lors de la recherche du prix du bond : {pos.instrument_id.name}")
+            elif pos.instrument_id.instrument_type in ('tcn','dat'):
+                self.generate_dat_tcn_price(pos, date_target)
+            elif pos.instrument_id.instrument_type == 'opcvm':
+                if pos.first_price_date < date_target and pos.quantity > 0:
+                    self.generate_opcvm_price(pos, date_target)
+                else:
+                    last_price_rec.price = 0
+            elif pos.instrument_id.instrument_type == 'equity':
+                raise UserError(_("Merci de saisir le cours à date"))
+            else:
+                raise UserError(_("Le type d'instrument n'est pas pris en charge"))
 
 
-        if not date_echeance or not date_achat:
-            return False
-
-        # 3. Calcul de la période
-        total_days = (date_echeance - date_achat).days
-        days_elapsed = (target_date - date_achat).days
-
-        # Sécurité : si on est avant la date d'achat ou après l'échéance
-        days_elapsed = max(0, min(days_elapsed, total_days))
-
-        if total_days > 0:
-
-            # 5. Lissage (Amortissement linéaire)
-            accrued_interest = (position.bond_dat_interest / total_days) * days_elapsed
-        else:
-            accrued_interest = 0
-
-
-        return accrued_interest
 
 
 

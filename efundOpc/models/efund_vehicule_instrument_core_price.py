@@ -71,7 +71,7 @@ class FundInstrumentPrice(models.Model):
         for pos in position:
             # --- CAS 1 : LES DAT (Calcul par intérêts courus) ---
             if pos.instrument_id.instrument_type == 'dat':
-                self.env["efund.service"].generate_dat_price(pos, today)
+                self.env["efund.service"].generate_dat_tcn_price(pos, today)
                 #self._generate_dat_price(pos, today)
 
             elif pos.instrument_id.instrument_type == 'tcn':
