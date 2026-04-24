@@ -2,6 +2,7 @@ import calendar
 import datetime
 import logging
 from math import ceil
+from xmlrpc.client import FastParser
 
 from dateutil.relativedelta import relativedelta
 
@@ -1047,6 +1048,53 @@ class EfundService(models.Model):
             else:
                 raise UserError(_("Le type d'instrument n'est pas pris en charge"))
 
+    def get_account_balance(self, account_id,company_id, target_date):
+        """
+        Calcule le solde (Débit - Crédit) d'un compte à une date donnée.
+        """
+        # On définit le domaine : le compte, la date et l'état 'posted' (publié)
+        domain = [
+            ('account_id', '=', account_id.id),
+            ('date', '<=', target_date),
+            ('move_id.state', '=', 'posted'),
+            ('company_id', '=', company_id.id)  # Important en multi-sociétés
+        ]
+
+        # On récupère les sommes débit et crédit
+        res = self.env['account.move.line'].read_group(
+            domain,
+            ['debit', 'credit'],
+            ['account_id']
+        )
+
+        if res:
+            balance = res[0]['debit'] - res[0]['credit']
+            return balance
+        return 0.0
+
+    def close_day(self, vehicule, target_date):
+        """
+        Ferme la journée pour le calcul de la VL.
+        """
+        # récupérer les informations nécessaires pour le calcul de la VL
+        account_id =  False
+        company = vehicule.company_id
+        last_account = self.env['account.account'].sudo().with_company(company).search([
+            ('code', '=like', '217100')
+        ], order='code desc', limit=1)
+        if last_account:
+            account_id = last_account.id
+
+        # 1 - Calcul des interêt couru des obligations, bon et dat
+        # Annulation des intérêts courus du dernier VL
+        interest_balance  = self.get_account_balance(account_id, company.id, target_date)
+
+        # Obtenir le solde du compte des bilans des intérêts couru compte: 217100
+        # Obligation
+        bond_interest = 0.0
+
+        #DAT et BOND
+        tcn_dat_interest = 0.0
 
 
 
