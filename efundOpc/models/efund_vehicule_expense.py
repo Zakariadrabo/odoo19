@@ -12,11 +12,11 @@ class FundExpense(models.Model):
     currency_id = fields.Many2one(related="vehicule_id.currency_id", string='Devise')
 
     name = fields.Char(required=True, string='Nom de la charge')
-    expense_type = fields.Selection([('bank', 'Frais bancaires'),('regulator', 'Redevance du régulateur'),
-        ('auditor', 'Commissaire aux comptes'),('custodian', 'Dépositaire'), ('management', 'Frais de gestion'),('other', 'Autres charges'),
+    expense_type = fields.Selection([('regulator', 'Redevance du régulateur'),
+        ('auditor', 'Commissaire aux comptes'),('custodian', 'Droit de garde'),('regul_mgt_fee','Commission sous actif'), ('management', 'Frais de gestion'),('other', 'Autres charges'),
     ], required=True, string='Type de charge')
     partner_id = fields.Many2one('efund.debit.partner', string="Bénéficiaire")
-    frequency = fields.Selection([('daily', 'Quotidienne'),('monthly', 'Mensuelle'),('quarterly', 'Trimestrielle'),
+    frequency = fields.Selection([('daily', 'Quotidienne'),('weekly','Hebdomadaire'),('monthly', 'Mensuelle'),('quarterly', 'Trimestrielle'),
         ('annual', 'Annuelle'),('one_off', 'Ponctuelle'),], required=True, string='Fréquence de paiement')
     calculation_method = fields.Selection([('fixed', 'Montant fixe'),('percentage_assets', '% des actifs'),
     ], required=True, string='Méthode de calcul')

@@ -9,7 +9,7 @@ from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
-
+"""
 def compute_linear_actuariat_value_at_date(valuation_date, buyed_price, buyed_date, nominal_price, maturity_date):
     if not valuation_date or not buyed_price or not nominal_price or not maturity_date:
         raise UserError(_("Veuillez renseigner tous les champs obligatoires."))
@@ -37,7 +37,7 @@ def compute_linear_actuariat_value_at_date(valuation_date, buyed_price, buyed_da
         #actuarial_value = buyed_price * ((1 + yield_rate) ** (days_elapsed / base))
 
         return linear_value #{'linear_value': linear_value,'actuarial_value': actuarial_value }
-
+"""
 
 class FundInstrumentPrice(models.Model):
     _name = "efund.vehicule.instrument.core.price"
@@ -141,7 +141,7 @@ class FundInstrumentPrice(models.Model):
                     position = self.env['efund.vehicule.portfolio'].search([ ('instrument_id', '=', bond.instrument_id.id),])
                     if position:
                         for pos in position:
-                           last_price = compute_linear_actuariat_value_at_date(target_date, pos.first_price, pos.first_price_date, bond.face_value,bond.maturity_date)
+                           last_price = self.env["efund.service"].compute_linear_actuariat_value_at_date(target_date, pos.first_price, pos.first_price_date, bond.face_value,bond.maturity_date)
 
                 # Si le cours n'est pas listé alors il est fourni par le marché
 

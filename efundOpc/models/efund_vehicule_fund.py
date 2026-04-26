@@ -1,5 +1,9 @@
 import csv
+import io
 import logging
+from datetime import timedelta
+
+import xlsxwriter
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
@@ -21,6 +25,10 @@ class Fund(models.Model):
     cutoff_time = fields.Float(string="Heure de cut-off",digits=(4, 2), default=16.0, help="Heure limite de réception des ordres (format décimal).\nExemples : 14.0 = 14h00, 14.5 = 14h30, 16.75 = 16h45.")
     allow_fractional_parts = fields.Boolean(string="Autoriser parts fractionnées ?", default=False,  help="Si décoché, les souscriptions sont arrondies à l'entier inférieur.")
     origin_nav = fields.Char(string="VL initiale", required=True)
+    expense_policy = fields.Selection([
+        ('all_in', 'toutes charges (Supporté par le Gestionnaire)'),
+        ('real_costs', 'Frais Réels (Supporté par le Fonds)')
+    ], string="Politique de charges", default='all_in')
 
     ##################################################
     ## RELATIONS

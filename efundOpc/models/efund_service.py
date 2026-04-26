@@ -1096,6 +1096,108 @@ class EfundService(models.Model):
         #DAT et BOND
         tcn_dat_interest = 0.0
 
+    def get_last_nav_date (self, fund_id, target_date):
+        last_session = self.env['efund.nav.session'].search([
+            ('fund_id', '=', fund_id.id),
+            ('valuation_date', '<=', target_date),
+            ('state', '=', 'validated')
+        ], order='valuation_date desc', limit=1)
+        return last_session.valuation_date if last_session else False
+
+    def compute_fixed_charges(self, amount, fund_id, target_date):
+        year = target_date.year
+        get_days_in_year = 366 if calendar.isleap(year) else 365
+
+        last_nav_compute_day = self.get_last_nav_date(fund_id, target_date)
+        if last_nav_compute_day:
+            nb_day_between_nav = (last_nav_compute_day - target_date)
+            return amount * nb_day_between_nav / get_days_in_year
+        else:
+            return 0.0
+
+
+    def get_valuation_by_type(self, vehicule_id, target_date):
+        """
+        Regroupe la valorisation des instruments d'un véhicule par type.
+        """
+        # 1. Récupérer les positions actives du portefeuille pour ce véhicule
+        positions = self.env['efund.vehicule.portfolio'].search([
+            ('vehicule_id', '=', vehicule_id.id),
+            ('quantity', '>', 0)
+        ])
+
+        # Initialisation du dictionnaire de regroupement
+        # Types : bond, dat, tcn, equity, opcvm
+        valuation_report = {}
+        total_valuation_bond_interest = 0.0
+        total_valuation_bond_value = 0.0
+        total_valuation_dat_interest_postpaid = 0.0
+        total_valuation_dat_interest_prepaid = 0.0
+        total_valuation_tcn_interest = 0.0
+        total_valuation_equity_value = 0.0
+        total_valuation_opcvm_value = 0.0
+        total_base_commission_sous_gestion = 0.0
+        total_base_commission_droit_garde = 0.0
+
+        for pos in positions:
+            instrument = pos.instrument_id
+            i_type = instrument.instrument_type or 'unknown'
+
+            # 2. Chercher le prix correspondant à la date cible pour ce véhicule
+            # On cherche le prix validé le plus proche (inférieur ou égal à target_date)
+            price_rec = self.env['efund.vehicule_instrument_core_price'].search([
+                ('instrument_id', '=', instrument.id),
+                ('vehicule_id', '=', vehicule_id.id),
+                ('date', '=', target_date),
+                ('is_validated', '=', True)
+            ], limit=1)
+
+            # Si pas de prix à la date exacte, on peut optionnellement chercher le dernier connu
+            if not price_rec:
+                raise ValidationError(f"Merci de mettre à jour le cours de l'instrument {instrument.name} pour la date {target_date}")
+
+            if instrument.instrument_type == 'bond':
+                total_valuation_bond_interest += price_rec.interest if price_rec else 0.0
+                total_valuation_bond_value += pos.quantity * (price_rec.price - pos.avg_cost) if price_rec else 0.0
+                # Valorisation du portefeuille des obligations pour le calcul de la commission sous gestion
+                total_base_commission_sous_gestion += pos.quantity * price_rec.price + total_valuation_bond_interest
+                total_base_commission_droit_garde += pos.quantity * price_rec.price
+            elif instrument.instrument_type == 'dat':
+                dat =  self.env['efund.vehicule.instrument.core.dat'].search([('instrument_id', '=', instrument.instrument_id.id)  ], limit=1)
+                if dat:
+                    if dat.interest_type =='prepaid':
+                        total_valuation_dat_interest_prepaid += price_rec.interest if price_rec else 0.0
+                    else:
+                        total_valuation_dat_interest_postpaid += price_rec.interest if price_rec else 0.0
+            elif instrument.instrument_type == 'tcn':
+                total_valuation_tcn_interest += price_rec.interest if price_rec else 0.0
+                # Valorisation des bons
+                total_base_commission_sous_gestion += pos.quantity * price_rec.price + total_valuation_tcn_interest
+                total_base_commission_droit_garde += pos.quantity * price_rec.avg_cost
+            elif instrument.instrument_type == 'opcvm':
+                total_valuation_opcvm_value += pos.quantity * (price_rec.price - pos.avg_cost) if price_rec else 0.0
+                total_base_commission_droit_garde += pos.quantity * price_rec.price
+            elif instrument.instrument_type == 'equity':
+                total_valuation_equity_value += pos.quantity * (price_rec.price - pos.avg_cost) if price_rec else 0.0
+
+                #Valorisation du portefeuille des actions
+                total_base_commission_sous_gestion += pos.quantity * price_rec.price
+                total_base_commission_droit_garde += pos.quantity * price_rec.price
+
+        return {
+            'total_valuation_bond_interest': total_valuation_bond_interest,
+            'total_valuation_bond_value': total_valuation_bond_value,
+            'total_valuation_dat_interest_prepaid': total_valuation_dat_interest_prepaid,
+            'total_valuation_dat_interest_postpaid': total_valuation_dat_interest_postpaid,
+            'total_valuation_tcn_interest': total_valuation_tcn_interest,
+            'total_valuation_opcvm_value': total_valuation_opcvm_value,
+            'total_valuation_equity_value': total_valuation_equity_value,
+            'total_base_commission_sous_gestion': total_base_commission_sous_gestion,
+            'total_base_commission_droit_garde': total_base_commission_droit_garde,
+        }
+
+
+
 
 
 
