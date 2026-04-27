@@ -9,3 +9,9 @@ class EfundFiscalYear(models.Model):
     date_end = fields.Date(string="Date de fin", required=True)
     company_id = fields.Many2one('res.company', string="Société de gestion")
     state = fields.Selection([('draft', 'Ouvert'), ('closed', 'Clôturé')], default='draft')
+
+    def action_close(self):
+        self.state = 'closed'
+
+    def action_reopen(self):
+        self.state = 'draft'

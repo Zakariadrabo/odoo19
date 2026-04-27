@@ -124,24 +124,9 @@ class Fund(models.Model):
     def action_revalue_positions(self):
         for record in self:
             position_ids = record.position_ids
-            for pos in position_ids:
-                # 1. Aller chercher le dernier prix VALIDÉ pour cet instrument
-                last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
-                    ('instrument_id', '=', pos.instrument_id.id),
-                    ('is_validated', '=', True),
-                    ('date', '<=', fields.Date.today())
-                ], order='date desc', limit=1)
 
-                if last_price_rec:
-                    # 2. Mettre à jour la position avec le prix officiel
-                    pos.write({
-                        'last_price': last_price_rec.price,
-                        'last_price_date': last_price_rec.date
-                    })
-                    # Le _compute_valuation_details fera le reste (Clean/Dirty/Accrued)
-                else:
-                    last_price_rec.cron_generate_daily_prices()
-                    # self.action_refresh_valuation()
+            for pos in position_ids:
+                self.env['efund.service'].compute_and_update_portfolio(pos, fields.Date.today())
 
     def generate_excel(self):
         # Créer le fichier Excel en mémoire

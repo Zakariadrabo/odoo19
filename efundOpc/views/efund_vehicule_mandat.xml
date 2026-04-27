@@ -218,13 +218,6 @@
                         </page>
 
                         <page string="Coupon">
-                            <!-- <button name="generate_coupon_schedule"
-                                    type="object"
-                                    class="btn-primary"
-                                    icon="fa-calculator"
-                                    string="Générer le calendrier des coupons"/>
-                                    -->
-
                             <field name="coupon_ids" readonly="state =='draft'">
                                 <list decoration-info="state == 'active'" decoration-warning="state == 'draft'">
                                     <field name="coupon_number"/>

@@ -19,6 +19,7 @@ class EfundFeeType(models.Model):
     investor_cash_move_id = fields.Many2one('efund.investor.cash_account.move', string="Cash Investisseur", readonly=True)
     fund_cash_move_id = fields.Many2one('efund.vehicule.cash.move', string="Cash Fonds", readonly=True)
     investor_id = fields.Many2one('efund.investor')
+    label = fields.Char(string="Libellé")
 
     # Récociliation Opération
     subscription_id = fields.Many2one('efund.investor.subscription', string="Ordre de Souscription")

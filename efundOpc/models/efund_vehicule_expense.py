@@ -28,14 +28,11 @@ class FundExpense(models.Model):
     state = fields.Selection([('draft', 'Draft'),('validated', 'Validé'),('archived', 'Archivé'),], default='draft',)
 
     def action_validate(self):
-        pass
+        for rec in self:
+            rec.write({'state': 'validated'})
     def action_archive(self):
         pass
     def action_reactivate(self):
         pass
     def action_duplicate(self):
-        pass
-    def action_show_rate_details(self):
-        pass
-    def action_show_amount_details(self):
         pass

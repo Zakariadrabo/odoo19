@@ -6,9 +6,9 @@ class EfundFundTypeAllocation(models.Model):
     _description = 'Allocation des types de fonds'
 
     fund_type_id = fields.Many2one('efund.fund.type', required=True, readonly=True)
-    asset_class_id = fields.Many2one('efund.asset.class', required=True)
-    min_pct = fields.Float(string="Minimum Allocation (%)", required=True)
-    max_pct = fields.Float(string="Maximum Allocation (%)",required=True)
+    asset_class_id = fields.Many2one('efund.asset.class', )
+    min_pct = fields.Float(string="Minimum Allocation (%)", )
+    max_pct = fields.Float(string="Maximum Allocation (%)",)
 
     @api.constrains('min_pct', 'max_pct')
     def _check_min_max(self):

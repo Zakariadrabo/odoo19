@@ -67,6 +67,8 @@ class EfundInvestorCashOperation(models.Model):
                 'cash_account_id': rec.cash_account_id.id,
                 'move_type': 'deposit',
                 'amount': rec.amount,
+                'date': rec.date_operation,
+                'value_date': rec.date_operation,
             })
             rec.message_post(
                 body=_("Crédit du compte cash investisseur au montant de %s.") % (rec.amount),

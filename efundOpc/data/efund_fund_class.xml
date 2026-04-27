@@ -1,0 +1,76 @@
+<odoo>
+    <data>
+        <!-- Données sur les Classes d'actif -->
+        <record id="asset_001" model="efund.asset.class">
+            <field name="name">Obligation</field>
+            <field name="code">OBL</field>
+            <field name="description">Les obligations</field>
+            <field name="sequence">10</field>
+            <field name="regulatory_category">bond</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="asset_002" model="efund.asset.class">
+            <field name="name">Action</field>
+            <field name="code">ACT</field>
+            <field name="description">Les actions</field>
+            <field name="sequence">20</field>
+            <field name="regulatory_category">equity</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="asset_003" model="efund.asset.class">
+            <field name="name">OPCVM</field>
+            <field name="code">opcvm</field>
+            <field name="description">Les OPCVM</field>
+            <field name="sequence">30</field>
+            <field name="regulatory_category">opcvm</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="asset_004" model="efund.asset.class">
+            <field name="name">Liquidités</field>
+            <field name="code">LIQ</field>
+            <field name="description">Les liquidités</field>
+            <field name="sequence">40</field>
+            <field name="regulatory_category">cash</field>
+            <field name="state">validated</field>
+        </record>
+
+        <!-- Type de fond -->
+        <record id="class_001" model="efund.fund.type">
+            <field name="name">Obligation</field>
+            <field name="code">OBL</field>
+            <field name="description">Type Obligation</field>
+            <field name="state">validated</field>
+            <!--
+            <field name="allocation_rule_ids" eval="[
+                (0, 0, {
+                    'min_pct': 10,
+                    'max_pct': 10,
+                }),
+                (0, 0, {
+                    'min_pct': 20,
+                    'max_pct': 10,
+                }),
+            ]"/>
+            -->
+        </record>
+        <record id="class_002" model="efund.fund.type">
+            <field name="name">Actions</field>
+            <field name="code">ACT</field>
+            <field name="description">Type Action</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="class_003" model="efund.fund.type">
+            <field name="name">OPCVM</field>
+            <field name="code">OPC</field>
+            <field name="description">type opcvm</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="class_004" model="efund.fund.type">
+            <field name="name">Liquidités</field>
+            <field name="code">LIQ</field>
+            <field name="description">Type Liquidités</field>
+            <field name="state">validated</field>
+        </record>
+
+    </data>
+</odoo>

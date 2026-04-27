@@ -66,6 +66,10 @@
                     <sheet>
                         <!-- Informations principales en 2 colonnes -->
                         <group>
+                            <field name="preuve_transaction_pdf" filename="nom_preuve_transaction_pdf" readonly="state == 'settled'" required="state == 'confirmed'"/>
+                            <field name="nom_preuve_transaction_pdf" invisible="1"/>
+                        </group>
+                        <group>
                             <group string="Transaction">
                                 <!-- Ordre parent -->
                                 <field name="order_id" options="{'no_create': True}"

@@ -95,6 +95,7 @@
         'views/efund_codification_account_number.xml',
         'views/efund_market_fee_config_views.xml',
         'views/efund_public_holiday_view.xml',
+        'views/efund_fiscal_year_views.xml',
         'data/sequence.xml',
         'data/efund_event_type.xml',
         #'data/efund_account_schema.xml',
@@ -102,6 +103,7 @@
         'wizard/efund_vehicule_mandat_deposit_wizard_views.xml',
         'wizard/efund_performance_wizard_view.xml',
         'data/efund_account_template_data.xml',
+        'data/efund_fund_class.xml',
 
     ],
 

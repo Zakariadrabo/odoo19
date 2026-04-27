@@ -81,10 +81,6 @@
 
                                 <group invisible=" calculation_method != 'fixed'">
                                     <field name="amount"/>
-                                    <button name="action_show_amount_details"
-                                            type="object"
-                                            string="Détails"
-                                            class="oe_link"/>
                                 </group>
                                 <group invisible=" calculation_method == 'fixed'">
                                     <field name="rate"/>

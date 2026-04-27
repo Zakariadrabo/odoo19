@@ -60,6 +60,9 @@ class EfundInvestmentTransaction(models.Model):
     state = fields.Selection(
         [('draft', 'Provisoire'), ('confirmed', 'Confirmé'), ('settled', 'Dénoué (R/L)'), ('cancelled', 'Annulé')
          ], default='draft')
+    # ajout du document pdf pour la preuve
+    preuve_transaction_pdf = fields.Binary(string="Preuve transaction (pdf)", attachment=True)
+    nom_preuve_transaction_pdf = fields.Char(string="Nom preuve transaction PDF")
 
 
     def action_confirm_settlement(self):

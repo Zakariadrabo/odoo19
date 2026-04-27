@@ -72,6 +72,13 @@ class FundSubscription(models.Model):
     event_id = fields.Many2one('efund.accounting.event', string="Événement", readonly=True)
 
     # -----------------------------------------------------------------
+    @api.onchange('gross_amount')
+    def on_change_gross_amount(self):
+        for rec in self:
+            if rec.vehicule_id and rec.fund_id:
+                if rec.gross_amount > rec.balance:
+                    raise ValidationError("Le montant brut ne peut pas être supérieur au solde.")
+
     @api.depends('investor_id', 'fund_id')
     def _compute_accounts(self):
         for rec in self:
@@ -335,8 +342,9 @@ class FundSubscription(models.Model):
                 'cash_account_id': rec.cash_account_id.id,
                 'move_type': 'subscription',
                 'amount': gross_amount,
-                'date': rec.date_valeur,
-                'value_date': rec.date_valeur,
+                'label': f"Souscription N°{rec.name} du fond {rec.fund_id.name} ",
+                'date': rec.date_operation,
+                'value_date': rec.date_operation,
                 'state': 'reconciled',
             })
             rec.message_post(
@@ -363,6 +371,7 @@ class FundSubscription(models.Model):
                 'move_type': 'subscription_in',
                 'liquidity_type': 'liquid',
                 'state': 'reconciled',
+                'label': f"Souscription N°{rec.name} du fond {rec.fund_id.name} ",
                 'date': rec.date_valeur,
                 'value_date': rec.date_valeur,
                 'investor_cash_move_id': investor_cash_move.id,
@@ -388,6 +397,7 @@ class FundSubscription(models.Model):
                     'subscription_id': rec.id,
                     'gross_amount': rec.gross_amount,
                     'base_amount': rec.net_amount,
+                    'label': f"Souscription N°{rec.name} du fond {rec.fund_id.name} ",
                     'date': rec.date_valeur,
                     'value_date': rec.date_valeur,
                     'fee_rate': rec.entry_load,
@@ -407,8 +417,11 @@ class FundSubscription(models.Model):
                 'move_type': 'subscription',
                 'shares': shares,
                 'state': 'reconciled',
-                'date': rec.date_valeur,
+                'label': f"Souscription N°{rec.name} du fond {rec.fund_id.name} ",
+                'date': rec.date_operation,
                 'value_date': rec.date_valeur,
+                'subscription_id': rec.id,
+                'fund_id': rec.fund_id.id,
             })
             rec.message_post(
                 body=_("Crédit du compte titre de l'investisseur au montant de %s part(s).") % (rec.shares),

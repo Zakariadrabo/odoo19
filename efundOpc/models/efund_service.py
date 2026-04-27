@@ -2,13 +2,13 @@ import calendar
 import datetime
 import logging
 from math import ceil
-from xmlrpc.client import FastParser
+
 
 from dateutil.relativedelta import relativedelta
 
 _logger = logging.getLogger(__name__)
 
-from odoo import models, _
+from odoo import models, _, fields
 from odoo.exceptions import UserError, ValidationError
 
 
@@ -143,7 +143,6 @@ class EfundService(models.Model):
 
         return last_nav.unit_nav if last_nav else 0.0
 
-
     def get_coupon_period(self, order_date, maturity_date, frequency=1):
         """
         Calcule les dates de coupon entourant la commande.
@@ -186,7 +185,6 @@ class EfundService(models.Model):
             'days_in_period': days_in_period
         }
 
-
     def create_first_nav(self, fund):
         """
         Crée la première NAV pour un fond donné.
@@ -206,7 +204,8 @@ class EfundService(models.Model):
         }
         res = self.env['efund.nav.session'].create(vals)
         if res:
-            share_class = self.env['efund.fund.share.class'].search([('vehicule_fund_id', '=', res.fund_id.id)], limit=1)
+            share_class = self.env['efund.fund.share.class'].search([('vehicule_fund_id', '=', res.fund_id.id)],
+                                                                    limit=1)
             if share_class:
                 share_class.write({
                     'current_nav': res.unit_nav,
@@ -621,8 +620,6 @@ class EfundService(models.Model):
                     ('state', '=', 'settled')
                 ])
 
-
-
                 qty_at_date = sum(o.quantity if o.move_type == 'in' else -o.quantity for o in orders)
 
                 # On récupère le cours à la date cible (ou le plus proche avant)
@@ -642,10 +639,10 @@ class EfundService(models.Model):
                         ('date', '=', date_target),
                     ], order='date desc', limit=1)
 
-
                 if not last_price_rec:
                     if pos.instrument_id.instrument_type == 'bond':
-                        _logger.info(f" les conditions date achat: {pos.first_price_date} date de recherche: {date_target} date maturité : {pos.maturity_date} ")
+                        _logger.info(
+                            f" les conditions date achat: {pos.first_price_date} date de recherche: {date_target} date maturité : {pos.maturity_date} ")
                         if pos.first_price_date < date_target and date_target < pos.maturity_date:
                             last_price_rec = self.generate_bond_price(pos, date_target)
                             _logger.info(f" j'ai trouvé le prix : {last_price_rec.price} ")
@@ -748,15 +745,15 @@ class EfundService(models.Model):
                         ('date', '=', date_target),
                     ], order='date desc', limit=1)
 
-
                 if not last_price_rec:
                     if pos.instrument_id.instrument_type == 'bond':
                         if pos.first_price_date <= date_target and date_target <= pos.maturity_date:
                             last_price_rec = self.generate_bond_price(pos, date_target)
                         else:
-                            raise ValidationError(f"Une erreur est survenue lors de la recherche du prix du bond : {pos.instrument_id.name}")
+                            raise ValidationError(
+                                f"Une erreur est survenue lors de la recherche du prix du bond : {pos.instrument_id.name}")
                     elif pos.instrument_id.instrument_type == 'tcn':
-                        last_price_rec = self.generate_tcn_price(pos, date_target)
+                        last_price_rec = self.generate_dat_tcn_price(pos, date_target)
                     elif pos.instrument_id.instrument_type == 'dat':
                         last_price_rec = self.generate_dat_tcn_price(pos, date_target)
                     elif pos.instrument_id.instrument_type == 'opcvm':
@@ -776,14 +773,14 @@ class EfundService(models.Model):
 
                 portfolio_at_date.append({
                     'instrument': pos.instrument_id,
+                    'type': 'asset',
                     'date': date_target,
                     'quantity': qty_at_date,
                     'price': last_price_rec.price,
                     'interest': last_price_rec.interest if last_price_rec else 0,
                     'total_amount': qty_at_date * price + last_price_rec.interest if last_price_rec else 0,
                 })
-                #_logger.info(f"Portfolio at date {date_target}: {portfolio_at_date} : {}")
-
+                # _logger.info(f"Portfolio at date {date_target}: {portfolio_at_date} : {}")
 
         # 2. Valorisation du Cash (Soldes Espèces)
         # On récupère tous les comptes espèces du véhicule
@@ -805,11 +802,34 @@ class EfundService(models.Model):
         portfolio_at_date.append({
             'intrument': False,
             'date': date_target,
+            'type': 'asset',
             'quantity': 1,
             'price': total_cash_balance,
             'interest': 0,
             'total_amount': total_cash_balance,
         })
+
+        # ajout des frais de gestion
+        total_asset = sum(item.get('total_amount', 0.0) for item in portfolio_at_date)
+        fund_id = self.env['efund.vehicule.fund'].search([('state', '=', 'active'), ('vehicule_id','=',vehicule.id)], limit=1)
+        if fund_id:
+            if not fund_id:
+                raise UserError(_("Aucun fond actif trouvé."))
+            share_class = self.env['efund.fund.share.class'].search([
+                ('vehicule_fund_id', '=', fund_id.id),
+                ('is_default', '=', True)
+            ])
+            management_fee = share_class.management_fee_rate
+            management_amount = self.compute_fixed_charges(total_asset,fund_id, date_target,management_fee)
+            portfolio_at_date.append({
+                'intrument': False,
+                'date': date_target,
+                'type': 'liability',
+                'quantity': 1,
+                'price': management_amount,
+                'interest': 0,
+                'total_amount': management_amount,
+            })
 
         return portfolio_at_date
 
@@ -875,13 +895,11 @@ class EfundService(models.Model):
             raise ValidationError(
                 f"La date de calcul {target_date} est postérieure à la date de maturité du DAT{position.maturity_date}")
 
-
-        interest_value = self.generate_lenear_amount_value(position.bond_dat_interest, position.value_date, position.maturity_date, target_date)
+        interest_value = self.generate_lenear_amount_value(position.bond_dat_interest, position.value_date,
+                                                           position.maturity_date, target_date)
         result = self.update_or_create_price(position.instrument_id, position.vehicule_id, target_date,
-                                                 position.face_value, interest_value, 'internal')
+                                             position.face_value, interest_value, 'internal')
         return result
-
-
 
     def generate_bond_price(self, position, target_date):
         bond = self.env['efund.vehicule.instrument.core.bond'].search([
@@ -890,8 +908,10 @@ class EfundService(models.Model):
         if bond.instrument_id.is_listed:
             _logger.info(f"***************** le titre est coté")
             if bond.instrument_id.valuation_method == 'listed':
-               _logger.info(f"***************** le titre est lissé")
-               last_price = self.compute_linear_actuariat_value_at_date(target_date, position.first_price,position.first_price_date, bond.face_value, bond.maturity_date)
+                _logger.info(f"***************** le titre est lissé")
+                last_price = self.compute_linear_actuariat_value_at_date(target_date, position.first_price,
+                                                                         position.first_price_date, bond.face_value,
+                                                                         bond.maturity_date)
             else:
                 raise ValidationError(f"Merci de saisir manuellement le cours")
 
@@ -909,15 +929,18 @@ class EfundService(models.Model):
             else:
                 last_price = position.face_value if position.face_value else bond.face_value
 
-        res = self.compute_accrued_interest_precise(bond.face_value, bond.rate_net, target_date, bond.maturity_date, bond.coupon_frequency, tax_rate=0.0, add_day=0)
+        res = self.compute_accrued_interest_precise(bond.face_value, bond.rate_net, target_date, bond.maturity_date,
+                                                    bond.coupon_frequency, tax_rate=0.0, add_day=0)
         interest = res.get('interest_net') * position.quantity
-        result = self.update_or_create_price(position.instrument_id, position.vehicule_id, target_date, last_price, interest, 'internal')
+        result = self.update_or_create_price(position.instrument_id, position.vehicule_id, target_date, last_price,
+                                             interest, 'internal')
         return result
 
-    def generate_opcvm_price (self, position, target_date):
+    def generate_opcvm_price(self, position, target_date):
         raise ValidationError(f"Merci de saisir manuellement le cours")
 
-    def get_interest_valuation_json(self, amount, rate, tax_rate, date_start, date_maturity, target_date, base_year, interest_type):
+    def get_interest_valuation_json(self, amount, rate, tax_rate, date_start, date_maturity, target_date, base_year,
+                                    interest_type):
         """
         Calcule l'intérêt lissé et retourne le détail au format JSON.
         :param amount: Montant nominal ou d'investissement
@@ -952,18 +975,20 @@ class EfundService(models.Model):
             total_interest = amount * rate * (total_duration / base_year)
             accrued_interest = (total_interest / total_duration) * days_elapsed
             valuation_at_date = amount + accrued_interest
-            _logger.info(f"************total_interest : {total_interest} accrued_interest : {accrued_interest} valuation_at_date : {valuation_at_date} ")
+            _logger.info(
+                f"************total_interest : {total_interest} accrued_interest : {accrued_interest} valuation_at_date : {valuation_at_date} ")
         elif interest_type == 'prepaid':
             total_interest = amount * rate * (total_duration / base_year)
-            #interet = (total_interest / total_duration) * days_elapsed
+            # interet = (total_interest / total_duration) * days_elapsed
             total_interest = total_interest * ((1 + day_rate) ** -total_duration)
             valuation_at_date = amount - accrued_interest
 
-        tax_en_decimal = tax_rate/100
+        tax_en_decimal = tax_rate / 100
         interet_total_net = 0.0
         interet_total_net = total_interest * (1 - tax_en_decimal)
 
-        return {'interet_brut': total_interest, 'interet_total_net': interet_total_net, 'accrued_interest': accrued_interest, 'total_valuation': valuation_at_date}
+        return {'interet_brut': total_interest, 'interet_total_net': interet_total_net,
+                'accrued_interest': accrued_interest, 'total_valuation': valuation_at_date}
 
     def get_instrument_avg_price(self, intrument, vehicule):
         pos = self.env['efund.vehicule.portfolio'].search([
@@ -980,6 +1005,8 @@ class EfundService(models.Model):
         date_achat = start_date
         date_echeance = end_date
 
+        _logger.info(
+            f"***************** montant {amount} date_achat : {date_achat} date_echeance : {date_echeance} target_date : {target_date}")
 
         if not date_echeance or not date_achat:
             return False
@@ -1011,8 +1038,9 @@ class EfundService(models.Model):
         """
         return accrued_interest
 
-    def compute_and_update_price(self,pos, date_target):
+    def compute_and_update_price(self, pos, date_target):
         # On récupère le cours à la date cible (ou le plus proche avant)
+        _logger.info(f"********* prix {pos} date {date_target} ")
         last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
             ('instrument_id', '=', pos.instrument_id.id),
             ('vehicule_id', '=', pos.vehicule_id.id),
@@ -1029,6 +1057,8 @@ class EfundService(models.Model):
                 ('date', '=', date_target),
             ], order='date desc', limit=1)
 
+        _logger.info(f"********* prix {last_price_rec} date {date_target} ")
+
         if not last_price_rec:
             if pos.instrument_id.instrument_type == 'bond':
                 if pos.first_price_date <= date_target and date_target <= pos.maturity_date:
@@ -1036,7 +1066,7 @@ class EfundService(models.Model):
                 else:
                     raise ValidationError(
                         f"Une erreur est survenue lors de la recherche du prix du bond : {pos.instrument_id.name}")
-            elif pos.instrument_id.instrument_type in ('tcn','dat'):
+            elif pos.instrument_id.instrument_type in ('tcn', 'dat'):
                 self.generate_dat_tcn_price(pos, date_target)
             elif pos.instrument_id.instrument_type == 'opcvm':
                 if pos.first_price_date < date_target and pos.quantity > 0:
@@ -1048,7 +1078,56 @@ class EfundService(models.Model):
             else:
                 raise UserError(_("Le type d'instrument n'est pas pris en charge"))
 
-    def get_account_balance(self, account_id,company_id, target_date):
+    def compute_and_update_portfolio(self, pos, date_target):
+        # 0 - Eliminer les instruments non actives
+        if pos.state == 'active':
+            # 1. Aller chercher le dernier prix VALIDÉ pour cet instrument
+            self.env["efund.service"].compute_and_update_price(pos, date_target)
+
+            # 2- récupérer le cours dans la tablea cours
+            last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+                ('instrument_id', '=', pos.instrument_id.id),
+                ('vehicule_id', '=', pos.vehicule_id.id),
+                ('is_validated', '=', True),
+                ('date', '=', date_target)
+            ], order='date desc', limit=1)
+
+            # 2. Repli (Fallback) : Cours global (ex: Action BRVM)
+            if not last_price_rec:
+                last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
+                    ('instrument_id', '=', pos.instrument_id.id),
+                    ('vehicule_id', '=', False),
+                    ('is_validated', '=', True),
+                    ('date', '=', date_target)
+                ], order='date desc', limit=1)
+
+            # 3- Mise à jour du portefeuille
+            if last_price_rec:
+                instr_type = pos.instrument_id.instrument_type
+                # Calcul du Coût (Cost Basis)
+                cost_basis = pos.quantity * (pos.avg_cost or 0.0)
+                if instr_type == 'dat':
+                    # Pour un DAT, le coût est généralement le nominal (quantity)
+                    cost_basis = pos.face_value
+                    market_value = pos.face_value + last_price_rec.interest
+                else:
+                    market_value = (pos.quantity * last_price_rec.price) + last_price_rec.interest
+
+                # Calcul de la Plus-value latente (P/L)
+                unrealized_pl = market_value - cost_basis
+                pl_percent = (unrealized_pl / cost_basis) if cost_basis != 0 else 0.0
+
+                # 2. Mise à jour de la position
+                pos.write({
+                    'last_price': last_price_rec.price,
+                    'last_price_date': last_price_rec.date,
+                    'accrued_interest': last_price_rec.interest,
+                    'market_value': market_value,
+                    'unrealized_pl': unrealized_pl,
+                    'unrealized_pl_percent': pl_percent,
+                })
+
+    def get_account_balance(self, account_id, company_id, target_date):
         """
         Calcule le solde (Débit - Crédit) d'un compte à une date donnée.
         """
@@ -1077,7 +1156,7 @@ class EfundService(models.Model):
         Ferme la journée pour le calcul de la VL.
         """
         # récupérer les informations nécessaires pour le calcul de la VL
-        account_id =  False
+        account_id = False
         company = vehicule.company_id
         last_account = self.env['account.account'].sudo().with_company(company).search([
             ('code', '=like', '217100')
@@ -1087,16 +1166,16 @@ class EfundService(models.Model):
 
         # 1 - Calcul des interêt couru des obligations, bon et dat
         # Annulation des intérêts courus du dernier VL
-        interest_balance  = self.get_account_balance(account_id, company.id, target_date)
+        interest_balance = self.get_account_balance(account_id, company.id, target_date)
 
         # Obtenir le solde du compte des bilans des intérêts couru compte: 217100
         # Obligation
         bond_interest = 0.0
 
-        #DAT et BOND
+        # DAT et BOND
         tcn_dat_interest = 0.0
 
-    def get_last_nav_date (self, fund_id, target_date):
+    def get_last_nav_date(self, fund_id, target_date):
         last_session = self.env['efund.nav.session'].search([
             ('fund_id', '=', fund_id.id),
             ('valuation_date', '<=', target_date),
@@ -1104,17 +1183,16 @@ class EfundService(models.Model):
         ], order='valuation_date desc', limit=1)
         return last_session.valuation_date if last_session else False
 
-    def compute_fixed_charges(self, amount, fund_id, target_date):
+    def compute_fixed_charges(self, amount, fund_id, target_date, rate):
         year = target_date.year
         get_days_in_year = 366 if calendar.isleap(year) else 365
 
         last_nav_compute_day = self.get_last_nav_date(fund_id, target_date)
         if last_nav_compute_day:
             nb_day_between_nav = (last_nav_compute_day - target_date)
-            return amount * nb_day_between_nav / get_days_in_year
+            return amount * nb_day_between_nav * rate / get_days_in_year
         else:
             return 0.0
-
 
     def get_valuation_by_type(self, vehicule_id, target_date):
         """
@@ -1134,6 +1212,7 @@ class EfundService(models.Model):
         total_valuation_dat_interest_postpaid = 0.0
         total_valuation_dat_interest_prepaid = 0.0
         total_valuation_tcn_interest = 0.0
+        total_valuation_tcn_value = 0.0
         total_valuation_equity_value = 0.0
         total_valuation_opcvm_value = 0.0
         total_base_commission_sous_gestion = 0.0
@@ -1145,7 +1224,7 @@ class EfundService(models.Model):
 
             # 2. Chercher le prix correspondant à la date cible pour ce véhicule
             # On cherche le prix validé le plus proche (inférieur ou égal à target_date)
-            price_rec = self.env['efund.vehicule_instrument_core_price'].search([
+            price_rec = self.env['efund.vehicule.instrument.core.price'].search([
                 ('instrument_id', '=', instrument.id),
                 ('vehicule_id', '=', vehicule_id.id),
                 ('date', '=', target_date),
@@ -1154,7 +1233,8 @@ class EfundService(models.Model):
 
             # Si pas de prix à la date exacte, on peut optionnellement chercher le dernier connu
             if not price_rec:
-                raise ValidationError(f"Merci de mettre à jour le cours de l'instrument {instrument.name} pour la date {target_date}")
+                raise ValidationError(
+                    f"Merci de mettre à jour le cours de l'instrument {instrument.name} pour la date {target_date}")
 
             if instrument.instrument_type == 'bond':
                 total_valuation_bond_interest += price_rec.interest if price_rec else 0.0
@@ -1163,24 +1243,26 @@ class EfundService(models.Model):
                 total_base_commission_sous_gestion += pos.quantity * price_rec.price + total_valuation_bond_interest
                 total_base_commission_droit_garde += pos.quantity * price_rec.price
             elif instrument.instrument_type == 'dat':
-                dat =  self.env['efund.vehicule.instrument.core.dat'].search([('instrument_id', '=', instrument.instrument_id.id)  ], limit=1)
+                dat = self.env['efund.vehicule.instrument.core.dat'].search(
+                    [('instrument_id', '=', instrument.instrument_id.id)], limit=1)
                 if dat:
-                    if dat.interest_type =='prepaid':
+                    if dat.interest_type == 'prepaid':
                         total_valuation_dat_interest_prepaid += price_rec.interest if price_rec else 0.0
                     else:
                         total_valuation_dat_interest_postpaid += price_rec.interest if price_rec else 0.0
             elif instrument.instrument_type == 'tcn':
                 total_valuation_tcn_interest += price_rec.interest if price_rec else 0.0
+                total_valuation_tcn_value += pos.quantity * (price_rec.price - pos.avg_cost) if price_rec else 0.0
                 # Valorisation des bons
                 total_base_commission_sous_gestion += pos.quantity * price_rec.price + total_valuation_tcn_interest
-                total_base_commission_droit_garde += pos.quantity * price_rec.avg_cost
+                total_base_commission_droit_garde += pos.quantity * pos.avg_cost
             elif instrument.instrument_type == 'opcvm':
                 total_valuation_opcvm_value += pos.quantity * (price_rec.price - pos.avg_cost) if price_rec else 0.0
                 total_base_commission_droit_garde += pos.quantity * price_rec.price
             elif instrument.instrument_type == 'equity':
                 total_valuation_equity_value += pos.quantity * (price_rec.price - pos.avg_cost) if price_rec else 0.0
 
-                #Valorisation du portefeuille des actions
+                # Valorisation du portefeuille des actions
                 total_base_commission_sous_gestion += pos.quantity * price_rec.price
                 total_base_commission_droit_garde += pos.quantity * price_rec.price
 
@@ -1190,14 +1272,33 @@ class EfundService(models.Model):
             'total_valuation_dat_interest_prepaid': total_valuation_dat_interest_prepaid,
             'total_valuation_dat_interest_postpaid': total_valuation_dat_interest_postpaid,
             'total_valuation_tcn_interest': total_valuation_tcn_interest,
+            'total_valuation_tcn_value': total_valuation_tcn_value,
             'total_valuation_opcvm_value': total_valuation_opcvm_value,
             'total_valuation_equity_value': total_valuation_equity_value,
             'total_base_commission_sous_gestion': total_base_commission_sous_gestion,
             'total_base_commission_droit_garde': total_base_commission_droit_garde,
         }
 
+    def get_total_shares_at_date(self, vehicule_id, target_date):
+        """
+        Calcule le nombre total de parts en circulation pour un véhicule à une date donnée.
+        """
+        # 1. Rechercher tous les mouvements validés jusqu'à la date cible
+        # On utilise la date comptable (value_date) pour la précision financière
+        domain = [
+            ('vehicule_id', '=', vehicule_id.id),
+            ('value_date', '<=', target_date),
+            ('state', 'in', ['reconciled'])
+        ]
 
+        moves = self.env['efund.investor.part.move'].search(domain)
+        _logger.info(f"*********  vehicule {vehicule_id}, date {target_date} liste SS {moves} ")
 
+        total_shares = 0.0
+        for move in moves:
+            if move.move_type == 'subscription':
+                total_shares += move.shares
+            elif move.move_type == 'redemption':
+                total_shares -= move.shares
 
-
-
+        return total_shares

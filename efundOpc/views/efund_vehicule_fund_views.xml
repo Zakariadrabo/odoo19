@@ -31,7 +31,7 @@
                             <div>
                                 <strong>Mode Brouillon :</strong>
                                 Ce véhicule d'investissement n'est pas encore actif.
-                                Veuillez configurer les paramètres ISIN et la devise avant l'activation.
+                                Veuillez configurer les paramètres avant l'activation.
                             </div>
                         </div>
                     </div>
@@ -39,7 +39,7 @@
                     <div class="oe_title">
                         <label for="name" string="Nom de l'OPCVM"/>
                         <h1>
-                            <field name="name" placeholder="Ex: FCP E-FUND ACTIONS UEMOA"/>
+                            <field name="name" class="text-success" placeholder="Ex: FCP E-FUND ACTIONS UEMOA"/>
                         </h1>
                     </div>
 
@@ -57,15 +57,20 @@
                     </group>
 
                     <notebook>
-                        <page string="Informations Générales">
+                        <page string="Informations Générales">7
                             <group>
-                                <field name="nav_frequency" />
-                                <field name="origin_nav" placeholder="Sasir la VL initiale ..."/>
+                                <group>
+                                    <field name="nav_frequency"/>
+                                    <field name="origin_nav" placeholder="Sasir la VL initiale ..."/>
+                                    <field name="expense_policy" string="Politique des frais" widget="radio"
+                                           options="{'horizontal': true}"/>
+                                </group>
+                                <group>
+                                    <field name="cutoff_time" placeholder="Heure de calcul de la VL..."/>
+                                    <field name="allow_fractional_parts" placeholder="Autoriser parts fractionnées ?"/>
+                                </group>
                             </group>
-                            <group>
-                                <field name="cutoff_time" placeholder="Heure de calcul de la VL..."/>
-                                <field name="allow_fractional_parts" placeholder="Autoriser parts fractionnées ?"/>
-                            </group>
+
                         </page>
                         <page string="Politique d'Investissement" name="policy" invisible="1">
                             <div class="o_horizontal_separator text-primary mt-3 mb-3"
@@ -105,6 +110,23 @@
                                 <list string="Inventaire des Titres">
                                     <field name="instrument_id"/>
                                     <field name="last_price_date"/>
+                                    <field name="quantity" sum="Total Quantité"/>
+                                    <field name="avg_cost" widget="monetary" string="Prix Revient"/>
+                                    <field name="last_price" widget="monetary" string="Dernier Cours"/>
+                                    <field name="clean_value" widget="monetary" optional="hide" string="Valeur Titre"/>
+                                    <field name="accrued_interest" widget="monetary" optional="show"
+                                           string="Intérêts Courus"/>
+                                    <field name="market_value" widget="monetary" string="Valeur Marché"
+                                           sum="Total Valeur"/>
+                                    <field name="unrealized_pl" widget="monetary" string="Différence d'estimation"
+                                           sum="Total P&amp;L"/>
+                                    <field name="unrealized_pl_percent" widget="percentage" digits="[16, 2]"
+                                           string="%"/>
+                                    <field name="state" widget="badge" decoration-info="state=='active'"
+                                           decoration-danger="state=='closed'"/>
+                                    <!--
+                                    <field name="instrument_id"/>
+                                    <field name="last_price_date"/>
                                     <field name="quantity"/>
                                     <field name="last_price"/>
                                     <field name="avg_cost" string="CMUP"/>
@@ -113,6 +135,7 @@
                                     <field name="unrealized_pl" sum="Total PV Latente"
                                            decoration-success="unrealized_pl &gt; 0"
                                            decoration-danger="unrealized_pl &lt; 0"/>
+                                           -->
                                 </list>
                             </field>
                         </page>
@@ -174,35 +197,6 @@
                                 </list>
                             </field>
                         </page>
-                        <page string="Positions">
-                            <header>
-                                <button name="action_revalue_positions"
-                                        string="Actualiser la Valorisation"
-                                        type="object"
-                                        icon="fa-refresh"
-                                        class="btn-secondary mb-2"/>
-                            </header>
-                            <field name="position_ids" readonly="1">
-                                <list string="Inventaire des Titres">
-                                    <field name="instrument_id"/>
-                                    <field name="last_price_date"/>
-                                    <field name="quantity"/>
-                                    <field name="last_price"/>
-                                    <field name="avg_cost" string="CMUP"/>
-                                    <field name="first_price"/>
-                                    <field name="market_value" sum="Total"/>
-                                    <field name="unrealized_pl" sum="Total PV Latente"
-                                           decoration-success="unrealized_pl &gt; 0"
-                                           decoration-danger="unrealized_pl &lt; 0"/>
-                                    <button name="action_generate_specific_amortization"
-                                            type="object"
-                                            string="Générer Échéancier"
-                                            icon="fa-cogs"
-                                            class="btn-secondary"/>
-                                </list>
-                            </field>
-                        </page>
-
                         <page string="Configuration Comptable" name="accounting" groups="account.group_account_manager">
                             <div class="p-3 mb-2 border-left border-info bg-light">
                                 <i class="fa fa-university text-info mr-2"/>

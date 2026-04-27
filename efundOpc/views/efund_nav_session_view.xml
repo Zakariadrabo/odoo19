@@ -70,7 +70,7 @@
 
                         <page string="Inventaire Détaillé" name="inventory">
                             <field name="line_ids" readonly="state == 'validated'">
-                                <list editable="bottom" decoration-info="type == 'asset'"
+                                <list create="0" edit="0" decoration-info="type == 'asset'"
                                       decoration-danger="type == 'liability'">
                                     <field name="date" />
                                     <field name="type"/>

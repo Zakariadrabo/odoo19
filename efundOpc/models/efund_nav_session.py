@@ -18,7 +18,7 @@ class EfundNavSession(models.Model):
     total_liabilities = fields.Monetary(string="Total Passif", compute="_compute_nav", store=True,)
     net_asset_value = fields.Monetary(string="Actif Net", compute="_compute_nav", store=True,)
 
-    nb_parts = fields.Float(string="Nombre de parts", digits=(16, 4))
+    nb_parts = fields.Float(string="Nombre de parts",compute='_compute_nb_parts', store=True, digits=(16, 4))
     unit_nav = fields.Float(string="VL Unitaire", digits=(16, 4), store=True)
 
     # Deflacation
@@ -33,6 +33,14 @@ class EfundNavSession(models.Model):
     state = fields.Selection([('draft', 'Brouillon'),('verify','Vérifié'), ('validated', 'Validé')], default='draft')
     line_ids = fields.One2many('efund.nav.line', 'session_id', string="Détails de l'Inventaire")
     fiscal_year_id = fields.Many2one('efund.fiscal.year',string="Exercice Fiscal", compute="_compute_fiscal_year", store=True)
+
+    @api.depends('fund_id', 'valuation_date')
+    def _compute_nb_parts(self):
+        for rec in self:
+            if rec.fund_id and rec.valuation_date:
+                nbpart = self.env['efund.service'].get_total_shares_at_date(rec.fund_id.vehicule_id, rec.valuation_date,)
+                rec.nb_parts = nbpart
+
 
     @api.depends('valuation_date', 'fund_id')
     def _compute_fiscal_year(self):
@@ -109,29 +117,33 @@ class EfundNavSession(models.Model):
         return True
 
     def action_compute_nav_lines(self):
-        self.ensure_one()
-        # 1. Nettoyage de l'ancien inventaire
-        self.line_ids.unlink()
+        for rec in self:
+            # 1. Nettoyage de l'ancien inventaire
+            rec.line_ids.unlink()
 
-        lines_vals = []
+            lines_vals = []
 
-        # Valorisation du Portefeuille (Titres)
-        # On utilise le service centralisé pour chaque instrument
-        result = self.env['efund.service'].get_portfolio_asset_value(self.fund_id.vehicule_id, self.valuation_date,)
-        if result:
-            for res in result:
-                lines_vals.append((0, 0, {
-                    'name': f"Titre : {res.get('instrument').name if res.get('instrument') else 'Solde Dispobilité'}",
-                    'type': 'asset',
-                    'quantity': res.get('quantity'),
-                    'price': res.get('price'),
-                    'interest': res.get('interest'),
-                    'total_amount': res.get('total_amount'),
-                }))
+            # Valorisation du Portefeuille (Titres)
+            # On utilise le service centralisé pour chaque instrument
+            result = self.env['efund.service'].get_portfolio_asset_value(rec.fund_id.vehicule_id, rec.valuation_date,)
+            if result:
+                for res in result:
+                    lines_vals.append((0, 0, {
+                        'name': f"{'Titre :' + res.get('instrument').name if res.get('instrument') else 'Solde Disponibilité'}",
+                        'type': 'asset',
+                        'quantity': res.get('quantity'),
+                        'price': res.get('price'),
+                        'interest': res.get('interest'),
+                        'total_amount': res.get('total_amount'),
+                    }))
 
-        # Injection des lignes dans la session
-        self.write({'line_ids': lines_vals})
-        return True
+            # Injection des lignes dans la session
+            self.write({'line_ids': lines_vals})
+
+            # vérification des données de calcul VL
+            result = self.env['efund.service'].get_valuation_by_type(rec.fund_id.vehicule_id, rec.valuation_date)
+            _logger.info(f"***** v&hicule {rec.fund_id.vehicule_id} date : {rec.valuation_date} et Resultat de la valeur du portefeuille : {result}")
+            return True
 
     def action_validate(self):
         for record in self:
