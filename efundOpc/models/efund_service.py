@@ -772,7 +772,7 @@ class EfundService(models.Model):
                     pass
 
                 portfolio_at_date.append({
-                    'instrument': pos.instrument_id,
+                    'instrument': f"Titre: {pos.instrument_id.name}",
                     'type': 'asset',
                     'date': date_target,
                     'quantity': qty_at_date,
@@ -800,7 +800,7 @@ class EfundService(models.Model):
             total_cash_balance += balance_at_date
 
         portfolio_at_date.append({
-            'intrument': False,
+            'instrument': f"Solde Cash Disponibilité ",
             'date': date_target,
             'type': 'asset',
             'quantity': 1,
@@ -822,7 +822,7 @@ class EfundService(models.Model):
             management_fee = share_class.management_fee_rate
             management_amount = self.compute_fixed_charges(total_asset,fund_id, date_target,management_fee)
             portfolio_at_date.append({
-                'intrument': False,
+                'instrument': f"Frais de gestion ",
                 'date': date_target,
                 'type': 'liability',
                 'quantity': 1,
@@ -1189,8 +1189,9 @@ class EfundService(models.Model):
 
         last_nav_compute_day = self.get_last_nav_date(fund_id, target_date)
         if last_nav_compute_day:
-            nb_day_between_nav = (last_nav_compute_day - target_date)
-            return amount * nb_day_between_nav * rate / get_days_in_year
+            nb_day_between_nav = (target_date - last_nav_compute_day).days
+            return_value = (amount * rate) / get_days_in_year * nb_day_between_nav
+            return return_value
         else:
             return 0.0
 
