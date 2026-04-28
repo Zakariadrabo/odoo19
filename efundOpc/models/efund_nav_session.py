@@ -56,14 +56,14 @@ class EfundNavSession(models.Model):
     @api.depends('line_ids', 'nb_parts')
     def _compute_nav(self):
         for rec in self:
-
-            assets = sum(rec.line_ids.filtered(lambda l: l.type == 'asset').mapped('total_amount'))
-            liabilities = sum(rec.line_ids.filtered(lambda l: l.type == 'liability').mapped('total_amount'))
-            _logger.info(f"***** compute nav {rec.id} et {rec.line_ids} actif {assets} et passif {liabilities}")
-            rec.total_assets = assets
-            rec.total_liabilities = liabilities
-            rec.net_asset_value = assets - liabilities
-            rec.unit_nav = rec.net_asset_value / rec.nb_parts
+            if rec.nb_parts and rec.nb_parts != 0:
+                assets = sum(rec.line_ids.filtered(lambda l: l.type == 'asset').mapped('total_amount'))
+                liabilities = sum(rec.line_ids.filtered(lambda l: l.type == 'liability').mapped('total_amount'))
+                _logger.info(f"***** compute nav {rec.id} et {rec.line_ids} actif {assets} et passif {liabilities}")
+                rec.total_assets = assets
+                rec.total_liabilities = liabilities
+                rec.net_asset_value = assets - liabilities
+                rec.unit_nav = rec.net_asset_value / rec.nb_parts
             #rec.unit_nav = rec.net_asset_value / rec.nb_parts if rec.nb_parts else 0
 
     def action_generate_lines(self):
