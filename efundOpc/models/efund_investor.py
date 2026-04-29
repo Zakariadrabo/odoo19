@@ -820,6 +820,4 @@ class FundInvestor(models.Model):
 
         # Formatage final sur 2 chiffres
         cle_str = str(cle).zfill(2)
-        raise ValidationError(f" radical {radical} et la clé {cle_str}")
-
         return f"{radical}{cle_str}"
