@@ -104,6 +104,7 @@
         'wizard/efund_performance_wizard_view.xml',
         'data/efund_account_template_data.xml',
         'data/efund_fund_class.xml',
+        'data/efund_account_schema_full.xml',
 
     ],
 

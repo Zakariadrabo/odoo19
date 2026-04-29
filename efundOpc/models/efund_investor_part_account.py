@@ -24,7 +24,7 @@ class EfundAccountPart(models.Model):
                              string="Status", default='draft', )
 
     _account_number_fund_uniq = models.Constraint(
-        'unique(account_number, vehicule_id)',
+        'unique(account_number, vehicule_id,investor_id)',
         'Numéro de compte titres déjà utilisé pour ce fonds'
     )
     _investor_id_fund_uniq = models.Constraint(

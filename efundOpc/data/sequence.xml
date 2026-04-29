@@ -16,6 +16,17 @@
         <field name="company_id" eval="False"/>
     </record>
 
+    <!-- investor order  -->
+    <record id="seq_efund_investor_order" model="ir.sequence">
+        <field name="name">Ordre investisseur</field>
+        <field name="code">efund.investor.order</field>
+        <field name="number_next">12</field>
+        <field name="number_increment">1</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+
     <!-- Sequence for véhicule -->
     <record id="seq_efund_vehicule" model="ir.sequence">
         <field name="name">Mouvement véhicule</field>

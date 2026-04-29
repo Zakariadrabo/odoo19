@@ -19,6 +19,7 @@ class FundInvestor(models.Model):
     company_id = fields.Many2one('res.company', string="Context Company (Fund)", index=True)
     # store the name for easier reading (populated from partner)
     name = fields.Char(related="partner_id.name", store=True, readonly=True)
+    investor_order_number = fields.Char(string='Ordre')
 
     #########################################
     # Obligation de connaissance du client
@@ -590,6 +591,7 @@ class FundInvestor(models.Model):
             if rec.status != "draft":
                 raise UserError("Seuls les investisseurs en attente peuvent être approuvés.")
             #rec.create_investor_accounts()
+            rec.investor_order_number = self.env['ir.sequence'].next_by_code('efund.investor.order')
             rec.status = "approved"
 
     def action_reject_kyc(self):
@@ -733,9 +735,9 @@ class FundInvestor(models.Model):
         # 1. Création du Compte Titres
         part_account_obj = self.env['efund.investor.part_account']
         existing_part = part_account_obj.search([
-            ('investor_id', '=', self.id),
-            ('vehicule_id', '=', fund_id.vehicule_id.id)
-        ])
+            ('investor_id', '=', self.id), ], limit=1)
+        _logger.info(f" investor_id: {self.id}, existing_part: {existing_part.account_number}, fund_id: {fund_id}")
+
         if not existing_part:
             part_account_obj.create({
                 'name': f"Compte Titres - {fund_id.name}",
@@ -744,19 +746,33 @@ class FundInvestor(models.Model):
                 'account_number': self._generate_account_number('part'),
                 'date_opened': fields.Date.today(),
             })
+        else:
+            part_account_obj.create({
+                'name': f"Compte Titres - {fund_id.name}",
+                'investor_id': self.id,
+                'vehicule_id': fund_id.vehicule_id.id,
+                'account_number':   existing_part.account_number, #self._generate_account_number('part'),
+                'date_opened': fields.Date.today(),
+            })
 
         # 2. Création du Compte Espèces
         cash_account_obj = self.env['efund.investor.cash_account']
         existing_cash = cash_account_obj.search([
-            ('investor_id', '=', self.id),
-            ('vehicule_id', '=', fund_id.vehicule_id.id)
-        ])
+            ('investor_id', '=', self.id), ], limit=1)
         if not existing_cash:
             cash_account_obj.create({
                 'name': f"Compte Espèces - {fund_id.name}",
                 'investor_id': self.id,
                 'vehicule_id': fund_id.vehicule_id.id,
                 'account_number': self._generate_account_number('cash'),
+                'date_opened': fields.Date.today(),
+            })
+        else:
+            cash_account_obj.create({
+                'name': f"Compte Espèces - {fund_id.name}",
+                'investor_id': self.id,
+                'vehicule_id': fund_id.vehicule_id.id,
+                'account_number': existing_cash.account_number, # self._generate_account_number('cash'),
                 'date_opened': fields.Date.today(),
             })
         return True
@@ -790,8 +806,7 @@ class FundInvestor(models.Model):
         type_client = "10" if self.investor_type == "individual" else "20"
 
         # Numéro chronologique (Séquence Odoo de 5 chiffres)
-        sequence = self.env['ir.sequence'].next_by_code('efund.investor.account.number') or '00001'
-        sequence = sequence[-5:]  # On s'assure d'avoir 5 chiffres
+        sequence = self.investor_order_number
 
         # 2. Construction du radical (18 chiffres)
         radical = f"{teneur}{agence}{type_compte}{categorie}{type_client}{sequence}"
@@ -799,11 +814,12 @@ class FundInvestor(models.Model):
         # 3. Calcul de la Clé de Contrôle (Algorithme Modulo 97)
         # Selon la circulaire : Reste de (Radical * 1000) / 97, puis 97 - Reste
         # Note : Pour les grands nombres en Python, on peut manipuler l'entier directement
-        val_for_key = int(radical + "000")
+        val_for_key = int(radical) * 1000
         reste = val_for_key % 97
         cle = 97 - reste
 
         # Formatage final sur 2 chiffres
         cle_str = str(cle).zfill(2)
+        raise ValidationError(f" radical {radical} et la clé {cle_str}")
 
         return f"{radical}{cle_str}"

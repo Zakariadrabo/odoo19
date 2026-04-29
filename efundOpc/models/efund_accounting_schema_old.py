@@ -13,7 +13,9 @@ class FundAccountingSchema(models.Model):
     name = fields.Char(string="Nom", required=True)
 
     event_type_id = fields.Many2one('efund.event.type', string="Type d'Événement", required=True)
-    journal_code = fields.Selection([('BNK','Banque'),('SUB','Souscriptions investisseurs'),('RED','Rachats investisseurs'),('SEC','Opérations sur titres'),('NAV','Valorisation / Valeur liquidative'),('EXP','Frais'),])
+    company_id = fields.Many2one('res.company', required=True, index=True)
+    company_code = fields.Char(related='company_id.company_code', string="Code société",)
+    journal_id = fields.Many2one('account.journal', string="Journal", required=False,)
     active = fields.Boolean(default=True)
     line_ids = fields.One2many('efund.accounting.schema.line', 'schema_id', string="Lignes comptables")
 

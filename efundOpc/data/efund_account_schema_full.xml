@@ -1,0 +1,47 @@
+<odoo>
+    <data>
+        <record id="schema_compute_vl_part_one" model="efund.accounting.schema.new">
+            <field name="name">Calcul VL part 1</field>
+            <field name="event_type_id" ref="event_013"/>
+            <field name="journal_code">NAV</field>
+            <field name="line_ids" eval="[
+                (0, 0, {
+                    'sequence': 10,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type': 'ic_obl',
+                    'account_selection_type': 'always',
+                    'account_code': '727110',
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 11,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type': 'ic_obl',
+                    'account_selection_type': 'always',
+                    'account_code': '217100',
+                    'use_analytic': True,
+                }),(0, 0, {
+                    'sequence': 12,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type': 'ic_dat',
+                    'account_selection_type': 'always',
+                    'account_code': '727120',
+                    'use_analytic': True,
+                }),(0, 0, {
+                    'sequence': 13,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type': 'ic_dat',
+                    'account_selection_type': 'always',
+                    'account_code': '141710',
+                    'use_analytic': True,
+                })
+            ]"/>
+        </record>
+
+
+    </data>
+</odoo>

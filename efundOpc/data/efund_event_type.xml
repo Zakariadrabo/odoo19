@@ -60,6 +60,17 @@
             <field name="sigle">DAT_EXECUTED_OUT</field>
             <field name="state">validated</field>
         </record>
+        <record id="event_013" model="efund.event.type.new">
+            <field name="name">Calcul VL part 1</field>
+            <field name="sigle">COMP_VL_INT_DIF</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_014" model="efund.event.type.new">
+            <field name="name">Calcul VL part 2</field>
+            <field name="sigle">COMP_VL_MGT_FEE</field>
+            <field name="state">validated</field>
+        </record>
+
     </data>
 </odoo>
 

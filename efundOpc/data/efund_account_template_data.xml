@@ -1,431 +1,432 @@
 <odoo>
-    <record id="code_111001" model="efund.account.template"> 
+    <data>
+        <record id="code_111001" model="efund.account.template">
             <field name="code">111001</field>
             <field name="name">Compte Espèces</field>
         </record>
-<record id="code_121001" model="efund.account.template"> 
+        <record id="code_121001" model="efund.account.template">
             <field name="code">121001</field>
             <field name="name">Compte Courant</field>
         </record>
-<record id="code_141710" model="efund.account.template"> 
+        <record id="code_141710" model="efund.account.template">
             <field name="code">141710</field>
             <field name="name">Intérêts courus / Placements monétaires</field>
         </record>
-<record id="code_141712" model="efund.account.template"> 
+        <record id="code_141712" model="efund.account.template">
             <field name="code">141712</field>
             <field name="name">Intérêts courus / Bon Trésor</field>
         </record>
-<record id="code_141714" model="efund.account.template"> 
+        <record id="code_141714" model="efund.account.template">
             <field name="code">141714</field>
             <field name="name">Intérêts courus des comptes courants</field>
         </record>
-<record id="code_217100" model="efund.account.template"> 
+        <record id="code_217100" model="efund.account.template">
             <field name="code">217100</field>
             <field name="name">Intérêts courus sur Obligations</field>
         </record>
-<record id="code_217300" model="efund.account.template"> 
+        <record id="code_217300" model="efund.account.template">
             <field name="code">217300</field>
             <field name="name">Différence d'estimation ACTIONS</field>
         </record>
-<record id="code_217400" model="efund.account.template"> 
+        <record id="code_217400" model="efund.account.template">
             <field name="code">217400</field>
             <field name="name">Différence d'estimation OBLIGATIONS</field>
         </record>
-<record id="code_217500" model="efund.account.template"> 
+        <record id="code_217500" model="efund.account.template">
             <field name="code">217500</field>
             <field name="name">Différence d'estimation OPCVM</field>
         </record>
-<record id="code_240001" model="efund.account.template"> 
+        <record id="code_240001" model="efund.account.template">
             <field name="code">240001</field>
             <field name="name">Obligation à recevoir</field>
         </record>
-<record id="code_240002" model="efund.account.template"> 
+        <record id="code_240002" model="efund.account.template">
             <field name="code">240002</field>
             <field name="name">Bon à recevoir</field>
         </record>
-<record id="code_240003" model="efund.account.template"> 
+        <record id="code_240003" model="efund.account.template">
             <field name="code">240003</field>
             <field name="name">Action à recevoir</field>
         </record>
-<record id="code_240004" model="efund.account.template"> 
+        <record id="code_240004" model="efund.account.template">
             <field name="code">240004</field>
             <field name="name">OPCVM à recevoir</field>
         </record>
-<record id="code_351000" model="efund.account.template"> 
+        <record id="code_351000" model="efund.account.template">
             <field name="code">351000</field>
             <field name="name">Impôt sur les bénéfices</field>
         </record>
-<record id="code_353100" model="efund.account.template"> 
+        <record id="code_353100" model="efund.account.template">
             <field name="code">353100</field>
             <field name="name">Etat, TVA facturée sur prestation de services</field>
         </record>
-<record id="code_353200" model="efund.account.template"> 
+        <record id="code_353200" model="efund.account.template">
             <field name="code">353200</field>
             <field name="name">Etat, TVA facturée sur commissions</field>
         </record>
-<record id="code_353500" model="efund.account.template"> 
+        <record id="code_353500" model="efund.account.template">
             <field name="code">353500</field>
             <field name="name">Etat, TVA facturée sur factures à établir</field>
         </record>
-<record id="code_355200" model="efund.account.template"> 
+        <record id="code_355200" model="efund.account.template">
             <field name="code">355200</field>
             <field name="name">Etat, TVA récupérable sur achats</field>
         </record>
-<record id="code_355400" model="efund.account.template"> 
+        <record id="code_355400" model="efund.account.template">
             <field name="code">355400</field>
             <field name="name">Etat, TVA récupérable sur services extérieurs et autres charges</field>
         </record>
-<record id="code_355500" model="efund.account.template"> 
+        <record id="code_355500" model="efund.account.template">
             <field name="code">355500</field>
             <field name="name">Etat, TVA récupérable sur factures non parvenues</field>
         </record>
-<record id="code_371200" model="efund.account.template"> 
+        <record id="code_371200" model="efund.account.template">
             <field name="code">371200</field>
             <field name="name">Clients, compte espèces</field>
         </record>
-<record id="code_389002" model="efund.account.template"> 
+        <record id="code_389002" model="efund.account.template">
             <field name="code">389002</field>
             <field name="name">Actions, Obligations à payer</field>
         </record>
-<record id="code_389003" model="efund.account.template"> 
+        <record id="code_389003" model="efund.account.template">
             <field name="code">389003</field>
             <field name="name">Vente / titres à encaisser</field>
         </record>
-<record id="code_389006" model="efund.account.template"> 
+        <record id="code_389006" model="efund.account.template">
             <field name="code">389006</field>
             <field name="name">Dividendes à payer</field>
         </record>
-<record id="code_389007" model="efund.account.template"> 
+        <record id="code_389007" model="efund.account.template">
             <field name="code">389007</field>
             <field name="name">Revenus / Actions à encaisser</field>
         </record>
-<record id="code_389008" model="efund.account.template"> 
+        <record id="code_389008" model="efund.account.template">
             <field name="code">389008</field>
             <field name="name">Coupons à recevoir Obligations</field>
         </record>
-<record id="code_389100" model="efund.account.template"> 
+        <record id="code_389100" model="efund.account.template">
             <field name="code">389100</field>
             <field name="name">Conservateurs, Droits de Garde</field>
         </record>
-<record id="code_389101" model="efund.account.template"> 
+        <record id="code_389101" model="efund.account.template">
             <field name="code">389101</field>
             <field name="name">TOB-SGI</field>
         </record>
-<record id="code_389200" model="efund.account.template"> 
+        <record id="code_389200" model="efund.account.template">
             <field name="code">389200</field>
             <field name="name">Créditeur CREPMF, Cpte de Redevance</field>
         </record>
-<record id="code_389201" model="efund.account.template"> 
+        <record id="code_389201" model="efund.account.template">
             <field name="code">389201</field>
             <field name="name">TOB-AVT</field>
         </record>
-<record id="code_389300" model="efund.account.template"> 
+        <record id="code_389300" model="efund.account.template">
             <field name="code">389300</field>
             <field name="name">Commission actif sous-gestion</field>
         </record>
-<record id="code_389400" model="efund.account.template"> 
+        <record id="code_389400" model="efund.account.template">
             <field name="code">389400</field>
             <field name="name">Créditeurs, Frais de Gestion</field>
         </record>
-<record id="code_389401" model="efund.account.template"> 
+        <record id="code_389401" model="efund.account.template">
             <field name="code">389401</field>
             <field name="name">TOB-SGO</field>
         </record>
-<record id="code_389500" model="efund.account.template"> 
+        <record id="code_389500" model="efund.account.template">
             <field name="code">389500</field>
             <field name="name">Créditeurs, CREPMF, Frais d'agrément</field>
         </record>
-<record id="code_389501" model="efund.account.template"> 
+        <record id="code_389501" model="efund.account.template">
             <field name="code">389501</field>
             <field name="name">Créditeurs, CREPMF, Frais de publication d'information</field>
         </record>
-<record id="code_389700" model="efund.account.template"> 
+        <record id="code_389700" model="efund.account.template">
             <field name="code">389700</field>
             <field name="name">Honoraires CAC</field>
         </record>
-<record id="code_389800" model="efund.account.template"> 
+        <record id="code_389800" model="efund.account.template">
             <field name="code">389800</field>
             <field name="name">Rompus souscriptions clients</field>
         </record>
-<record id="code_389900" model="efund.account.template"> 
+        <record id="code_389900" model="efund.account.template">
             <field name="code">389900</field>
             <field name="name">Droits d'entrée / sortie Sortie Acquis à la SGO</field>
         </record>
-<record id="code_389901" model="efund.account.template"> 
+        <record id="code_389901" model="efund.account.template">
             <field name="code">389901</field>
             <field name="name">TOB-DES</field>
         </record>
-<record id="code_389902" model="efund.account.template"> 
+        <record id="code_389902" model="efund.account.template">
             <field name="code">389902</field>
             <field name="name">Associés apports en numéraire + Autres clients</field>
         </record>
-<record id="code_389903" model="efund.account.template"> 
+        <record id="code_389903" model="efund.account.template">
             <field name="code">389903</field>
             <field name="name">Débiteurs divers</field>
         </record>
-<record id="code_389904" model="efund.account.template"> 
+        <record id="code_389904" model="efund.account.template">
             <field name="code">389904</field>
             <field name="name">Créditeurs divers</field>
         </record>
-<record id="code_389905" model="efund.account.template"> 
+        <record id="code_389905" model="efund.account.template">
             <field name="code">389905</field>
             <field name="name">Créditeurs divers BOA-AM</field>
         </record>
-<record id="code_389908" model="efund.account.template"> 
+        <record id="code_389908" model="efund.account.template">
             <field name="code">389908</field>
             <field name="name">BOA CI Dépositaire</field>
         </record>
-<record id="code_389909" model="efund.account.template"> 
+        <record id="code_389909" model="efund.account.template">
             <field name="code">389909</field>
             <field name="name">Compte d attente BOA BENIN</field>
         </record>
-<record id="code_389910" model="efund.account.template"> 
+        <record id="code_389910" model="efund.account.template">
             <field name="code">389910</field>
             <field name="name">BOA-CI, Concervateur marché</field>
         </record>
-<record id="code_389911" model="efund.account.template"> 
+        <record id="code_389911" model="efund.account.template">
             <field name="code">389911</field>
-            <field name="name">Créditeur  BOA BN</field>
+            <field name="name">Créditeur BOA BN</field>
         </record>
-<record id="code_389912" model="efund.account.template"> 
+        <record id="code_389912" model="efund.account.template">
             <field name="code">389912</field>
             <field name="name">Créditeurs Garants de liquidité</field>
         </record>
-<record id="code_389915" model="efund.account.template"> 
+        <record id="code_389915" model="efund.account.template">
             <field name="code">389915</field>
             <field name="name">Droit d'attribution exceptionnel</field>
         </record>
-<record id="code_389950" model="efund.account.template"> 
+        <record id="code_389950" model="efund.account.template">
             <field name="code">389950</field>
             <field name="name">Compte de liaisson Dépositaire</field>
         </record>
-<record id="code_389951" model="efund.account.template"> 
+        <record id="code_389951" model="efund.account.template">
             <field name="code">389951</field>
             <field name="name">Droits de sortie acquis à la SGO</field>
         </record>
-<record id="code_389952" model="efund.account.template"> 
+        <record id="code_389952" model="efund.account.template">
             <field name="code">389952</field>
             <field name="name">Droits d'entrée acquis à la SGO</field>
         </record>
-<record id="code_551120" model="efund.account.template"> 
+        <record id="code_551120" model="efund.account.template">
             <field name="code">551120</field>
             <field name="name">Réguls lot et primes</field>
         </record>
-<record id="code_551801" model="efund.account.template"> 
+        <record id="code_551801" model="efund.account.template">
             <field name="code">551801</field>
             <field name="name">Plus values sur obligations</field>
         </record>
-<record id="code_551802" model="efund.account.template"> 
+        <record id="code_551802" model="efund.account.template">
             <field name="code">551802</field>
             <field name="name">Moins values sur obligations</field>
         </record>
-<record id="code_551803" model="efund.account.template"> 
+        <record id="code_551803" model="efund.account.template">
             <field name="code">551803</field>
             <field name="name">Plus values sur actions</field>
         </record>
-<record id="code_551804" model="efund.account.template"> 
+        <record id="code_551804" model="efund.account.template">
             <field name="code">551804</field>
             <field name="name">Moins values sur actions</field>
         </record>
-<record id="code_553100" model="efund.account.template"> 
+        <record id="code_553100" model="efund.account.template">
             <field name="code">553100</field>
             <field name="name">Différence d'estimation portefeuille</field>
         </record>
-<record id="code_553200" model="efund.account.template"> 
+        <record id="code_553200" model="efund.account.template">
             <field name="code">553200</field>
             <field name="name">Frais sur titres (achat, vente, garde)</field>
         </record>
-<record id="code_553300" model="efund.account.template"> 
+        <record id="code_553300" model="efund.account.template">
             <field name="code">553300</field>
             <field name="name">Droits d'entrée / sortie Sortie Acquis au fond</field>
         </record>
-<record id="code_553400" model="efund.account.template"> 
+        <record id="code_553400" model="efund.account.template">
             <field name="code">553400</field>
             <field name="name">Droits d'entrée acquis au FCP</field>
         </record>
-<record id="code_553401" model="efund.account.template"> 
+        <record id="code_553401" model="efund.account.template">
             <field name="code">553401</field>
             <field name="name">Droits de sortie acquis au FCP</field>
         </record>
-<record id="code_571000" model="efund.account.template"> 
+        <record id="code_571000" model="efund.account.template">
             <field name="code">571000</field>
             <field name="name">Capital</field>
         </record>
-<record id="code_571001" model="efund.account.template"> 
+        <record id="code_571001" model="efund.account.template">
             <field name="code">571001</field>
             <field name="name">REGUL SUR LE CAPITAL</field>
         </record>
-<record id="code_571002" model="efund.account.template"> 
+        <record id="code_571002" model="efund.account.template">
             <field name="code">571002</field>
             <field name="name">Droit d'entrée/sortie</field>
         </record>
-<record id="code_572100" model="efund.account.template"> 
+        <record id="code_572100" model="efund.account.template">
             <field name="code">572100</field>
             <field name="name">Souscriptions exercice</field>
         </record>
-<record id="code_572200" model="efund.account.template"> 
+        <record id="code_572200" model="efund.account.template">
             <field name="code">572200</field>
             <field name="name">Rachats exercice</field>
         </record>
-<record id="code_581100" model="efund.account.template"> 
+        <record id="code_581100" model="efund.account.template">
             <field name="code">581100</field>
             <field name="name">Report à nouveau créditeur</field>
         </record>
-<record id="code_581200" model="efund.account.template"> 
+        <record id="code_581200" model="efund.account.template">
             <field name="code">581200</field>
             <field name="name">Réport à nouveau débiteur</field>
         </record>
-<record id="code_581300" model="efund.account.template"> 
+        <record id="code_581300" model="efund.account.template">
             <field name="code">581300</field>
             <field name="name">Réguls résultat antérieur incorporé à la VL</field>
         </record>
-<record id="code_591100" model="efund.account.template"> 
+        <record id="code_591100" model="efund.account.template">
             <field name="code">591100</field>
             <field name="name">Résultat à affecter</field>
         </record>
-<record id="code_591110" model="efund.account.template"> 
+        <record id="code_591110" model="efund.account.template">
             <field name="code">591110</field>
             <field name="name">Régul résultat de l'exercice clos</field>
         </record>
-<record id="code_603100" model="efund.account.template"> 
+        <record id="code_603100" model="efund.account.template">
             <field name="code">603100</field>
             <field name="name">Frais de gestion</field>
         </record>
-<record id="code_603200" model="efund.account.template"> 
+        <record id="code_603200" model="efund.account.template">
             <field name="code">603200</field>
-            <field name="name">Droit de garde </field>
+            <field name="name">Droit de garde</field>
         </record>
-<record id="code_603800" model="efund.account.template"> 
+        <record id="code_603800" model="efund.account.template">
             <field name="code">603800</field>
             <field name="name">Autres frais de gestion</field>
         </record>
-<record id="code_615100" model="efund.account.template"> 
+        <record id="code_615100" model="efund.account.template">
             <field name="code">615100</field>
             <field name="name">Frais bancaires</field>
         </record>
-<record id="code_615180" model="efund.account.template"> 
+        <record id="code_615180" model="efund.account.template">
             <field name="code">615180</field>
             <field name="name">Autres frais bancaires</field>
         </record>
-<record id="code_615210" model="efund.account.template"> 
+        <record id="code_615210" model="efund.account.template">
             <field name="code">615210</field>
             <field name="name">Redevances CREPMF</field>
         </record>
-<record id="code_615220" model="efund.account.template"> 
+        <record id="code_615220" model="efund.account.template">
             <field name="code">615220</field>
             <field name="name">Honoraires CAC</field>
         </record>
-<record id="code_615230" model="efund.account.template"> 
+        <record id="code_615230" model="efund.account.template">
             <field name="code">615230</field>
             <field name="name">Commissions sur l'actif net</field>
         </record>
-<record id="code_615310" model="efund.account.template"> 
+        <record id="code_615310" model="efund.account.template">
             <field name="code">615310</field>
             <field name="name">Autres frais</field>
         </record>
-<record id="code_615311" model="efund.account.template"> 
+        <record id="code_615311" model="efund.account.template">
             <field name="code">615311</field>
             <field name="name">Frais d'engagement liquidité</field>
         </record>
-<record id="code_690000" model="efund.account.template"> 
+        <record id="code_690000" model="efund.account.template">
             <field name="code">690000</field>
             <field name="name">Impôt sur les bénéfices</field>
         </record>
-<record id="code_710100" model="efund.account.template"> 
+        <record id="code_710100" model="efund.account.template">
             <field name="code">710100</field>
             <field name="name">Revenus des ACTIONS</field>
         </record>
-<record id="code_710200" model="efund.account.template"> 
+        <record id="code_710200" model="efund.account.template">
             <field name="code">710200</field>
             <field name="name">Revenus des OBLIGATIONS</field>
         </record>
-<record id="code_710300" model="efund.account.template"> 
+        <record id="code_710300" model="efund.account.template">
             <field name="code">710300</field>
             <field name="name">Revenus des BONS</field>
         </record>
-<record id="code_710400" model="efund.account.template"> 
+        <record id="code_710400" model="efund.account.template">
             <field name="code">710400</field>
             <field name="name">Autres Produits</field>
         </record>
-<record id="code_710500" model="efund.account.template"> 
+        <record id="code_710500" model="efund.account.template">
             <field name="code">710500</field>
             <field name="name">Revenus des autres valeurs</field>
         </record>
-<record id="code_710600" model="efund.account.template"> 
+        <record id="code_710600" model="efund.account.template">
             <field name="code">710600</field>
             <field name="name">Revenus des OPCVM</field>
         </record>
-<record id="code_727110" model="efund.account.template"> 
+        <record id="code_727110" model="efund.account.template">
             <field name="code">727110</field>
             <field name="name">Intérêts courus sur obligations</field>
         </record>
-<record id="code_727111" model="efund.account.template"> 
+        <record id="code_727111" model="efund.account.template">
             <field name="code">727111</field>
             <field name="name">Intérêts courus sur transaction</field>
         </record>
-<record id="code_727120" model="efund.account.template"> 
+        <record id="code_727120" model="efund.account.template">
             <field name="code">727120</field>
             <field name="name">Intérêts courus sur DAT</field>
         </record>
-<record id="code_727130" model="efund.account.template"> 
+        <record id="code_727130" model="efund.account.template">
             <field name="code">727130</field>
             <field name="name">Intérêts courus sur BTC</field>
         </record>
-<record id="code_727200" model="efund.account.template"> 
+        <record id="code_727200" model="efund.account.template">
             <field name="code">727200</field>
             <field name="name">Intérêts des Comptes courants</field>
         </record>
-<record id="code_727400" model="efund.account.template"> 
+        <record id="code_727400" model="efund.account.template">
             <field name="code">727400</field>
             <field name="name">Revenus de titres de placement</field>
         </record>
-<record id="code_731100" model="efund.account.template"> 
+        <record id="code_731100" model="efund.account.template">
             <field name="code">731100</field>
-            <field name="name">Revenus sur DAT et autres Placements </field>
+            <field name="name">Revenus sur DAT et autres Placements</field>
         </record>
-<record id="code_770000" model="efund.account.template"> 
+        <record id="code_770000" model="efund.account.template">
             <field name="code">770000</field>
             <field name="name">Régul résultat exercice en cours</field>
         </record>
-<record id="code_922110" model="efund.account.template"> 
+        <record id="code_922110" model="efund.account.template">
             <field name="code">922110</field>
             <field name="name">Obligation à recevoir du DC/BR</field>
         </record>
-<record id="code_922120" model="efund.account.template"> 
+        <record id="code_922120" model="efund.account.template">
             <field name="code">922120</field>
             <field name="name">Bon à recevoir du DC/BR</field>
         </record>
-<record id="code_922130" model="efund.account.template"> 
+        <record id="code_922130" model="efund.account.template">
             <field name="code">922130</field>
             <field name="name">Action à recevoir du DC/BR</field>
         </record>
-<record id="code_922140" model="efund.account.template"> 
+        <record id="code_922140" model="efund.account.template">
             <field name="code">922140</field>
             <field name="name">OPCVM à recevoir du DC/BR</field>
         </record>
-<record id="code_940001" model="efund.account.template"> 
+        <record id="code_940001" model="efund.account.template">
             <field name="code">940001</field>
             <field name="name">Souscription / Rachat</field>
         </record>
-<record id="code_950001" model="efund.account.template"> 
+        <record id="code_950001" model="efund.account.template">
             <field name="code">950001</field>
             <field name="name">Stock titre obligation</field>
         </record>
-<record id="code_950002" model="efund.account.template"> 
+        <record id="code_950002" model="efund.account.template">
             <field name="code">950002</field>
             <field name="name">Stock titre bon</field>
         </record>
-<record id="code_950003" model="efund.account.template"> 
+        <record id="code_950003" model="efund.account.template">
             <field name="code">950003</field>
             <field name="name">Stock titre action</field>
         </record>
-<record id="code_950004" model="efund.account.template"> 
+        <record id="code_950004" model="efund.account.template">
             <field name="code">950004</field>
             <field name="name">Stock titre OPCVM</field>
         </record>
-<record id="code_960001" model="efund.account.template"> 
+        <record id="code_960001" model="efund.account.template">
             <field name="code">960001</field>
             <field name="name">Stock part</field>
         </record>
-
+    </data>
 </odoo>
