@@ -54,7 +54,7 @@ class EfundNavSession(models.Model):
             fy = self.env['efund.fiscal.year'].search([
                 ('date_start', '<=', nav.valuation_date),
                 ('date_end', '>=', nav.valuation_date),
-                #('company_id', '=', nav.fund_id.company_id.id)
+
             ], limit=1)
             nav.fiscal_year_id = fy
 
@@ -151,7 +151,6 @@ class EfundNavSession(models.Model):
 
             # vérification des données de calcul VL
             result = self.env['efund.service'].get_valuation_by_type(rec.fund_id.vehicule_id, rec.valuation_date)
-            _logger.info(f"***** v&hicule {rec.fund_id.vehicule_id} date : {rec.valuation_date} et Resultat de la valeur du portefeuille : {result}")
             return True
 
     def action_validate(self):

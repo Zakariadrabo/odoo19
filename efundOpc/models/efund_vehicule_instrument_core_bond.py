@@ -130,7 +130,7 @@ class FundInstrumentBond(models.Model):
             return 0, 0, 0
 
         if end_date < start_date:
-            raise ValueError("end_date doit être postérieure à start_date")
+            raise ValidationError(f"la date de fin ({end_date}) doit être supérieure à la date de début ({start_date})")
 
         years = end_date.year - start_date.year
         months = end_date.month - start_date.month
@@ -166,10 +166,11 @@ class FundInstrumentBond(models.Model):
                     frequency=1)
 
             if isinstance(res, dict) and res.get('next_coupon'):
-                result = rec.date_diff_ymd(today, res.get('next_coupon') )
-                result1 = rec.date_diff_ymd(today, rec.maturity_date)
-                rec.remaining_date_to_coupon = f"{result.get('years')} ans {result.get('months')} mois {result.get('days')} jours"
-                rec.remaining_date_to_maturity = f"{result1.get('years')} ans {result1.get('months')} mois {result1.get('days')} jours"
+                pass
+                #result = rec.date_diff_ymd(today, res.get('next_coupon') )
+                #result1 = rec.date_diff_ymd(today, rec.maturity_date)
+                #rec.remaining_date_to_coupon = f"{result.get('years')} ans {result.get('months')} mois {result.get('days')} jours"
+                #rec.remaining_date_to_maturity = f"{result1.get('years')} ans {result1.get('months')} mois {result1.get('days')} jours"
 
     def action_compute_coupons(self):
         self.ensure_one()
