@@ -188,3 +188,4 @@ class EfundMandatHandler(models.AbstractModel):
             'user_type_id': self.env.ref('account.data_account_type_non_current_assets').id,  # Type Actif Immobilisé
             'reconcile': True,
         })
+

@@ -18,8 +18,8 @@ class EfundNavSession(models.Model):
     total_liabilities = fields.Monetary(string="Total Passif", compute="_compute_nav", store=True,)
     net_asset_value = fields.Monetary(string="Actif Net", compute="_compute_nav", store=True,)
 
-    nb_parts = fields.Float(string="Nombre de parts",compute='_compute_nb_parts', store=True, digits=(16, 4))
-    unit_nav = fields.Float(string="VL Unitaire", digits=(16, 4), store=True)
+    nb_parts = fields.Float(string="Nombre de parts",compute='_compute_nb_parts', store=True, digits=(16, 4), readonly=False, )
+    unit_nav = fields.Float(string="Valeur Liquidative",)
 
     # Deflacation
     capital = fields.Float(string="Capital", digits=(18, 10))
@@ -28,11 +28,16 @@ class EfundNavSession(models.Model):
     closed_fiscal_year_result = fields.Float(string="Résultat exercice clos", digits=(18, 10))
     current_fiscal_year_result = fields.Float(string="Résultat exercice en cours", digits=(18, 10))
 
-
     currency_id = fields.Many2one(related='fund_id.currency_id')
     state = fields.Selection([('draft', 'Brouillon'),('verify','Vérifié'), ('validated', 'Validé')], default='draft')
     line_ids = fields.One2many('efund.nav.line', 'session_id', string="Détails de l'Inventaire")
     fiscal_year_id = fields.Many2one('efund.fiscal.year',string="Exercice Fiscal", compute="_compute_fiscal_year", store=True)
+
+    # Récupération des données de performances
+    PerformanceHebdomadaire = fields.Float(string="Performance Hebdomadaire")
+    PerformanceMensuelle = fields.Float(string="Performance Mensuelle")
+    PerformanceAnnuelle = fields.Float(string="Performance Annuelle")
+    PerformanceOrigine = fields.Float(string="Performance Origine")
 
     @api.depends('fund_id', 'valuation_date')
     def _compute_nb_parts(self):
@@ -64,7 +69,7 @@ class EfundNavSession(models.Model):
                 rec.total_liabilities = liabilities
                 rec.net_asset_value = assets - liabilities
                 rec.unit_nav = rec.net_asset_value / rec.nb_parts
-            #rec.unit_nav = rec.net_asset_value / rec.nb_parts if rec.nb_parts else 0
+
 
     def action_generate_lines(self):
         self.ensure_one()

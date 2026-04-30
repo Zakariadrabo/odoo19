@@ -43,6 +43,12 @@ class Fund(models.Model):
     # ------------------------------------------------------------
     def action_activate(self):
         for rec in self:
+            #Création des comptes pour le fond palmares
+            if rec.isin =='9999999999':
+                investor = self.env['efund.investor'].search([])
+                for inv in investor:
+                    inv.action_join_fund(rec)
+
             if not rec.start_date:
                 raise ValidationError(_("Merci de saisir la date d'opération."))
             if rec.company_id:

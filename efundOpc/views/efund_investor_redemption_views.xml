@@ -52,7 +52,7 @@
                         <group>
                             <field name="gross_amount" invisible="buy_choice != 'amount'"/>
                             <field name="shares" invisible="buy_choice != 'share'"/>
-                            <field name="is_subscription_fee"/>
+                            <field name="is_redemption_fee"/>
                         </group>
                     </group>
                     <notebook>
@@ -60,7 +60,7 @@
                             <group>
                                 <group string="Flux Global">
                                     <field name="gross_amount" readonly="1"/>
-                                    <field name="subscription_fee_amount" string="Frais de souscription"/>
+                                    <field name="redemption_fee_amount" string="Frais de rachat"/>
                                     <field name="net_amount" decoration-bf="1"/>
                                     <field name="shares" />
                                     <field name="amount_remaining" string="Reliquat"/>

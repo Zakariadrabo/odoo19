@@ -20,29 +20,27 @@ class FundRedemption(models.Model):
     total_shares = fields.Float(string="Total de parts", related="part_account_id.total_parts", readonly=True)
     shares = fields.Float(string="Nombre de parts")
 
-    net_amount = fields.Monetary(string="Montant utilisé", compute="_compute_subscription", store=True)
-    amount_remaining = fields.Monetary(string="Montant restitué", compute="_compute_subscription", store=True)
-    subscription_fee_amount = fields.Monetary(string="Frais de souscription", compute="_compute_subscription",store=True)
+    net_amount = fields.Monetary(string="Montant utilisé", compute="_compute_redemption", store=True, readonly = False,)
+    amount_remaining = fields.Monetary(string="Montant restitué", compute="_compute_redemption", store=True, readonly = False,)
+    #buy_choice = fields.Selection([('amount', 'Montant'), ('share', 'Part')], string="Choix d'achat", default='share')
+    #buy_choice = fields.Selection([('amount', 'Montant'), ('share', 'Part')], string="Choix d'achat", default='share')
+    redemption_fee_amount = fields.Monetary(string="Frais de souscription", compute="_compute_redemption",store=True, readonly = False)
 
     buy_choice = fields.Selection([('amount', 'Montant'), ('share', 'Part')], string="Choix d'achat", default='amount')
-    is_subscription_fee = fields.Boolean(string="Appliquer Frais de souscription", default=True, store=True)
-
+    is_redemption_fee = fields.Boolean(string="Appliquer Frais de souscription", default=True, store=True)
 
     date_operation = fields.Datetime(string="Date de l'opération", default=fields.Datetime.now)
     date_valeur = fields.Datetime(string="Date de valeur")
     allow_fractional_parts = fields.Boolean(string="Parts fractionnées", related='fund_id.allow_fractional_parts', )
     total_parts_available = fields.Float(string=" Nombre total de parts", related="part_account_id.total_parts",
                                          readonly=True)
-    #buy_choice = fields.Selection([('amount', 'Montant'), ('share', 'Part')], string="Choix d'achat", default='share')
-    parts_to_redeem = fields.Float(string="Nombre de parts", store=True)
     nav_date = fields.Date(string="Date VL appliquée", default=fields.Date.context_today, required=True)
-    nav = fields.Float(string="VL estimée", compute="_compute_nav_value", help="Valeur Liquidative ", store=True)
-    #net_amount = fields.Monetary(string="Montant à percevoir", readonly=True, )
-    redemption_fee_amount = fields.Monetary(string="Frais de rachat", store=True, readonly=True)
+    nav = fields.Float(string="VL estimée", compute="_compute_nav_value", help="Valeur Liquidative ", store=True,readonly = False,)
     redemption_fee_rate = fields.Float(string=" % Frais de rachat", compute="_compute_nav_value", store=True,
-                                       readonly=True)
-    gross_amount = fields.Monetary(string="Montant + frais", )
-    desired_amount = fields.Monetary(string="Montant souhaité")
+                                       readonly=False)
+    exit_load = fields.Float(related="share_class_id.entry_load", string="Taux frais de souscription (%)", store=True)
+    gross_amount = fields.Monetary(string="Montant", )
+
 
     # -----------------------------------------------------------------
     # RELATIONS
@@ -97,7 +95,7 @@ class FundRedemption(models.Model):
     #investor_cash_move_id = fields.Many2one('efund.investor.cash.move', string="Cash Investisseur", readonly=True)
     #fund_cash_move_id = fields.Many2one('efund.fund.cash.move', string="Cash Fond", readonly=True)
     operation_fee_move_id = fields.Many2one('efund.investor.operation.fee', string="Frais souscription", readonly=True)
-    is_redemption_fee = fields.Boolean(string="Appliquer Frais", default=True)
+
     # -----------------------------------------------------------------
     # LES METHODES
     # -----------------------------------------------------------------
@@ -128,25 +126,28 @@ class FundRedemption(models.Model):
             rec.amount_res_clos = rec.shares * rec.vl_res_clos
             rec.amount_income_current = rec.shares * rec.vl_res_en_cours
 
-    @api.depends('gross_amount', 'is_subscription_fee')
-    def _compute_subscription(self):
+    """
+    @api.depends('gross_amount', 'is_redemption_fee')
+    def _compute_redemption(self):
         for sub in self:
             if sub.gross_amount:
                 nav = self.env['efund.service'].get_last_nav_value(sub.fund_id)
                 if sub.buy_choice == 'amount':
                     result = self.calculate_shares(nav, sub.allow_fractional_parts, sub.gross_amount,
-                                                   sub.entry_load, sub.is_subscription_fee)
+                                                   sub.entry_load, sub.is_redemption_fee)
                 else:
                     result = self.calculate_amount(nav, sub.allow_fractional_parts, sub.shares,
-                                                   sub.entry_load, sub.is_subscription_fee)
+                                                   sub.entry_load, sub.is_redemption_fee)
 
                 # affectation des valeurs
                 sub.net_amount = result.get('net_amount')
-                sub.subscription_fee_amount = result.get('fees_amount')
+                sub.redemption_fee_amount = result.get('fees_amount')
                 sub.amount_remaining = result.get('amount_remaining')
                 sub.gross_amount = result.get('gross_amount')
                 sub.shares = result.get('shares')
                 sub.vehicule_id = sub.fund_id.vehicule_id
+    
+    """
 
     def calculate_shares(self, nav, allow_fractional_shares, gross_amount, fee_percent, apply_subscription_fees):
         """
@@ -253,21 +254,27 @@ class FundRedemption(models.Model):
         }
 
 
-    @api.onchange('desired_amount', 'parts_to_redeem','is_redemption_fee')
-    def _onchange_desired_amount_or_part(self):
+    @api.depends('gross_amount', 'shares','is_redemption_fee')
+    def _compute_redemption(self):
         for sub in self:
+            nav = self.env['efund.service'].get_last_nav_value(sub.fund_id)
+            share_class = self.env['efund.fund.share.class'].search([
+                ('vehicule_fund_id', '=', sub.fund_id.id),
+                ('is_default', '=', True)
+            ])
+            sub.exit_load = share_class.exit_load
             if sub.buy_choice == 'amount':
-                result = self.calculate_redemption_update(sub.nav, sub.allow_fractional_parts, sub.redemption_fee_rate,sub.is_redemption_fee,
-                                                   sub.desired_amount, None)
+                result = self.calculate_redemption_update(nav, sub.allow_fractional_parts, sub.exit_load,sub.is_redemption_fee,
+                                                   sub.gross_amount, None)
             else:
-                result = self.calculate_redemption_update(sub.nav, sub.allow_fractional_parts, sub.redemption_fee_rate,sub.is_redemption_fee,
-                                                   None, sub.parts_to_redeem)
+                result = self.calculate_redemption_update(nav, sub.allow_fractional_parts, sub.exit_load,sub.is_redemption_fee,
+                                                   None, sub.shares)
 
             # affectation des valeurs
             sub.net_amount = result.get('net_amount_to_receive')
             sub.redemption_fee_amount = result.get('fees_amount')
             sub.gross_amount = result.get('gross_amount')
-            sub.parts_to_redeem = result.get('shares_to_redeem')
+            sub.shares = result.get('shares_to_redeem')
 
     @api.depends('fund_id')
     def _compute_nav_value(self):
@@ -280,7 +287,7 @@ class FundRedemption(models.Model):
                 if share_class:
                     nav = self.env['efund.service'].get_last_nav_value(sub.fund_id)
                     sub.nav = nav
-                    sub.entry_load = share_class.entry_load
+                    sub.exit_load = share_class.exit_load
                 else:
                     raise UserError("Besoin d'avoir la classe de parts par défaut pour le fonds")
 
@@ -356,7 +363,7 @@ class FundRedemption(models.Model):
             return {'error': "Les frais de rachat ne peuvent pas atteindre 100%."}
 
         # Taux de frais effectif
-        effective_fee_rate = (fee_percent / 100.0) if apply_redemption_fee else 0.0
+        effective_fee_rate = fee_percent if apply_redemption_fee else 0.0
 
         # --- DÉTERMINATION DU NOMBRE DE PARTS ---
         if amount_net_target is not None:
@@ -582,7 +589,8 @@ class FundRedemption(models.Model):
                 raise UserError(
                     "Le fond n'a pas assez de liquidité pour le rachat. Merci de faire un désinvestissement ou de diminuer le montant ou le nombre de parts")
 
-            vl = share_class.current_nav
+
+            vl = self.env['efund.service'].get_last_nav_value(rec.fund_id)
             if not vl or vl <= 0:
                 raise UserError(_("Aucune VL valide disponible."))
 
@@ -599,7 +607,7 @@ class FundRedemption(models.Model):
                 # RECALCULER les valeurs avant création
                 if rec.buy_choice == 'amount':
                     result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
-                                                       rec.desired_amount, None)
+                                                       rec.gross_amount, None)
                 else:
                     result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
                                                        None, rec.parts_to_redeem)
@@ -622,7 +630,7 @@ class FundRedemption(models.Model):
             # RECALCULER les valeurs avant création
             if rec.buy_choice == 'amount':
                 result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
-                                                   rec.desired_amount, None)
+                                                   rec.gross_amount, None)
             else:
                 result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
                                                    None, rec.parts_to_redeem)
@@ -664,7 +672,7 @@ class FundRedemption(models.Model):
                 raise UserError(
                     "Le fond n'a pas assez de liquidité pour le rachat. Merci de faire un désinvestissement ou de diminuer le montant ou le nombre de parts")
 
-            vl = share_class.current_nav
+            vl = self.env['efund.service'].get_last_nav_value(rec.fund_id)
             if not vl or vl <= 0:
                 raise UserError(_("Aucune VL valide disponible."))
 
@@ -681,7 +689,7 @@ class FundRedemption(models.Model):
                 # RECALCULER les valeurs avant création
                 if rec.buy_choice == 'amount':
                     result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
-                                                       rec.desired_amount, None)
+                                                       rec.gross_amount, None)
                 else:
                     result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
                                                        None, rec.parts_to_redeem)

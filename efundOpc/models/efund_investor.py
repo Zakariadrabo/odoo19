@@ -736,7 +736,6 @@ class FundInvestor(models.Model):
         part_account_obj = self.env['efund.investor.part_account']
         existing_part = part_account_obj.search([
             ('investor_id', '=', self.id), ], limit=1)
-        _logger.info(f" investor_id: {self.id}, existing_part: {existing_part.account_number}, fund_id: {fund_id}")
 
         if not existing_part:
             part_account_obj.create({
