@@ -22,7 +22,7 @@
                     </div>
                     <group>
                         <group>
-                            <field name="sigle" placeholder="ex: SUB_VALIDATED"/>
+                            <field name="code" placeholder="ex: SUB_VALIDATED"/>
                         </group>
                         <group>
                         </group>
@@ -37,7 +37,7 @@
         <field name="arch" type="xml">
             <list string="Types d'Événements">
                 <field name="name"/>
-                <field name="sigle"/>
+                <field name="code"/>
                 <field name="state" widget="badge"
                        decoration-info="state == 'draft'"
                        decoration-success="state == 'validated'"

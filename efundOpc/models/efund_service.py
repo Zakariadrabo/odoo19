@@ -31,7 +31,7 @@ class EfundService(models.Model):
         }
         return mapping.get(instrument_type, '218')
 
-    def get_or_create_accounting_mapping(self, instrument, vehicule):
+    def get_or_create_accounting_mapping(self, instrument, vehicule, account_type='balance'):
         """
         Retourne le compte comptable associé.
         Le crée s'il n'existe pas encore pour cette société.
@@ -49,7 +49,8 @@ class EfundService(models.Model):
         mapping_obj = self.env['efund.instrument.account']
         mapping = mapping_obj.search([
             ('instrument_id', '=', instrument.id),
-            ('company_id', '=', company.id)
+            ('company_id', '=', company.id),
+            ('usage_type', '=', account_type)
         ], limit=1)
 
         if not mapping:
@@ -58,12 +59,13 @@ class EfundService(models.Model):
             mapping = mapping_obj.create({
                 'instrument_id': instrument.id,
                 'company_id': company.id,
-                'account_id': new_account.id
+                'account_id': new_account.id,
+                'usage_type': account_type
             })
 
         return mapping.account_id
 
-    def create_chronological_account(self, company, instrument):
+    def create_chronological_account(self, company, instrument, account_type='balance'):
         """
         Génère un compte comptable chronologique compatible Odoo 19+.
         Format : Racine + Séquence 5 chiffres (ex: 21100001).
@@ -71,7 +73,7 @@ class EfundService(models.Model):
 
         target_company = self.env['res.company'].browse(company.id)
         AccountObj = self.env['account.account'].sudo().with_company(target_company)
-        root = self.get_account_root(instrument.instrument_type)
+        root = self.get_account_root(instrument.instrument_type) if account_type == 'balance' else '951'
         company_id = str(company.id)
 
         last_account = AccountObj.search([
@@ -524,7 +526,7 @@ class EfundService(models.Model):
 
     def build_event_payload(self, event, vehicule_id, name, date_operation, playload):
 
-        event_type_id = self.env['efund.event.type.new'].search([('sigle', '=', event)], limit=1)
+        event_type_id = self.env['efund.event.type'].search([('code', '=', event)], limit=1)
         if not event_type_id:
             raise ValidationError(
                 f" Le type d'évènement {event} n'est pas définir. Merci de contacter votre Administrateur")

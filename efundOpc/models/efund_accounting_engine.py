@@ -30,7 +30,7 @@ class FundAccountingEngine(models.AbstractModel):
         else:
             idcompany_id = event.vehicule_id.company_id
 
-        schema = self.env['efund.accounting.schema.new'].search([
+        schema = self.env['efund.accounting.schema'].search([
             ('event_type_id', '=', event.event_type_id.id),
             #('company_id', '=', idcompany_id.id),
             ('active', '=', True)
@@ -42,7 +42,6 @@ class FundAccountingEngine(models.AbstractModel):
 
         # Récupération du journal
         journal_code = schema.journal_code
-        _logger.info(f"******** Code Journal {journal_code} et compagnie {idcompany_id.name}")
 
         target_journal = self.env['account.journal'].with_company(idcompany_id).search([
             ('code', '=', journal_code),
@@ -52,13 +51,10 @@ class FundAccountingEngine(models.AbstractModel):
         if not target_journal:
             raise UserError(_("Journal '%s' non trouvé pour la société %s") % (journal_code, journal_code.name))
 
-        _logger.info(f"**************Afficher le journal {target_journal.name}")
-
-
         lines = []
 
         for rule in schema.line_ids:
-            amount = self._resolve_amount(event, rule.amount_type)
+            amount = self._resolve_amount(event, rule.amount_type_id.code)
 
             if not amount:
                 continue
@@ -82,28 +78,26 @@ class FundAccountingEngine(models.AbstractModel):
 
             if rule.account_resolution_type == 'fixed':
                 #target_account = rule.account_id
-                target_code = rule.account_code
-                if target_code : #and target_account.company_id != idcompany_id
+                target_code = rule.account_id.code
+                if target_code :
                     target_account = self.env['account.account'].sudo().with_company(idcompany_id).search([
                         ('code', '=', target_code),
                     ], order='code desc', limit=1)
 
             elif rule.account_resolution_type == 'instrument':
-
                 # RÉSOLUTION : On va chercher dans le dictionnaire payload
-
                 instrument_id = event.payload.get('instrument_id')
-
-
                 if not instrument_id:
                     raise UserError(_("L'ID de l'instrument est manquant dans le payload de l'événement."))
 
                 # On récupère l'objet instrument pour appeler sa méthode de mapping
                 instrument = self.env['efund.vehicule.instrument.core'].browse(instrument_id)
 
+                # type de compte (bilan ou hors bilan)
+                is_off_balance = rule.is_off_balance
                 # On utilise la méthode de mapping chronologique
-
-                target_account = self.env["efund.service"].get_or_create_accounting_mapping(instrument ,event.vehicule_id )
+                target_account = self.env["efund.service"].get_or_create_accounting_mapping(instrument ,event.vehicule_id,
+                account_type='off_balance' if is_off_balance else 'balance' )
 
             elif rule.account_resolution_type == 'liquidity':
                 # On récupère le compte de trésorerie lié au fonds/véhicule

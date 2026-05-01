@@ -5,7 +5,7 @@ class AccountingEvent(models.Model):
     _description = "Financial Events"
     _order = "id desc"
 
-    event_type_id = fields.Many2one('efund.event.type.new', string="Type d'Événement", required=True)
+    event_type_id = fields.Many2one('efund.event.type', string="Type d'Événement",)
     vehicule_id = fields.Many2one('efund.vehicule', string="Véhicule")
     reference = fields.Char(string="Reference", required=True)
     event_date = fields.Datetime(string="Date de l'évènement")

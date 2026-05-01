@@ -1,0 +1,152 @@
+<odoo>
+    <data>
+        <record id="event_type_001" model="efund.event.type">
+            <field name="name">OBL. Souscription</field>
+            <field name="code">TRADE_SUBSCRIPTION_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_002" model="efund.event.type">
+            <field name="name">OBL. Achat. Execution</field>
+            <field name="code">TRADE_EXECUTED_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_003" model="efund.event.type">
+            <field name="name">OBL. Achat. Dénouement</field>
+            <field name="code">BOND_TRADE_SETTLE</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_004" model="efund.event.type">
+            <field name="name">OBL. Coupon. Constatation</field>
+            <field name="code">OBL_COUPON_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_005" model="efund.event.type">
+            <field name="name">OBL. Coupon. Paiement</field>
+            <field name="code">OBL_COUPON_PAIEMENT</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_006" model="efund.event.type">
+            <field name="name">OBL. Remboursement Capital Constatation</field>
+            <field name="code">OBL_PRINCIPAL_PAYMENT</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_007" model="efund.event.type">
+            <field name="name">OBL. Remboursement Capital PAIEMENT</field>
+            <field name="code">OBL_PRINCIPAL_PAYMENT_REALISED</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_008" model="efund.event.type">
+            <field name="name">OBL. Vente</field>
+            <field name="code">OBL_SELL_OUT</field>
+            <field name="state">validated</field>
+        </record>
+
+        <record id="event_type_009" model="efund.event.type">
+            <field name="name">Action. Achat. Execution</field>
+            <field name="code">EQUITY_EXECUTED_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_010" model="efund.event.type">
+            <field name="name">Action. Achat. Dénouement</field>
+            <field name="code">EQUITITY_SETTLE</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_011" model="efund.event.type">
+            <field name="name">Action. Dividende. Paiement</field>
+            <field name="code">EQUITY_DIVIDENDE</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_012" model="efund.event.type">
+            <field name="name">Action. Vente - Constatation</field>
+            <field name="code">EQUITITY_SOLD</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_013" model="efund.event.type">
+            <field name="name">Action. Vente - Encaissement</field>
+            <field name="code">EQUITITY_SOLD_PAIEMENT</field>
+            <field name="state">validated</field>
+        </record>
+
+        <!--
+        <record id="event_type_003" model="efund.event.type">
+            <field name="name">OBL. Achat</field>
+            <field name="code">TRADE_EXECUTED_IN</field>
+            <field name="state">validated</field>
+        </record>
+
+        <record id="event_type_001" model="efund.event.type.new">
+            <field name="name">Apport de liquidité - Mandat</field>
+            <field name="code">MDT_CASH_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_002" model="efund.event.type.new">
+            <field name="name">Mise en place du DAT</field>
+            <field name="code">DAT_EXECUTED_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_003" model="efund.event.type.new">
+            <field name="name">Rachat Validé</field>
+            <field name="code">RED_VALIDATED</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_004" model="efund.event.type.new">
+            <field name="name">Retrait de liquidité - Mandat</field>
+            <field name="code">MDT_CASH_OUT</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_005" model="efund.event.type.new">
+            <field name="name">Souscription Titre OPCVM</field>
+            <field name="code">OPC_EXECUTED_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_006" model="efund.event.type.new">
+            <field name="name">Souscription Titre</field>
+            <field name="code">TRADE_SUBSCRIPTION_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_007" model="efund.event.type.new">
+            <field name="name">Souscription Part OPC</field>
+            <field name="code">SUB_VALIDATED</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_008" model="efund.event.type.new">
+            <field name="name">Transaction Titre - Vente</field>
+            <field name="code">TRADE_EXECUTED_OUT</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_009" model="efund.event.type.new">
+            <field name="name">Transaction Titre - Achat</field>
+            <field name="code">TRADE_EXECUTED_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_010" model="efund.event.type.new">
+            <field name="name">Souscription BONS</field>
+            <field name="code">TCN_VALIDATED_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_011" model="efund.event.type.new">
+            <field name="name">Vente Titre OPCVM</field>
+            <field name="code">OPC_EXECUTED_OUT</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_012" model="efund.event.type.new">
+            <field name="name">Fin en place du DAT</field>
+            <field name="code">DAT_EXECUTED_OUT</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_013" model="efund.event.type.new">
+            <field name="name">Calcul VL part 1</field>
+            <field name="code">COMP_VL_INT_DIF</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_014" model="efund.event.type.new">
+            <field name="name">Calcul VL part 2</field>
+            <field name="code">COMP_VL_MGT_FEE</field>
+            <field name="state">validated</field>
+        </record>
+        -->
+
+    </data>
+</odoo>
+
+

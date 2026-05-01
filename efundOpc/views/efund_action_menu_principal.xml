@@ -2,6 +2,58 @@
     <!-- ========================================= -->
     <!-- ACTIONS PRINCIPALES -->
     <!-- ========================================= -->
+    <record id="action_efund_event_type1" model="ir.actions.act_window">
+        <field name="name">Type d'évènement</field>
+        <field name="res_model">efund.event.type</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Bienvenue dans le type des évènements !
+            </p>
+            <p>
+                Commencez par créer votre société de gestion, puis ajoutez vos fonds.
+            </p>
+        </field>
+    </record>
+    <record id="action_efund_accounting_schema1" model="ir.actions.act_window">
+        <field name="name">Schéma comptable des évènements</field>
+        <field name="res_model">efund.accounting.schema</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Bienvenue dans le module de Gestion de Fonds !
+            </p>
+            <p>
+                Commencez par créer votre société de gestion, puis ajoutez vos fonds.
+            </p>
+        </field>
+    </record>
+    <record id="action_efund_account_template" model="ir.actions.act_window">
+        <field name="name">Plan Comptable Fond</field>
+        <field name="res_model">efund.account.template</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Bienvenue dans efund.account.template !
+            </p>
+            <p>
+                Commencez par créer votre société de gestion, puis ajoutez vos fonds.
+            </p>
+        </field>
+    </record>
+    <record id="action_efund_event_amount_dispacher" model="ir.actions.act_window">
+        <field name="name">Répartition montant évènement</field>
+        <field name="res_model">efund.event.amount.dispacher</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Bienvenue dans efund.event.amount.dispacher !
+            </p>
+            <p>
+                Commencez par créer votre société de gestion, puis ajoutez vos fonds.
+            </p>
+        </field>
+    </record>
 
     <!-- Action pour le tableau de bord principal -->
     <record id="action_gestion_fonds_dashboard" model="ir.actions.act_window">

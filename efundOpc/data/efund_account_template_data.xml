@@ -390,19 +390,19 @@
         </record>
         <record id="code_922110" model="efund.account.template">
             <field name="code">922110</field>
-            <field name="name">Obligation à recevoir du DC/BR</field>
+            <field name="name">Obligation à recevoir (quantité)</field>
         </record>
         <record id="code_922120" model="efund.account.template">
             <field name="code">922120</field>
-            <field name="name">Bon à recevoir du DC/BR</field>
+            <field name="name">Bon à recevoir (quantité)</field>
         </record>
         <record id="code_922130" model="efund.account.template">
             <field name="code">922130</field>
-            <field name="name">Action à recevoir du DC/BR</field>
+            <field name="name">Action à recevoir(quantité)</field>
         </record>
         <record id="code_922140" model="efund.account.template">
             <field name="code">922140</field>
-            <field name="name">OPCVM à recevoir du DC/BR</field>
+            <field name="name">OPCVM à recevoir (quantité)</field>
         </record>
         <record id="code_940001" model="efund.account.template">
             <field name="code">940001</field>
@@ -410,23 +410,23 @@
         </record>
         <record id="code_950001" model="efund.account.template">
             <field name="code">950001</field>
-            <field name="name">Stock titre obligation</field>
+            <field name="name">Quantité titre obligation - Constat</field>
         </record>
         <record id="code_950002" model="efund.account.template">
             <field name="code">950002</field>
-            <field name="name">Stock titre bon</field>
+            <field name="name">Quantité titre bon - Constat</field>
         </record>
         <record id="code_950003" model="efund.account.template">
             <field name="code">950003</field>
-            <field name="name">Stock titre action</field>
+            <field name="name">Quantité titre action - Constat</field>
         </record>
         <record id="code_950004" model="efund.account.template">
             <field name="code">950004</field>
-            <field name="name">Stock titre OPCVM</field>
+            <field name="name">Quantité titre OPCVM - Constat</field>
         </record>
         <record id="code_960001" model="efund.account.template">
             <field name="code">960001</field>
-            <field name="name">Stock part</field>
+            <field name="name">Nombre de part part</field>
         </record>
     </data>
 </odoo>

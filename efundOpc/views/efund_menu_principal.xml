@@ -51,6 +51,7 @@
      <!-- Comptabilité   -->
     <menuitem id="menu_account_root" name="Comptabilité" parent="menu_fund_management_root" sequence="50"/>
     <menuitem id="menu_account_schema" name="Schéma comptable" parent="menu_account_root" action="action_efund_accounting_schema" sequence="10"/>
+    <menuitem id="menu_account_schema1" name="Schéma comptable new" parent="menu_account_root" action="action_efund_accounting_schema1" sequence="11"/>
     <menuitem id="menu_account_event" name="Evènements" parent="menu_account_root" action="action_efund_accounting_event" sequence="20"/>
 
 
@@ -60,13 +61,14 @@
     <menuitem id="menu_management_compagny" name="Société de gestion" parent="menu_ref_statique" action="action_efund_management_compagny" sequence="10"/>
     <menuitem id="menu_issuers" name="Émetteurs" parent="menu_ref_statique" action="action_efund_instrument_issuer" sequence="10"/>
     <menuitem id="menu_fund_type" name="Type de fonds"  parent="menu_ref_statique"  action="action_efund_fund_type" sequence="15"/>
-   <menuitem id="menu_efund_event_type" name="Types Evénements" parent="menu_ref_statique" action="action_efund_event_type"  sequence="16"/>
+    <menuitem id="menu_efund_event_type" name="Types Evénements new" parent="menu_ref_statique" action="action_efund_event_type1"  sequence="16"/>
     <menuitem id="menu_efund_config_holidays"  name="Jours Fériés"   parent="menu_ref_statique"   action="action_efund_public_holiday" sequence="17"/>
     <menuitem id="menu_efund_config_fiscal_year"  name="Exercice Fiscal"   parent="menu_ref_statique"   action="action_efund_fiscal_year" sequence="18"/>
     <menuitem id="menu_asset_classes" name="Classes d'actifs" parent="menu_ref_statique" action="action_efund_asset_class" sequence="20"/>
     <menuitem id="menu_brokers" name="Sociétés de Bourse / Dépositaires" parent="menu_ref_statique" action="action_efund_depositaire" sequence="30"/>
     <menuitem id="menu_country_zone" name="Zone économique" parent="menu_ref_statique" action="action_efund_country_zone" sequence="40"/>
     <menuitem id="menu_codification_account_number" name="Codification Numéro de Compte" parent="menu_ref_statique" action="action_efund_codification_numero_compte" sequence="50"/>
+    <menuitem id="menu_event_amount_dispacher" name="Event disparhing" parent="menu_ref_statique" action="action_efund_event_amount_dispacher" sequence="40"/>
 
     <!-- Reporting -->
     <menuitem id="menu_reporting_root" name="Reporting &amp; Conformité" parent="menu_fund_management_root" sequence="50"/>

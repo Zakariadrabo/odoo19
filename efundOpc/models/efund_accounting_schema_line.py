@@ -11,14 +11,10 @@ class FundAccountingSchemaLine(models.Model):
     account_resolution_type = fields.Selection([('fixed', 'Compte Fixe'),('instrument', 'Compte lié à l\'Instrument'), ('liquidity', 'Compte Liquidité du Véhicule')
     ], default='fixed')
     account_id = fields.Many2one('efund.account.template', string="Compte")
-
+    is_off_balance = fields.Boolean(string="Hors-Bilan", default=False )
     account_selection_type = fields.Selection([('always', 'Toujours ce compte'), ('if_positive', 'Uniquement si Positif'), ('if_negative', 'Uniquement si Négatif'), ], required=True, default='always', string="Condition de signe")
     side = fields.Selection([('debit', 'Debit'),('credit', 'Credit')], string="Sens", required=True)
-    amount_type = fields.Selection([('gross', 'Montant Brut'),('net', 'Montant Net'),('fees', 'Frais/Commissions'),
-                                    ('capital_init','Souscription Exercice'),('non_distribuable','Sommes Non Distribuables'),
-                                    ('res_anterieurs','Résultat Antérieur'),('res_clos','Résultat Clos'),('interest','Intérêt couru'),
-                                    ('res_en_cours','Résultat En Cours'),('entry_load','Droit entrée'),('exit_load','Droit sortie'),('reliquat','Reliquat'),
-        ('capital', 'Part Capital'),('income', 'Revenu'),('tax', 'Taxes/Prélèvements'),('quantity','Quantité')], string="Source du Montant", required=True)
+    amount_type_id = fields.Many2one('efund.event.amount.dispacher', string="Type  montant", required=True,  )
     label = fields.Char(help="Libellé de la ligne")
     use_analytic = fields.Boolean(string="Utiliser l'analytique du mandat", default=True,
                                   help="Si coché, l'écriture sera marquée avec le compte analytique du mandat lié.")

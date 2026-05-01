@@ -6,7 +6,7 @@ class FundDepositaire(models.Model):
     _order = "name"
 
     name = fields.Char("Nom du type", required=True)
-    sigle = fields.Char("Code Type")
+    code = fields.Char("Code Type")
     state = fields.Selection([
         ('draft', 'Draft'),
         ('validated', 'Validé'),

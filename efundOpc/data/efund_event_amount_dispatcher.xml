@@ -1,0 +1,81 @@
+<odoo>
+    <data>
+        <record id="event_dis_001" model="efund.event.amount.dispacher">
+            <field name="code">gross</field>
+            <field name="name">Montant Brut</field>            
+        </record>
+        <record id="event_dis_002" model="efund.event.amount.dispacher">
+            <field name="code">net</field>
+            <field name="name">Montant Net</field>
+        </record>
+        <record id="event_dis_003" model="efund.event.amount.dispacher">
+            <field name="code">fees</field>
+            <field name="name">Frais/Commissions</field>
+        </record>
+        <record id="event_dis_004" model="efund.event.amount.dispacher">
+            <field name="code">capital_init</field>
+            <field name="name">Souscription Exercice</field>
+        </record>
+        <record id="event_dis_005" model="efund.event.amount.dispacher">
+            <field name="code">non_distribuable</field>
+            <field name="name">Sommes Non Distribuables</field>
+        </record>
+        <record id="event_dis_006" model="efund.event.amount.dispacher">
+            <field name="code">res_anterieurs</field>
+            <field name="name">Résultat Antérieur</field>            
+        </record>
+        <record id="event_dis_007" model="efund.event.amount.dispacher">
+            <field name="code">res_clos</field>
+            <field name="name">Résultat Clos</field>            
+        </record>
+        <record id="event_dis_008" model="efund.event.amount.dispacher">
+            <field name="code">interest</field>
+            <field name="name">Intérêt couru</field>            
+        </record>
+        <record id="event_dis_009" model="efund.event.amount.dispacher">
+            <field name="code">res_en_cours</field>
+            <field name="name">Résultat En Cours</field>            
+        </record>
+        <record id="event_dis_010" model="efund.event.amount.dispacher">
+            <field name="code">entry_load</field>
+            <field name="name">Droit entrée</field>            
+        </record>
+        <record id="event_dis_011" model="efund.event.amount.dispacher">
+            <field name="code">exit_load</field>
+            <field name="name">Droit sortie</field>            
+        </record>
+        <record id="event_dis_012" model="efund.event.amount.dispacher">
+            <field name="code">reliquat</field>
+            <field name="name">Reliquat</field>            
+        </record>
+        <record id="event_dis_013" model="efund.event.amount.dispacher">
+            <field name="code">capital</field>
+            <field name="name">Part Capital</field>            
+        </record>
+        <record id="event_dis_014" model="efund.event.amount.dispacher">
+            <field name="code">income</field>
+            <field name="name">Revenu</field>            
+        </record>
+        <record id="event_dis_015" model="efund.event.amount.dispacher">
+            <field name="code">tax</field>
+            <field name="name">Taxes/Prélèvements</field>            
+        </record>
+        <record id="event_dis_016" model="efund.event.amount.dispacher">
+            <field name="code">quantity</field>
+            <field name="name">Quantité</field>            
+        </record>
+        <record id="event_dis_017" model="efund.event.amount.dispacher">
+            <field name="code">coupon</field>
+            <field name="name">Coupon</field>
+        </record>
+        <record id="event_dis_018" model="efund.event.amount.dispacher">
+            <field name="code">plusmoinsvalue</field>
+            <field name="name">Plus ou moins value</field>
+        </record>
+        <record id="event_dis_019" model="efund.event.amount.dispacher">
+            <field name="code">dividende</field>
+            <field name="name">Dividende</field>
+        </record>
+                      
+    </data>
+</odoo>
