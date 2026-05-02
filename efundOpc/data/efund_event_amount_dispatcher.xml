@@ -76,6 +76,14 @@
             <field name="code">dividende</field>
             <field name="name">Dividende</field>
         </record>
+        <record id="event_dis_020" model="efund.event.amount.dispacher">
+            <field name="code">accrued_interest</field>
+            <field name="name">Intérêt échu</field>
+        </record>
+        <record id="event_dis_021" model="efund.event.amount.dispacher">
+            <field name="code">accrued_interest_waiting</field>
+            <field name="name">Intérêt precompté non couru</field>
+        </record>
                       
     </data>
 </odoo>

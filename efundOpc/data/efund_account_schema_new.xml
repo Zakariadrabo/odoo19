@@ -1,5 +1,6 @@
 <odoo>
     <data noupdate="1">
+        <!-- ######################### OBLIGATION   ############################## -->
         <record id="schema_TRADE_SUBSCRIPTION_IN" model="efund.accounting.schema">
             <field name="name">Schéma Souscription de Titre</field>
             <field name="event_type_id" ref="event_type_001"/>
@@ -242,6 +243,7 @@
             ]"/>
         </record>
 
+        <!-- ######################### ACTION   ############################## -->
         <record id="schema_EQUITY_EXECUTED_IN" model="efund.accounting.schema">
             <field name="name">Schéma Achat de Titre Action- Exécution</field>
             <field name="event_type_id" ref="event_type_009"/>
@@ -428,7 +430,7 @@
             ]"/>
         </record>
         <record id="schema_EQUITITY_SOLD_PAIEMENT" model="efund.accounting.schema">
-            <field name="name">Schéma Action Dividende Constatation</field>
+            <field name="name">Schéma Vente de Titre Action- Paiement</field>
             <field name="event_type_id" ref="event_type_011"/>
             <field name="journal_code">SEC</field>
              <field name="line_ids" eval="[
@@ -452,6 +454,310 @@
                 })
             ]"/>
         </record>
+
+        <!-- ######################### BONS   ############################## -->
+        <record id="schema_TCN_SUBSCRIPTION" model="efund.accounting.schema">
+            <field name="name">Schéma Achat de Titre Bon- Souscription</field>
+            <field name="event_type_id" ref="event_type_014"/>
+            <field name="journal_code">SEC</field>
+             <field name="line_ids" eval="[
+                (0, 0, {
+                    'sequence': 10,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_002'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_111001'),
+                    'use_analytic': True,
+                }),
+                 (0, 0, {
+                    'sequence': 11,
+                    'account_resolution_type': 'instrument',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_001'),
+                    'account_selection_type': 'always',
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 12,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_003'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_553200'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 13,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_008'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_141710'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 14,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_016'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_950002'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 13,
+                    'account_resolution_type': 'instrument',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_016'),
+                    'account_selection_type': 'always',
+                    'use_analytic': True,
+                    'is_off_balance': True,
+                }),
+            ]"/>
+        </record>
+        <record id="schema_TCN_SELL_OUT" model="efund.accounting.schema">
+            <field name="name">Schéma Vente Bon</field>
+            <field name="event_type_id" ref="event_type_019"/>
+            <field name="journal_code">SEC</field>
+             <field name="line_ids" eval="[
+                (0, 0, {
+                    'sequence': 10,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_002'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_111001'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 11,
+                    'account_resolution_type': 'instrument',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_001'),
+                    'account_selection_type': 'always',
+                    'use_analytic': True,
+                }),
+               (0, 0, {
+                    'sequence': 12,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_001'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_389007'),
+                    'use_analytic': True,
+                })
+            ]"/>
+        </record>
+        <record id="schema_TCN_SELL_OUT" model="efund.accounting.schema">
+            <field name="name">Schéma Vente Bon</field>
+            <field name="event_type_id" ref="event_type_019"/>
+            <field name="journal_code">SEC</field>
+             <field name="line_ids" eval="[
+                (0, 0, {
+                    'sequence': 10,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_002'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_389008'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 11,
+                    'account_resolution_type': 'instrument',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_001'),
+                    'account_selection_type': 'always',
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 12,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_008'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_141712'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 13,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_008'),
+                    'account_selection_type': 'if_positive',
+                    'account_id': ref('code_727130'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 14,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_021'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_141712'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 15,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_020'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_727130'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 15,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_020'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_710300'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 15,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_018'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_551801'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 16,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_016'),
+                    'account_selection_type': 'if_negative',
+                    'account_id': ref('code_950002'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 17,
+                    'account_resolution_type': 'instrument',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_016'),
+                    'account_selection_type': 'always',
+                    'use_analytic': True,
+                    'is_off_balance': True,
+                }),
+            ]"/>
+        </record>
+        <record id="schema_TCN_PRINCIPAL_PAYMENT" model="efund.accounting.schema">
+            <field name="name">Schéma Remboursement Principal Bon- Constatation</field>
+            <field name="event_type_id" ref="event_type_012"/>
+            <field name="journal_code">SEC</field>
+             <field name="line_ids" eval="[
+                (0, 0, {
+                    'sequence': 10,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_001'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_389008'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 11,
+                    'account_resolution_type': 'instrument',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_001'),
+                    'account_selection_type': 'always',
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 12,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_008'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_141712'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 13,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_008'),
+                    'account_selection_type': 'if_positive',
+                    'account_id': ref('code_727130'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 14,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_020'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_710300'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 15,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_020'),
+                    'account_selection_type': 'if_positive',
+                    'account_id': ref('code_727130'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 16,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_016'),
+                    'account_selection_type': 'if_negative',
+                    'account_id': ref('code_950002'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 17,
+                    'account_resolution_type': 'instrument',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_016'),
+                    'account_selection_type': 'always',
+                    'use_analytic': True,
+                    'is_off_balance': True,
+                }),
+            ]"/>
+        </record>
+        <record id="schema_TCN_PRINCIPAL_PAYMENT_REALISED" model="efund.accounting.schema">
+            <field name="name">Schéma Vente de Titre Action- Paiement</field>
+            <field name="event_type_id" ref="event_type_018"/>
+            <field name="journal_code">SEC</field>
+             <field name="line_ids" eval="[
+                (0, 0, {
+                    'sequence': 10,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_002'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_111001'),
+                    'use_analytic': True,
+                }),
+               (0, 0, {
+                    'sequence': 12,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_002'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_389008'),
+                    'use_analytic': True,
+                })
+            ]"/>
+        </record>
+
+        <!-- ######################### DAT   ############################## -->
+
+
+
+        <!-- ######################### SOUSCRIPTION RACHAT   ############################## -->
+
+        <!-- ######################### CALCUL VL   ############################## -->
+
+
 
 
     </data>
