@@ -424,6 +424,10 @@
             <field name="code">950004</field>
             <field name="name">Quantité titre OPCVM - Constat</field>
         </record>
+        <record id="code_950005" model="efund.account.template">
+            <field name="code">950005</field>
+            <field name="name">Quantité DAT - Constat</field>
+        </record>
         <record id="code_960001" model="efund.account.template">
             <field name="code">960001</field>
             <field name="name">Nombre de part part</field>

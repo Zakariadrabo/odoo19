@@ -72,13 +72,11 @@
             <field name="code">TCN_SUBSCRIPTION</field>
             <field name="state">validated</field>
         </record>
-
         <record id="event_type_015" model="efund.event.type">
             <field name="name">TCN. Achat. Dénouement</field>
             <field name="code">TCN_TRADE_SETTLE</field>
             <field name="state">validated</field>
         </record>
-
         <record id="event_type_016" model="efund.event.type">
             <field name="name">TCN. Remboursement Capital Constatation</field>
             <field name="code">TCN_PRINCIPAL_PAYMENT</field>
@@ -99,6 +97,64 @@
             <field name="code">TCN_SOLD_PAIEMENT</field>
             <field name="state">validated</field>
         </record>
+
+        <!-- Mise en place du DAT  -->
+        <record id="event_type_021" model="efund.event.type">
+            <field name="name">DAT. Mise en place</field>
+            <field name="code">DAT_EXECUTED_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_022" model="efund.event.type">
+            <field name="name">DAT. Fin</field>
+            <field name="code">DAT_EXECUTED_OUT</field>
+            <field name="state">validated</field>
+        </record>
+
+        <!-- Investissement sur les part d'OPCVM -->
+        <record id="event_type_023" model="efund.event.type">
+            <field name="name">OPC. Souscription Titre</field>
+            <field name="code">OPC_EXECUTED_IN</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_024" model="efund.event.type">
+            <field name="name">OPC. Rachat Titre</field>
+            <field name="code">OPC_EXECUTED_OUT</field>
+            <field name="state">validated</field>
+        </record>
+
+        <!-- Souscription rachat de part d'opc par les clients -->
+        <record id="event_type_025" model="efund.event.type">
+            <field name="name">OPC - Souscription Client Cash</field>
+            <field name="code">SUBS_VALIDATED_CASH</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_026" model="efund.event.type">
+            <field name="name">OPC - Souscription Client Par Titre</field>
+            <field name="code">SUBS_VALIDATED_TITRE</field>
+            <field name="state">validated</field>
+        </record>
+
+        <record id="event_type_027" model="efund.event.type">
+            <field name="name">OPC. Rachat CLient</field>
+            <field name="code">REDEM_VALIDATED</field>
+            <field name="state">validated</field>
+        </record>
+
+
+        <!-- Calcul de la valeur liquidative -->
+        <record id="event_type_028" model="efund.event.type">
+            <field name="name">VL - Annulation des interets et diff estimation</field>
+            <field name="code">VL_RESET_INTEREST</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_029" model="efund.event.type">
+            <field name="name">VL - Repartition Interet</field>
+            <field name="code">VL_INIT_INTEREST</field>
+            <field name="state">validated</field>
+        </record>
+
+        <!-- Opération de clôture d'exercice -->
+
 
 
 

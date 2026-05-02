@@ -84,6 +84,10 @@
             <field name="code">accrued_interest_waiting</field>
             <field name="name">Intérêt precompté non couru</field>
         </record>
+        <record id="event_dis_022" model="efund.event.amount.dispacher">
+            <field name="code">rachat_exo</field>
+            <field name="name">Rachat Exercice</field>
+        </record>
                       
     </data>
 </odoo>
