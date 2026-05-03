@@ -56,7 +56,7 @@ class EfundInvestmentOrder(models.Model):
     limit_price = fields.Float(string="Prix limite", digits=(16, 6))
     validity_date = fields.Date(string="Date de validité", help="Date d'expiration de l'ordre")
     quantity = fields.Float(string="Quantité", digits=(16, 6))
-    total_amount_trade = fields.Monetary(compute='_compute_total_amount', string='Total HT',precompute=True, store=True)
+    total_amount_trade = fields.Monetary(compute='_compute_total_amount', string='Total HT',precompute=True, store=True, readonly=False)
 
     # les données de opcvm
     amount_type = fields.Selection([('amount', 'Montant'), ('unit', 'Nombre de parts')], string='Type',default='amount')
