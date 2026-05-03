@@ -88,6 +88,10 @@
             <field name="code">rachat_exo</field>
             <field name="name">Rachat Exercice</field>
         </record>
+        <record id="event_dis_023" model="efund.event.amount.dispacher">
+            <field name="code">reset_interest</field>
+            <field name="name">Annulation Intérêt</field>
+        </record>
                       
     </data>
 </odoo>

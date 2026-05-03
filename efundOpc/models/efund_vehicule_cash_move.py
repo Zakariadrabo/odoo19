@@ -39,7 +39,7 @@ class EfundFundCashMove(models.Model):
     investor_cash_move_id = fields.Many2one('efund.investor.cash_account.move', string="Mouvement Investisseur")
     cash_operation_id = fields.Many2one('efund.vehicule.cash.operation', string="Ordre de Souscription")
     #subscription_id = fields.Many2one('efund.investor.subscription', string="Ordre de Souscription")
-    #redemption_id = fields.Many2one('efund.investor.redemption', string="Ordre de Rachat")
+    redemption_id = fields.Many2one('efund.investor.redemption', string="Ordre de Rachat")
 
     # Références aux transactions Portefeuille
     trade_id = fields.Many2one('efund.investment.transaction', string="Ordre de Souscription")

@@ -27,6 +27,7 @@ class FundSubscription(models.Model):
 
     allow_fractional_parts = fields.Boolean(string="Parts fractionnées", related='fund_id.allow_fractional_parts', )
     nav = fields.Monetary(string="VL appliquée", compute="_compute_nav_value", store=True, readonly = False, )
+    nav_date = fields.Datetime(string="Date de la valeur", store=True, readonly = False, )
     entry_load = fields.Float(related="share_class_id.entry_load", string="Taux frais de souscription (%)", store=True)
 
     net_amount = fields.Monetary(string="Montant utilisé", compute="_compute_subscription", store=True, readonly=False)
@@ -276,6 +277,7 @@ class FundSubscription(models.Model):
 
     def action_account(self):
         for rec in self:
+            """
             fee_id = 0
             if rec.state != 'validated':
                 raise UserError(_("La souscription doit être validée avant exécution."))
@@ -316,8 +318,13 @@ class FundSubscription(models.Model):
             amount_remaining = result.get('amount_remaining', 0.0)
             gross_amount = result.get('gross_amount', rec.gross_amount)
             shares = result.get('shares', 0.0)
+            rec.shares = shares
+            rec.net_amount = net_amount
+            rec.amount_remaining = amount_remaining
+            rec.gross_amount = gross_amount
+            """
 
-            if not rec.allow_fractional_parts and shares <= 0:
+            if not rec.allow_fractional_parts and rec.shares <= 0:
                 raise UserError(
                     _("Le montant est insuffisant pour souscrire au moins une part.")
                 )
@@ -325,10 +332,9 @@ class FundSubscription(models.Model):
             # 🧾 Mise à jour
             rec.write({
                 'nav': rec.nav,
-                'shares': shares,
-                'net_amount': net_amount,
-                'amount_remaining': amount_remaining,
-                'date_valeur': fields.Datetime.now(),
+                'shares': rec.shares,
+                'net_amount': rec.net_amount,
+                'amount_remaining': rec.amount_remaining,
             })
 
             rec.message_post(
@@ -341,7 +347,7 @@ class FundSubscription(models.Model):
             investor_cash_move = self.env['efund.investor.cash_account.move'].create({
                 'cash_account_id': rec.cash_account_id.id,
                 'move_type': 'subscription',
-                'amount': gross_amount,
+                'amount': rec.gross_amount,
                 'label': f"Souscription N°{rec.name} du fond {rec.fund_id.name} ",
                 'date': rec.date_operation,
                 'value_date': rec.date_operation,
@@ -415,7 +421,7 @@ class FundSubscription(models.Model):
             self.env['efund.investor.part.move'].create({
                 'part_account_id': rec.part_account_id.id,
                 'move_type': 'subscription',
-                'shares': shares,
+                'shares': rec.shares,
                 'state': 'reconciled',
                 'label': f"Souscription N°{rec.name} du fond {rec.fund_id.name} ",
                 'date': rec.date_operation,
@@ -462,11 +468,13 @@ class FundSubscription(models.Model):
             'entry_load': rec.subscription_fee_amount,
             'quantity': rec.shares,
             }
+            """
             event = self.env['efund.accounting.event'].create(
                 serviceEngine.build_event_payload('SUB_VALIDATED', rec.vehicule_id.id, 'Souscription - ' + rec.name,
                                                   rec.date_operation, payload))
             rec.event_id = event.id
             self.env['efund.accounting.engine'].process_event(event)
+            """
 
             # Fin de la réconciliation
             if rec.subscription_fee_amount > 0:

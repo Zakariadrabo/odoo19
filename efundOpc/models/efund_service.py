@@ -1295,7 +1295,6 @@ class EfundService(models.Model):
         ]
 
         moves = self.env['efund.investor.part.move'].search(domain)
-        _logger.info(f"*********  vehicule {vehicule_id}, date {target_date} liste SS {moves} ")
 
         total_shares = 0.0
         for move in moves:
@@ -1305,3 +1304,27 @@ class EfundService(models.Model):
                 total_shares -= move.shares
 
         return total_shares
+
+    def get_balance_sql_optimized(self, account_code, company_id, date_at):
+        """
+        Récupère la balance comptable via SQL en interrogeant le champ JSONB code_store.
+        """
+        # L'ID de la société doit être une chaîne pour correspondre à la clé JSON
+        company_key = str(company_id.id)
+
+        query = """
+                SELECT SUM(aml.debit - aml.credit) as balance
+                FROM account_move_line aml
+                         JOIN account_account acc ON aml.account_id = acc.id
+                WHERE acc.code_store ->> %s = %s
+                  AND aml.company_id = %s
+                  AND aml.date <= %s
+                  AND aml.parent_state = 'posted' \
+                """
+
+        # %s (clé JSON) = company_key
+        # %s (valeur cherchée) = account_code
+        self.env.cr.execute(query, (company_key, account_code, company_id.id, date_at))
+
+        result = self.env.cr.fetchone()
+        return result[0] if result and result[0] is not None else 0.0

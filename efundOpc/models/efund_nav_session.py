@@ -151,6 +151,8 @@ class EfundNavSession(models.Model):
 
             # vérification des données de calcul VL
             result = self.env['efund.service'].get_valuation_by_type(rec.fund_id.vehicule_id, rec.valuation_date)
+
+            balance = self.env['efund.service'].get_balance_sql_optimized('389951', rec.fund_id.vehicule_id.company_id, '2026-04-30')
             return True
 
     def action_validate(self):

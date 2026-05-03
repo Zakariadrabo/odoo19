@@ -22,8 +22,6 @@ class FundRedemption(models.Model):
 
     net_amount = fields.Monetary(string="Montant utilisé", compute="_compute_redemption", store=True, readonly = False,)
     amount_remaining = fields.Monetary(string="Montant restitué", compute="_compute_redemption", store=True, readonly = False,)
-    #buy_choice = fields.Selection([('amount', 'Montant'), ('share', 'Part')], string="Choix d'achat", default='share')
-    #buy_choice = fields.Selection([('amount', 'Montant'), ('share', 'Part')], string="Choix d'achat", default='share')
     redemption_fee_amount = fields.Monetary(string="Frais de souscription", compute="_compute_redemption",store=True, readonly = False)
 
     buy_choice = fields.Selection([('amount', 'Montant'), ('share', 'Part')], string="Choix d'achat", default='amount')
@@ -34,10 +32,9 @@ class FundRedemption(models.Model):
     allow_fractional_parts = fields.Boolean(string="Parts fractionnées", related='fund_id.allow_fractional_parts', )
     total_parts_available = fields.Float(string=" Nombre total de parts", related="part_account_id.total_parts",
                                          readonly=True)
-    nav_date = fields.Date(string="Date VL appliquée", default=fields.Date.context_today, required=True)
-    nav = fields.Float(string="VL estimée", compute="_compute_nav_value", help="Valeur Liquidative ", store=True,readonly = False,)
-    redemption_fee_rate = fields.Float(string=" % Frais de rachat", compute="_compute_nav_value", store=True,
-                                       readonly=False)
+    nav_date = fields.Date(string="Date VL appliquée" )
+    nav = fields.Float(string="VL estimée",)# compute="_compute_nav_value", help="Valeur Liquidative ", store=True,readonly = False,)
+    redemption_fee_rate = fields.Float(string=" % Frais de rachat",)# compute="_compute_nav_value", store=True, readonly=False)
     exit_load = fields.Float(related="share_class_id.entry_load", string="Taux frais de souscription (%)", store=True)
     gross_amount = fields.Monetary(string="Montant", )
 
@@ -419,17 +416,27 @@ class FundRedemption(models.Model):
     def action_account(self):
         for rec in self:
             if rec.state != 'validated':
-                raise UserError(_("Le rachat doit être validée avant exécution."))
+                raise UserError(_("La souscription doit être validée avant exécution."))
 
+                # Solde disponible suffisant
+            if self.part_account_id.total_parts < self.shares:
+                raise UserError(_("Solde part insuffisant."))
+
+            """
+
+                # récupération des taux des droits
             share_class = self.env['efund.fund.share.class'].search([
-                ('fund_id', '=', rec.fund_id.id),
+                ('vehicule_fund_id', '=', rec.fund_id.id),
                 ('is_default', '=', True)
             ])
+            entry_load = share_class.entry_load
+            nav = self.env['efund.service'].get_last_nav_value(rec.fund_id)       
+
             fund_cash = self.env['efund.vehicule.cash'].search([
                 ('vehicule_id', '=', rec.fund_id.id),
             ])
 
-            vl = share_class.current_nav
+            vl = nav
             if not vl or vl <= 0:
                 raise UserError(_("Aucune VL valide disponible."))
 
@@ -439,8 +446,9 @@ class FundRedemption(models.Model):
 
             if fund_cash and fund_cash.balance < rec.gross_amount :
                 raise UserError("Le fond n'a pas assez de liquidité pour le rachat. Merci de faire un désinvestissement ou de diminuer le montant ou le nombre de parts")
+            """
 
-            if rec.nav != vl:
+            if rec.nav != rec.nav: # vl:
                 return rec._open_confirmation_wizard(
                     message="la VL a changé depuis la soumission du rachat. La nouvelle VL sera appliquée, Voulez-vous continuer?",
                     method_name='action_execute_confirmed'
@@ -448,6 +456,7 @@ class FundRedemption(models.Model):
             else:
                 # RECALCULER les valeurs avant création
                 fee_id = 0
+                """
                 if rec.buy_choice == 'amount':
                     result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
                                                        rec.desired_amount, None)
@@ -458,14 +467,18 @@ class FundRedemption(models.Model):
                 shares = result.get('shares_to_redeem')
                 gross_amount = result.get('gross_amount')
                 fees_amount = result.get('fees_amount')
-                net_amount_to_pay = result.get('net_amount_to_receive')
+                rec.net_amount = result.get('net_amount_to_receive')
+                rec.redemption_fee_amount = result.get('fees_amount')
+                rec.net_amount = result.get('net_amount_to_receive')  
+                """
+
 
                 rec.write({
-                    'parts_to_redeem': shares,
-                    'gross_amount': gross_amount,
-                    'redemption_fee_amount': fees_amount,
-                    'net_amount': net_amount_to_pay,
-                    'date_valeur': fields.Datetime.now(),
+                    'shares': rec.shares,
+                    'nav': rec.nav,
+                    'gross_amount': rec.gross_amount,
+                    'redemption_fee_amount': rec.redemption_fee_amount,
+                    'net_amount': rec.net_amount,
                     'state': 'accounted'
                 })
 
@@ -482,33 +495,40 @@ class FundRedemption(models.Model):
                     'part_account_id': rec.part_account_id.id,
                     'move_type': 'redemption',
                     'redemption_id': rec.id,
-                    'shares': shares,
+                    'shares': rec.shares,
                     'state': 'reconciled',
                 })
                 rec.message_post(
-                    body=_("Débit du compte du titre de l'investisseur de %s parts.") % (shares),
+                    body=_("Débit du compte du titre de l'investisseur de %s parts.") % (rec.shares),
                     subject="comptabilisation du rachat",
                     message_type="comment",
                     subtype_xmlid="mail.mt_comment"
                 )
                 # 2- Débit compte cash du fond
-                fund_cash = self.env['efund.fund.cash'].search([
-                    ('fund_id', '=', rec.fund_id.id)
+                fund_cash = self.env['efund.vehicule.cash'].search([
+                    ('vehicule_id', '=', rec.fund_id.vehicule_id.id)
                 ], limit=1)
                 if not fund_cash:
-                    raise UserError(_("Le fond n'a pas de compte de caisse."))
+                    fund_cash = self.env['efund.vehicule.cash'].create({
+                        'name': f"Compte cash - {rec.fund_id.vehicule_id.name}",
+                        'vehicule_id': rec.fund_id.vehicule_id.id,
+                        'company_id': rec.fund_id.vehicule_id.company_id.id,
+                    })
 
-                fund_cash_move = self.env['efund.fund.cash.move'].create({
-                    'name': self.env['ir.sequence'].next_by_code('efund.fund.cash.move'),
-                    'fund_cash_id': fund_cash.id,
+                fund_move = self.env['efund.vehicule.cash.move'].create({
+                    'name': self.env['ir.sequence'].next_by_code('efund.vehicule.cash.move'),
+                    'vehicule_cash_id': fund_cash.id,
                     'amount': rec.gross_amount,
                     'move_type': 'redemption_out',
                     'liquidity_type': 'liquid',
                     'state': 'reconciled',
-                    'redemption_id': rec.id,
+                    'label': f"Rachat N°{rec.name} du fond {rec.fund_id.name} ",
+                    'date': rec.date_valeur,
+                    'value_date': rec.date_valeur,
+                    #'investor_cash_move_id': investor_titre_move.id,
                     'investor_id': rec.investor_id.id,
-                    'fund_id': rec.fund_id.id,
-
+                    'vehicule_id': rec.fund_id.vehicule_id.id,
+                    'redemption_id': rec.id,
                 })
                 rec.message_post(
                     body=_("Débit du compte cash du fond au montant de %s francs") % (rec.gross_amount),
@@ -524,16 +544,16 @@ class FundRedemption(models.Model):
                         'name': self.env['ir.sequence'].next_by_code('efund.investor.operation.fee'),
                         'fee_type': 'redemption',
                         'fund_id': rec.fund_id.id,
-                        'fund_cash_move_id': fund_cash_move.id,
+                        'fund_cash_move_id': fund_move.id,
                         'investor_id': rec.investor_id.id,
                         'redemption_id': rec.id,
-                        'gross_amount': gross_amount,
-                        'base_amount': net_amount_to_pay,
+                        'gross_amount': rec.gross_amount,
+                        'base_amount': rec.net_amount,
                         'fee_rate': rec.redemption_fee_rate,
-                        'fee_amount': fees_amount,
+                        'fee_amount': rec.redemption_fee_amount,
                     })
                     rec.message_post(
-                        body=_("Crédit du compte des frais au montant de %s francs") % (fees_amount),
+                        body=_("Crédit du compte des frais au montant de %s francs") % (rec.redemption_fee_amount),
                         subject="comptabilisation du rachat",
                         message_type="comment",
                         subtype_xmlid="mail.mt_comment"
@@ -541,23 +561,23 @@ class FundRedemption(models.Model):
                     fee_id = operation_fee_move.id
 
                 # 5- Crédit du compte cash de l'investisseur
-                investor_cash_move = self.env['efund.investor.cash.move'].create({
+                investor_cash_move = self.env['efund.investor.cash_account.move'].create({
                     'cash_account_id': rec.cash_account_id.id,
                     'move_type': 'redemption_net',
-                    'amount': net_amount_to_pay,
-                    'fund_cash_move_id': fund_cash_move.id,
+                    'amount': rec.net_amount,
+                    'fund_cash_move_id': fund_move.id,
                     'redemption_id' : rec.id,
                     'state': 'reconciled',
                 })
                 rec.message_post(
-                    body=_("Crédit du compte investisseur au montant de %s pour le rachat") % (net_amount_to_pay),
+                    body=_("Crédit du compte investisseur au montant de %s pour le rachat") % (rec.net_amount),
                     subject="comptabilisation de la souscription",
                     message_type="comment",
                     subtype_xmlid="mail.mt_comment"
                 )
 
                 #Mise à jour référence
-                fund_cash_move.write({
+                fund_move.write({
                     'investor_cash_move_id': investor_cash_move.id,
                 })
                 # Post du résultat sur le chatter
@@ -595,7 +615,7 @@ class FundRedemption(models.Model):
                 raise UserError(_("Aucune VL valide disponible."))
 
                 # Parts suffisantes
-            if rec.total_parts_available < rec.parts_to_redeem:
+            if rec.total_parts_available < rec.shares:
                 raise UserError(_("Nombre de parts insuffisant."))
 
             if rec.nav != vl:
@@ -610,18 +630,20 @@ class FundRedemption(models.Model):
                                                        rec.gross_amount, None)
                 else:
                     result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
-                                                       None, rec.parts_to_redeem)
+                                                       None, rec.shares)
 
                 shares = result.get('shares_to_redeem')
                 gross_amount = result.get('gross_amount')
                 fees_amount = result.get('fees_amount')
-                net_amount_to_pay = result.get('net_amount_to_receive')
+                rec.net_amount = result.get('net_amount_to_receive')
+                rec.redemption_fee_amount = fees_amount
+                rec.shares = result.get('shares_to_redeem')
 
                 rec.write({
-                    'parts_to_redeem': shares,
+                    'shares': shares,
                     'gross_amount': gross_amount,
-                    'redemption_fee_amount': fees_amount,
-                    'net_amount': net_amount_to_pay,
+                    'redemption_fee_amount': rec.redemption_fee_amount,
+                    'net_amount': rec.net_amount,
                     'state': 'validated'
                 })
 
@@ -633,18 +655,19 @@ class FundRedemption(models.Model):
                                                    rec.gross_amount, None)
             else:
                 result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
-                                                   None, rec.parts_to_redeem)
+                                                   None, rec.shares)
 
-            shares = result.get('shares_to_redeem')
+
             gross_amount = result.get('gross_amount')
-            fees_amount = result.get('fees_amount')
-            net_amount_to_pay = result.get('net_amount_to_receive')
+            rec.net_amount = result.get('net_amount_to_receive')
+            rec.redemption_fee_amount = result.get('fees_amount')
+            rec.shares = result.get('shares_to_redeem')
 
             rec.write({
-                'parts_to_redeem': shares,
+                'shares': rec.shares,
                 'gross_amount': gross_amount,
-                'redemption_fee_amount': fees_amount,
-                'net_amount': net_amount_to_pay,
+                'redemption_fee_amount': rec.redemption_fee_amount,
+                'net_amount': rec.net_amount,
                 'state': 'validated'
             })
 
@@ -677,7 +700,7 @@ class FundRedemption(models.Model):
                 raise UserError(_("Aucune VL valide disponible."))
 
                 # Parts suffisantes
-            if rec.total_parts_available < rec.parts_to_redeem:
+            if rec.total_parts_available < rec.shares:
                 raise UserError(_("Nombre de parts insuffisant."))
 
             if rec.nav != vl:
@@ -692,18 +715,19 @@ class FundRedemption(models.Model):
                                                        rec.gross_amount, None)
                 else:
                     result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
-                                                       None, rec.parts_to_redeem)
+                                                       None, rec.shares)
 
-                shares = result.get('shares_to_redeem')
+
                 gross_amount = result.get('gross_amount')
-                fees_amount = result.get('fees_amount')
-                net_amount_to_pay = result.get('net_amount_to_receive')
+                rec.shares = result.get('shares_to_redeem')
+                rec.net_amount = result.get('net_amount_to_receive')
+                rec.redemption_fee_amount = result.get('fees_amount')
 
                 rec.write({
-                    'parts_to_redeem': shares,
+                    'shares': rec.shares,
                     'gross_amount': gross_amount,
-                    'redemption_fee_amount': fees_amount,
-                    'net_amount': net_amount_to_pay,
+                    'redemption_fee_amount': rec.redemption_fee_amount,
+                    'net_amount': rec.net_amount,
                     'state': 'submitted'
                 })
 

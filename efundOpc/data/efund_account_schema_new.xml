@@ -1101,8 +1101,32 @@
             ]"/>
         </record>
 
-
         <!-- ######################### CALCUL VL   ############################## -->
+        <record id="schema_VL_RESET_INTEREST" model="efund.accounting.schema">
+            <field name="name">Schéma VL Annulation Intéret</field>
+            <field name="event_type_id" ref="event_type_028"/>
+            <field name="journal_code">NAV</field>
+             <field name="line_ids" eval="[
+                (0, 0, {
+                    'sequence': 10,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_023'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_727110'),
+                    'use_analytic': True,
+                }),
+               (0, 0, {
+                    'sequence': 12,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_002'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_217100'),
+                    'use_analytic': True,
+                })
+            ]"/>
+        </record>
 
 
 

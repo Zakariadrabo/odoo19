@@ -111,7 +111,7 @@
                 <field name="fund_id" string="Fonds"/>
                 <field name="gross_amount" sum="Total Brut" widget="monetary"/>
                 <field name="shares" sum="Total Parts"/>
-                <field name="nav" optional="hide"/>
+                <field name="nav" />
                 <field name="state" widget="badge"
                        decoration-info="state == 'submitted'"
                        decoration-success="state == 'validated'"/>
