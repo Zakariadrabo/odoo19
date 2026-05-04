@@ -277,7 +277,6 @@ class FundSubscription(models.Model):
 
     def action_account(self):
         for rec in self:
-            """
             fee_id = 0
             if rec.state != 'validated':
                 raise UserError(_("La souscription doit être validée avant exécution."))
@@ -322,7 +321,7 @@ class FundSubscription(models.Model):
             rec.net_amount = net_amount
             rec.amount_remaining = amount_remaining
             rec.gross_amount = gross_amount
-            """
+
 
             if not rec.allow_fractional_parts and rec.shares <= 0:
                 raise UserError(

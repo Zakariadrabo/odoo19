@@ -2,42 +2,43 @@
 <odoo>
     <!-- Vue tree des positions -->
     <record id="view_efund_fund_position_list" model="ir.ui.view">
-    <field name="name">efund.fund.position.list</field>
-    <field name="model">efund.vehicule.portfolio</field>
-    <field name="arch" type="xml">
-        <list string="Positions du Portefeuille"
-              decoration-success="unrealized_pl &gt; 0"
-              decoration-danger="unrealized_pl &lt; 0">
+        <field name="name">efund.fund.position.list</field>
+        <field name="model">efund.vehicule.portfolio</field>
+        <field name="arch" type="xml">
+            <list string="Positions du Portefeuille"
+                  decoration-success="unrealized_pl &gt; 0"
+                  decoration-danger="unrealized_pl &lt; 0">
 
-            <header>
-                <button name="action_refresh_valuation"
-                        string="Actualiser la Valorisation"
-                        type="object"
-                        class="btn-primary"
-                        confirm="Voulez-vous recalculer les valeurs de marché et intérêts courus pour les positions sélectionnées ?"/>
-            </header>
+                <header>
+                    <button name="action_refresh_valuation"
+                            string="Actualiser la Valorisation"
+                            type="object"
+                            class="btn-primary"
+                            confirm="Voulez-vous recalculer les valeurs de marché et intérêts courus pour les positions sélectionnées ?"/>
+                </header>
 
-            <field name="vehicule_id" optional="show"/>
-            <field name="instrument_id"/>
-            <field name="last_price_date"/>
+                <field name="vehicule_id" optional="show"/>
+                <field name="instrument_id"/>
+                <field name="last_price_date"/>
 
-            <field name="quantity" sum="Total Quantité"/>
-            <field name="avg_cost" widget="monetary" string="Prix Revient"/>
-            <field name="last_price" widget="monetary" string="Dernier Cours"/>
+                <field name="quantity" sum="Total Quantité"/>
+                <field name="avg_cost" widget="monetary" string="Prix Revient"/>
+                <field name="last_price" widget="monetary" string="Dernier Cours"/>
 
-            <field name="clean_value" widget="monetary" optional="hide" string="Valeur Titre"/>
-            <field name="accrued_interest" widget="monetary" optional="show" string="Intérêts Courus"/>
+                <field name="clean_value" widget="monetary" optional="hide" string="Valeur Titre"/>
+                <field name="accrued_interest" widget="monetary" optional="show" string="Intérêts Courus"/>
 
-            <field name="market_value" widget="monetary" string="Valeur Marché" sum="Total Valeur"/>
+                <field name="market_value" widget="monetary" string="Valeur Marché" sum="Total Valeur"/>
 
-            <field name="unrealized_pl" widget="monetary" string="Différence d'estimation" sum="Total P&amp;L"/>
+                <field name="unrealized_pl" widget="monetary" string="Différence d'estimation" sum="Total P&amp;L"/>
 
-            <field name="unrealized_pl_percent" widget="percentage" digits="[16, 2]" string="%"/>
+                <field name="unrealized_pl_percent" widget="percentage" digits="[16, 2]" string="%"/>
 
-            <field name="state" widget="badge" decoration-info="state=='active'"  decoration-danger="state=='closed'"/>
-        </list>
-    </field>
-</record>
+                <field name="state" widget="badge" decoration-info="state=='active'"
+                       decoration-danger="state=='closed'"/>
+            </list>
+        </field>
+    </record>
 
     <record id="view_efund_fund_position_form" model="ir.ui.view">
         <field name="name">efund.fund.position.form</field>
@@ -116,6 +117,27 @@
                     <field name="message_ids"/>
                 </chatter>
             </form>
+        </field>
+    </record>
+
+    <record id="view_efund_vehicule_portfolio_search" model="ir.ui.view">
+        <field name="name">efund.vehicule.portfolio.search</field>
+        <field name="model">efund.vehicule.portfolio</field>
+        <field name="arch" type="xml">
+            <search string="Recherche Portfolio">
+                <!-- Recherche textuelle -->
+                <field name="instrument_id"/>
+                <field name="vehicule_id"/>
+
+                <!-- Filtres rapides sur le statut -->
+                <filter string="Actifs" name="active_positions" domain="[('state', '=', 'active')]"/>
+                <filter string="Clôturés" name="closed_positions" domain="[('state', '=', 'closed')]"/>
+                <filter string="Obligation" name="bond_positions" domain="[('instrument_type', '=', 'bond')]"/>
+                <filter string="Bon" name="tcn_positions" domain="[('instrument_type', '=', 'tcn')]"/>
+
+
+                <separator/>
+            </search>
         </field>
     </record>
 </odoo>

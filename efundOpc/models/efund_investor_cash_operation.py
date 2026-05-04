@@ -78,7 +78,6 @@ class EfundInvestorCashOperation(models.Model):
             )
 
            # Création de Event
-            """
             serviceEngine = self.env['efund.service']
             payload = {'gross': rec.amount, }
             event = self.env['efund.accounting.event'].create(
@@ -92,7 +91,7 @@ class EfundInvestorCashOperation(models.Model):
                 'investor_cash_move_id': investor_cash_move.id,
                 'state': 'reconciled',
             })
-            """
+
 
             # Post du résultat sur le chatter
             rec.message_post(

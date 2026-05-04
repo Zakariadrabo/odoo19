@@ -17,6 +17,7 @@ class FundPosition(models.Model):
     # ========== CHAMPS DE BASE ==========
     vehicule_id = fields.Many2one('efund.vehicule', required=True, ondelete='cascade')
     instrument_id = fields.Many2one('efund.vehicule.instrument.core', string="Instrument", required=True, index=True, )
+    instrument_type = fields.Selection(related='instrument_id.instrument_type', string="Type d'Instrument",)
     issuance_price = fields.Monetary(string="Price", store=True, )
 
     # ========== INFORMATIONS DE POSITION ==========

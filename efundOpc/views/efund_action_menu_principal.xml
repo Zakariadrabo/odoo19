@@ -422,9 +422,14 @@
 
     <!-- Positions -->
     <record id="action_fund_position_list" model="ir.actions.act_window">
-        <field name="name">Positions</field>
+        <field name="name">Portefeuille</field>
         <field name="res_model">efund.vehicule.portfolio</field>
-        <field name="view_mode">list,form,graph</field>
+        <field name="view_mode">list,form</field>
+        <!-- On active le filtre 'active_positions' par défaut -->
+
+        <field name="context">{'search_default_active_positions': 1}</field>
+        <field name="search_view_id" ref="view_efund_vehicule_portfolio_search"/>
+
     </record>
 
     <!-- order de bourse
@@ -631,8 +636,8 @@
         </field>
     </record>
 
-     <record id="action_efund_fiscal_year" model="ir.actions.act_window">
-        <field name="name">Exercice </field>
+    <record id="action_efund_fiscal_year" model="ir.actions.act_window">
+        <field name="name">Exercice</field>
         <field name="res_model">efund.fiscal.year</field>
         <field name="view_mode">list,form</field>
         <field name="help" type="html">
@@ -662,18 +667,18 @@
         </field>
     </record>
     <record id="action_efund_event_type" model="ir.actions.act_window">
-    <field name="name">Types d'Événements</field>
-    <field name="res_model">efund.event.type.new</field>
-    <field name="view_mode">list,form</field>
-    <field name="help" type="html">
-        <p class="o_view_nocontent_smiling_face">
-            Créez votre premier type d'événement comptable.
-        </p>
-        <p>
-            Ces types (sigles) seront utilisés par l'Accounting Engine pour mapper les schémas.
-        </p>
-    </field>
-</record>
+        <field name="name">Types d'Événements</field>
+        <field name="res_model">efund.event.type.new</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créez votre premier type d'événement comptable.
+            </p>
+            <p>
+                Ces types (sigles) seront utilisés par l'Accounting Engine pour mapper les schémas.
+            </p>
+        </field>
+    </record>
 
     <record id="action_efund_codification_numero_compte" model="ir.actions.act_window">
         <field name="name">Codification Numéro de Compte</field>
@@ -738,7 +743,6 @@
         <field name="print_report_name">'Etat KYC Investor - %s' % (object.name)</field>
 
     </record>
-
 
 
 </odoo>

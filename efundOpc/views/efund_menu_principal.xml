@@ -37,7 +37,7 @@
     <menuitem id="menu_execution_sub" name="Trading &amp; Ordres" parent="menu_asset_management_root" sequence="20"/>
     <menuitem id="menu_investment_orders" name="Ordre de Bourse" parent="menu_execution_sub" action="action_efund_investment_order" sequence="10"/>
     <menuitem id="menu_investment_transactions" name="Transactions" parent="menu_execution_sub" action="action_efund_investment_transaction" sequence="15"/>
-    <menuitem id="menu_portfolio_positions" name="Inventaire des Positions" parent="menu_execution_sub" action="action_fund_position_list" sequence="20"/>
+    <menuitem id="menu_portfolio_positions" name="Inventaire du portefeuille" parent="menu_execution_sub" action="action_fund_position_list" sequence="20"/>
     <menuitem id="menu_instrument_core_price" name="Cours" parent="menu_execution_sub" action="action_instrument_core_price" sequence="21"/>
 
     <!-- Opérations de flux   -->
