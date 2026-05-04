@@ -908,9 +908,7 @@ class EfundService(models.Model):
             ('instrument_id', '=', position.instrument_id.id)
         ], limit=1)
         if bond.instrument_id.is_listed:
-            _logger.info(f"***************** le titre est coté")
             if bond.instrument_id.valuation_method == 'listed':
-                _logger.info(f"***************** le titre est lissé")
                 last_price = self.compute_linear_actuariat_value_at_date(target_date, position.first_price,
                                                                          position.first_price_date, bond.face_value,
                                                                          bond.maturity_date)
@@ -1042,7 +1040,6 @@ class EfundService(models.Model):
 
     def compute_and_update_price(self, pos, date_target):
         # On récupère le cours à la date cible (ou le plus proche avant)
-        _logger.info(f"********* prix {pos} date {date_target} ")
         last_price_rec = self.env['efund.vehicule.instrument.core.price'].search([
             ('instrument_id', '=', pos.instrument_id.id),
             ('vehicule_id', '=', pos.vehicule_id.id),
@@ -1059,7 +1056,6 @@ class EfundService(models.Model):
                 ('date', '=', date_target),
             ], order='date desc', limit=1)
 
-        _logger.info(f"********* prix {last_price_rec} date {date_target} ")
 
         if not last_price_rec:
             if pos.instrument_id.instrument_type == 'bond':

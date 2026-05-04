@@ -83,6 +83,7 @@
                                     <field name="bond_type"/>
                                     <field name="issue_amount"/>
                                     <field name="face_value"/>
+                                    <field name="coupon_frequency"/>
 
                                 </group>
                                 <group string="Dates Clés">
