@@ -68,7 +68,7 @@ class EfundNavSession(models.Model):
                 rec.total_assets = assets
                 rec.total_liabilities = liabilities
                 rec.net_asset_value = assets - liabilities
-                rec.unit_nav = rec.net_asset_value / rec.nb_parts
+                #rec.unit_nav = rec.net_asset_value / rec.nb_parts
 
 
     def action_generate_lines(self):
