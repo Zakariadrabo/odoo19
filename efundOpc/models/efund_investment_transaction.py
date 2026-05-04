@@ -77,6 +77,7 @@ class EfundInvestmentTransaction(models.Model):
                     raise UserError(_("Le prix doit être supérieur à 0 pour confirmer la ligne."))
 
             # 2. Création d'évenement et écriture comptable
+            """
             if rec.instrument_id.instrument_type == 'bond':
                 if rec.move_type =='in':
                     payload =  {'instrument_id': self.instrument_id.id, 'gross': self.total_amount_trade,  'net': self.total_amount, 'fees': self.total_fees,'interest': self.total_interest, 'qte': self.quantity,}
@@ -116,7 +117,7 @@ class EfundInvestmentTransaction(models.Model):
                 raise ValidationError(f" Evènement non créé pour la transaction {rec.name}")
 
             self.env['efund.accounting.engine'].process_event(event)
-
+            """
             # comptabiliation
             rec.message_post(
                 body=_("Comptabilisation de la transaction. Lancement de la réconciliation..."),

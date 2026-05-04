@@ -7,6 +7,7 @@
             <list string="Dépôts à Terme" decoration-success="accrued_interest &gt; 0"
                   decoration-danger="end_date &lt;= context_today()" decoration-info="end_date &gt; context_today()">
                 <!-- Banque et montant -->
+                <field name="name" string="Compte"/>
                 <field name="account_number" string="Compte"/>
                 <field name="bank_id" widget="many2one_clickable"/>
                 <field name="amount_deposit" string="Montant"/>
