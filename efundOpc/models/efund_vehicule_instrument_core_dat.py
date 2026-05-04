@@ -116,29 +116,16 @@ class FundInstrumentDAT(models.Model):
         """Calcul quotidien des intérêts courus pour la VL"""
 
         today = fields.Date.today()
-
-
         for dat in self:
-            if dat.start_date and today > dat.start_date:
+            if dat.start_date and dat.end_date and today > dat.start_date and today <= dat.end_date:
             # On ne calcule des intérêts que jusqu'à l'échéance
                 res = self.env["efund.service"].get_interest_valuation_json(dat.amount_deposit, dat.interest_rate, dat.tax_rate, dat.start_date, dat.end_date,
                                                                             today, dat.interest_calculation_type, dat.interest_type)
                 dat.accrued_interest = res.get("accrued_interest")
 
                 _logger.info(f"******* intéret total {res.get("total_interest")}, intéret couru {res.get("accrued_interest")} Evaluation à date {res.get('valuation_at_date')}")
-
-
-            """
-
-
-                calculation_date = min(today, dat.end_date) if dat.end_date else today
-                days_elapsed = (calculation_date - dat.start_date).days
-                base = int(dat.interest_calculation_type) if dat.interest_calculation_type else 360
-                dat.accrued_interest = (dat.amount_deposit * (dat.interest_rate / 100) * days_elapsed) / base
-                dat.last_calculation_date = today
             else:
                 dat.accrued_interest = 0.0
-            """
 
 
 
