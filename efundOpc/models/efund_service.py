@@ -712,7 +712,9 @@ class EfundService(models.Model):
         positions = self.env['efund.vehicule.portfolio'].search([
             ('vehicule_id', '=', vehicule.id),
             ('first_price_date', '<=', date_target),
-            ('quantity', '>', 0)
+            ('quantity', '>', 0),
+            ('state', '=', 'active')
+
         ])
 
         portfolio_at_date = []
@@ -778,6 +780,7 @@ class EfundService(models.Model):
                     'type': 'asset',
                     'date': date_target,
                     'quantity': qty_at_date,
+                    'price_acquisition': pos.first_price,
                     'price': last_price_rec.price,
                     'interest': last_price_rec.interest if last_price_rec else 0,
                     'total_amount': qty_at_date * price + last_price_rec.interest if last_price_rec else 0,
@@ -1200,7 +1203,8 @@ class EfundService(models.Model):
         # 1. Récupérer les positions actives du portefeuille pour ce véhicule
         positions = self.env['efund.vehicule.portfolio'].search([
             ('vehicule_id', '=', vehicule_id.id),
-            ('quantity', '>', 0)
+            ('quantity', '>', 0),
+            ('state', '=', 'active')
         ])
 
         # Initialisation du dictionnaire de regroupement
@@ -1301,7 +1305,7 @@ class EfundService(models.Model):
 
         return total_shares
 
-    def get_balance_sql_optimized(self, account_code, company_id, date_at):
+    def get_balance_sql_optimized(self, account_code, company_id,year_fiscal, date_at):
         """
         Récupère la balance comptable via SQL en interrogeant le champ JSONB code_store.
         """
@@ -1312,15 +1316,24 @@ class EfundService(models.Model):
                 SELECT SUM(aml.debit - aml.credit) as balance
                 FROM account_move_line aml
                          JOIN account_account acc ON aml.account_id = acc.id
-                WHERE acc.code_store ->> %s = %s
+                WHERE acc.code_store ->> %s LIKE %s
                   AND aml.company_id = %s
+                  AND EXTRACT(YEAR FROM aml.date) = %s
                   AND aml.date <= %s
                   AND aml.parent_state = 'posted' \
                 """
 
         # %s (clé JSON) = company_key
         # %s (valeur cherchée) = account_code
-        self.env.cr.execute(query, (company_key, account_code, company_id.id, date_at))
+        search_pattern = f"{account_code}%"
+        self.env.cr.execute(query, (company_key, search_pattern, company_id.id,year_fiscal, date_at))
 
         result = self.env.cr.fetchone()
         return result[0] if result and result[0] is not None else 0.0
+
+    def get_actif_net(self, vehicule,date_at):
+
+        balance_classe1 = self.get_balance_sql_optimized('1', vehicule.company_id,date_at.year, date_at)
+        balance_classe2 = self.get_balance_sql_optimized('2', vehicule.company_id,date_at.year, date_at)
+        balance_classe3 = self.get_balance_sql_optimized('3', vehicule.company_id,date_at.year, date_at)
+        return balance_classe1 + balance_classe2 + balance_classe3

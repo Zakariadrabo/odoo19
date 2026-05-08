@@ -43,11 +43,9 @@ class FundRedemption(models.Model):
     # RELATIONS
     # -----------------------------------------------------------------
     part_account_id = fields.Many2one('efund.investor.part_account', string="Compte Titres",
-                                      compute="_compute_accounts",
-                                      store=True, readonly=True, precompute=True, required=True)
+                                      compute="_compute_accounts",store=True, readonly=True, precompute=True, required=True)
     cash_account_id = fields.Many2one('efund.investor.cash_account', string="Compte Espèces",
-                                      compute="_compute_accounts",
-                                      store=True, readonly=True, precompute=True, required=True)
+                                      compute="_compute_accounts",store=True, readonly=True, precompute=True, required=True)
     investor_id = fields.Many2one('efund.investor', string="Investisseur", store=True)
 
     # Compartiments de la VL par part (à titre informatif ou saisie)
@@ -80,18 +78,15 @@ class FundRedemption(models.Model):
     # -----------------------------------------------------------------
     # RELATIONS
     # -----------------------------------------------------------------
-    #part_account_id = fields.Many2one('efund.investor.part', string="Compte Titre", required=True, readonly=True)
-    #cash_account_id = fields.Many2one('efund.investor.cash', string="Compte Espèces", required=True, readonly=True)
     #fund_id = fields.Many2one(related='part_account_id.fund_id', string="Fonds", store=True)
     share_class_id = fields.Many2one('efund.fund.share.class', string="Classe de part",
                                      domain="[('fund_id', '=', fund_id)]")
-    #investor_id = fields.Many2one(related='part_account_id.investor_id', store=True)
-    #company_id = fields.Many2one(related='fund_id.company_id', store=True)
     currency_id = fields.Many2one(related='company_id.currency_id', store=True)
-
-    #investor_cash_move_id = fields.Many2one('efund.investor.cash.move', string="Cash Investisseur", readonly=True)
-    #fund_cash_move_id = fields.Many2one('efund.fund.cash.move', string="Cash Fond", readonly=True)
+    investor_cash_move_id = fields.Many2one('efund.investor.cash_account.move', string="Cash Investisseur",
+                                            readonly=True)
+    fund_cash_move_id = fields.Many2one('efund.vehicule.cash.move', string="Cash Fond", readonly=True)
     operation_fee_move_id = fields.Many2one('efund.investor.operation.fee', string="Frais souscription", readonly=True)
+
 
     # -----------------------------------------------------------------
     # LES METHODES
@@ -122,133 +117,6 @@ class FundRedemption(models.Model):
             rec.amount_res_anterieurs = rec.shares * rec.vl_res_anterieurs
             rec.amount_res_clos = rec.shares * rec.vl_res_clos
             rec.amount_income_current = rec.shares * rec.vl_res_en_cours
-
-    """
-    @api.depends('gross_amount', 'is_redemption_fee')
-    def _compute_redemption(self):
-        for sub in self:
-            if sub.gross_amount:
-                nav = self.env['efund.service'].get_last_nav_value(sub.fund_id)
-                if sub.buy_choice == 'amount':
-                    result = self.calculate_shares(nav, sub.allow_fractional_parts, sub.gross_amount,
-                                                   sub.entry_load, sub.is_redemption_fee)
-                else:
-                    result = self.calculate_amount(nav, sub.allow_fractional_parts, sub.shares,
-                                                   sub.entry_load, sub.is_redemption_fee)
-
-                # affectation des valeurs
-                sub.net_amount = result.get('net_amount')
-                sub.redemption_fee_amount = result.get('fees_amount')
-                sub.amount_remaining = result.get('amount_remaining')
-                sub.gross_amount = result.get('gross_amount')
-                sub.shares = result.get('shares')
-                sub.vehicule_id = sub.fund_id.vehicule_id
-    
-    """
-
-    def calculate_shares(self, nav, allow_fractional_shares, gross_amount, fee_percent, apply_subscription_fees):
-        """
-        Calcule le nombre de parts à partir d'un montant de souscription.
-
-        :param nav: Valeur liquidative
-        :param allow_fractional_shares: bool - parts fractionnaires autorisées
-        :param gross_amount: Montant brut souscrit
-        :param fee_percent: Pourcentage de frais de souscription
-        :param apply_subscription_fees: bool - appliquer ou non les frais
-        """
-
-        # 1️⃣ Calcul des frais
-        if apply_subscription_fees:
-            if fee_percent:
-                fees_amount = gross_amount * fee_percent
-            else:
-                raise UserError(f"Merci de renseigner le taux de souscription dans la classe de part.")
-        else:
-            fees_amount = 0.0
-
-        # 2️⃣ Montant net à investir
-        net_amount_to_invest = gross_amount - fees_amount
-
-        # Sécurité
-        if net_amount_to_invest < 0:
-            net_amount_to_invest = 0.0
-
-        # 3️⃣ Calcul théorique des parts
-
-        raw_shares = net_amount_to_invest / nav if nav else 0.0
-
-        # 4️⃣ Application des règles du fonds
-        if allow_fractional_shares:
-            shares = float_round(raw_shares, precision_digits=6)
-        else:
-            shares = int(raw_shares)  # troncature volontaire
-            if shares < 0:
-                raise UserError(
-                    f"Le montant de souscription doit supérieur à {nav} en tenant en compte les frais le cas échéant")
-
-        # 5️⃣ Montant réellement investi
-        actual_amount_invested = shares * nav
-
-        # 6️⃣ Reliquat (sur le montant NET)
-        amount_remaining = net_amount_to_invest - actual_amount_invested
-        net_amount = gross_amount - amount_remaining - fees_amount
-
-        # Sécurité flottants
-        if float_is_zero(amount_remaining, precision_rounding=0.01):
-            amount_remaining = 0.0
-
-
-        return {
-            'gross_amount': gross_amount,
-            'fees_amount': fees_amount,
-            'net_amount': net_amount,
-            'shares': shares,
-            'amount_used': actual_amount_invested,
-            'amount_remaining': amount_remaining,
-            'fees_applied': apply_subscription_fees,
-        }
-
-    def calculate_amount(self, nav, allow_fractional_shares, shares_to_buy, fee_percent, apply_subscription_fees):
-        """
-        Calcule les montants (brut, net, frais) à partir d'un nombre de parts.
-        """
-
-        # 1️⃣ Sécurité NAV
-        if nav <= 0:
-            return {'error': "La valeur liquidative (NAV) doit être positive."}
-
-        # 2️⃣ Validation du nombre de parts
-        if not allow_fractional_shares:
-            shares_to_buy = int(shares_to_buy)
-
-        # 3️⃣ Montant net (investissement pur)
-        net_amount = shares_to_buy * nav
-
-        # 4️⃣ Calcul des frais et du montant brut
-        if apply_subscription_fees and fee_percent:
-            if fee_percent >= 100:
-                return {'error': "Les frais ne peuvent pas être égaux ou supérieurs à 100%."}
-
-            gross_amount = net_amount / (1 - fee_percent)
-            fees_amount = gross_amount - net_amount
-        else:
-            gross_amount = net_amount
-            fees_amount = 0.0
-
-        # 5️⃣ Reliquat (par construction = 0 ici)
-        amount_remaining = gross_amount - net_amount - fees_amount
-
-        if float_is_zero(amount_remaining, precision_rounding=0.01):
-            amount_remaining = 0.0
-
-        return {
-            'shares': shares_to_buy,
-            'net_amount': float_round(net_amount, precision_digits=4),
-            'fees_amount': float_round(fees_amount, precision_digits=4),
-            'gross_amount': float_round(gross_amount, precision_digits=4),
-            'amount_remaining': float_round(amount_remaining, precision_digits=4),
-            'fees_applied': apply_subscription_fees,
-        }
 
 
     @api.depends('gross_amount', 'shares','is_redemption_fee')
@@ -422,7 +290,6 @@ class FundRedemption(models.Model):
             if self.part_account_id.total_parts < self.shares:
                 raise UserError(_("Solde part insuffisant."))
 
-            """
 
                 # récupération des taux des droits
             share_class = self.env['efund.fund.share.class'].search([
@@ -446,7 +313,7 @@ class FundRedemption(models.Model):
 
             if fund_cash and fund_cash.balance < rec.gross_amount :
                 raise UserError("Le fond n'a pas assez de liquidité pour le rachat. Merci de faire un désinvestissement ou de diminuer le montant ou le nombre de parts")
-            """
+
 
             if rec.nav != rec.nav: # vl:
                 return rec._open_confirmation_wizard(
@@ -456,7 +323,7 @@ class FundRedemption(models.Model):
             else:
                 # RECALCULER les valeurs avant création
                 fee_id = 0
-                """
+
                 if rec.buy_choice == 'amount':
                     result = self.calculate_redemption_update(rec.nav, rec.allow_fractional_parts, rec.redemption_fee_rate,rec.is_redemption_fee,
                                                        rec.desired_amount, None)
@@ -470,7 +337,7 @@ class FundRedemption(models.Model):
                 rec.net_amount = result.get('net_amount_to_receive')
                 rec.redemption_fee_amount = result.get('fees_amount')
                 rec.net_amount = result.get('net_amount_to_receive')  
-                """
+
 
 
                 rec.write({
@@ -497,6 +364,9 @@ class FundRedemption(models.Model):
                     'redemption_id': rec.id,
                     'shares': rec.shares,
                     'state': 'reconciled',
+                    'label': f"Rachat N°{rec.name} du fond {rec.fund_id.name} ",
+                    'date': rec.date_operation,
+                    'value_date': rec.date_valeur,
                 })
                 rec.message_post(
                     body=_("Débit du compte du titre de l'investisseur de %s parts.") % (rec.shares),

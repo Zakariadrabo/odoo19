@@ -117,5 +117,18 @@
             </list>
         </field>
     </record>
+    <record id="view_efund_investor_subscription_search" model="ir.ui.view">
+    <field name="name">efund.investor.subscription.search</field>
+    <field name="model">efund.investor.subscription</field>
+    <field name="arch" type="xml">
+        <search string="Recherche Souscriptions">
+            <field name="investor_id"/>
+            <field name="fund_id"/>
+            <filter string="En cours" name="filter_active"
+                    domain="[('state', 'not in', ['reconciled', 'cancel'])]"/>
+
+        </search>
+    </field>
+</record>
 
 </odoo>

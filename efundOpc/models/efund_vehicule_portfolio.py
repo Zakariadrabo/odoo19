@@ -34,6 +34,7 @@ class FundPosition(models.Model):
     # ========== CALCULS DE PERFORMANCE ==========
     unrealized_pl = fields.Monetary(string="Différence d'estimation", currency_field='currency_id',
                                     compute='_compute_market_value', store=True, )
+
     unrealized_pl_percent = fields.Float(string="PL %", digits=(16, 8), compute='_compute_market_value', store=True, )
     decoration_state = fields.Selection([('normal', 'Normal'), ('success', 'Success'), ('danger', 'Danger')],
                                         string="Decoration State", compute='_compute_decoration_state',
@@ -66,6 +67,7 @@ class FundPosition(models.Model):
     is_amortized = fields.Boolean(string="Amortissement")
     amortization_line_ids = fields.One2many('efund.portfolio.amortization.line', 'portfolio_id',
                                             string="Tableau d'Amortissement Spécifique")
+
 
     def action_generate_specific_amortization(self):
         for rec in self:
@@ -147,6 +149,7 @@ class FundPosition(models.Model):
                     market_value = pos.face_value + last_price_rec.interest
                 else:
                     market_value = (pos.quantity * last_price_rec.price) + last_price_rec.interest
+
 
                 # Calcul de la Plus-value latente (P/L)
                 unrealized_pl = market_value - cost_basis

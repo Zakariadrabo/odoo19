@@ -65,13 +65,14 @@ class EfundInvestorCashOperation(models.Model):
 
             investor_cash_move = self.env['efund.investor.cash_account.move'].create({
                 'cash_account_id': rec.cash_account_id.id,
-                'move_type': 'deposit',
+                'move_type': rec.type,
+                'label': f"Déposit de {rec.amount}" if rec.type == 'deposit' else f"Retrait de {rec.amount}",
                 'amount': rec.amount,
                 'date': rec.date_operation,
                 'value_date': rec.date_operation,
             })
             rec.message_post(
-                body=_("Crédit du compte cash investisseur au montant de %s.") % (rec.amount),
+                body=_(f"Crédit du compte cash investisseur au montant de %s." if rec.type == 'deposit' else f"Débit du compte cash investisseur au montant de %s.") % (rec.amount),
                 subject="comptabilisation du déposit",
                 message_type="comment",
                 subtype_xmlid="mail.mt_comment"
@@ -81,7 +82,7 @@ class EfundInvestorCashOperation(models.Model):
             serviceEngine = self.env['efund.service']
             payload = {'gross': rec.amount, }
             event = self.env['efund.accounting.event'].create(
-                serviceEngine.build_event_payload('INV_CASH_IN' if self.type == 'deposit' else 'INV_CASH_OUT', rec.vehicule_id.id, 'Apport Liquidité - ' + rec.name,
+                serviceEngine.build_event_payload('OPC_DEPOSIT' if self.type == 'deposit' else 'OPC_WITHDRAW', rec.vehicule_id.id, 'Apport Liquidité - ' + rec.name,
                                                   rec.date_operation, payload))
             rec.event_id = event.id
             self.env['efund.accounting.engine'].process_event(event)

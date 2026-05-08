@@ -92,6 +92,26 @@
             <field name="code">reset_interest</field>
             <field name="name">Annulation Intérêt</field>
         </record>
+        <record id="event_dis_024" model="efund.event.amount.dispacher">
+            <field name="code">reset_dfe</field>
+            <field name="name">Annulation différence d'estimation</field>
+        </record>
+        <record id="event_dis_025" model="efund.event.amount.dispacher">
+            <field name="code">dfe_action</field>
+            <field name="name">différence d'estimation - action</field>
+        </record>
+        <record id="event_dis_026" model="efund.event.amount.dispacher">
+            <field name="code">dfe_obligation</field>
+            <field name="name">différence d'estimation - Obligation</field>
+        </record>
+        <record id="event_dis_027" model="efund.event.amount.dispacher">
+            <field name="code">dfe_opcvm</field>
+            <field name="name">différence d'estimation - OPCVM</field>
+        </record>
+        <record id="event_dis_028" model="efund.event.amount.dispacher">
+            <field name="code">frais_gestion</field>
+            <field name="name">Frais de gestion</field>
+        </record>
                       
     </data>
 </odoo>

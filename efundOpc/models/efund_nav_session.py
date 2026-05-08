@@ -8,6 +8,7 @@ class EfundNavSession(models.Model):
     _name = 'efund.nav.session'
     _description = 'Séance de calcul de la VL'
     _inherit = ['mail.thread', 'mail.activity.mixin']
+    _order = "valuation_date desc"
 
     name = fields.Char(string="Référence", default='/')
     fund_id = fields.Many2one('efund.vehicule.fund', string="Fonds", required=True)
@@ -38,6 +39,8 @@ class EfundNavSession(models.Model):
     PerformanceMensuelle = fields.Float(string="Performance Mensuelle")
     PerformanceAnnuelle = fields.Float(string="Performance Annuelle")
     PerformanceOrigine = fields.Float(string="Performance Origine")
+    event_reset_id = fields.Many2one('efund.accounting.event', string="Événement", readonly=True)
+    event_frais_id = fields.Many2one('efund.accounting.event', string="Événement", readonly=True)
 
     @api.depends('fund_id', 'valuation_date')
     def _compute_nb_parts(self):
@@ -68,7 +71,7 @@ class EfundNavSession(models.Model):
                 rec.total_assets = assets
                 rec.total_liabilities = liabilities
                 rec.net_asset_value = assets - liabilities
-                #rec.unit_nav = rec.net_asset_value / rec.nb_parts
+
 
 
     def action_generate_lines(self):
@@ -133,7 +136,8 @@ class EfundNavSession(models.Model):
 
             # Valorisation du Portefeuille (Titres)
             # On utilise le service centralisé pour chaque instrument
-            result = self.env['efund.service'].get_portfolio_asset_value(rec.fund_id.vehicule_id, rec.valuation_date,)
+            serviceEngine = self.env['efund.service']
+            result = serviceEngine.get_portfolio_asset_value(rec.fund_id.vehicule_id, rec.valuation_date,)
             if result:
                 for res in result:
                     lines_vals.append((0, 0, {
@@ -141,6 +145,7 @@ class EfundNavSession(models.Model):
                         'date': res.get('date'),
                         'type': res.get('type'),
                         'quantity': res.get('quantity'),
+                        'price_acquisition': res.get('price_acquisition'),
                         'price': res.get('price'),
                         'interest': res.get('interest'),
                         'total_amount': res.get('total_amount'),
@@ -150,9 +155,53 @@ class EfundNavSession(models.Model):
             self.write({'line_ids': lines_vals})
 
             # vérification des données de calcul VL
-            result = self.env['efund.service'].get_valuation_by_type(rec.fund_id.vehicule_id, rec.valuation_date)
 
-            balance = self.env['efund.service'].get_balance_sql_optimized('389951', rec.fund_id.vehicule_id.company_id, '2026-04-30')
+            result = serviceEngine.get_valuation_by_type(rec.fund_id.vehicule_id, rec.valuation_date)
+            payload = {
+                'reset_interest': serviceEngine.get_balance_sql_optimized('217100', rec.fund_id.vehicule_id.company_id,
+                                                                          rec.valuation_date.year,
+                                                                          rec.valuation_date),
+                'interest':result.get ('total_valuation_bond_interest'),
+                'reset_dfe': serviceEngine.get_balance_sql_optimized('553100', rec.fund_id.vehicule_id.company_id,
+                                                                          rec.valuation_date.year,
+                                                                          rec.valuation_date),
+                'dfe_obligation':result.get ('total_valuation_bond_value'),
+
+            }
+            raise ValidationError(f"payload {payload}")
+            event = self.env['efund.accounting.event'].create(
+                serviceEngine.build_event_payload('VL_RESET_INTEREST', rec.fund_id.vehicule_id.id, 'Intérêt couru et Différence Estimation - VL',  rec.valuation_date, payload))
+            rec.event_reset_id = event.id
+            self.env['efund.accounting.engine'].process_event(event)
+
+            fund_id = self.env['efund.vehicule.fund'].search(
+                [('state', '=', 'active'), ('vehicule_id', '=', rec.fund_id.vehicule.id)], limit=1)
+            if fund_id:
+                if not fund_id:
+                    raise ValidationError(_("Aucun fond actif trouvé."))
+                share_class = self.env['efund.fund.share.class'].search([
+                    ('vehicule_fund_id', '=', rec.fund_id.id),
+                    ('is_default', '=', True)
+                ])
+
+            management_fee = share_class.management_fee_rate
+            total_actifnet = serviceEngine.get_actif_net(rec.fund_id.vehicule_id, rec.date_operation)
+            management_amount = self.compute_fixed_charges(total_actifnet, fund_id, rec.date_operation, management_fee)
+
+
+            payload = {
+                "frais_gestion": management_amount,
+            }
+            event = self.env['efund.accounting.event'].create(
+                serviceEngine.build_event_payload('VL_INIT_INTEREST', rec.fund_id.vehicule_id.id,
+                                                  'Intérêt couru et Différence Estimation - VL', rec.valuation_date,
+                                                  payload))
+            rec.event_frais_id = event.id
+            self.env['efund.accounting.engine'].process_event(event)
+
+            total_actifnet = serviceEngine.get_actif_net(rec.fund_id.vehicule_id, rec.date_operation)
+            rec.unit_nav = total_actifnet / rec.nb_parts
+
             return True
 
     def action_validate(self):

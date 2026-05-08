@@ -284,12 +284,17 @@
         <field name="name">Opération Cash</field>
         <field name="res_model">efund.investor.cash.operation</field>
         <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_pending_operations': 1}</field>
+        <field name="search_view_id" ref="view_efund_investor_cash_operation_search"/>
     </record>
 
     <record id="action_investor_subscription" model="ir.actions.act_window">
         <field name="name">Souscriptions</field>
         <field name="res_model">efund.investor.subscription</field>
         <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_active': 1}</field>
+        <field name="search_view_id" ref="view_efund_investor_subscription_search"/>
+
     </record>
 
 
@@ -426,7 +431,6 @@
         <field name="res_model">efund.vehicule.portfolio</field>
         <field name="view_mode">list,form</field>
         <!-- On active le filtre 'active_positions' par défaut -->
-
         <field name="context">{'search_default_active_positions': 1}</field>
         <field name="search_view_id" ref="view_efund_vehicule_portfolio_search"/>
 

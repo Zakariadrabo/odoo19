@@ -26,6 +26,7 @@ class FundInvestor(models.Model):
     ########################################
     investor_type = fields.Selection([("individual", "Personne physique"), ("company", "Personne morale"), ],
                                      string="Type de client", default="individual", required=True)
+    investor_name = fields.Char(string="investisseur", compute="_compute_investor_name", store=True)
 
     # Personne physique
     civilite = fields.Selection([('Mr', 'Monsieur'), ('Mrs', 'Madame')])
@@ -304,6 +305,13 @@ class FundInvestor(models.Model):
     def _onchange_nom_prenom(self):
         for rec in self:
             rec.full_name = f"{rec.prenom} {rec.nom}" if rec.prenom or rec.nom else ""
+
+    @api.depends('nom', 'prenom', 'company_name', 'investor_type')
+    def _compute_investor_name(self):
+        for rec in self:
+            if rec.investor_type :
+                rec.investor_name = rec.company_name if rec.investor_type == 'company' else rec.nom + ' ' + rec.prenom if rec.investor_type == 'company' else rec.prenom
+
 
     @api.onchange(
         'identical_address',

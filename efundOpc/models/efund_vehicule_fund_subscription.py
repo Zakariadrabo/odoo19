@@ -467,13 +467,12 @@ class FundSubscription(models.Model):
             'entry_load': rec.subscription_fee_amount,
             'quantity': rec.shares,
             }
-            """
             event = self.env['efund.accounting.event'].create(
-                serviceEngine.build_event_payload('SUB_VALIDATED', rec.vehicule_id.id, 'Souscription - ' + rec.name,
+                serviceEngine.build_event_payload('SUBS_VALIDATED_CASH', rec.vehicule_id.id, 'Souscription - ' + rec.investor_id.investor_name,
                                                   rec.date_operation, payload))
             rec.event_id = event.id
             self.env['efund.accounting.engine'].process_event(event)
-            """
+            
 
             # Fin de la réconciliation
             if rec.subscription_fee_amount > 0:

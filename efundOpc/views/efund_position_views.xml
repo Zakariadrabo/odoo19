@@ -26,7 +26,7 @@
                 <field name="last_price" widget="monetary" string="Dernier Cours"/>
 
                 <field name="clean_value" widget="monetary" optional="hide" string="Valeur Titre"/>
-                <field name="accrued_interest" widget="monetary" optional="show" string="Intérêts Courus"/>
+                <field name="accrued_interest" widget="monetary" optional="show" sum="Total interêtt" string="Intérêts Courus"/>
 
                 <field name="market_value" widget="monetary" string="Valeur Marché" sum="Total Valeur"/>
 

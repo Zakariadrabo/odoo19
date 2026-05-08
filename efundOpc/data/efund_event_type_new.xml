@@ -153,6 +153,18 @@
             <field name="state">validated</field>
         </record>
 
+        <!-- Opération de apport et retrait de liquidité OPC -->
+        <record id="event_type_030" model="efund.event.type">
+            <field name="name">OPC - Apport Liquidité</field>
+            <field name="code">OPC_DEPOSIT</field>
+            <field name="state">validated</field>
+        </record>
+        <record id="event_type_031" model="efund.event.type">
+            <field name="name">OPC - Retrait Liquidité</field>
+            <field name="code">OPC_WITHDRAW</field>
+            <field name="state">validated</field>
+        </record>
+
         <!-- Opération de clôture d'exercice -->
 
 

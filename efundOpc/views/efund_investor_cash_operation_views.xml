@@ -42,7 +42,6 @@
             </form>
         </field>
     </record>
-
     <record id="view_efund_investor_cash_operation_tree" model="ir.ui.view">
         <field name="name">efund.investor.cash.operation.list</field>
         <field name="model">efund.investor.cash.operation</field>
@@ -60,4 +59,19 @@
             </list>
         </field>
     </record>
+    <record id="view_efund_investor_cash_operation_search" model="ir.ui.view">
+    <field name="name">efund.investor.cash.operation.search</field>
+    <field name="model">efund.investor.cash.operation</field>
+    <field name="arch" type="xml">
+        <search string="Recherche Opérations">
+            <field name="investor_id"/>
+            <field name="vehicule_id"/>
+
+            <filter string="Opérations en cours"
+                    name="pending_operations"
+                    domain="[('state', 'not in', ['reconciled', 'cancelled'])]"/>
+
+        </search>
+    </field>
+</record>
 </odoo>

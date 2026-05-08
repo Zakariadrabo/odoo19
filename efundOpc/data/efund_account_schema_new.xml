@@ -5,7 +5,7 @@
             <field name="name">Schéma Souscription de Titre</field>
             <field name="event_type_id" ref="event_type_001"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -45,7 +45,7 @@
             <field name="name">Schéma Achat de Titre OBL- Exécution</field>
             <field name="event_type_id" ref="event_type_002"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -88,7 +88,7 @@
             <field name="name">Schéma Achat de Titre - Dénouement</field>
             <field name="event_type_id" ref="event_type_003"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -145,7 +145,7 @@
             <field name="name">Schéma OBL. Coupon. Constatation</field>
             <field name="event_type_id" ref="event_type_001"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -170,7 +170,7 @@
             <field name="name">Schéma Vente de Titre - Obligation</field>
             <field name="event_type_id" ref="event_type_008"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -248,7 +248,7 @@
             <field name="name">Schéma Achat de Titre Action- Exécution</field>
             <field name="event_type_id" ref="event_type_009"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -291,7 +291,7 @@
             <field name="name">Schéma Achat de Titre Action- Dénouement</field>
             <field name="event_type_id" ref="event_type_010"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -340,7 +340,7 @@
             <field name="name">Schéma Action Dividende Constatation</field>
             <field name="event_type_id" ref="event_type_011"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -365,7 +365,7 @@
             <field name="name">Schéma Vente de Titre Action- Constatation</field>
             <field name="event_type_id" ref="event_type_012"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -433,7 +433,7 @@
             <field name="name">Schéma Vente de Titre Action- Paiement</field>
             <field name="event_type_id" ref="event_type_011"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -460,7 +460,7 @@
             <field name="name">Schéma Achat de Titre Bon- Souscription</field>
             <field name="event_type_id" ref="event_type_014"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -520,7 +520,7 @@
             <field name="name">Schéma Vente Bon</field>
             <field name="event_type_id" ref="event_type_019"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -545,7 +545,7 @@
             <field name="name">Schéma Vente Bon</field>
             <field name="event_type_id" ref="event_type_019"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -641,7 +641,7 @@
             <field name="name">Schéma Remboursement Bon- Constatation</field>
             <field name="event_type_id" ref="event_type_016"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -719,7 +719,7 @@
             <field name="name">Schéma Vente de Titre Action- Paiement</field>
             <field name="event_type_id" ref="event_type_018"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -746,7 +746,7 @@
             <field name="name">Schéma Mise en place du DAT Précompté</field>
             <field name="event_type_id" ref="event_type_021"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -797,7 +797,7 @@
             <field name="name">Schéma Fin DAT</field>
             <field name="event_type_id" ref="event_type_022"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -877,7 +877,7 @@
             <field name="name">Schéma Achat de Titre OPCVM - Exécution</field>
             <field name="event_type_id" ref="event_type_023"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -918,7 +918,7 @@
             <field name="name">Schéma Vente de Titre OPCVM</field>
             <field name="event_type_id" ref="event_type_024"/>
             <field name="journal_code">SEC</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -975,12 +975,64 @@
             ]"/>
         </record>
 
+        <!-- ######################### OPC Apport liquidité - Retrait  liquidité   ############################## -->
+        <record id="schema_OPC_DEPOSIT" model="efund.accounting.schema">
+            <field name="name">Schéma Apport de liquidité - OPC</field>
+            <field name="event_type_id" ref="event_type_030"/>
+            <field name="journal_code">BNK</field>
+            <field name="line_ids" eval="[
+                (0, 0, {
+                    'sequence': 10,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_001'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_111001'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 11,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_001'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_371200'),
+                    'use_analytic': True,
+                })
+            ]"/>
+        </record>
+        <record id="schema_OPC_WITHDRAW" model="efund.accounting.schema">
+            <field name="name">Schéma Retrait de liquidité - OPC</field>
+            <field name="event_type_id" ref="event_type_030"/>
+            <field name="journal_code">BNK</field>
+            <field name="line_ids" eval="[
+                (0, 0, {
+                    'sequence': 10,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_001'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_111001'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 11,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_001'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_371200'),
+                    'use_analytic': True,
+                })
+            ]"/>
+        </record>
+
         <!-- ######################### SOUSCRIPTION RACHAT   ############################## -->
         <record id="schema_SUBS_VALIDATED_CASH" model="efund.accounting.schema">
             <field name="name">Schéma Souscription Client OPC</field>
             <field name="event_type_id" ref="event_type_025"/>
             <field name="journal_code">SUB</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -994,13 +1046,13 @@
                     'sequence': 11,
                     'account_resolution_type': 'fixed',
                     'side': 'credit',
-                    'amount_type_id': ref('event_dis_003'),
+                    'amount_type_id': ref('event_dis_010'),
                     'account_selection_type': 'always',
                     'account_id': ref('code_389952'),
                     'use_analytic': True,
                 }),
                 (0, 0, {
-                    'sequence': 13,
+                    'sequence': 12,
                     'account_resolution_type': 'fixed',
                     'side': 'credit',
                     'amount_type_id': ref('event_dis_004'),
@@ -1009,7 +1061,7 @@
                     'use_analytic': True,
                 }),
                 (0, 0, {
-                    'sequence': 14,
+                    'sequence': 13,
                     'account_resolution_type': 'fixed',
                     'side': 'credit',
                     'amount_type_id': ref('event_dis_009'),
@@ -1018,7 +1070,7 @@
                     'use_analytic': True,
                 }),
                 (0, 0, {
-                    'sequence': 15,
+                    'sequence': 14,
                     'account_resolution_type': 'fixed',
                     'side': 'credit',
                     'amount_type_id': ref('event_dis_007'),
@@ -1027,7 +1079,7 @@
                     'use_analytic': True,
                 }),
                 (0, 0, {
-                    'sequence': 16,
+                    'sequence': 15,
                     'account_resolution_type': 'fixed',
                     'side': 'credit',
                     'amount_type_id': ref('event_dis_006'),
@@ -1035,14 +1087,32 @@
                     'account_id': ref('code_581300'),
                     'use_analytic': True,
                 }),
+                (0, 0, {
+                    'sequence': 16,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_016'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_940001'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 17,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_016'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_960001'),
+                    'use_analytic': True,
+                }),
 
             ]"/>
         </record>
-         <record id="schema_REDEM_VALIDATED" model="efund.accounting.schema">
+        <record id="schema_REDEM_VALIDATED" model="efund.accounting.schema">
             <field name="name">Schéma Rachat Client OPC</field>
             <field name="event_type_id" ref="event_type_027"/>
             <field name="journal_code">RED</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -1056,13 +1126,13 @@
                     'sequence': 11,
                     'account_resolution_type': 'fixed',
                     'side': 'credit',
-                    'amount_type_id': ref('event_dis_003'),
+                    'amount_type_id': ref('event_dis_011'),
                     'account_selection_type': 'always',
-                    'account_id': ref('code_389952'),
+                    'account_id': ref('code_389951'),
                     'use_analytic': True,
                 }),
                 (0, 0, {
-                    'sequence': 13,
+                    'sequence': 12,
                     'account_resolution_type': 'fixed',
                     'side': 'debit',
                     'amount_type_id': ref('event_dis_022'),
@@ -1071,7 +1141,7 @@
                     'use_analytic': True,
                 }),
                 (0, 0, {
-                    'sequence': 14,
+                    'sequence': 13,
                     'account_resolution_type': 'fixed',
                     'side': 'credit',
                     'amount_type_id': ref('event_dis_009'),
@@ -1080,7 +1150,7 @@
                     'use_analytic': True,
                 }),
                 (0, 0, {
-                    'sequence': 15,
+                    'sequence': 14,
                     'account_resolution_type': 'fixed',
                     'side': 'debit',
                     'amount_type_id': ref('event_dis_007'),
@@ -1089,12 +1159,31 @@
                     'use_analytic': True,
                 }),
                 (0, 0, {
-                    'sequence': 16,
+                    'sequence': 15,
                     'account_resolution_type': 'fixed',
                     'side': 'debit',
                     'amount_type_id': ref('event_dis_006'),
                     'account_selection_type': 'always',
                     'account_id': ref('code_581300'),
+                    'use_analytic': True,
+                }),
+
+                (0, 0, {
+                    'sequence': 16,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_016'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_940001'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 17,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_016'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_960001'),
                     'use_analytic': True,
                 }),
 
@@ -1106,7 +1195,7 @@
             <field name="name">Schéma VL Annulation Intéret</field>
             <field name="event_type_id" ref="event_type_028"/>
             <field name="journal_code">NAV</field>
-             <field name="line_ids" eval="[
+            <field name="line_ids" eval="[
                 (0, 0, {
                     'sequence': 10,
                     'account_resolution_type': 'fixed',
@@ -1117,19 +1206,96 @@
                     'use_analytic': True,
                 }),
                (0, 0, {
-                    'sequence': 12,
+                    'sequence': 11,
                     'account_resolution_type': 'fixed',
                     'side': 'credit',
-                    'amount_type_id': ref('event_dis_002'),
+                    'amount_type_id': ref('event_dis_023'),
                     'account_selection_type': 'always',
                     'account_id': ref('code_217100'),
                     'use_analytic': True,
-                })
+                }),
+                (0, 0, {
+                    'sequence': 12,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_008'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_217100'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 13,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_008'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_727100'),
+                    'use_analytic': True,
+                }),
+                 (0, 0, {
+                    'sequence': 14,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_024'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_553100'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 15,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_024'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_217400'),
+                    'use_analytic': True,
+                }),
+
+                 (0, 0, {
+                    'sequence': 16,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_026'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_553100'),
+                    'use_analytic': True,
+                }),
+                (0, 0, {
+                    'sequence': 17,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_026'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_217400'),
+                    'use_analytic': True,
+                }),
             ]"/>
         </record>
+        <record id="schema_VL_INIT_INTEREST" model="efund.accounting.schema">
+            <field name="name">Schéma VL - Frais de gestion</field>
+            <field name="event_type_id" ref="event_type_029"/>
+            <field name="journal_code">NAV</field>
+            <field name="line_ids" eval="[
+                (0, 0, {
+                    'sequence': 10,
+                    'account_resolution_type': 'fixed',
+                    'side': 'debit',
+                    'amount_type_id': ref('event_dis_028'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_603100'),
+                    'use_analytic': True,
+                }),
+               (0, 0, {
+                    'sequence': 11,
+                    'account_resolution_type': 'fixed',
+                    'side': 'credit',
+                    'amount_type_id': ref('event_dis_028'),
+                    'account_selection_type': 'always',
+                    'account_id': ref('code_389400'),
+                    'use_analytic': True,
+                }),
 
-
-
-
+            ]"/>
+        </record>
     </data>
 </odoo>
