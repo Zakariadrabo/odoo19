@@ -1229,7 +1229,7 @@
                     'side': 'debit',
                     'amount_type_id': ref('event_dis_008'),
                     'account_selection_type': 'always',
-                    'account_id': ref('code_727100'),
+                    'account_id': ref('code_727110'),
                     'use_analytic': True,
                 }),
                  (0, 0, {

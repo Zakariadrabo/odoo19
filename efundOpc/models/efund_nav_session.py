@@ -162,20 +162,19 @@ class EfundNavSession(models.Model):
                                                                           rec.valuation_date.year,
                                                                           rec.valuation_date),
                 'interest':result.get ('total_valuation_bond_interest'),
-                'reset_dfe': serviceEngine.get_balance_sql_optimized('553100', rec.fund_id.vehicule_id.company_id,
+                'reset_dfe': serviceEngine.get_balance_sql_optimized('217400', rec.fund_id.vehicule_id.company_id,
                                                                           rec.valuation_date.year,
                                                                           rec.valuation_date),
                 'dfe_obligation':result.get ('total_valuation_bond_value'),
 
             }
-            raise ValidationError(f"payload {payload}")
             event = self.env['efund.accounting.event'].create(
                 serviceEngine.build_event_payload('VL_RESET_INTEREST', rec.fund_id.vehicule_id.id, 'Intérêt couru et Différence Estimation - VL',  rec.valuation_date, payload))
             rec.event_reset_id = event.id
             self.env['efund.accounting.engine'].process_event(event)
 
             fund_id = self.env['efund.vehicule.fund'].search(
-                [('state', '=', 'active'), ('vehicule_id', '=', rec.fund_id.vehicule.id)], limit=1)
+                [('state', '=', 'active'), ('vehicule_id', '=', rec.fund_id.vehicule_id.id)], limit=1)
             if fund_id:
                 if not fund_id:
                     raise ValidationError(_("Aucun fond actif trouvé."))
@@ -185,8 +184,8 @@ class EfundNavSession(models.Model):
                 ])
 
             management_fee = share_class.management_fee_rate
-            total_actifnet = serviceEngine.get_actif_net(rec.fund_id.vehicule_id, rec.date_operation)
-            management_amount = self.compute_fixed_charges(total_actifnet, fund_id, rec.date_operation, management_fee)
+            total_actifnet = serviceEngine.get_actif_net(rec.fund_id.vehicule_id, rec.valuation_date)
+            management_amount = serviceEngine.compute_fixed_charges(total_actifnet, fund_id, rec.valuation_date, management_fee)
 
 
             payload = {
@@ -198,8 +197,7 @@ class EfundNavSession(models.Model):
                                                   payload))
             rec.event_frais_id = event.id
             self.env['efund.accounting.engine'].process_event(event)
-
-            total_actifnet = serviceEngine.get_actif_net(rec.fund_id.vehicule_id, rec.date_operation)
+            total_actifnet = serviceEngine.get_actif_net(rec.fund_id.vehicule_id, rec.valuation_date)
             rec.unit_nav = total_actifnet / rec.nb_parts
 
             return True
