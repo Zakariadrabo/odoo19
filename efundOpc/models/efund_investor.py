@@ -309,8 +309,11 @@ class FundInvestor(models.Model):
     @api.depends('nom', 'prenom', 'company_name', 'investor_type')
     def _compute_investor_name(self):
         for rec in self:
-            if rec.investor_type :
-                rec.investor_name = rec.company_name if rec.investor_type == 'company' else rec.nom + ' ' + rec.prenom if rec.investor_type == 'company' else rec.prenom
+            if rec.investor_type and (rec.company_name or rec.nom or rec.prenom) :
+                nom = rec.nom or ''
+                prenom = rec.prenom or ''
+                complet = nom +' ' + prenom
+                rec.investor_name = rec.company_name if rec.investor_type == 'company' else complet
 
 
     @api.onchange(
@@ -347,7 +350,7 @@ class FundInvestor(models.Model):
     def _prepare_partner_vals(self, vals):
         """Convertit les champs EfundInvestor → res.partner proprement."""
         return {
-            "name": vals.get("nom") + ' ' + vals.get("prenom") if vals.get(
+            "name": vals.get("nom") or '' + ' ' + vals.get("prenom") or '' if vals.get(
                 "investor_type") == 'individual' else vals.get("company_name"),
             "email": vals.get("email"),
             "phone": vals.get("phone"),

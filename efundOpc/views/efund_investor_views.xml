@@ -31,8 +31,7 @@
                         <div class="flex-grow-1">
                             <field name="investor_type" widget="radio" options="{'horizontal': true}"/>
                             <h1>
-                                <field name="full_name" invisible="investor_type != 'individual'" class="text-success"/>
-                                <field name="company_name" invisible="investor_type != 'company'" class="text-success"/>
+                                <field name="investor_name" class="text-success"/>
                             </h1>
                             <div class="row mt-2">
                                 <group>
@@ -371,8 +370,7 @@
                 <field name="investor_type" widget="badge"
                        decoration-muted="investor_type == 'individual'"
                        decoration-info="investor_type == 'company'"/>
-                <field name="full_name" invisible="investor_type != 'individual'" optional="show"/>
-                <field name="company_name" invisible="investor_type != 'company'" optional="show"/>
+                <field name="investor_name" />
                 <field name="email" widget="email"/>
                 <field name="phone" widget="phone"/>
                 <field name="country_id" optional="hide"/>
