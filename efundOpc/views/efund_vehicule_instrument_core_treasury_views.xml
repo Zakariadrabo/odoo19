@@ -10,7 +10,7 @@
                 <field name="issue_date"/>
                 <field name="maturity_date"/>
                 <field name="face_value" sum="Total Nominal"/>
-                <field name="yield_rate" widget="percentage" avg="Moyenne Rendement"/>
+                <field name="yield_rate"  avg="Moyenne Rendement"/>
                 <field name="purchase_price" sum="Total Investi"/>
                 <field name="state" widget="badge" decoration-info="state == 'draft'"
                        decoration-success="state == 'validated'"/>

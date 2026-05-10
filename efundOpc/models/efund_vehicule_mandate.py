@@ -32,7 +32,6 @@ class Mandate(models.Model):
     is_fund_released = fields.Boolean(string='Est un fonds', default=False)
     coupon_capitalisation = fields.Boolean(string='Est capitalisé', default=False)
 
-    # risk_profile_id = fields.Many2one('mandate.risk.profile',string='Profil de risque',required=True)
 
     # ---------------------------------------------------------
     # PARAMETRES FINANCIERS CONTRACTUELS
@@ -49,15 +48,15 @@ class Mandate(models.Model):
     days_corridor = fields.Integer(string='Nombre de jours corridor', required=True)
     corridor_min_rate = fields.Float(string='Corridor minimum (%)')
     corridor_max_rate = fields.Float(string='Corridor maximum (%)')
-    corridor_start_date = fields.Date(string='Date début corridor')
-    corridor_end_date = fields.Date(string='Date fin corridor')
+    corridor_start_date = fields.Date(string="Date d'effet")
+    corridor_end_date = fields.Date(string='Date corridor')
 
     # ---------------------------------------------------------
     # PARAMETRES TEMPORELS
     # ---------------------------------------------------------
     start_date = fields.Date(string="Date d'effet", required=True)
-    duration_months = fields.Integer(string='Durée du mandat (mois)', required=True)
-    maturity_date = fields.Date(string='Date d’échéance', compute='_compute_maturity_date', store=True)
+    duration_months = fields.Float(string='Durée (années)',)
+    maturity_date = fields.Date(string='Date d’échéance', store=True, readonly=False)
     amount_received_date = fields.Date(string='Date de réception des fonds')
 
     # ---------------------------------------------------------

@@ -11,7 +11,7 @@
 
 
                 <!-- Caractéristiques obligataires -->
-                <field name="bond_type" string="Type"/>
+                <field name="bond_type" string="Marché"/>
                 <field name="face_value" string="Valeur Nominale"/>
                 <field name="coupon_rate" string="Taux Coupon %"/>
                 <field name="valuation_method" string="Méthode Valo"/>
@@ -26,8 +26,7 @@
                 <field name="remaining_date_to_coupon" string="Jours Restants Coupon"/>
 
                 <!-- État -->
-                <field name="is_listed" string="Coté" invisible="1"/>
-                <field name="is_listed" string="Coté" widget="boolean_favorite" column_invisible="1"/>
+                <field name="is_listed" string="Coté" />
             </list>
         </field>
     </record>
@@ -38,9 +37,27 @@
         <field name="arch" type="xml">
             <form string="Obligation">
                 <header>
-                    <!-- <button name="action_compute_coupons" string="Recalculer Coupons" type="object" class="btn-primary"
-                            invisible="state !='draft'"/>
-                    <widget name="web_ribbon" title="Échu" bg_color="bg-danger" invisible="maturity_date &gt; context_today()"/> -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button name="action_activate" type="object"
+                                    string="Activer"
+                                    class="btn-primary oe_highlight"
+                                    invisible="state != 'draft'"/>
+                            <button name="action_suspend" type="object"
+                                    string="Suspendre"
+                                    class="btn-warning"
+                                    invisible="state != 'active'"/>
+                            <button name="action_reset_to_draft" type="object"
+                                    string="Remettre en brouillon"
+                                    class="btn-secondary"
+                                    invisible="state in ('suspended','liquidated','draft')"/>
+                            <button name="action_liquidated" type="object"
+                                    string="Radie"
+                                    class="btn-secondary"
+                                    invisible="state in ('suspended','liquidated','draft')"/>
+
+                        </div>
+                    </div>
                     <field name="state" widget="statusbar"/>
                 </header>
 
@@ -80,7 +97,7 @@
                         <page string="Caractéristiques">
                             <group>
                                 <group string="Identification">
-                                    <field name="bond_type"/>
+                                    <field name="bond_type" string="Marché"/>
                                     <field name="issue_amount"/>
                                     <field name="face_value"/>
                                     <field name="coupon_frequency"/>

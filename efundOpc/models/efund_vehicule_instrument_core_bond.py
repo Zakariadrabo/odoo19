@@ -27,7 +27,7 @@ class FundInstrumentBond(models.Model):
     coupon_rate = fields.Float(string="Taux du Coupon (%)")
     rate_net = fields.Float(string="Taux net (%)", compute='_compute_rate_net', store=True)
     maturity_date = fields.Date(string="Échéance")
-    remaining_date_to_maturity = fields.Char(string="Jours restants à la maturité", store=True)
+    remaining_date_to_maturity = fields.Char(string="Jours restants à la maturité",  store=True)
     remaining_date_to_coupon = fields.Char(string="Jours restants au prochain coupon",store=True)
     coupon_frequency = fields.Selection( [('annual', 'Annuel'), ('semi_annual', 'Semestriel'), ('quarterly', 'Trimestriel'),
          ('monthly', 'Mensuel'), ('at_maturity', 'A Maturité'), ], string='Fréquence', default='annual', )
@@ -478,3 +478,15 @@ class FundInstrumentBond(models.Model):
                 'default_date_start': fields.Date.today(),
             }
         }
+
+    def action_activate(self):
+        pass
+
+    def action_suspend(self):
+        pass
+
+    def action_reset_to_draft(self):
+        pass
+
+    def action_liquidated(self):
+        pass

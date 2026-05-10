@@ -454,6 +454,8 @@
         <field name="name">Ordres de Bourse</field>
         <field name="res_model">efund.investment.order</field>
         <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_not_sent_state': 1}</field>
+        <field name="search_view_id" ref="view_efund_investment_order_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Créez un ordre de bourse.

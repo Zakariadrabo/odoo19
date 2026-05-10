@@ -212,5 +212,26 @@
             </form>
         </field>
     </record>
+    <record id="view_efund_investment_order_search" model="ir.ui.view">
+        <field name="name">efund.investment.order.search</field>
+        <field name="model">efund.investment.order</field>
+        <field name="arch" type="xml">
+            <search string="Recherche Portfolio">
+                <!-- Recherche textuelle -->
+                <field name="instrument_id"/>
+                <field name="vehicule_id"/>
+                <field name="operation_type"/>
+
+                <!-- Filtres rapides sur le statut -->
+                <filter string="envoyés" name="sent_state" domain="[('state', '=', 'sent')]"/>
+                <filter string="executés" name="executed_state" domain="[('state', '=', 'executed')]"/>
+                <filter string="validés" name="activate_state" domain="[('state', '=', 'validated')]"/>
+                <filter string="Annulés" name="cancel_state" domain="[('state', '=', 'cancelled')]"/>
+                <filter string="En cours" name="not_sent_state" domain="[('state', 'in', ['draft', 'validated', 'sent','partially_executed'])]"/>
+
+                <separator/>
+            </search>
+        </field>
+    </record>
 
 </odoo>
